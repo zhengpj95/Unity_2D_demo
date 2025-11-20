@@ -1,0 +1,164 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using Unity.VisualScripting;
+using UnityEngine;
+
+/**
+ * 1. 敌人跟随玩家的时候，玩家进入高地会改变层级，敌人也需要调整层级
+ * 2. 敌人攻击动画
+ * 3. 技能冷却时间
+ */
+public class RpgEnemyMovement : MonoBehaviour
+{
+  private static readonly int IsMoving = Animator.StringToHash("isMoving");
+  private static readonly int IsIdle = Animator.StringToHash("isIdle");
+  private static readonly int IsFighting = Animator.StringToHash("isFighting");
+  private static readonly int IsDamage = Animator.StringToHash("isDamage");
+  private static readonly int IsDeath = Animator.StringToHash("isDeath");
+
+  [Header("Attack Settings")]
+  public float attackRange = 1f;
+  public float attackCoolDownTime = 1.5f;
+  public Transform attackPoint;
+
+  [Header("Movement Settings")]
+  public float moveRange = 2f;
+  public Transform movePoint;
+  public LayerMask playerLayer;
+
+  private Transform _player;
+  private Rigidbody2D _rb2d;
+  private Animator _animator;
+
+  private int _facingRight = 1;
+  private EnemyState _enemyState;
+  private float _attackCoolDownTimer;
+
+  private readonly Collider2D[] _playerColliders = new Collider2D[5];
+
+  public enum EnemyState
+  {
+    Idle,
+    Moving,
+    Fighting,
+    KnockBack,
+  }
+
+  private void Start()
+  {
+    _rb2d = GetComponent<Rigidbody2D>();
+    _animator = GetComponent<Animator>();
+    ChangeState(EnemyState.Idle);
+  }
+
+  private void Update()
+  {
+    if (_enemyState != EnemyState.KnockBack)
+    {
+      if (_attackCoolDownTimer > 0)
+      {
+        _attackCoolDownTimer -= Time.deltaTime;
+      }
+
+      CheckPlayer();
+
+      if (_enemyState == EnemyState.Moving)
+      {
+        Moving();
+      }
+      else if (_enemyState == EnemyState.Fighting)
+      {
+        // 进入fight，不动 
+        _rb2d.velocity = Vector2.zero;
+      }
+    }
+  }
+
+  private bool CheckDistance()
+  {
+    return Vector2.Distance(transform.position, _player.transform.position) < attackRange;
+  }
+
+  private void Moving()
+  {
+    if (transform.position.x > _player.position.x && _facingRight == 1 ||
+        transform.position.x < _player.position.x && _facingRight == -1)
+    {
+      Flip();
+    }
+
+    Vector2 direction = (_player.position - transform.position).normalized;
+    _rb2d.velocity = direction * StatsManager.Instance.enemySpeed;
+  }
+
+  private void Flip()
+  {
+    _facingRight *= -1;
+    transform.localScale = new Vector2(transform.localScale.x * -1, transform.localScale.y);
+  }
+
+  private void CheckPlayer()
+  {
+    var size = Physics2D.OverlapCircleNonAlloc(movePoint.position, moveRange, _playerColliders, playerLayer);
+    if (size > 0 && _playerColliders.Length > 0)
+    {
+      _player = _playerColliders[0].transform;
+      if (CheckDistance() && _attackCoolDownTimer <= 0)
+      {
+        _attackCoolDownTimer = attackCoolDownTime;
+        ChangeState(EnemyState.Fighting);
+      }
+      else if (!CheckDistance() && _enemyState != EnemyState.Fighting)
+      {
+        ChangeState(EnemyState.Moving);
+      }
+    }
+    else
+    {
+      _player = null;
+      _rb2d.velocity = Vector2.zero;
+      ChangeState(EnemyState.Idle);
+    }
+  }
+
+  // 改变状态
+  public void ChangeState(EnemyState state)
+  {
+    if (_enemyState == EnemyState.Idle)
+    {
+      _animator.SetBool(IsIdle, false);
+    }
+    else if (_enemyState == EnemyState.Moving)
+    {
+      _animator.SetBool(IsMoving, false);
+    }
+    else if (_enemyState == EnemyState.Fighting)
+    {
+      _animator.SetBool(IsFighting, false);
+    }
+
+    _enemyState = state;
+
+    if (_enemyState == EnemyState.Idle)
+    {
+      _animator.SetBool(IsIdle, true);
+    }
+    else if (_enemyState == EnemyState.Moving)
+    {
+      _animator.SetBool(IsMoving, true);
+    }
+    else if (_enemyState == EnemyState.Fighting)
+    {
+      _animator.SetBool(IsFighting, true);
+    }
+  }
+
+  // 绘制攻击范围和检测范围
+  private void OnDrawGizmosSelected()
+  {
+    Gizmos.color = Color.red;
+    Gizmos.DrawWireSphere(attackPoint.position, attackRange);
+    Gizmos.DrawWireSphere(movePoint.position, moveRange);
+  }
+}

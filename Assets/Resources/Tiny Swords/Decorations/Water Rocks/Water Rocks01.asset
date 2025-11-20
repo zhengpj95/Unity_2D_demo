@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13b75c95f34a00d4e8c04f76b73312e6, type: 3}
+  m_Name: Water Rocks01
+  m_EditorClassIdentifier: 
+  m_AnimatedSprites:
+  - {fileID: 765997020, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
+  - {fileID: -1304832920, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
+  - {fileID: -1849234729, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
+  - {fileID: 2066634911, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
+  - {fileID: -1529500840, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
+  - {fileID: -893751915, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
+  - {fileID: -850293231, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
+  - {fileID: 917148915, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
+  - {fileID: 2135781514, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
+  - {fileID: -443450961, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
+  - {fileID: 1054533216, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
+  - {fileID: 1870739812, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
+  - {fileID: 609480834, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
+  - {fileID: 1237740553, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
+  - {fileID: -2115587438, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
+  - {fileID: -1361915345, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
+  m_MinSpeed: 5
+  m_MaxSpeed: 5
+  m_AnimationStartTime: 0
+  m_AnimationStartFrame: 0
+  m_TileColliderType: 0
+  m_TileAnimationFlags: 0
