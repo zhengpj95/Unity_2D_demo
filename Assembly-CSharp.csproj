@@ -56,10 +56,11 @@
     <Compile Include="Assets\Scripts\Rpg\RpgEnemyCombat.cs" />
     <Compile Include="Assets\Scripts\Rpg\ElevationExit.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgEnemyKnockBack.cs" />
+    <Compile Include="Assets\Scripts\UIRoot.cs" />
+    <Compile Include="Assets\Scripts\FruitCollectManager.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgPlayerMovement.cs" />
     <Compile Include="Assets\Scripts\PlayerLife.cs" />
     <Compile Include="Assets\Scripts\StartGame.cs" />
-    <Compile Include="Assets\Scripts\FrogManager.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgPlayerCombat.cs" />
     <Compile Include="Assets\Scripts\PlayerMovement.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgEnemyMovement.cs" />

@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 8774384829297578775}
   - component: {fileID: 8664355080346359005}
   - component: {fileID: 7889016660221120265}
+  - component: {fileID: 7118703843412040497}
   m_Layer: 0
   m_Name: Banana
   m_TagString: Fruits
@@ -152,3 +153,16 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.28253555, y: 0.24931967}
   m_EdgeRadius: 0
+--- !u!114 &7118703843412040497
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7275274576161559182}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c59ba09eff70d5f40a0302a5f3750c39, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scoreValue: 1

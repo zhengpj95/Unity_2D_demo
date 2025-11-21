@@ -1,14 +1,23 @@
+using System;
 using UnityEngine;
 
 public class FruitCollect : MonoBehaviour
 {
+  public int scoreValue = 1;
+  private FruitCollectManager collectManager;
+
+  private void Start()
+  {
+    collectManager = FindAnyObjectByType<FruitCollectManager>();
+  }
+
   private void OnTriggerEnter2D(Collider2D other)
   {
-    if (other.CompareTag("Fruits"))
+    if (other.CompareTag("Player"))
     {
-      Destroy(other.gameObject);
-      FrogManager.Instance.Score++;
-      Debug.Log("Fruit collected: " + FrogManager.Instance.Score);
+      Destroy(gameObject);
+      collectManager.ChangeScore(scoreValue);
+      Debug.Log("Fruit collected: " + collectManager.score);
     }
   }
 }
