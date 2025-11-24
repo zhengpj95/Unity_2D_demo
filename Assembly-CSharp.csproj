@@ -45,27 +45,27 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\2022.3.62f2c1\Editor\Data\Tools\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\CheckEndPoint.cs" />
-    <Compile Include="Assets\Scripts\FruitCollect.cs" />
-    <Compile Include="Assets\Scripts\UILevel.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\UILevel.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\StartGame.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\UIFruit.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\UIManager.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\PlayerLife.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\EndGame.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgEnemyHealth.cs" />
     <Compile Include="Assets\Scripts\Rpg\StatsManager.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\UIRoot.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\FruitCollectManager.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgPlayerHealth.cs" />
-    <Compile Include="Assets\Scripts\UIFruit.cs" />
     <Compile Include="Assets\Scripts\Rpg\ElevationEntry.cs" />
-    <Compile Include="Assets\Scripts\EndGame.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgEnemyCombat.cs" />
     <Compile Include="Assets\Scripts\Rpg\ElevationExit.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgEnemyKnockBack.cs" />
-    <Compile Include="Assets\Scripts\UIRoot.cs" />
-    <Compile Include="Assets\Scripts\FruitCollectManager.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\PlayerMovement.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgPlayerMovement.cs" />
-    <Compile Include="Assets\Scripts\EventBus.cs" />
-    <Compile Include="Assets\Scripts\PlayerLife.cs" />
-    <Compile Include="Assets\Scripts\StartGame.cs" />
-    <Compile Include="Assets\Scripts\UIManager.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgPlayerCombat.cs" />
-    <Compile Include="Assets\Scripts\PlayerMovement.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\FruitCollect.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\CheckEndPoint.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\EventBus.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgEnemyMovement.cs" />
     <Reference Include="UnityEngine">
       <HintPath>C:\Program Files\Unity\Hub\Editor\2022.3.62f2c1\Editor\Data\Managed\UnityEngine\UnityEngine.dll</HintPath>

@@ -6,15 +6,15 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/StartGame.unity
+    path: Assets/Scenes/FrogAdventure/StartGame.unity
     guid: cac8b2d0e3523de409b60dcad342c3d5
   - enabled: 1
-    path: Assets/Scenes/FrogPrince.unity
+    path: Assets/Scenes/FrogAdventure/FrogPrince.unity
     guid: 3fca23e8b19d52349ae4e1c3b78a1c30
   - enabled: 1
-    path: Assets/Scenes/FrogPrince2.unity
+    path: Assets/Scenes/FrogAdventure/FrogPrince2.unity
     guid: ee3d1a3b43c12cf42b1847579b02eafb
   - enabled: 1
-    path: Assets/Scenes/EndGame.unity
+    path: Assets/Scenes/FrogAdventure/EndGame.unity
     guid: b4f105b761240d240a729ff7c1e77f8e
   m_configObjects: {}
