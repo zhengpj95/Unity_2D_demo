@@ -45,6 +45,8 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\2022.3.62f2c1\Editor\Data\Tools\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\FrogAdventure\Trap.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\PlayerKnockBack.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\UILevel.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\StartGame.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\UIFruit.cs" />
@@ -62,6 +64,7 @@
     <Compile Include="Assets\Scripts\Rpg\ElevationExit.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgEnemyKnockBack.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\PlayerMovement.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\GameController.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgPlayerMovement.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgPlayerCombat.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\FruitCollect.cs" />

@@ -5,12 +5,6 @@ using UnityEngine.UI;
 public class UILevel : MonoBehaviour
 {
   public Text levelText;
-  public int level;
-
-  private void Awake()
-  {
-    DontDestroyOnLoad(gameObject.transform.parent.gameObject);
-  }
 
   private void Start()
   {
@@ -19,6 +13,6 @@ public class UILevel : MonoBehaviour
 
   private void SetLevelText()
   {
-    levelText.text = "关卡：" + level;
+    levelText.text = "关卡：" + SceneManager.GetActiveScene().buildIndex;
   }
 }

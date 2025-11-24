@@ -11,18 +11,20 @@ internal enum PlayerState
 
 public class PlayerMovement : MonoBehaviour
 {
+  [Header("移动")]
   public int moveSpeed = 5;
   public int jumpSpeed = 5;
 
+  [Header("地板检测")]
   public Transform groundCheck;
   public float checkRadius = 0.2f;
   public LayerMask groundLayer;
-  private Animator _animator;
-
-  private float _dirX;
 
   private Rigidbody2D _rb2d;
   private SpriteRenderer _sprite;
+  private Animator _animator;
+
+  private float _dirX;
 
   private void Start()
   {
@@ -30,11 +32,18 @@ public class PlayerMovement : MonoBehaviour
     _sprite = GetComponent<SpriteRenderer>();
     _animator = GetComponent<Animator>();
 
+    UIManager.Instance.ShowUI("Prefabs/UI/UI_Level", UILayerIndex.Main);
     UIManager.Instance.ShowUI("Prefabs/UI/UI_Fruit", UILayerIndex.Main);
   }
 
   private void Update()
   {
+    // 击退时候不更新
+    if (GameController.Instance.IsKnockBack)
+    {
+      return;
+    }
+
     // 获取左右键的输入
     _dirX = Input.GetAxis("Horizontal");
     _rb2d.velocity = new Vector2(_dirX * moveSpeed, _rb2d.velocity.y);
