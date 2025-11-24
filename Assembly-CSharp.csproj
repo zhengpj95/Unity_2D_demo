@@ -48,6 +48,7 @@
     <Compile Include="Assets\Scripts\FrogAdventure\UILevel.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\StartGame.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\UIFruit.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\DestroyEvent.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\UIManager.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\PlayerLife.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\EndGame.cs" />

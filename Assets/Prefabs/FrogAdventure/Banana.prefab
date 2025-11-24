@@ -166,3 +166,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scoreValue: 1
+  collectedPrefab: {fileID: 4516434879619428253, guid: b5b73bd07e415614b92b3d794ef4e94b, type: 3}
