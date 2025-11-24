@@ -4,28 +4,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class FruitCollectManager : MonoBehaviour
+public class FruitCollectManager
 {
-  public int score = 0;
-  public UIRoot uiRoot;
+  private static FruitCollectManager _instance;
+  public static FruitCollectManager Instance => _instance ??= new FruitCollectManager();
 
-  private void Awake()
-  {
-    DontDestroyOnLoad(gameObject);
-    SceneManager.sceneLoaded += OnSceneLoaded;
-  }
-
-  private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-  {
-    if (scene.name == "EndGame")
-    {
-      Destroy(gameObject);
-    }
-  }
+  public int Score = 0;
 
   public void ChangeScore(int scoreValue)
   {
-    score += scoreValue;
-    uiRoot.UpdateScore(score);
+    Score += scoreValue;
+    EventBus.Dispatch("update_score");
   }
 }

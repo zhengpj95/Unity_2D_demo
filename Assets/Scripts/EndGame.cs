@@ -9,6 +9,7 @@ public class EndGame : MonoBehaviour
   private void Start()
   {
     restartBtn.onClick.AddListener(RestartGame);
+    UIManager.Instance.HideUI("Prefabs/UI/UI_Fruit");
   }
 
   private void OnDestroy()
@@ -20,5 +21,6 @@ public class EndGame : MonoBehaviour
   {
     Debug.Log("RestartGame");
     SceneManager.LoadScene(1); //第一个关卡序号
+    FruitCollectManager.Instance.Score = 0;
   }
 }

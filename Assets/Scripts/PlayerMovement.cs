@@ -29,6 +29,8 @@ public class PlayerMovement : MonoBehaviour
     _rb2d = GetComponent<Rigidbody2D>();
     _sprite = GetComponent<SpriteRenderer>();
     _animator = GetComponent<Animator>();
+
+    UIManager.Instance.ShowUI("Prefabs/UI/UI_Fruit", UILayerIndex.Main);
   }
 
   private void Update()
