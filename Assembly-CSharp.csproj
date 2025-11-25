@@ -66,6 +66,7 @@
     <Compile Include="Assets\Scripts\FrogAdventure\PlayerMovement.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\GameController.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgPlayerMovement.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\Enemy_Mushroom.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgPlayerCombat.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\FruitCollect.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\CheckEndPoint.cs" />

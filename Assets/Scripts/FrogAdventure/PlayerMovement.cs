@@ -11,12 +11,10 @@ internal enum PlayerState
 
 public class PlayerMovement : MonoBehaviour
 {
-  [Header("移动")]
-  public int moveSpeed = 5;
+  [Header("移动")] public int moveSpeed = 5;
   public int jumpSpeed = 5;
 
-  [Header("地板检测")]
-  public Transform groundCheck;
+  [Header("地板检测")] public Transform groundCheck;
   public float checkRadius = 0.2f;
   public LayerMask groundLayer;
 
@@ -70,5 +68,10 @@ public class PlayerMovement : MonoBehaviour
   private bool IsGrounded()
   {
     return Physics2D.OverlapCircle(groundCheck.position, checkRadius, groundLayer);
+  }
+
+  public void JumpUp(float jumpForce)
+  {
+    _rb2d.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
   }
 }

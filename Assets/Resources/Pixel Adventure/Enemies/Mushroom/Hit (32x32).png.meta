@@ -63,7 +63,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 32
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -86,7 +86,7 @@ TextureImporter:
     buildTarget: DefaultTexturePlatform
     maxTextureSize: 2048
     resizeAlgorithm: 0
-    textureFormat: -1
+    textureFormat: 4
     textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
@@ -125,7 +125,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Hit_0
+      name: Hit (32x32)_0
       rect:
         serializedVersion: 2
         x: 0
@@ -139,14 +139,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: ed5788351ac3334408483d56105cd5a0
-      internalID: 4457663794195168306
+      spriteID: 75677dfbbf33d7f4f8f3bc41df7a21d0
+      internalID: -1977345874
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Hit_1
+      name: Hit (32x32)_1
       rect:
         serializedVersion: 2
         x: 32
@@ -160,14 +160,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: e0059fafc2d95d646b1167159fc15d56
-      internalID: -5364657433725072944
+      spriteID: 74c6a2ee51065d44089bc524ae72e3c8
+      internalID: -1867903404
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Hit_2
+      name: Hit (32x32)_2
       rect:
         serializedVersion: 2
         x: 64
@@ -181,14 +181,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: eadbec3c9577c5c46a782244124e0858
-      internalID: -4947864620551752270
+      spriteID: 468b5c062dc98a643aa27305dac275d9
+      internalID: 708474084
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Hit_3
+      name: Hit (32x32)_3
       rect:
         serializedVersion: 2
         x: 96
@@ -202,14 +202,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c2dba36aecac28d4f9ece4652fd32fcc
-      internalID: 8733631668352107246
+      spriteID: 9a2cea32055bfe24db489f46869570c6
+      internalID: -1228659996
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Hit_4
+      name: Hit (32x32)_4
       rect:
         serializedVersion: 2
         x: 128
@@ -223,8 +223,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 06721c3f0f046a142b719f09147ed8ed
-      internalID: -7612900313820856468
+      spriteID: 10596c75a364d024fb49c70904791c39
+      internalID: 708253092
       vertices: []
       indices: 
       edges: []
@@ -240,11 +240,11 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      Hit_0: 4457663794195168306
-      Hit_1: -5364657433725072944
-      Hit_2: -4947864620551752270
-      Hit_3: 8733631668352107246
-      Hit_4: -7612900313820856468
+      Hit (32x32)_0: -1977345874
+      Hit (32x32)_1: -1867903404
+      Hit (32x32)_2: 708474084
+      Hit (32x32)_3: -1228659996
+      Hit (32x32)_4: 708253092
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
