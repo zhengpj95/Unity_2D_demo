@@ -11,7 +11,7 @@ public class Trap : MonoBehaviour
     {
       Debug.Log("Player Hit");
       var knockBack = other.gameObject.GetComponent<PlayerKnockBack>();
-      knockBack.KnockBack(transform);
+      knockBack.KnockBack(transform); // 玩家 knockback
     }
   }
 }
