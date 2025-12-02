@@ -20,7 +20,7 @@ public class EndGame : MonoBehaviour
   private static void RestartGame()
   {
     Debug.Log("RestartGame");
-    SceneManager.LoadScene(1); //第一个关卡序号
+    GameController.Instance.LoadScene(1); //第一个关卡序号
     FruitCollectManager.Instance.Score = 0;
   }
 }

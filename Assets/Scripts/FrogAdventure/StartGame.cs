@@ -19,6 +19,6 @@ public class StartGame : MonoBehaviour
   private static void ClickStartGame()
   {
     Debug.Log("StartGame");
-    SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+    GameController.Instance.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
   }
 }

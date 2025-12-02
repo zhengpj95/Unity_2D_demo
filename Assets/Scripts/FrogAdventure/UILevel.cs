@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class UILevel : MonoBehaviour
@@ -9,10 +8,11 @@ public class UILevel : MonoBehaviour
   private void Start()
   {
     SetLevelText();
+    EventBus.AddListener("UPDATE_LEVEL", SetLevelText);
   }
 
   private void SetLevelText()
   {
-    levelText.text = "关卡：" + SceneManager.GetActiveScene().buildIndex;
+    levelText.text = "关卡：" + GameController.Instance.Level;
   }
 }

@@ -33,6 +33,6 @@ public class PlayerLife : MonoBehaviour
   private void Revive()
   {
     Debug.Log("Revive");
-    SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    GameController.Instance.LoadScene(SceneManager.GetActiveScene().buildIndex);
   }
 }

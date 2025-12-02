@@ -8,7 +8,7 @@ public class CheckEndPoint : MonoBehaviour
     if (other.gameObject.CompareTag("Player"))
     {
       Debug.Log("到达终点，切换关卡");
-      SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+      GameController.Instance.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
     }
   }
 }
