@@ -3,10 +3,13 @@ using UnityEditor.SceneManagement;
 
 public static class SceneEditorUtils
 {
-  [MenuItem("Scene/打开游戏启动场景")]
+  [MenuItem("Tools/Start Game")]
   private static void OpenGameStartScene()
   {
-    EditorSceneManager.OpenScene("Assets/Scenes/FrogAdventure/StartGame.unity", OpenSceneMode.Single);
-    EditorApplication.isPlaying = true;
+    if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+    {
+      EditorSceneManager.OpenScene("Assets/Scenes/FrogAdventure/StartGame.unity", OpenSceneMode.Single);
+      EditorApplication.isPlaying = true;
+    }
   }
 }
