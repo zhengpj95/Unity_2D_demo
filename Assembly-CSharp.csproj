@@ -52,13 +52,13 @@
     <Compile Include="Assets\Scripts\FrogAdventure\UIFruit.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\DestroyEvent.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\UIManager.cs" />
-    <Compile Include="Assets\Scripts\FrogAdventure\PlayerLife.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\EndGame.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgEnemyHealth.cs" />
     <Compile Include="Assets\Scripts\Rpg\StatsManager.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\FruitCollectManager.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgPlayerHealth.cs" />
     <Compile Include="Assets\Scripts\Rpg\ElevationEntry.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\PlayerLifeController.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgEnemyCombat.cs" />
     <Compile Include="Assets\Scripts\Rpg\ElevationExit.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgEnemyKnockBack.cs" />
