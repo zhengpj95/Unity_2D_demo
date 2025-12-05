@@ -6,14 +6,14 @@ public class PlayerLifeController : MonoBehaviour
   public GameObject playerPrefab;
   public Transform spawnPoint;
 
-  private void Awake()
-  {
-    DontDestroyOnLoad(gameObject);
-  }
-
   private void Start()
   {
     EventBus.AddListener("PLAYER_REVIVE", Revive);
+  }
+
+  private void OnDestroy()
+  {
+    EventBus.RemoveListener("PLAYER_REVIVE", Revive);
   }
 
   private void Revive()
