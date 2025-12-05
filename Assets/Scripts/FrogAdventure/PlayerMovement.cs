@@ -17,6 +17,10 @@ public class PlayerMovement : MonoBehaviour
   [Header("地板检测")] public Transform groundCheck;
   public float checkRadius = 0.2f;
   public LayerMask groundLayer;
+  
+  [Header("音效")]
+  public AudioSource jumpSound;
+  public AudioSource collectSound;
 
   private Rigidbody2D _rb2d;
   private SpriteRenderer _sprite;
@@ -51,6 +55,7 @@ public class PlayerMovement : MonoBehaviour
 
     if (Input.GetKeyDown(KeyCode.Space) && IsGrounded())
     {
+      jumpSound.Play();
       // _rb2d.velocity = new Vector2(_rb2d.velocity.x, 0f); // 防止叠力跳
       _rb2d.AddForce(Vector2.up * jumpSpeed, ForceMode2D.Impulse);
     }

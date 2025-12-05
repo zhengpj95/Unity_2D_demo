@@ -15,6 +15,9 @@ public class FruitCollect : MonoBehaviour
       AddCollectedAnimation(gameObject.transform);
       FruitCollectManager.Instance.ChangeScore(scoreValue);
       Debug.Log("Fruit collected: " + FruitCollectManager.Instance.Score);
+
+      var player = other.gameObject.GetComponent<PlayerMovement>();
+      player.collectSound.Play();
     }
   }
 
