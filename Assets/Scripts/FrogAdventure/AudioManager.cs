@@ -18,6 +18,8 @@ public static class SoundType
 
 public class AudioManager : MonoBehaviour
 {
+  public static AudioManager Instance { get; private set; }
+
   [Header("默认背景音乐")] 
   public AudioClip defaultBgm;
 
@@ -41,6 +43,12 @@ public class AudioManager : MonoBehaviour
 
   protected void Awake()
   {
+    if (Instance != null && Instance != this)
+    {
+      Destroy(gameObject);
+      return;
+    }
+    Instance = this;
     DontDestroyOnLoad(gameObject);
 
     _bgm = gameObject.GetComponent<AudioSource>();
