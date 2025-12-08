@@ -52,6 +52,7 @@
     <Compile Include="Assets\Scripts\FrogAdventure\UIFruit.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\DestroyEvent.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\UIManager.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\Enemy_Plant.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\EndGame.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgEnemyHealth.cs" />
     <Compile Include="Assets\Scripts\Rpg\StatsManager.cs" />
@@ -66,6 +67,7 @@
     <Compile Include="Assets\Scripts\FrogAdventure\PlayerMovement.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgPlayerMovement.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\AudioManager.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\Enemy_Bullet.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Enemy_Mushroom.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgPlayerCombat.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\FruitCollect.cs" />
