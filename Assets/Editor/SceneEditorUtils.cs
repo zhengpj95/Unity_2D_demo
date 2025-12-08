@@ -3,7 +3,7 @@ using UnityEditor.SceneManagement;
 
 public static class SceneEditorUtils
 {
-  [MenuItem("Tools/Start Game")]
+  [MenuItem("Tools/01 Start Game")]
   private static void OpenGameStartScene()
   {
     if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())

@@ -56,11 +56,13 @@
     <Compile Include="Assets\Scripts\FrogAdventure\EndGame.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgEnemyHealth.cs" />
     <Compile Include="Assets\Scripts\Rpg\StatsManager.cs" />
+    <Compile Include="Assets\Scripts\def\GameLayer.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\FruitCollectManager.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgPlayerHealth.cs" />
     <Compile Include="Assets\Scripts\Rpg\ElevationEntry.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\PlayerLifeController.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgEnemyCombat.cs" />
+    <Compile Include="Assets\Scripts\def\SceneUIName.cs" />
     <Compile Include="Assets\Scripts\Rpg\ElevationExit.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgEnemyKnockBack.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\GameController.cs" />
@@ -68,6 +70,7 @@
     <Compile Include="Assets\Scripts\Rpg\RpgPlayerMovement.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\AudioManager.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Enemy_Bullet.cs" />
+    <Compile Include="Assets\Scripts\def\GameTag.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Enemy_Mushroom.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgPlayerCombat.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\FruitCollect.cs" />
