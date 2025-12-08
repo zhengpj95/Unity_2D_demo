@@ -10,6 +10,7 @@ public class EndGame : MonoBehaviour
   {
     restartBtn.onClick.AddListener(RestartGame);
     UIManager.Instance.HideUI("Prefabs/UI/UI_Fruit");
+    UIManager.Instance.HideUI("Prefabs/UI/UI_Level");
   }
 
   private void OnDestroy()
