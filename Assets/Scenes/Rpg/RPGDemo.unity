@@ -1667,7 +1667,7 @@ MonoBehaviour:
   attackRange: 1
   attackCoolDownTime: 1.5
   attackPoint: {fileID: 805480541}
-  moveRange: 2
+  moveRange: 10
   movePoint: {fileID: 941813276}
   playerLayer:
     serializedVersion: 2
@@ -7891,7 +7891,7 @@ PolygonCollider2D:
     - - {x: -15.368412, y: 11.280654}
       - {x: -15.490081, y: -8.406475}
       - {x: 15.178063, y: -8.320667}
-      - {x: 15.19158, y: 11.398307}
+      - {x: 15.470678, y: 11.286667}
   m_UseDelaunayMesh: 0
 --- !u!1001 &1502869885
 PrefabInstance:
@@ -10448,7 +10448,7 @@ Tilemap:
       - {fileID: 1237740553, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
       - {fileID: -2115587438, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
       - {fileID: -1361915345, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
-      m_AnimationSpeed: 5.0000005
+      m_AnimationSpeed: 5
       m_AnimationTimeOffset: 0
       m_Flags: 0
   - first: {x: 20, y: 9, z: 0}

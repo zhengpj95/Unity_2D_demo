@@ -1,7 +1,3 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using Cinemachine.Utility;
 using UnityEngine;
 
 public class Enemy_Mushroom : MonoBehaviour

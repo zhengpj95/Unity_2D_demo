@@ -1,8 +1,5 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem.Android.LowLevel;
-using UnityEngine.SceneManagement;
 
 public class PlayerKnockBack : MonoBehaviour
 {
