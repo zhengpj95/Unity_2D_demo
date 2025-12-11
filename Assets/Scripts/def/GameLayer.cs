@@ -1,6 +1,6 @@
 ﻿/**
  * 自动生成的 Layer 常量类
- * 请勿手动修改！使用 Scene/TagLayer Generator 重新生成
+ * 请勿手动修改！使用 Tools/02 TagLayer Generator 重新生成
 */
 
 public static class GameLayer
