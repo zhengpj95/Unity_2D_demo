@@ -16,4 +16,10 @@ public class FruitCollectManager
     Score += scoreValue;
     EventBus.Dispatch("update_score");
   }
+
+  public void ResetScore()
+  {
+    Score = 0;
+    EventBus.Dispatch("update_score");
+  }
 }

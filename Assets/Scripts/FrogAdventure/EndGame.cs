@@ -21,6 +21,6 @@ public class EndGame : MonoBehaviour
   {
     Debug.Log("RestartGame");
     GameController.Instance.LoadScene(1); //第一个关卡序号
-    FruitCollectManager.Instance.Score = 0;
+    FruitCollectManager.Instance.ResetScore();
   }
 }
