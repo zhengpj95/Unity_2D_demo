@@ -1,0 +1,19 @@
+CREDITS
+
+ART & ASSETS
+Character sprites created using the Universal LPC Sprite Generator
+Based on the Liberated Pixel Cup artwork
+Original artists: Redshrike, Sharm, Bluecarrot16, and LPC contributors
+Licensed under CC-BY-SA 3.0 / GPLv3
+
+Source assets courtesy of assetstore.unity.com, opengameart.org, Pixabay, and itch.io
+
+GAME DEVELOPMENT
+zpj
+
+SPECIAL THANKS
+Open-source creators who made this project possible
+
+TECHNOLOGY
+Made with Unity
+Additional open-source tools from the community
