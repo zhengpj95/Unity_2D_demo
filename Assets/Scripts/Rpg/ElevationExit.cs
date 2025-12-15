@@ -26,7 +26,7 @@ public class ElevationExit : MonoBehaviour
       
       Debug.Log("11111 exit2D");
     }
-    if (other.gameObject.name == "Enemy_Minotaur")
+    if (other.gameObject.CompareTag("Enemy"))
     {
       other.gameObject.GetComponent<SpriteRenderer>().sortingOrder = 5;
     }

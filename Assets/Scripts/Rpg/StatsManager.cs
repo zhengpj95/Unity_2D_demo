@@ -6,20 +6,32 @@ using UnityEngine;
 
 public class StatsManager : MonoBehaviour
 {
-  public static StatsManager Instance;
+  public static StatsManager Instance { get; private set; }
 
   private void Awake()
   {
     if (Instance == null)
     {
       Instance = this;
+      DontDestroyOnLoad(gameObject);
+    }
+    else if (Instance != this)
+    {
+      Destroy(gameObject);
+    }
+  }
+
+  private void OnDestroy()
+  {
+    if (Instance == this)
+    {
+      Instance = null;
     }
   }
 
   [Header("Enemy Stats")]
   public float enemySpeed;
   public int enemyDamage;
-  public int enemyHealth;
   public int enemyMaxHealth;
 
   [Header("Player Stats")]

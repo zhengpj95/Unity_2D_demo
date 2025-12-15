@@ -4,14 +4,17 @@ using UnityEngine;
 
 public class RpgEnemyHealth : MonoBehaviour
 {
+  public int health = 10;
+
   public void ChangeHealth(int amount)
   {
-    StatsManager.Instance.enemyHealth += amount;
-    if (StatsManager.Instance.enemyHealth > StatsManager.Instance.enemyMaxHealth)
+    health += amount;
+    if (health > StatsManager.Instance.enemyMaxHealth)
     {
-      StatsManager.Instance.enemyHealth = StatsManager.Instance.enemyMaxHealth;
+      health = StatsManager.Instance.enemyMaxHealth;
     }
-    if (StatsManager.Instance.enemyHealth <= 0)
+
+    if (health <= 0)
     {
       Destroy(gameObject);
     }
