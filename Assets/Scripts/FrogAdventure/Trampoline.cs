@@ -23,10 +23,6 @@ public class Trampoline : MonoBehaviour
     }
   }
 
-  private void StartJump()
-  {
-  }
-
   private void JumpEnd()
   {
     _animator.SetBool(IsIsJumping, false);
