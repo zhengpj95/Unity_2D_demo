@@ -68,6 +68,7 @@
     <Compile Include="Assets\Scripts\Rpg\RpgEnemyKnockBack.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\GameController.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\PlayerMovement.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\Trap_Saw.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgPlayerMovement.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\AudioManager.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Enemy_Bullet.cs" />
