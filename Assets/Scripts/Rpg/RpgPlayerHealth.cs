@@ -16,6 +16,7 @@ public class RpgPlayerHealth : MonoBehaviour
     EventBus.Dispatch("Event_UpdatePlayerHealth");
     if (StatsManager.Instance.health <= 0)
     {
+      EventBus.Dispatch("Event_GameOver", true);
       Destroy(gameObject);
     }
   }

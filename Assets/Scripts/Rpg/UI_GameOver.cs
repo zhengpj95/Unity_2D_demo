@@ -5,6 +5,7 @@ using UnityEngine;
 public class UI_GameOver : MonoBehaviour
 {
   public GameObject gameOverPanel;
+  public Transform playerPrefab;
 
   void Start()
   {
@@ -26,5 +27,13 @@ public class UI_GameOver : MonoBehaviour
   {
     Debug.Log("Restart Game UI_GameOver");
     UpdateActive(false);
+
+    StartCoroutine(SpawnPlayerAfterDelay(0.5f));
+  }
+
+  IEnumerator SpawnPlayerAfterDelay(float delay)
+  {
+    yield return new WaitForSeconds(delay);
+    Instantiate(playerPrefab, Vector3.down, Quaternion.identity);
   }
 }

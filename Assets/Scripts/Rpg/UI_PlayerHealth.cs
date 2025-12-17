@@ -24,6 +24,6 @@ public class UI_PlayerHealth : MonoBehaviour
     var currentHealth = StatsManager.Instance.health;
     playerHealthslider.maxValue = maxHealth;
     playerHealthslider.value = currentHealth;
-    healthText.text = currentHealth + " / " + maxHealth;
+    healthText.text = Mathf.Max(0, currentHealth) + " / " + maxHealth;
   }
 }
