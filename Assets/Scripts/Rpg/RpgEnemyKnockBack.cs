@@ -19,7 +19,7 @@ public class RpgEnemyKnockBack : MonoBehaviour
       return;
     }
 
-    _rpgEnemyMovement.ChangeState(RpgEnemyMovement.EnemyState.KnockBack);
+    _rpgEnemyMovement.ChangeState(RpgEnemyMovement.EnemyState.Damage);
     StartCoroutine(KnockBackCounter(stunTime));
 
     Vector2 direction = (transform.position - player.position).normalized;

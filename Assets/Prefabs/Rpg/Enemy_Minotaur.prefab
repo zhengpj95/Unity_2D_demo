@@ -220,7 +220,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   attackRange: 0.8
-  attackCoolDownTime: 1
+  attackCoolDownTime: 0.8
   attackPoint: {fileID: 2366547212851235465}
   moveRange: 2
   movePoint: {fileID: 6566776742081043784}

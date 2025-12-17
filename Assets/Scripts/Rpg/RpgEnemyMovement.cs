@@ -57,7 +57,7 @@ public class RpgEnemyMovement : MonoBehaviour
 
   private void Update()
   {
-    if (enemyState == EnemyState.Death)
+    if (enemyState == EnemyState.Death || enemyState == EnemyState.Damage)
     {
       return;
     }

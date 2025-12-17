@@ -11,6 +11,7 @@ public class RpgPlayerMovement : MonoBehaviour
 
   private Vector2 _movement;
   private bool _isKnockBack;
+  private int _facingRight = 1;
 
   private void Start()
   {
@@ -32,11 +33,19 @@ public class RpgPlayerMovement : MonoBehaviour
       _movement.y = Input.GetAxis("Vertical");
       _rb2d.velocity = _movement * StatsManager.Instance.speed;
 
-      if (_movement.x > 0f) _renderer.flipX = false;
-      else if (_movement.x < 0f) _renderer.flipX = true;
+      if ((_movement.x > 0f && _facingRight == -1) || (_movement.x < 0f && _facingRight == 1))
+      {
+        Flip();
+      }
 
       _animator.SetFloat(VelocityHash, _movement.sqrMagnitude);
     }
+  }
+
+  private void Flip()
+  {
+    _facingRight *= -1;
+    transform.localScale = new Vector2(transform.localScale.x * -1, transform.localScale.y);
   }
 
   // 击退

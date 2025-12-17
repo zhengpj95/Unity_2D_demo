@@ -205,7 +205,7 @@ MonoBehaviour:
     m_Bits: 256
   weaponRange: 1
   knockBackForce: 1
-  stunTime: 0.5
+  stunTime: 0.8
 --- !u!114 &1225048092121006909
 MonoBehaviour:
   m_ObjectHideFlags: 0
