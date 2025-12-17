@@ -101,6 +101,7 @@
     <Compile Include="Assets\Scripts\Rpg\RpgPlayerCombat.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\FruitCollect.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\CheckEndPoint.cs" />
+    <Compile Include="Assets\Scripts\Rpg\UI_PlayerHealth.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\EventBus.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgEnemyMovement.cs" />
   </ItemGroup>

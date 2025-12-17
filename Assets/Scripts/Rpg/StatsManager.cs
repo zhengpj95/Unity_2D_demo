@@ -37,5 +37,6 @@ public class StatsManager : MonoBehaviour
   [Header("Player Stats")]
   public float speed;
   public int damage;
-  public float health;
+  public int health;
+  public int MaxHealth;
 }
