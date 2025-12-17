@@ -5,8 +5,6 @@ public class RpgPlayerMovement : MonoBehaviour
 {
   private static readonly int VelocityHash = Animator.StringToHash("velocity");
 
-  private RpgPlayerCombat _combat;
-
   private Rigidbody2D _rb2d;
   private Animator _animator;
   private SpriteRenderer _renderer;
@@ -19,15 +17,11 @@ public class RpgPlayerMovement : MonoBehaviour
     _rb2d = GetComponent<Rigidbody2D>();
     _animator = GetComponent<Animator>();
     _renderer = GetComponent<SpriteRenderer>();
-    _combat = GetComponent<RpgPlayerCombat>();
   }
 
   private void Update()
   {
-    if (Input.GetButtonDown("Jump"))
-    {
-      _combat.Attack();
-    }
+    //
   }
 
   private void FixedUpdate()

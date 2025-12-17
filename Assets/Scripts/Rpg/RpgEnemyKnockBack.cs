@@ -14,6 +14,11 @@ public class RpgEnemyKnockBack : MonoBehaviour
 
   public void KnockBack(Transform player, float knockBackForce, float stunTime)
   {
+    if (_rpgEnemyMovement.enemyState == RpgEnemyMovement.EnemyState.Death)
+    {
+      return;
+    }
+
     _rpgEnemyMovement.ChangeState(RpgEnemyMovement.EnemyState.KnockBack);
     StartCoroutine(KnockBackCounter(stunTime));
 

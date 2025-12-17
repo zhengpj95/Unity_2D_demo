@@ -6696,7 +6696,7 @@ MonoBehaviour:
   enemyDamage: 1
   enemyMaxHealth: 10
   speed: 3
-  damage: 5
+  damage: 1
   health: 100
 --- !u!4 &833454956
 Transform:
@@ -7387,7 +7387,7 @@ Transform:
   m_GameObject: {fileID: 1277582388}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.83, y: -0.64, z: -10}
+  m_LocalPosition: {x: -0.44300023, y: -1.61, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -7493,7 +7493,7 @@ Transform:
   m_GameObject: {fileID: 1342905946}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.83, y: -0.64, z: -10}
+  m_LocalPosition: {x: -0.44300023, y: -1.61, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -10601,11 +10601,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4494274887980193366, guid: 7727085ef538bde48b82f4da4a231ee3, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 4.83
+      value: -0.443
       objectReference: {fileID: 0}
     - target: {fileID: 4494274887980193366, guid: 7727085ef538bde48b82f4da4a231ee3, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.64
+      value: -1.61
       objectReference: {fileID: 0}
     - target: {fileID: 4494274887980193366, guid: 7727085ef538bde48b82f4da4a231ee3, type: 3}
       propertyPath: m_LocalPosition.z

@@ -5,6 +5,12 @@ using UnityEngine;
 public class RpgEnemyHealth : MonoBehaviour
 {
   public int health = 10;
+  private RpgEnemyMovement _rpgEnemyMovement;
+
+  private void Start()
+  {
+    _rpgEnemyMovement = GetComponent<RpgEnemyMovement>();
+  }
 
   public void ChangeHealth(int amount)
   {
@@ -16,7 +22,12 @@ public class RpgEnemyHealth : MonoBehaviour
 
     if (health <= 0)
     {
-      Destroy(gameObject);
+      _rpgEnemyMovement.ChangeState(RpgEnemyMovement.EnemyState.Death);
     }
+  }
+
+  public void Death()
+  {
+    Destroy(gameObject);
   }
 }

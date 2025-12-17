@@ -7,13 +7,13 @@ using UnityEngine.Serialization;
 
 public class RpgPlayerCombat : MonoBehaviour
 {
-  [Header("Attack Settings")] 
+  [Header("Attack Settings")]
   public float attackCoolDownTime = 0.8f;
   public Transform attackPoint;
   public LayerMask enemyLayer;
   public float weaponRange;
 
-  [Header("KnockBack Settings")] 
+  [Header("KnockBack Settings")]
   public float knockBackForce = 2;
   public float stunTime = 0.5f;
 
@@ -34,27 +34,37 @@ public class RpgPlayerCombat : MonoBehaviour
     {
       _attackTimer -= Time.deltaTime;
     }
-  }
 
-  public void Attack()
-  {
-    if (_attackTimer <= 0)
+    if (_attackTimer <= 0 && Input.GetButtonDown("Jump"))
     {
-      _attackTimer = attackCoolDownTime;
-      _animator.SetBool(IsAttacking, true);
+      Attack();
     }
   }
 
+  // 按下空格，攻击
+  public void Attack()
+  {
+    _attackTimer = attackCoolDownTime;
+    _animator.SetBool(IsAttacking, true);
+  }
+
+  // 处理伤害
   public void DealDamage()
   {
     var size = Physics2D.OverlapCircleNonAlloc(attackPoint.position, weaponRange, _enemyColliders, enemyLayer);
     if (size > 0 && _enemyColliders.Length > 0)
     {
-      _enemyColliders[0].GetComponent<RpgEnemyHealth>().ChangeHealth(-StatsManager.Instance.damage);
-      _enemyColliders[0].GetComponent<RpgEnemyKnockBack>().KnockBack(transform, knockBackForce, stunTime);
+      for (int i = 0; i < size; i++)
+      {
+        var enemy = _enemyColliders[i];
+        if (enemy == null) continue;
+        enemy.GetComponent<RpgEnemyHealth>().ChangeHealth(-StatsManager.Instance.damage);
+        enemy.GetComponent<RpgEnemyKnockBack>().KnockBack(transform, knockBackForce, stunTime);
+      }
     }
   }
 
+  // 结束攻击
   public void FinishAttack()
   {
     _animator.SetBool(IsAttacking, false);

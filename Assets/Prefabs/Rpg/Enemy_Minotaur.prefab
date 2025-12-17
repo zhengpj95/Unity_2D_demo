@@ -219,8 +219,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f26bcb616399147439615e5337d562bb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  attackRange: 1
-  attackCoolDownTime: 1.5
+  attackRange: 0.8
+  attackCoolDownTime: 1
   attackPoint: {fileID: 2366547212851235465}
   moveRange: 2
   movePoint: {fileID: 6566776742081043784}
@@ -244,7 +244,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   weaponRange: 1
-  knockBackForce: 2
+  knockBackForce: 1
   stunTime: 0.5
 --- !u!114 &8866961715768691362
 MonoBehaviour:

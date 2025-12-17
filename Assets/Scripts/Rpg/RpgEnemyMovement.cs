@@ -32,8 +32,9 @@ public class RpgEnemyMovement : MonoBehaviour
   private Animator _animator;
 
   private int _facingRight = 1;
-  private EnemyState _enemyState;
   private float _attackCoolDownTimer;
+
+  public EnemyState enemyState { get; set; }
 
   private readonly Collider2D[] _playerColliders = new Collider2D[5];
 
@@ -43,6 +44,8 @@ public class RpgEnemyMovement : MonoBehaviour
     Moving,
     Fighting,
     KnockBack,
+    Death,
+    Damage
   }
 
   private void Start()
@@ -54,7 +57,12 @@ public class RpgEnemyMovement : MonoBehaviour
 
   private void Update()
   {
-    if (_enemyState != EnemyState.KnockBack)
+    if (enemyState == EnemyState.Death)
+    {
+      return;
+    }
+
+    if (enemyState != EnemyState.KnockBack)
     {
       if (_attackCoolDownTimer > 0)
       {
@@ -63,11 +71,11 @@ public class RpgEnemyMovement : MonoBehaviour
 
       CheckPlayer();
 
-      if (_enemyState == EnemyState.Moving)
+      if (enemyState == EnemyState.Moving)
       {
         Moving();
       }
-      else if (_enemyState == EnemyState.Fighting)
+      else if (enemyState == EnemyState.Fighting)
       {
         // 进入fight，不动 
         _rb2d.velocity = Vector2.zero;
@@ -109,7 +117,7 @@ public class RpgEnemyMovement : MonoBehaviour
         _attackCoolDownTimer = attackCoolDownTime;
         ChangeState(EnemyState.Fighting);
       }
-      else if (!CheckDistance() && _enemyState != EnemyState.Fighting)
+      else if (!CheckDistance() && enemyState != EnemyState.Fighting)
       {
         ChangeState(EnemyState.Moving);
       }
@@ -125,32 +133,49 @@ public class RpgEnemyMovement : MonoBehaviour
   // 改变状态
   public void ChangeState(EnemyState state)
   {
-    if (_enemyState == EnemyState.Idle)
+    if (enemyState == EnemyState.Death)
+    {
+      return;
+    }
+
+    if (enemyState == EnemyState.Idle)
     {
       _animator.SetBool(IsIdle, false);
     }
-    else if (_enemyState == EnemyState.Moving)
+    else if (enemyState == EnemyState.Moving)
     {
       _animator.SetBool(IsMoving, false);
     }
-    else if (_enemyState == EnemyState.Fighting)
+    else if (enemyState == EnemyState.Fighting)
     {
       _animator.SetBool(IsFighting, false);
     }
+    else if (enemyState == EnemyState.Damage)
+    {
+      _animator.SetBool(IsDamage, false);
+    }
 
-    _enemyState = state;
+    enemyState = state;
 
-    if (_enemyState == EnemyState.Idle)
+    if (enemyState == EnemyState.Idle)
     {
       _animator.SetBool(IsIdle, true);
     }
-    else if (_enemyState == EnemyState.Moving)
+    else if (enemyState == EnemyState.Moving)
     {
       _animator.SetBool(IsMoving, true);
     }
-    else if (_enemyState == EnemyState.Fighting)
+    else if (enemyState == EnemyState.Fighting)
     {
       _animator.SetBool(IsFighting, true);
+    }
+    else if (enemyState == EnemyState.Death)
+    {
+      _animator.SetBool(IsDeath, true);
+    }
+    else if (enemyState == EnemyState.Damage)
+    {
+      _animator.SetBool(IsDamage, true);
     }
   }
 
@@ -158,7 +183,8 @@ public class RpgEnemyMovement : MonoBehaviour
   private void OnDrawGizmosSelected()
   {
     Gizmos.color = Color.red;
-    Gizmos.DrawWireSphere(attackPoint.position, attackRange);
     Gizmos.DrawWireSphere(movePoint.position, moveRange);
+    Gizmos.color = Color.cyan;
+    Gizmos.DrawWireSphere(attackPoint.position, attackRange);
   }
 }
