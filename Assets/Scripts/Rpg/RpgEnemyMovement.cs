@@ -4,6 +4,12 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 
+public enum EnemyType
+{
+  Normal,
+  Goblin,
+}
+
 /**
  * 1. 敌人跟随玩家的时候，玩家进入高地会改变层级，敌人也需要调整层级
  * 2. 敌人攻击动画
@@ -18,8 +24,8 @@ public class RpgEnemyMovement : MonoBehaviour
   private static readonly int IsDeath = Animator.StringToHash("isDeath");
 
   [Header("Attack Settings")]
-  public float attackRange = 1f;
-  public float attackCoolDownTime = 1.5f;
+  public float attackRange = 0.8f;
+  public float attackCoolDownTime = 0.8f;
   public Transform attackPoint;
 
   [Header("Movement Settings")]
@@ -35,6 +41,7 @@ public class RpgEnemyMovement : MonoBehaviour
   private float _attackCoolDownTimer;
 
   public EnemyState enemyState { get; set; }
+  public EnemyType enemyType = EnemyType.Normal;
 
   private readonly Collider2D[] _playerColliders = new Collider2D[5];
 
@@ -68,8 +75,10 @@ public class RpgEnemyMovement : MonoBehaviour
       {
         _attackCoolDownTimer -= Time.deltaTime;
       }
-
-      CheckPlayer();
+      else
+      {
+        CheckPlayer();
+      }
 
       if (enemyState == EnemyState.Moving)
       {
@@ -112,7 +121,7 @@ public class RpgEnemyMovement : MonoBehaviour
     if (size > 0 && _playerColliders.Length > 0)
     {
       _player = _playerColliders[0].transform;
-      if (CheckDistance() && _attackCoolDownTimer <= 0)
+      if (CheckDistance())
       {
         _attackCoolDownTimer = attackCoolDownTime;
         ChangeState(EnemyState.Fighting);

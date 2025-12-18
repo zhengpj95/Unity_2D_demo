@@ -123,7 +123,7 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
-  m_SpriteSortPoint: 0
+  m_SpriteSortPoint: 1
 --- !u!50 &3178784962620922021
 Rigidbody2D:
   serializedVersion: 4
@@ -227,6 +227,7 @@ MonoBehaviour:
   playerLayer:
     serializedVersion: 2
     m_Bits: 128
+  enemyType: 0
 --- !u!114 &7023814110759643915
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -259,6 +260,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   health: 10
+  damage: 2
 --- !u!114 &2664009400169479624
 MonoBehaviour:
   m_ObjectHideFlags: 0

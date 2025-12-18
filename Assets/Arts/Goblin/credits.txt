@@ -1,0 +1,116 @@
+body/bodies/male/walk/lavender.png
+	- Note: see details at https://opengameart.org/content/lpc-character-bases; 'Thick' Male Revised Run/Climb by JaidynReiman (based on ElizaWy's LPC Revised)
+	- Licenses:
+		- OGA-BY 3.0
+		- CC-BY-SA 3.0
+		- GPL 3.0
+	- Authors:
+		- bluecarrot16
+		- JaidynReiman
+		- Benjamin K. Smith (BenCreating)
+		- Evert
+		- Eliza Wyatt (ElizaWy)
+		- TheraHedwig
+		- MuffinElZangano
+		- Durrani
+		- Johannes Sjölund (wulax)
+		- Stephen Challener (Redshrike)
+	- Links:
+		- https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles
+		- https://opengameart.org/content/lpc-medieval-fantasy-character-sprites
+		- https://opengameart.org/content/lpc-male-jumping-animation-by-durrani
+		- https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle
+		- https://opengameart.org/content/lpc-revised-character-basics
+		- https://opengameart.org/content/lpc-be-seated
+		- https://opengameart.org/content/lpc-runcycle-for-male-muscular-and-pregnant-character-bases-with-modular-heads
+		- https://opengameart.org/content/lpc-jump-expanded
+		- https://opengameart.org/content/lpc-character-bases
+
+shadow/adult/walk/shadow.png
+	- Licenses:
+		- CC0
+	- Authors:
+		- drjamgo@hotmail.com
+	- Links:
+		- https://opengameart.org/content/shadow-for-lpc-sprite
+
+head/heads/goblin/adult/walk/lavender.png
+	- Note: original goblin by Redshrike, commisioned by William.Thomsponj; modular head extracted and enlarged by bluecarrot16
+	- Licenses:
+		- OGA-BY 3.0
+		- CC-BY 4.0
+		- GPL 2.0
+		- GPL 3.0
+	- Authors:
+		- bluecarrot16
+		- Stephen Challener (Redshrike)
+		- William.Thomsponj
+	- Links:
+		- https://opengameart.org/content/lpc-goblin
+		- https://opengameart.org/content/lpc-folk
+
+bauldron/male/walk/charcoal.png
+	- Licenses:
+		- GPL 2.0
+		- GPL 3.0
+		- OGA-BY 3.0
+		- CC-BY-SA 3.0
+	- Authors:
+		- Nila122
+	- Links:
+		- https://opengameart.org/content/more-lpc-clothes-and-hair
+
+torso/clothes/longsleeve/longsleeve2/male/walk/brown.png
+	- Note: original by ElizaWy; spellcast/thrust/shoot/hurt/male adapted from original by JaidynReiman
+	- Licenses:
+		- OGA-BY 3.0
+	- Authors:
+		- ElizaWy
+		- JaidynReiman
+		- Stephen Challener (Redshrike)
+		- Johannes Sjölund (wulax)
+	- Links:
+		- https://opengameart.org/content/lpc-revised-character-basics
+		- https://github.com/ElizaWy/LPC/tree/main/Characters/Clothing
+		- https://opengameart.org/content/lpc-expanded-sit-run-jump-more
+		- https://opengameart.org/content/lpc-expanded-simple-shirts
+
+legs/pantaloons/male/walk/leather.png
+	- Note: Original bases by Redshrike, thrust/shoot bases by Wulax, Original Pantaloons by Nila122, climb/jump/run/sit/emotes/revised combat by JaidynReiman
+	- Licenses:
+		- OGA-BY 3.0
+		- GPL 2.0
+		- GPL 3.0
+		- CC-BY-SA 3.0
+	- Authors:
+		- Nila122
+		- JaidynReiman
+		- Johannes Sjölund (wulax)
+		- Stephen Challener (Redshrike)
+	- Links:
+		- https://opengameart.org/content/lpc-pirates
+		- https://opengameart.org/content/more-lpc-clothes-and-hair
+		- https://opengameart.org/content/lpc-expanded-pants
+
+hair/high_and_tight/adult/walk/dark_brown.png
+	- Licenses:
+		- CC-BY-SA 3.0
+		- GPL 3.0
+	- Authors:
+		- Skorpio
+		- bluecarrot16
+	- Links:
+		- https://opengameart.org/content/lpc-skorpios-scifi-sprite-pack
+		- https://opengameart.org/content/lpc-hair
+
+weapon/polearm/halberd/behind/walk/halberd.png
+	- Licenses:
+		- CC-BY-SA 3.0
+		- GPL 3.0
+	- Authors:
+		- Benjamin K. Smith (BenCreating)
+		- bluecarrot16
+		- Sander Frenken (castelonia)
+	- Links:
+		- https://opengameart.org/content/lpc-medieval-weapons
+

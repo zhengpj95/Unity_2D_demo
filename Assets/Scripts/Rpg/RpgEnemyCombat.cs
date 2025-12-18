@@ -12,10 +12,10 @@ public class RpgEnemyCombat : MonoBehaviour
   [Header("Attack Settings")]
   public Transform attackPoint;
   public LayerMask playerLayer;
-  public float weaponRange;
+  public float weaponRange = 1f;
 
   [Header("KnockBack Settings")]
-  public float knockBackForce = 2;
+  public float knockBackForce = 1f;
   public float stunTime = 0.5f;
 
   private readonly Collider2D[] _playerColliders = new Collider2D[5];

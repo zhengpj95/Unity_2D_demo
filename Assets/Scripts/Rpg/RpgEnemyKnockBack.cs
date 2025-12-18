@@ -19,7 +19,9 @@ public class RpgEnemyKnockBack : MonoBehaviour
       return;
     }
 
-    _rpgEnemyMovement.ChangeState(RpgEnemyMovement.EnemyState.Damage);
+    // Goblin 没有damage受击状态和动画
+    var enemyType = _rpgEnemyMovement.enemyType;
+    _rpgEnemyMovement.ChangeState(EnemyType.Goblin == enemyType ? RpgEnemyMovement.EnemyState.KnockBack : RpgEnemyMovement.EnemyState.Damage);
     StartCoroutine(KnockBackCounter(stunTime));
 
     Vector2 direction = (transform.position - player.position).normalized;
