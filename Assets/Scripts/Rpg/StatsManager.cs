@@ -31,7 +31,6 @@ public class StatsManager : MonoBehaviour
 
   [Header("Enemy Stats")]
   public float enemySpeed;
-  public int enemyDamage;
   public int enemyMaxHealth;
 
   [Header("Player Stats")]

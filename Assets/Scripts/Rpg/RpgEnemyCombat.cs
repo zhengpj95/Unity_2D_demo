@@ -26,7 +26,8 @@ public class RpgEnemyCombat : MonoBehaviour
     var size = Physics2D.OverlapCircleNonAlloc(attackPoint.position, weaponRange, _playerColliders, playerLayer);
     if (size > 0 && _playerColliders.Length > 0)
     {
-      _playerColliders[0].GetComponent<RpgPlayerHealth>().ChangeHealth(-StatsManager.Instance.enemyDamage);
+      var damage = GetComponent<RpgEnemyHealth>().damage;
+      _playerColliders[0].GetComponent<RpgPlayerHealth>().ChangeHealth(-damage);
       _playerColliders[0].GetComponent<RpgPlayerMovement>().KnockBack(transform, knockBackForce, stunTime);
     }
   }

@@ -5,6 +5,7 @@ using UnityEngine;
 public class RpgEnemyHealth : MonoBehaviour
 {
   public int health = 10;
+  public int damage = 2;
   private RpgEnemyMovement _rpgEnemyMovement;
 
   private void Start()
