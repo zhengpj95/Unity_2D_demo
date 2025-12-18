@@ -12,7 +12,8 @@ GameObject:
   - component: {fileID: 1593531832529645835}
   - component: {fileID: 5251361278949204903}
   - component: {fileID: 6883048657480748571}
-  - component: {fileID: 8419557327211154656}
+  - component: {fileID: 31685409446528225}
+  - component: {fileID: 2270160486713266632}
   m_Layer: 0
   m_Name: Tree
   m_TagString: Untagged
@@ -75,7 +76,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 5
   m_Sprite: {fileID: 1784094144, guid: 4e14f21b29eddea408da618ff75ad0d2, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -86,7 +87,7 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
-  m_SpriteSortPoint: 0
+  m_SpriteSortPoint: 1
 --- !u!61 &5251361278949204903
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -153,15 +154,114 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!210 &8419557327211154656
-SortingGroup:
+--- !u!60 &31685409446528225
+PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6165086436723593290}
   m_Enabled: 1
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 5
-  m_SortAtRoot: 0
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.1}
+    oldSize: {x: 3, y: 4}
+    newSize: {x: 1, y: 1}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Points:
+    m_Paths:
+    - - {x: 0.75714064, y: 0.3699279}
+      - {x: 0.828125, y: 0.41250002}
+      - {x: 0.96875, y: 0.56875}
+      - {x: 0.96875, y: 0.6625}
+      - {x: 0.953125, y: 0.709375}
+      - {x: 0.890625, y: 0.865625}
+      - {x: 0.8125, y: 0.975}
+      - {x: 0.828125, y: 1.053125}
+      - {x: 0.796875, y: 1.1625}
+      - {x: 0.765625, y: 1.25625}
+      - {x: 0.59375, y: 1.4125}
+      - {x: 0.484375, y: 1.490625}
+      - {x: 0.609375, y: 1.615625}
+      - {x: 0.546875, y: 1.81875}
+      - {x: 0.328125, y: 1.928125}
+      - {x: 0.4375, y: 2.00625}
+      - {x: 0.453125, y: 2.115625}
+      - {x: 0.296875, y: 2.2875}
+      - {x: 0.109375, y: 2.475}
+      - {x: 0, y: 2.803125}
+      - {x: -0.03125, y: 2.834375}
+      - {x: -0.078125, y: 2.81875}
+      - {x: -0.125, y: 2.44375}
+      - {x: -0.328125, y: 2.2875}
+      - {x: -0.28125, y: 2.209375}
+      - {x: -0.4375, y: 2.1}
+      - {x: -0.421875, y: 1.94375}
+      - {x: -0.53125, y: 1.834375}
+      - {x: -0.5625, y: 1.69375}
+      - {x: -0.671875, y: 1.56875}
+      - {x: -0.625, y: 1.35}
+      - {x: -0.546875, y: 1.303125}
+      - {x: -0.71875, y: 1.271875}
+      - {x: -0.75, y: 1.1625}
+      - {x: -0.65625, y: 1.0375}
+      - {x: -0.734375, y: 1.00625}
+      - {x: -0.71875, y: 0.94375}
+      - {x: -0.921875, y: 0.85}
+      - {x: -0.9375, y: 0.69375}
+      - {x: -0.953125, y: 0.646875}
+      - {x: -0.953125, y: 0.56875}
+      - {x: -0.8366394, y: 0.40326846}
+      - {x: -0.71875, y: 0.30312502}
+      - {x: -0.658371, y: 0.24701846}
+      - {x: -0.453125, y: 0.15398562}
+      - {x: -0.36576843, y: 0.15682375}
+      - {x: -0.30255127, y: 0.2520385}
+      - {x: 0.0028681755, y: 0.25774524}
+      - {x: 0.3963623, y: 0.26413867}
+      - {x: 0.4901123, y: 0.22506091}
+      - {x: 0.580307, y: 0.21723321}
+      - {x: 0.65275574, y: 0.31026614}
+  m_UseDelaunayMesh: 0
+--- !u!114 &2270160486713266632
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6165086436723593290}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: baff8a95b440a694ca679ca76e02f4c3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fadedAlpha: 0.6
+  fadeSpeed: 5

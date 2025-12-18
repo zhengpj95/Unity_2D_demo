@@ -91,6 +91,7 @@
     <Compile Include="Assets\Scripts\FrogAdventure\GameController.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\PlayerMovement.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Trap_Saw.cs" />
+    <Compile Include="Assets\Scripts\Rpg\ObjectFader.cs" />
     <Compile Include="Assets\Scripts\Def\GameLayer.cs" />
     <Compile Include="Assets\Scripts\Common\SingletonMono.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgPlayerMovement.cs" />
