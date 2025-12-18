@@ -23,7 +23,7 @@ public class UI_GameOver : MonoBehaviour
   }
 
   // ui Button点击调用
-  void RestartGame()
+  public void RestartGame()
   {
     Debug.Log("Restart Game UI_GameOver");
     UpdateActive(false);
@@ -31,7 +31,7 @@ public class UI_GameOver : MonoBehaviour
     StartCoroutine(SpawnPlayerAfterDelay(0.5f));
   }
 
-  IEnumerator SpawnPlayerAfterDelay(float delay)
+  private IEnumerator SpawnPlayerAfterDelay(float delay)
   {
     yield return new WaitForSeconds(delay);
     Instantiate(playerPrefab, Vector3.down, Quaternion.identity);

@@ -6867,9 +6867,9 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 939580272}
-        m_TargetAssemblyTypeName: UnityEngine.Component, UnityEngine
-        m_MethodName: SendMessage
-        m_Mode: 5
+        m_TargetAssemblyTypeName: UI_GameOver, Assembly-CSharp
+        m_MethodName: RestartGame
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -10052,7 +10052,7 @@ Tilemap:
       - {fileID: 1237740553, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
       - {fileID: -2115587438, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
       - {fileID: -1361915345, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
-      m_AnimationSpeed: 5.0000005
+      m_AnimationSpeed: 5
       m_AnimationTimeOffset: 0
       m_Flags: 0
   - first: {x: -5, y: -9, z: 0}
@@ -11812,6 +11812,8 @@ SceneRoots:
   - {fileID: 1277582391}
   - {fileID: 1342905948}
   - {fileID: 1491413030}
+  - {fileID: 833454956}
+  - {fileID: 889466943}
   - {fileID: 1823722106}
   - {fileID: 911764559}
   - {fileID: 77710914}
@@ -11822,7 +11824,5 @@ SceneRoots:
   - {fileID: 1451654848}
   - {fileID: 4982210926187777853}
   - {fileID: 1811464088285611834}
-  - {fileID: 833454956}
-  - {fileID: 889466943}
   - {fileID: 939580270}
   - {fileID: 409472546}
