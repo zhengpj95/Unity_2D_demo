@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -16,6 +17,7 @@ public class RpgEnemyHealth : MonoBehaviour
   public void ChangeHealth(int amount)
   {
     health += amount;
+    DamageController.Instance.ShowDamage(Mathf.Abs(amount), transform.position);
     if (health > StatsManager.Instance.enemyMaxHealth)
     {
       health = StatsManager.Instance.enemyMaxHealth;
