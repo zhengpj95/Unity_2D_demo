@@ -16,3 +16,7 @@ UserSettings/
 # 系统文件
 .DS_Store
 Thumbs.db
+
+# TextMeshPro (TMP) 文档 & 示例（安全忽略）
+Assets/TextMesh Pro/Documentation~
+Assets/TextMesh Pro/Examples & Extras/
