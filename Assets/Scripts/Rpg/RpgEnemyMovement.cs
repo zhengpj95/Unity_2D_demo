@@ -23,11 +23,6 @@ public class RpgEnemyMovement : MonoBehaviour
   private static readonly int IsDamage = Animator.StringToHash("isDamage");
   private static readonly int IsDeath = Animator.StringToHash("isDeath");
 
-  [Header("Attack Settings")]
-  public float attackRange = 0.8f;
-  public float attackCoolDownTime = 0.8f;
-  public Transform attackPoint;
-
   [Header("Movement Settings")]
   public float moveRange = 2f;
   public Transform movePoint;
@@ -45,6 +40,8 @@ public class RpgEnemyMovement : MonoBehaviour
 
   private readonly Collider2D[] _playerColliders = new Collider2D[5];
 
+  private RpgEnemyCombat _combat;
+
   public enum EnemyState
   {
     Idle,
@@ -59,6 +56,7 @@ public class RpgEnemyMovement : MonoBehaviour
   {
     _rb2d = GetComponent<Rigidbody2D>();
     _animator = GetComponent<Animator>();
+    _combat = GetComponent<RpgEnemyCombat>();
     ChangeState(EnemyState.Idle);
   }
 
@@ -94,7 +92,7 @@ public class RpgEnemyMovement : MonoBehaviour
 
   private bool CheckDistance()
   {
-    return Vector2.Distance(transform.position, _player.transform.position) < attackRange;
+    return Vector2.Distance(transform.position, _player.transform.position) < _combat.attackRange;
   }
 
   private void Moving()
@@ -123,7 +121,7 @@ public class RpgEnemyMovement : MonoBehaviour
       _player = _playerColliders[0].transform;
       if (CheckDistance())
       {
-        _attackCoolDownTimer = attackCoolDownTime;
+        _attackCoolDownTimer = _combat.attackCoolDownTime;
         ChangeState(EnemyState.Fighting);
       }
       else if (!CheckDistance() && enemyState != EnemyState.Fighting)
@@ -193,7 +191,5 @@ public class RpgEnemyMovement : MonoBehaviour
   {
     Gizmos.color = Color.red;
     Gizmos.DrawWireSphere(movePoint.position, moveRange);
-    Gizmos.color = Color.cyan;
-    Gizmos.DrawWireSphere(attackPoint.position, attackRange);
   }
 }

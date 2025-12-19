@@ -12,7 +12,8 @@ public class RpgEnemyCombat : MonoBehaviour
   [Header("Attack Settings")]
   public Transform attackPoint;
   public LayerMask playerLayer;
-  public float weaponRange = 1f;
+  public float attackRange = 0.8f;
+  public float attackCoolDownTime = 0.8f;
 
   [Header("KnockBack Settings")]
   public float knockBackForce = 1f;
@@ -23,12 +24,18 @@ public class RpgEnemyCombat : MonoBehaviour
   // 攻击动画的动画事件处理
   private void Attack()
   {
-    var size = Physics2D.OverlapCircleNonAlloc(attackPoint.position, weaponRange, _playerColliders, playerLayer);
+    var size = Physics2D.OverlapCircleNonAlloc(attackPoint.position, attackRange, _playerColliders, playerLayer);
     if (size > 0 && _playerColliders.Length > 0)
     {
       var damage = GetComponent<RpgEnemyHealth>().damage;
       _playerColliders[0].GetComponent<RpgPlayerHealth>().ChangeHealth(-damage);
       _playerColliders[0].GetComponent<RpgPlayerMovement>().KnockBack(transform, knockBackForce, stunTime);
     }
+  }
+
+  private void OnDrawGizmosSelected()
+  {
+    Gizmos.color = Color.cyan;
+    Gizmos.DrawWireSphere(attackPoint.position, attackRange);
   }
 }

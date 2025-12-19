@@ -60,6 +60,12 @@ public class RpgPlayerCombat : MonoBehaviour
         if (enemy == null) continue;
         enemy.GetComponent<RpgEnemyHealth>().ChangeHealth(-StatsManager.Instance.damage);
         enemy.GetComponent<RpgEnemyKnockBack>().KnockBack(transform, knockBackForce, stunTime);
+
+        var source = GetComponent<AudioSource>();
+        if (source)
+        {
+          source.Play(); // 攻击音效
+        }
       }
     }
   }
