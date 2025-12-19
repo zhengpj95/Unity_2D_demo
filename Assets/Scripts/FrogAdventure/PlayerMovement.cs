@@ -17,7 +17,7 @@ public class PlayerMovement : MonoBehaviour
   [Header("地板检测")] public Transform groundCheck;
   public float checkRadius = 0.2f;
   public LayerMask groundLayer;
-  
+
   [Header("音效")]
   public AudioSource jumpSound;
   public AudioSource collectSound;
