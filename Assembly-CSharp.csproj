@@ -97,10 +97,12 @@
     <Compile Include="Assets\Scripts\Rpg\DamageController.cs" />
     <Compile Include="Assets\Scripts\Common\SingletonMono.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgPlayerMovement.cs" />
+    <Compile Include="Assets\Scripts\Rpg\ShooterBullet.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\AudioManager.cs" />
     <Compile Include="Assets\Scripts\Def\GameTag.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgEnemyTrace.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Enemy_Bullet.cs" />
+    <Compile Include="Assets\Scripts\Rpg\PlayerShooter.cs" />
     <Compile Include="Assets\Scripts\Def\GameSortingLayers.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Enemy_Mushroom.cs" />
     <Compile Include="Assets\Scripts\Rpg\RpgPlayerCombat.cs" />
