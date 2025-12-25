@@ -19,7 +19,8 @@ public static class SceneUINameGenerator
 
     string code = "/**\n";
     code += " * 自动生成的 SceneUIName 常量类\n";
-    code += " * 请勿手动修改！使用 Scene/SceneUIName Generator 重新生成\n";
+    code += " * 生成时间：" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\n";
+    code += " * 请勿手动修改！使用菜单 Tools > 03 SceneUIName Generator 重新生成\n";
     code += " */\n\n";
     code += "public static class SceneUIName\n";
     code += "{\n";

@@ -66,6 +66,7 @@
   <ItemGroup>
     <Compile Include="Assets\Editor\TagLayerGenerator.cs" />
     <Compile Include="Assets\Editor\SceneUINameGenerator.cs" />
+    <Compile Include="Assets\Editor\SortingLayerGenerator.cs" />
     <Compile Include="Assets\Editor\SceneEditorUtils.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -1,6 +1,7 @@
 /**
  * 自动生成的 SceneUIName 常量类
- * 请勿手动修改！使用 Tools/03 SceneUIName Generator 重新生成
+ * 生成时间：2025-12-25 09:57:55
+ * 请勿手动修改！使用菜单 Tools > 03 SceneUIName Generator 重新生成
  */
 
 public static class SceneUIName

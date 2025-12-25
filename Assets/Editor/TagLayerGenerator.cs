@@ -28,9 +28,11 @@ public class TagLayerGenerator : EditorWindow
   {
     string[] tags = InternalEditorUtility.tags;
     StringBuilder sb = new StringBuilder();
-    sb.AppendLine("/**\n * 自动生成的 Tag 常量类");
-    sb.AppendLine(" * 请勿手动修改！使用 Scene/TagLayer Generator 重新生成");
-    sb.AppendLine("*/");
+    sb.AppendLine("/**");
+    sb.AppendLine(" * 自动生成的 Tag 常量类");
+    sb.AppendLine(" * 生成时间：" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+    sb.AppendLine(" * 请勿手动修改！使用菜单 Tools > 02 TagLayer Generator 重新生成");
+    sb.AppendLine(" */");
     sb.AppendLine();
     sb.AppendLine("public static class GameTag");
     sb.AppendLine("{");
@@ -50,9 +52,11 @@ public class TagLayerGenerator : EditorWindow
   {
     string[] layers = InternalEditorUtility.layers;
     StringBuilder sb = new StringBuilder();
-    sb.AppendLine("/**\n * 自动生成的 Layer 常量类");
-    sb.AppendLine(" * 请勿手动修改！使用 Scene/TagLayer Generator 重新生成");
-    sb.AppendLine("*/");
+    sb.AppendLine("/**");
+    sb.AppendLine(" * 自动生成的 Layer 常量类");
+    sb.AppendLine(" * 生成时间：" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+    sb.AppendLine(" * 请勿手动修改！使用菜单 Tools > 02 TagLayer Generator 重新生成");
+    sb.AppendLine(" */");
     sb.AppendLine();
     sb.AppendLine("public static class GameLayer");
     sb.AppendLine("{");
