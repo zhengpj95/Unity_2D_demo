@@ -25,6 +25,8 @@ public class RpgEnemyHealth : MonoBehaviour
 
     if (health <= 0)
     {
+      var rb = GetComponent<Rigidbody2D>();
+      rb.simulated = false; // Disable physics interactions
       _rpgEnemyMovement.ChangeState(RpgEnemyMovement.EnemyState.Death);
     }
   }

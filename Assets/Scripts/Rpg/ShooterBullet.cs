@@ -9,10 +9,18 @@ public class ShooterBullet : MonoBehaviour
     Destroy(gameObject, 5f);
   }
 
-  private void OnCollisionEnter2D(Collision2D collision)
+  private void OnTriggerEnter2D(Collider2D other)
   {
-    var effect = Instantiate(effectPrefab, transform.position, Quaternion.identity);
-    Destroy(effect, 0.6f);
-    Destroy(gameObject);
+    if (other.gameObject.CompareTag("Enemy"))
+    {
+      var enemyHealth = other.gameObject.GetComponent<RpgEnemyHealth>();
+      if (enemyHealth != null)
+      {
+        enemyHealth.ChangeHealth(-StatsManager.Instance.damage);
+      }
+      var effect = Instantiate(effectPrefab, transform.position, Quaternion.identity);
+      Destroy(effect, 0.6f);
+      Destroy(gameObject);
+    }
   }
 }
