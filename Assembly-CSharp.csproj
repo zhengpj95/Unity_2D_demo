@@ -65,7 +65,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\FrogAdventure\Trap.cs" />
-    <Compile Include="Assets\Scripts\FrogAdventure\PlayerKnockBack.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\UILevel.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\StartGame.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\RpgPlayerHealth.cs" />
@@ -74,10 +73,11 @@
     <Compile Include="Assets\Scripts\FrogAdventure\DestroyEvent.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\UIManager.cs" />
     <Compile Include="Assets\Scripts\Common\Singleton.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\Player\PlayerLifeController.cs" />
     <Compile Include="Assets\Scripts\Common\TimerManager.cs" />
-    <Compile Include="Assets\Scripts\FrogAdventure\Enemy_Plant.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\EndGame.cs" />
     <Compile Include="Assets\Scripts\Rpg\StatsManager.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\Enemy\Enemy_Plant.cs" />
     <Compile Include="Assets\Scripts\Rpg\UI\UI_PlayerHealth.cs" />
     <Compile Include="Assets\Scripts\Def\SceneUIName.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\FruitCollectManager.cs" />
@@ -87,15 +87,15 @@
     <Compile Include="Assets\Scripts\FrogAdventure\Trampoline.cs" />
     <Compile Include="Assets\Scripts\Rpg\UI\UI_GameOver.cs" />
     <Compile Include="Assets\Scripts\Rpg\ElevationEntry.cs" />
-    <Compile Include="Assets\Scripts\FrogAdventure\PlayerLifeController.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyHealth.cs" />
     <Compile Include="Assets\Scripts\Rpg\ElevationExit.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\Hero.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\Player\PlayerMovement.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\GameController.cs" />
-    <Compile Include="Assets\Scripts\FrogAdventure\PlayerMovement.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyCombat.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyMovement.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Trap_Saw.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\Player\PlayerKnockBack.cs" />
     <Compile Include="Assets\Scripts\Rpg\ObjectFader.cs" />
     <Compile Include="Assets\Scripts\Def\GameLayer.cs" />
     <Compile Include="Assets\Scripts\Rpg\DamageController.cs" />
@@ -104,10 +104,10 @@
     <Compile Include="Assets\Scripts\FrogAdventure\AudioManager.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\ShooterBullet.cs" />
     <Compile Include="Assets\Scripts\Def\GameTag.cs" />
-    <Compile Include="Assets\Scripts\FrogAdventure\Enemy_Bullet.cs" />
     <Compile Include="Assets\Scripts\Def\GameSortingLayers.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\Enemy\Enemy_Bullet.cs" />
+    <Compile Include="Assets\Scripts\FrogAdventure\Enemy\Enemy_Mushroom.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\RpgPlayerMovement.cs" />
-    <Compile Include="Assets\Scripts\FrogAdventure\Enemy_Mushroom.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyKnockBack.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\FruitCollect.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\CheckEndPoint.cs" />
