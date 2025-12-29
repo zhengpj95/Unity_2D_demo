@@ -27,7 +27,7 @@ public class DamageController : MonoBehaviour
     if (damagePrefab != null)
     {
       Transform dmgText = Instantiate(damagePrefab, position, Quaternion.identity, point);
-      Damage damage = dmgText.GetComponent<Damage>();
+      UI_Damage damage = dmgText.GetComponent<UI_Damage>();
       if (damage != null)
       {
         damage.SetDamageText(damageAmount);

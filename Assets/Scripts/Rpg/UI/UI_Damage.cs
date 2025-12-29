@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Damage : MonoBehaviour
+public class UI_Damage : MonoBehaviour
 {
   void Start()
   {
