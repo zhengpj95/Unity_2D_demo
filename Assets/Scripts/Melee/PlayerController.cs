@@ -13,6 +13,12 @@ public class PlayerController : MonoBehaviour
   [SerializeField] private float checkRadius = 0.2f;
   [SerializeField] private LayerMask groundLayer;
 
+  [Header("Attack Settings")]
+  [SerializeField] private Transform attackPoint;
+  [SerializeField] private float attackRadius = 0.5f;
+  [SerializeField] private LayerMask attackLayer;
+  [SerializeField] private float attackDamage = 10f;
+
   private Rigidbody2D rb;
   private Animator anim;
 
@@ -84,5 +90,21 @@ public class PlayerController : MonoBehaviour
   private void AttackEnd()
   {
     isAttack = false;
+  }
+
+  // Animation Event
+  private void Attack()
+  {
+    Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint.position, attackRadius, attackLayer);
+    foreach (Collider2D enemy in hitEnemies)
+    {
+      enemy.GetComponent<Enemy>().TakeDamage(attackDamage);
+    }
+  }
+
+  private void OnDrawGizmosSelected()
+  {
+    Gizmos.DrawWireSphere(groundCheck.position, checkRadius);
+    Gizmos.DrawWireSphere(attackPoint.position, attackRadius);
   }
 }

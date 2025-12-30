@@ -108,6 +108,7 @@
     <Compile Include="Assets\Scripts\Def\GameSortingLayers.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Enemy\Enemy_Bullet.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Enemy\Enemy_Mushroom.cs" />
+    <Compile Include="Assets\Scripts\Melee\EnemyController.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\RpgPlayerMovement.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyKnockBack.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\FruitCollect.cs" />
