@@ -87,6 +87,7 @@
     <Compile Include="Assets\Scripts\FrogAdventure\Trampoline.cs" />
     <Compile Include="Assets\Scripts\Rpg\UI\UI_GameOver.cs" />
     <Compile Include="Assets\Scripts\Rpg\ElevationEntry.cs" />
+    <Compile Include="Assets\Scripts\Melee\PlayerController.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyHealth.cs" />
     <Compile Include="Assets\Scripts\Rpg\ElevationExit.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\Hero.cs" />
