@@ -5,14 +5,15 @@ using UnityEngine;
 
 /**
   * top-down movement hero
-  * blend tree 处理移动动画，2D simple directional 处理4个方向
-  * 下一步要处理：idle朝向，向上run后，idle就要朝上；其他类似
+  * blend tree 处理walk动画，4个walk动画
+  * blend tree 处理idle动画，4个idle动画
   */
 public class Hero : MonoBehaviour
 {
   public float runSpeed = 2f;
   private Rigidbody2D _rb;
   private Animator _animator;
+  private Vector2 _lastFacing = Vector2.down; // 初始朝向，默认向下
 
   void Start()
   {
@@ -25,15 +26,31 @@ public class Hero : MonoBehaviour
     var moveInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
     if (moveInput != Vector2.zero)
     {
+      var face = GetCardinal(moveInput);
+      _lastFacing = face;
       _animator.SetFloat("speed", 1);
-      _animator.SetFloat("xVelocity", moveInput.x);
-      _animator.SetFloat("yVelocity", moveInput.y);
+      _animator.SetFloat("xVelocity", face.x);
+      _animator.SetFloat("yVelocity", face.y);
     }
     else
     {
       _animator.SetFloat("speed", 0);
+      _animator.SetFloat("moveX", _lastFacing.x);
+      _animator.SetFloat("moveY", _lastFacing.y);
     }
     // rb.MovePosition(rb.position + moveInput.normalized * runSpeed * Time.deltaTime);
     _rb.velocity = moveInput.normalized * runSpeed;
+  }
+
+  private Vector2 GetCardinal(Vector2 v)
+  {
+    const float dead = 0.1f;
+    // 横向分量 > 纵向分量，在横向移动
+    if (Mathf.Abs(v.x) > Mathf.Abs(v.y) && Mathf.Abs(v.x) > dead)
+      return new Vector2(Mathf.Sign(v.x), 0);
+    // 判断有没有纵向输入，有则纵向移动
+    if (Mathf.Abs(v.y) > dead)
+      return new Vector2(0, Mathf.Sign(v.y));
+    return _lastFacing;
   }
 }
