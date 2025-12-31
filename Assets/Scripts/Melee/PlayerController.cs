@@ -98,13 +98,13 @@ public class PlayerController : MonoBehaviour
     Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint.position, attackRadius, attackLayer);
     foreach (Collider2D enemy in hitEnemies)
     {
-      enemy.GetComponent<Enemy>().TakeDamage(attackDamage);
+      enemy.GetComponent<EnemyHealth>().TakeDamage(attackDamage);
     }
   }
 
   private void OnDrawGizmosSelected()
   {
-    Gizmos.DrawWireSphere(groundCheck.position, checkRadius);
+    Gizmos.color = Color.red;
     Gizmos.DrawWireSphere(attackPoint.position, attackRadius);
   }
 }

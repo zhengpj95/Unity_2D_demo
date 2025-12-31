@@ -88,6 +88,7 @@
     <Compile Include="Assets\Scripts\FrogAdventure\Trampoline.cs" />
     <Compile Include="Assets\Scripts\Rpg\UI\UI_GameOver.cs" />
     <Compile Include="Assets\Scripts\Rpg\ElevationEntry.cs" />
+    <Compile Include="Assets\Scripts\Melee\EnemyHealth.cs" />
     <Compile Include="Assets\Scripts\Melee\PlayerController.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyHealth.cs" />
     <Compile Include="Assets\Arts\Bandits - Pixel Art\Demo\Bandit.cs" />
@@ -101,6 +102,7 @@
     <Compile Include="Assets\Scripts\FrogAdventure\Trap_Saw.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Player\PlayerKnockBack.cs" />
     <Compile Include="Assets\Scripts\Rpg\ObjectFader.cs" />
+    <Compile Include="Assets\Scripts\Melee\EnemyChase.cs" />
     <Compile Include="Assets\Scripts\Def\GameLayer.cs" />
     <Compile Include="Assets\Scripts\Rpg\DamageController.cs" />
     <Compile Include="Assets\Scripts\Common\SingletonMono.cs" />
@@ -114,7 +116,6 @@
     <Compile Include="Assets\Scripts\Def\GameSortingLayers.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Enemy\Enemy_Bullet.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Enemy\Enemy_Mushroom.cs" />
-    <Compile Include="Assets\Scripts\Melee\EnemyController.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\RpgPlayerMovement.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyKnockBack.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\FruitCollect.cs" />

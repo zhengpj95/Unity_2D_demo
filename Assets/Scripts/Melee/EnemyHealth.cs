@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Enemy : MonoBehaviour
+public class EnemyHealth : MonoBehaviour
 {
   [SerializeField] private float maxHealth = 100f;
   private float currentHealth;
@@ -31,7 +31,7 @@ public class Enemy : MonoBehaviour
   }
 
   // Animation Event
-  private void Die()
+  private void Death()
   {
     Destroy(gameObject);
   }
