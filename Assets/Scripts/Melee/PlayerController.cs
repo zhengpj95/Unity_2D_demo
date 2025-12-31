@@ -34,10 +34,62 @@ public class PlayerController : MonoBehaviour
 
   void Update()
   {
+    HandleGroundCheck();
     HandleAttack();
     HandleMove();
     HandleJump();
-    HandleGroundCheck();
+    UpdateStateFromMovement();
+  }
+
+  private void UpdateStateFromMovement()
+  {
+    // 不在受击或攻击时，基于速度与着地状态决定 Idle/Run/Jump/Fall
+    if (playerState == EntityState.Attack || playerState == EntityState.Hurt) return;
+
+    if (!isGrounded)
+    {
+      if (rb.velocity.y > 0.1f) ChangeState(EntityState.Jump);
+      else ChangeState(EntityState.Fall);
+    }
+    else
+    {
+      if (Mathf.Abs(rb.velocity.x) > 0.1f) ChangeState(EntityState.Run);
+      else ChangeState(EntityState.Idle);
+    }
+
+    // 持续更新一些 animator 参数
+    anim.SetFloat("VerticalVelocity", rb.velocity.y);
+    anim.SetBool("IsGrounded", isGrounded);
+    anim.SetFloat("Speed", Mathf.Abs(rb.velocity.x));
+  }
+
+  private void ChangeState(EntityState newState)
+  {
+    if (playerState == newState) return;
+    playerState = newState;
+
+    // 根据进入状态触发对应动画或行为
+    switch (newState)
+    {
+      case EntityState.Idle:
+        // 无需额外 trigger
+        break;
+      case EntityState.Run:
+        break;
+      case EntityState.Jump:
+        anim.SetTrigger("Jump");
+        break;
+      case EntityState.Fall:
+        // 使用 VerticalVelocity/IsGrounded 控制过渡
+        break;
+      case EntityState.Attack:
+        anim.SetTrigger("Attack");
+        rb.velocity = Vector2.zero; // attack 时停止移动
+        break;
+      case EntityState.Hurt:
+        anim.SetTrigger("Hurt");
+        break;
+    }
   }
 
   private void HandleMove()
@@ -46,7 +98,6 @@ public class PlayerController : MonoBehaviour
 
     float moveX = Input.GetAxisRaw("Horizontal");
     rb.velocity = new Vector2(moveX * moveSpeed, rb.velocity.y);
-    anim.SetFloat("Speed", Mathf.Abs(moveX));
 
     if (moveX != 0)
     {
@@ -65,12 +116,10 @@ public class PlayerController : MonoBehaviour
     if (Input.GetButtonDown("Jump") && isGrounded)
     {
       rb.velocity = new Vector2(rb.velocity.x, jumpForce);
-      anim.SetTrigger("Jump");
+      ChangeState(EntityState.Jump);
     }
     // Jump -> Fall
-    anim.SetFloat("VerticalVelocity", rb.velocity.y);
-    // Fall -> Idle
-    anim.SetBool("IsGrounded", isGrounded);
+    // 由 UpdateStateFromMovement 更新 VerticalVelocity 与 IsGrounded
   }
 
   private void HandleGroundCheck()
@@ -87,16 +136,14 @@ public class PlayerController : MonoBehaviour
 
     if (Input.GetButtonDown("Fire1"))
     {
-      anim.SetTrigger("Attack");
-      playerState = EntityState.Attack;
-      rb.velocity = Vector2.zero;
+      ChangeState(EntityState.Attack);
     }
   }
 
   // Animation Event
   private void AttackEnd()
   {
-    playerState = EntityState.Idle;
+    ChangeState(EntityState.Idle);
   }
 
   // Animation Event
@@ -112,13 +159,12 @@ public class PlayerController : MonoBehaviour
   public void TakeDamage(float damage)
   {
     Debug.Log("Player took " + damage + " damage.");
-    anim.SetTrigger("Hurt");
-    playerState = EntityState.Hurt;
+    ChangeState(EntityState.Hurt);
   }
 
   public void TakeDamageEnd()
   {
-    playerState = EntityState.Idle;
+    ChangeState(EntityState.Idle);
   }
 
   private void OnDrawGizmosSelected()
