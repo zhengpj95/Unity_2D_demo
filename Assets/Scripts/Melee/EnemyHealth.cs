@@ -9,6 +9,8 @@ public class EnemyHealth : MonoBehaviour
 
   private Animator anim;
 
+  public bool IsHit { get; private set; }
+
   void Start()
   {
     anim = GetComponent<Animator>();
@@ -27,7 +29,13 @@ public class EnemyHealth : MonoBehaviour
     else
     {
       anim.SetTrigger("Hit");
+      IsHit = true;
     }
+  }
+
+  private void HitEnd()
+  {
+    IsHit = false;
   }
 
   // Animation Event

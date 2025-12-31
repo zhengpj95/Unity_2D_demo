@@ -2,6 +2,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum MeleePlayerState
+{
+  Idle,
+  Run,
+  Jump,
+  Fall,
+  Attack,
+  Hurt,
+  Death
+}
+
 public class PlayerController : MonoBehaviour
 {
   [Header("Movement Settings")]
@@ -23,7 +34,8 @@ public class PlayerController : MonoBehaviour
   private Animator anim;
 
   private bool isGrounded;
-  private bool isAttack;
+
+  public MeleePlayerState playerState { get; private set; }
 
   void Start()
   {
@@ -41,7 +53,7 @@ public class PlayerController : MonoBehaviour
 
   private void HandleMove()
   {
-    if (isAttack) return;
+    if (playerState == MeleePlayerState.Attack || playerState == MeleePlayerState.Hurt) return;
 
     float moveX = Input.GetAxisRaw("Horizontal");
     rb.velocity = new Vector2(moveX * moveSpeed, rb.velocity.y);
@@ -55,7 +67,10 @@ public class PlayerController : MonoBehaviour
 
   private void HandleJump()
   {
-    if (isAttack) return;
+    if (playerState == MeleePlayerState.Attack || playerState == MeleePlayerState.Hurt)
+    {
+      return;
+    }
 
     // Idle/Run -> Jump
     if (Input.GetButtonDown("Jump") && isGrounded)
@@ -76,12 +91,15 @@ public class PlayerController : MonoBehaviour
 
   private void HandleAttack()
   {
-    if (!isGrounded) return;
+    if (!isGrounded || playerState == MeleePlayerState.Attack || playerState == MeleePlayerState.Hurt)
+    {
+      return;
+    }
 
     if (Input.GetButtonDown("Fire1"))
     {
       anim.SetTrigger("Attack");
-      isAttack = true;
+      playerState = MeleePlayerState.Attack;
       rb.velocity = Vector2.zero;
     }
   }
@@ -89,7 +107,7 @@ public class PlayerController : MonoBehaviour
   // Animation Event
   private void AttackEnd()
   {
-    isAttack = false;
+    playerState = MeleePlayerState.Idle;
   }
 
   // Animation Event
@@ -100,6 +118,18 @@ public class PlayerController : MonoBehaviour
     {
       enemy.GetComponent<EnemyHealth>().TakeDamage(attackDamage);
     }
+  }
+
+  public void TakeDamage(float damage)
+  {
+    Debug.Log("Player took " + damage + " damage.");
+    anim.SetTrigger("Hurt");
+    playerState = MeleePlayerState.Hurt;
+  }
+
+  public void TakeDamageEnd()
+  {
+    playerState = MeleePlayerState.Idle;
   }
 
   private void OnDrawGizmosSelected()

@@ -9375,14 +9375,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 135a7d7417748ed46a271376a2a7c300, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chaseRange: 5
-  stopChaseRange: 1.2
   moveSpeed: 2
+  chaseRange: 5
+  stopChaseRange: 1.5
   groundCheck: {fileID: 323416117}
-  checkRadius: 0.2
   groundLayer:
     serializedVersion: 2
     m_Bits: 64
+  checkRadius: 0.2
+  attackPoint: {fileID: 2366547211737154168}
+  playerLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  attackRadius: 1.5
+  attackCoolDownTime: 4
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
