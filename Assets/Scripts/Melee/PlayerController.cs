@@ -2,17 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum MeleePlayerState
-{
-  Idle,
-  Run,
-  Jump,
-  Fall,
-  Attack,
-  Hurt,
-  Death
-}
-
 public class PlayerController : MonoBehaviour
 {
   [Header("Movement Settings")]
@@ -35,7 +24,7 @@ public class PlayerController : MonoBehaviour
 
   private bool isGrounded;
 
-  public MeleePlayerState playerState { get; private set; }
+  public EntityState playerState { get; private set; }
 
   void Start()
   {
@@ -53,7 +42,7 @@ public class PlayerController : MonoBehaviour
 
   private void HandleMove()
   {
-    if (playerState == MeleePlayerState.Attack || playerState == MeleePlayerState.Hurt) return;
+    if (playerState == EntityState.Attack || playerState == EntityState.Hurt) return;
 
     float moveX = Input.GetAxisRaw("Horizontal");
     rb.velocity = new Vector2(moveX * moveSpeed, rb.velocity.y);
@@ -67,7 +56,7 @@ public class PlayerController : MonoBehaviour
 
   private void HandleJump()
   {
-    if (playerState == MeleePlayerState.Attack || playerState == MeleePlayerState.Hurt)
+    if (playerState == EntityState.Attack || playerState == EntityState.Hurt)
     {
       return;
     }
@@ -91,7 +80,7 @@ public class PlayerController : MonoBehaviour
 
   private void HandleAttack()
   {
-    if (!isGrounded || playerState == MeleePlayerState.Attack || playerState == MeleePlayerState.Hurt)
+    if (!isGrounded || playerState == EntityState.Attack || playerState == EntityState.Hurt)
     {
       return;
     }
@@ -99,7 +88,7 @@ public class PlayerController : MonoBehaviour
     if (Input.GetButtonDown("Fire1"))
     {
       anim.SetTrigger("Attack");
-      playerState = MeleePlayerState.Attack;
+      playerState = EntityState.Attack;
       rb.velocity = Vector2.zero;
     }
   }
@@ -107,7 +96,7 @@ public class PlayerController : MonoBehaviour
   // Animation Event
   private void AttackEnd()
   {
-    playerState = MeleePlayerState.Idle;
+    playerState = EntityState.Idle;
   }
 
   // Animation Event
@@ -124,12 +113,12 @@ public class PlayerController : MonoBehaviour
   {
     Debug.Log("Player took " + damage + " damage.");
     anim.SetTrigger("Hurt");
-    playerState = MeleePlayerState.Hurt;
+    playerState = EntityState.Hurt;
   }
 
   public void TakeDamageEnd()
   {
-    playerState = MeleePlayerState.Idle;
+    playerState = EntityState.Idle;
   }
 
   private void OnDrawGizmosSelected()

@@ -1,14 +1,6 @@
 using System;
 using UnityEngine;
 
-internal enum PlayerState
-{
-  Idle = 0,
-  Run = 1,
-  Jump = 2,
-  Fall = 3
-}
-
 public class PlayerMovement : MonoBehaviour
 {
   [Header("移动")] public int moveSpeed = 5;
@@ -60,12 +52,12 @@ public class PlayerMovement : MonoBehaviour
       _rb2d.AddForce(Vector2.up * jumpSpeed, ForceMode2D.Impulse);
     }
 
-    var state = PlayerState.Idle;
+    var state = EntityState.Idle;
     if (_rb2d.velocity.y > 0.1f)
-      state = PlayerState.Jump;
+      state = EntityState.Jump;
     else if (_rb2d.velocity.y < -0.1f)
-      state = PlayerState.Fall;
-    else if (Math.Abs(_dirX) > 0.1f) state = PlayerState.Run;
+      state = EntityState.Fall;
+    else if (Math.Abs(_dirX) > 0.1f) state = EntityState.Run;
 
     _animator.SetInteger("state", (int)state);
   }
