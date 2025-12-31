@@ -28,7 +28,7 @@ public class EnemyHealth : MonoBehaviour
     }
     else
     {
-      anim.SetTrigger("Hit");
+      anim.SetTrigger("Hurt");
       IsHit = true;
     }
   }

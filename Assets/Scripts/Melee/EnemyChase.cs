@@ -90,7 +90,7 @@ public class EnemyChase : MonoBehaviour
     Collider2D[] hitPlayers = Physics2D.OverlapCircleAll(attackPoint.position, attackRadius, playerLayer);
     if (distanceToPlayer <= attackRadius && attackTimer <= 0 && !isAttacking && player != null && hitPlayers.Length > 0 && !enemyHealth.IsHit)
     {
-      anim.SetBool("IsAttacking", true);
+      anim.SetBool("Attack", true);
       isAttacking = true;
       attackTimer = attackCoolDownTime;
     }
@@ -111,7 +111,7 @@ public class EnemyChase : MonoBehaviour
   {
     Debug.Log("Enemy finished attacking.");
     isAttacking = false;
-    anim.SetBool("IsAttacking", false);
+    anim.SetBool("Attack", false);
   }
 
   private void OnDrawGizmosSelected()
