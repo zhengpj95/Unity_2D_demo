@@ -105,6 +105,7 @@
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyMovement.cs" />
     <Compile Include="Assets\Scripts\Def\StateEnums.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Trap_Saw.cs" />
+    <Compile Include="Assets\Scripts\Vampire Survivors-like\SawWeapon.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Player\PlayerKnockBack.cs" />
     <Compile Include="Assets\Scripts\Rpg\ObjectFader.cs" />
     <Compile Include="Assets\Scripts\Melee\EnemyChase.cs" />

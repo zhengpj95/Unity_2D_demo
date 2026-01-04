@@ -12,7 +12,16 @@ public class WeaponManager : SingletonMono<WeaponManager>
   [Header("Arrow Weapon Settings")]
   [SerializeField] private Transform arrowWeaponPrefab;
   [SerializeField] private float arrowFireInterval = 1f;
-  private float arrowTimer = 0f;
+  [SerializeField] private float arrowDestroyTime = 10f;
+  private float nextArrowTimer = 0f;
+
+  [Header("Saw Weapon Settings")]
+  [SerializeField] private Transform sawWeaponPrefab;
+  [SerializeField] private float sawFireInterval = 10f;
+  [SerializeField] private float sawDestroyTime = 10f;
+  private float nextSawTimer = 0f;
+
+  private float timer = 0f;
 
   private void Start()
   {
@@ -21,13 +30,26 @@ public class WeaponManager : SingletonMono<WeaponManager>
 
   private void Update()
   {
-    arrowTimer += Time.deltaTime;
+    timer += Time.deltaTime;
 
-    if (arrowTimer >= arrowFireInterval)
+    if (timer >= nextArrowTimer)
     {
-      arrowTimer = 0f;
+      nextArrowTimer += arrowFireInterval;
       FireArrow();
     }
+
+    if (timer >= nextSawTimer)
+    {
+      nextSawTimer += sawFireInterval;
+      FireSaw();
+    }
+  }
+
+  private void FireSaw()
+  {
+    Transform saw = Instantiate(sawWeaponPrefab, player);
+    SawWeapon sawWeapon = saw.GetComponent<SawWeapon>();
+    sawWeapon.SetDestoryTime(sawDestroyTime);
   }
 
   private void FireArrow()
@@ -37,7 +59,7 @@ public class WeaponManager : SingletonMono<WeaponManager>
     {
       Transform arrow = Instantiate(arrowWeaponPrefab, player.position, Quaternion.identity);
       ArrowWeapon arrowScript = arrow.GetComponent<ArrowWeapon>();
-      arrowScript.SetTarget(nearestEnemy.transform);
+      arrowScript.SetTarget(nearestEnemy.transform, arrowDestroyTime);
     }
   }
 
@@ -72,5 +94,4 @@ public class WeaponManager : SingletonMono<WeaponManager>
     Gizmos.color = Color.red;
     Gizmos.DrawWireSphere(transform.position, attackRange);
   }
-
 }

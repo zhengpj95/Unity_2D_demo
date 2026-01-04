@@ -3042,7 +3042,9 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 256
   arrowWeaponPrefab: {fileID: 2408999292843277343, guid: de1c274bcceb7ee408c047cdeba7754e, type: 3}
-  arrowFireInterval: 1
+  arrowFireInterval: 10
+  sawWeaponPrefab: {fileID: 2400732400320537634, guid: cfd045f9d45c84544a3e63013c118f9b, type: 3}
+  sawFireInterval: 15
 --- !u!4 &196190851
 Transform:
   m_ObjectHideFlags: 0
