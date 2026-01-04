@@ -5,15 +5,14 @@ using UnityEngine;
 public class EnemyHealth : MonoBehaviour
 {
   [SerializeField] private float maxHealth = 100f;
+
+  private EnemyChase enemyChase;
+
   private float currentHealth;
-
-  private Animator anim;
-
-  public bool IsHit { get; private set; }
 
   void Start()
   {
-    anim = GetComponent<Animator>();
+    enemyChase = GetComponent<EnemyChase>();
     currentHealth = maxHealth;
   }
 
@@ -24,18 +23,12 @@ public class EnemyHealth : MonoBehaviour
     currentHealth -= damage;
     if (currentHealth <= 0)
     {
-      anim.SetTrigger("Death");
+      enemyChase.ChangeState(EntityState.Death);
     }
     else
     {
-      anim.SetTrigger("Hurt");
-      IsHit = true;
+      enemyChase.ChangeState(EntityState.Hurt);
     }
-  }
-
-  private void HitEnd()
-  {
-    IsHit = false;
   }
 
   // Animation Event
