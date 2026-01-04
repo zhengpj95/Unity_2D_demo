@@ -5,6 +5,7 @@ using UnityEngine;
 public class EnemyChasing : MonoBehaviour
 {
   [SerializeField] private float chaseSpeed = 0.5f;
+  [SerializeField] private int damage = 1;
 
   private Transform player;
 
@@ -32,6 +33,11 @@ public class EnemyChasing : MonoBehaviour
   {
     if (collision.gameObject.CompareTag("Player"))
     {
+      var health = collision.gameObject.GetComponent<VSPlayerHealth>();
+      if (health != null)
+      {
+        health.TakeDamage(damage);
+      }
       Destroy(gameObject);
     }
   }

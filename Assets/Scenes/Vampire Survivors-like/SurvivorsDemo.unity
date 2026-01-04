@@ -2918,13 +2918,14 @@ GameObject:
   - component: {fileID: 166185225}
   - component: {fileID: 166185224}
   - component: {fileID: 166185223}
+  - component: {fileID: 166185227}
   m_Layer: 5
   m_Name: UICanvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &166185223
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3008,6 +3009,19 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &166185227
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 166185222}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9674ae9bf8057944b8a23157c1328c5a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  uiHp: {fileID: 439206785}
 --- !u!1 &196190849
 GameObject:
   m_ObjectHideFlags: 0
@@ -3043,8 +3057,10 @@ MonoBehaviour:
     m_Bits: 256
   arrowWeaponPrefab: {fileID: 2408999292843277343, guid: de1c274bcceb7ee408c047cdeba7754e, type: 3}
   arrowFireInterval: 10
+  arrowDestroyTime: 10
   sawWeaponPrefab: {fileID: 2400732400320537634, guid: cfd045f9d45c84544a3e63013c118f9b, type: 3}
   sawFireInterval: 15
+  sawDestroyTime: 10
 --- !u!4 &196190851
 Transform:
   m_ObjectHideFlags: 0
@@ -3060,6 +3076,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &439206785 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3154422892154613027, guid: 67ff5ec491cafbc49864bd98e914e2e7, type: 3}
+  m_PrefabInstance: {fileID: 2088378088}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &492218512
 GameObject:
   m_ObjectHideFlags: 0
@@ -3747,7 +3768,10 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6549470668076876196, guid: f8387f00b35defe4ead998bc16d3611c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1681357070}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6216488643197094208, guid: f8387f00b35defe4ead998bc16d3611c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1870446303}
   m_SourcePrefab: {fileID: 100100000, guid: f8387f00b35defe4ead998bc16d3611c, type: 3}
 --- !u!1 &1653446472
 GameObject:
@@ -3901,11 +3925,29 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!1 &1870446296 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6216488643197094208, guid: f8387f00b35defe4ead998bc16d3611c, type: 3}
+  m_PrefabInstance: {fileID: 1618317612}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1870446302 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6549470668076876196, guid: f8387f00b35defe4ead998bc16d3611c, type: 3}
   m_PrefabInstance: {fileID: 1618317612}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1870446303
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1870446296}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d837e61977aa24547a722fc763ccba06, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 5
 --- !u!1 &1972822214
 GameObject:
   m_ObjectHideFlags: 0
@@ -4052,13 +4094,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: UI_HP
       objectReference: {fileID: 0}
+    - target: {fileID: 3815609318268723901, guid: 67ff5ec491cafbc49864bd98e914e2e7, type: 3}
+      propertyPath: m_Value
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8063515574050320870, guid: 67ff5ec491cafbc49864bd98e914e2e7, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0.279
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8063515574050320870, guid: 67ff5ec491cafbc49864bd98e914e2e7, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

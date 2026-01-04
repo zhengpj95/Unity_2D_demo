@@ -77,6 +77,7 @@
     <Compile Include="Assets\Scripts\Vampire Survivors-like\EnemySpawnManager.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Player\PlayerLifeController.cs" />
     <Compile Include="Assets\Scripts\Common\TimerManager.cs" />
+    <Compile Include="Assets\Scripts\Vampire Survivors-like\VSUIManager.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\EndGame.cs" />
     <Compile Include="Assets\Scripts\Rpg\StatsManager.cs" />
     <Compile Include="Assets\Arts\Hero Knight - Pixel Art\ColorSwap\ColorSwap_HeroKnight.cs" />
@@ -103,6 +104,7 @@
     <Compile Include="Assets\Scripts\Vampire Survivors-like\PointUtil.cs" />
     <Compile Include="Assets\Arts\Bandits - Pixel Art\Demo\Sensor_Bandit.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyMovement.cs" />
+    <Compile Include="Assets\Scripts\Vampire Survivors-like\VSPlayerHealth.cs" />
     <Compile Include="Assets\Scripts\Def\StateEnums.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Trap_Saw.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\SawWeapon.cs" />
