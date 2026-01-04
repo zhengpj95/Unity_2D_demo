@@ -32,11 +32,11 @@ public class WeaponManager : SingletonMono<WeaponManager>
 
   private void FireArrow()
   {
-    Transform arrow = Instantiate(arrowWeaponPrefab, player.position, Quaternion.identity);
-    ArrowWeapon arrowScript = arrow.GetComponent<ArrowWeapon>();
     EnemyChasing nearestEnemy = GetNearestEnemy(player.position, attackRange, enemyLayer);
     if (nearestEnemy != null)
     {
+      Transform arrow = Instantiate(arrowWeaponPrefab, player.position, Quaternion.identity);
+      ArrowWeapon arrowScript = arrow.GetComponent<ArrowWeapon>();
       arrowScript.SetTarget(nearestEnemy.transform);
     }
   }

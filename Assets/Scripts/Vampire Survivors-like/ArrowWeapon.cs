@@ -6,7 +6,7 @@ public class ArrowWeapon : MonoBehaviour
 {
   [SerializeField] private float speed = 2f;
 
-  private Vector3 targetPosition;
+  private Transform target;
 
   void Start()
   {
@@ -15,18 +15,23 @@ public class ArrowWeapon : MonoBehaviour
 
   public void SetTarget(Transform targetTransform)
   {
-    targetPosition = targetTransform.position.normalized * 100;
+    target = targetTransform;
   }
 
   private void Update()
   {
-    if (targetPosition != null)
+    if (target != null)
     {
-      Vector3 dir = (targetPosition - transform.position).normalized;
+      Vector3 dir = (target.position - transform.position).normalized;
       transform.position += dir * speed * Time.deltaTime;
 
       float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
       transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
+    }
+    else
+    {
+      // 没有目标则直线前进，箭头朝向右边，所以是right
+      transform.position += transform.right * speed * Time.deltaTime;
     }
   }
 
