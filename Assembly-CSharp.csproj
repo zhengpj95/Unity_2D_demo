@@ -101,6 +101,7 @@
     <Compile Include="Assets\Scripts\FrogAdventure\GameController.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyCombat.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\PointUtil.cs" />
+    <Compile Include="Assets\Scripts\Common\Manager\EventBus.cs" />
     <Compile Include="Assets\Arts\Bandits - Pixel Art\Demo\Sensor_Bandit.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyMovement.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\VSPlayerHealth.cs" />
@@ -112,9 +113,9 @@
     <Compile Include="Assets\Scripts\Melee\EnemyChase.cs" />
     <Compile Include="Assets\Scripts\Common\UI\DamageController.cs" />
     <Compile Include="Assets\Scripts\Def\GameLayer.cs" />
+    <Compile Include="Assets\Scripts\Common\Manager\AudioManager.cs" />
     <Compile Include="Assets\Arts\Hero Knight - Pixel Art\Demo\Sensor_HeroKnight.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\RpgPlayerCombat.cs" />
-    <Compile Include="Assets\Scripts\FrogAdventure\AudioManager.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\ShooterBullet.cs" />
     <Compile Include="Assets\Arts\Hero Knight - Pixel Art\Demo\DestroyEvent_HeroKnight.cs" />
     <Compile Include="Assets\Scripts\Def\GameTag.cs" />
@@ -130,7 +131,6 @@
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyKnockBack.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\FruitCollect.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\CheckEndPoint.cs" />
-    <Compile Include="Assets\Scripts\FrogAdventure\EventBus.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />
