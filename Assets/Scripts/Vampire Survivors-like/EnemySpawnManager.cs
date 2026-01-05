@@ -49,4 +49,10 @@ public class EnemySpawnManager : SingletonMono<EnemySpawnManager>
       Instantiate(enemyPrefab[randomIndex], point, Quaternion.identity, enemyContainer);
     }
   }
+
+  public void SpeedUpSpawnRate()
+  {
+    spawnInterval = Mathf.Max(0.1f, spawnInterval - 0.2f);
+    maxEnemies *= 2;
+  }
 }
