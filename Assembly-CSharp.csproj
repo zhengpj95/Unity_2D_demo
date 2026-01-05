@@ -67,10 +67,8 @@
     <Compile Include="Assets\Scripts\FrogAdventure\Trap.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\UILevel.cs" />
     <Compile Include="Assets\Scripts\Common\Manager\TimerManager.cs" />
-    <Compile Include="Assets\Scripts\Vampire Survivors-like\ArrowWeapon.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\StartGame.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\RpgPlayerHealth.cs" />
-    <Compile Include="Assets\Scripts\Vampire Survivors-like\BlueOvalWeapon.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\UIFruit.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\PlayerShooter.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\EnemySpawnManager.cs" />
@@ -96,7 +94,6 @@
     <Compile Include="Assets\Arts\Bandits - Pixel Art\Demo\Bandit.cs" />
     <Compile Include="Assets\Scripts\Rpg\ElevationExit.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\Hero.cs" />
-    <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponManager.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Player\PlayerMovement.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\GameController.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyCombat.cs" />
@@ -107,9 +104,9 @@
     <Compile Include="Assets\Scripts\Vampire Survivors-like\VSPlayerHealth.cs" />
     <Compile Include="Assets\Scripts\Def\StateEnums.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Trap_Saw.cs" />
-    <Compile Include="Assets\Scripts\Vampire Survivors-like\SawWeapon.cs" />
     <Compile Include="Assets\Scripts\Common\Singleton\Singleton.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Player\PlayerKnockBack.cs" />
+    <Compile Include="Assets\Scripts\Vampire Survivors-like\Weapon\SawWeapon.cs" />
     <Compile Include="Assets\Scripts\Melee\EnemyChase.cs" />
     <Compile Include="Assets\Scripts\Common\UI\DamageController.cs" />
     <Compile Include="Assets\Scripts\Def\GameLayer.cs" />
@@ -119,14 +116,17 @@
     <Compile Include="Assets\Scripts\Rpg\Player\ShooterBullet.cs" />
     <Compile Include="Assets\Arts\Hero Knight - Pixel Art\Demo\DestroyEvent_HeroKnight.cs" />
     <Compile Include="Assets\Scripts\Def\GameTag.cs" />
+    <Compile Include="Assets\Scripts\Vampire Survivors-like\Weapon\BlueOvalWeapon.cs" />
     <Compile Include="Assets\Scripts\Common\Singleton\SingletonMono.cs" />
     <Compile Include="Assets\Arts\Hero Knight - Pixel Art\Demo\HeroKnight.cs" />
     <Compile Include="Assets\Scripts\Common\Manager\UIManager.cs" />
     <Compile Include="Assets\Scripts\Def\GameSortingLayers.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Enemy\Enemy_Bullet.cs" />
+    <Compile Include="Assets\Scripts\Vampire Survivors-like\Weapon\WeaponManager.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Enemy\Enemy_Mushroom.cs" />
     <Compile Include="Assets\Scripts\Common\UI\DestroyEvent.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\EnemyChasing.cs" />
+    <Compile Include="Assets\Scripts\Vampire Survivors-like\Weapon\ArrowWeapon.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\RpgPlayerMovement.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyKnockBack.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\FruitCollect.cs" />
