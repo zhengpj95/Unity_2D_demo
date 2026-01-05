@@ -9,6 +9,8 @@ public class EnemyChasing : MonoBehaviour
 
   private Transform player;
 
+  public int Damage => damage;
+
   void Start()
   {
     player = GameObject.FindGameObjectWithTag("Player").transform;

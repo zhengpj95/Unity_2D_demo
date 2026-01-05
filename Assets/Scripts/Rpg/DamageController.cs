@@ -11,6 +11,14 @@ public class DamageController : MonoBehaviour
 
   private void Awake()
   {
+    if (point == null)
+    {
+      Canvas canvas = FindObjectOfType<Canvas>();
+      GameObject empty = new GameObject("DamagePoint");
+      empty.transform.SetParent(canvas.transform, false);
+      point = empty.transform;
+    }
+
     if (Instance == null)
     {
       Instance = this;

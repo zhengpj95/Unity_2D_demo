@@ -18,5 +18,6 @@ public class VSPlayerHealth : MonoBehaviour
     currentHealth -= damage;
 
     VSUIManager.Instance.UpdateHp(currentHealth, maxHealth);
+    DamageController.Instance.ShowDamage(damage, transform.position);
   }
 }
