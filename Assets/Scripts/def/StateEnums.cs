@@ -10,3 +10,10 @@ public enum EntityState
   Hurt,
   Death,
 }
+
+// 掉落物品类型
+public enum DropItemType
+{
+  Gem,
+  Coin,
+}

@@ -8,6 +8,7 @@ public class EnemySpawnManager : SingletonMono<EnemySpawnManager>
   [SerializeField] private Transform[] spawnPoints;
   [SerializeField] private float spawnInterval = 1f;
   [SerializeField] private int maxEnemies = 10;
+  [SerializeField] private Transform enemyContainer;
 
   private float timer = 0f;
 
@@ -45,7 +46,7 @@ public class EnemySpawnManager : SingletonMono<EnemySpawnManager>
       {
         point = PointUtil.RandomVertical(spawnPoint.position, 6f);
       }
-      Instantiate(enemyPrefab[randomIndex], point, Quaternion.identity);
+      Instantiate(enemyPrefab[randomIndex], point, Quaternion.identity, enemyContainer);
     }
   }
 }

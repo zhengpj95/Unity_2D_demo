@@ -6,10 +6,12 @@ public class EnemyChasing : MonoBehaviour
 {
   [SerializeField] private float chaseSpeed = 0.5f;
   [SerializeField] private int damage = 1;
+  [SerializeField] private DropItemType dropItemType;
 
   private Transform player;
 
   public int Damage => damage;
+  public DropItemType DropItemType => dropItemType;
 
   void Start()
   {

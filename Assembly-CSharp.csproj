@@ -71,6 +71,7 @@
     <Compile Include="Assets\Scripts\Rpg\Player\RpgPlayerHealth.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\UIFruit.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\PlayerShooter.cs" />
+    <Compile Include="Assets\Scripts\Vampire Survivors-like\DropItem.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\EnemySpawnManager.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Player\PlayerLifeController.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\VSUIManager.cs" />
@@ -86,6 +87,7 @@
     <Compile Include="Assets\Scripts\Rpg\Enemy\EnemyManager.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyTrace.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Trampoline.cs" />
+    <Compile Include="Assets\Scripts\Vampire Survivors-like\DropItemManager.cs" />
     <Compile Include="Assets\Scripts\Rpg\UI\UI_GameOver.cs" />
     <Compile Include="Assets\Scripts\Rpg\ElevationEntry.cs" />
     <Compile Include="Assets\Scripts\Melee\EnemyHealth.cs" />

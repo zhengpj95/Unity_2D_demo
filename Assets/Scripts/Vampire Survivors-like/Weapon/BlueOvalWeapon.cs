@@ -42,7 +42,11 @@ public class BlueOvalWeapon : MonoBehaviour
     {
       if (i >= 0 && hitEnemies[i] != null)
       {
-        Destroy(hitEnemies[i].gameObject);
+        var enemy = hitEnemies[i];
+        EnemyChasing enemyChasing = enemy.GetComponent<EnemyChasing>();
+        DamageController.Instance.ShowDamage(enemyChasing.Damage, enemy.position);
+        DropItemManager.Instance.SpawnDropItem(enemy.position, enemyChasing.DropItemType);
+        Destroy(enemy.gameObject);
       }
     }
   }

@@ -8,6 +8,7 @@ public class WeaponManager : SingletonMono<WeaponManager>
 
   [SerializeField] private float attackRange = 6f;
   [SerializeField] private LayerMask enemyLayer;
+  [SerializeField] private Transform weaponContainer;
 
   [Header("Arrow Weapon Settings")]
   [SerializeField] private Transform arrowWeaponPrefab;
@@ -71,7 +72,7 @@ public class WeaponManager : SingletonMono<WeaponManager>
   {
     var enemy = GetRandomEnemy(player.position, attackRange, enemyLayer);
     if (enemy == null) return;
-    Transform lightning = Instantiate(lightningWeaponPrefab, player.position, Quaternion.identity);
+    Transform lightning = Instantiate(lightningWeaponPrefab, player.position, Quaternion.identity, weaponContainer);
     BlueOvalWeapon lightningWeapon = lightning.GetComponent<BlueOvalWeapon>();
     lightningWeapon.SetTarget(enemy.transform);
   }
@@ -80,7 +81,7 @@ public class WeaponManager : SingletonMono<WeaponManager>
   {
     var enemy = GetRandomEnemy(player.position, attackRange, enemyLayer);
     if (enemy == null) return;
-    Transform blueOval = Instantiate(blueOvalWeaponPrefab, player.position, Quaternion.identity);
+    Transform blueOval = Instantiate(blueOvalWeaponPrefab, player.position, Quaternion.identity, weaponContainer);
     BlueOvalWeapon blueOvalWeapon = blueOval.GetComponent<BlueOvalWeapon>();
     blueOvalWeapon.SetTarget(enemy.transform);
   }
@@ -97,7 +98,7 @@ public class WeaponManager : SingletonMono<WeaponManager>
     EnemyChasing nearestEnemy = GetNearestEnemy(player.position, attackRange, enemyLayer);
     if (nearestEnemy != null)
     {
-      Transform arrow = Instantiate(arrowWeaponPrefab, player.position, Quaternion.identity);
+      Transform arrow = Instantiate(arrowWeaponPrefab, player.position, Quaternion.identity, weaponContainer);
       ArrowWeapon arrowScript = arrow.GetComponent<ArrowWeapon>();
       arrowScript.SetTarget(nearestEnemy.transform, arrowDestroyTime);
     }

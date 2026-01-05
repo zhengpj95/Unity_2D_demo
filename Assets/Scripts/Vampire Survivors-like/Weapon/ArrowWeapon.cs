@@ -37,6 +37,7 @@ public class ArrowWeapon : MonoBehaviour
     {
       EnemyChasing enemyChasing = collision.gameObject.GetComponent<EnemyChasing>();
       DamageController.Instance.ShowDamage(enemyChasing.Damage, transform.position);
+      DropItemManager.Instance.SpawnDropItem(transform.position, enemyChasing.DropItemType);
       Destroy(gameObject);
       Destroy(collision.gameObject);
     }
