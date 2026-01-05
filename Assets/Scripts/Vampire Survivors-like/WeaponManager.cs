@@ -26,6 +26,11 @@ public class WeaponManager : SingletonMono<WeaponManager>
   [SerializeField] private float blueOvalFireInterval = 5f;
   private float nextBlueOvalTimer = 0f;
 
+  [Header("Lightning Weapon Settings")]
+  [SerializeField] private Transform lightningWeaponPrefab;
+  [SerializeField] private float lightningFireInterval = 5f;
+  private float nextLightningTimer = 0f;
+
   private float timer = 0f;
 
   private void Start()
@@ -54,6 +59,21 @@ public class WeaponManager : SingletonMono<WeaponManager>
       nextBlueOvalTimer += blueOvalFireInterval;
       FireBlueOval();
     }
+
+    if (timer >= nextLightningTimer)
+    {
+      nextLightningTimer += lightningFireInterval;
+      FireLightning();
+    }
+  }
+
+  private void FireLightning()
+  {
+    var enemy = GetRandomEnemy(player.position, attackRange, enemyLayer);
+    if (enemy == null) return;
+    Transform lightning = Instantiate(lightningWeaponPrefab, player.position, Quaternion.identity);
+    BlueOvalWeapon lightningWeapon = lightning.GetComponent<BlueOvalWeapon>();
+    lightningWeapon.SetTarget(enemy.transform);
   }
 
   private void FireBlueOval()

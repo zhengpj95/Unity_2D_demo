@@ -3063,7 +3063,9 @@ MonoBehaviour:
   sawFireInterval: 15
   sawDestroyTime: 10
   blueOvalWeaponPrefab: {fileID: 9104589825890431468, guid: fb19d800627dfbc4e8b7239b19b0ad42, type: 3}
-  blueOvalFireInterval: 5
+  blueOvalFireInterval: 10
+  lightningWeaponPrefab: {fileID: 858478033565469563, guid: 08d3acaf678cbe446b07597715ff201c, type: 3}
+  lightningFireInterval: 5
 --- !u!4 &196190851
 Transform:
   m_ObjectHideFlags: 0
@@ -3750,6 +3752,10 @@ PrefabInstance:
     - target: {fileID: 6216488643197094208, guid: f8387f00b35defe4ead998bc16d3611c, type: 3}
       propertyPath: m_Name
       value: Hero
+      objectReference: {fileID: 0}
+    - target: {fileID: 6216488643197094208, guid: f8387f00b35defe4ead998bc16d3611c, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6549470668076876196, guid: f8387f00b35defe4ead998bc16d3611c, type: 3}
       propertyPath: m_LocalPosition.x
