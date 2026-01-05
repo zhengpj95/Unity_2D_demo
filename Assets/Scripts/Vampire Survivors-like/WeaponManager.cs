@@ -21,6 +21,11 @@ public class WeaponManager : SingletonMono<WeaponManager>
   [SerializeField] private float sawDestroyTime = 10f;
   private float nextSawTimer = 0f;
 
+  [Header("Blue Oval Weapon Settings")]
+  [SerializeField] private Transform blueOvalWeaponPrefab;
+  [SerializeField] private float blueOvalFireInterval = 5f;
+  private float nextBlueOvalTimer = 0f;
+
   private float timer = 0f;
 
   private void Start()
@@ -43,6 +48,21 @@ public class WeaponManager : SingletonMono<WeaponManager>
       nextSawTimer += sawFireInterval;
       FireSaw();
     }
+
+    if (timer >= nextBlueOvalTimer)
+    {
+      nextBlueOvalTimer += blueOvalFireInterval;
+      FireBlueOval();
+    }
+  }
+
+  private void FireBlueOval()
+  {
+    var enemy = GetRandomEnemy(player.position, attackRange, enemyLayer);
+    if (enemy == null) return;
+    Transform blueOval = Instantiate(blueOvalWeaponPrefab, player.position, Quaternion.identity);
+    BlueOvalWeapon blueOvalWeapon = blueOval.GetComponent<BlueOvalWeapon>();
+    blueOvalWeapon.SetTarget(enemy.transform);
   }
 
   private void FireSaw()
@@ -63,7 +83,23 @@ public class WeaponManager : SingletonMono<WeaponManager>
     }
   }
 
-  public static EnemyChasing GetNearestEnemy(Vector2 center, float range, LayerMask enemyLayer)
+  public EnemyChasing GetRandomEnemy(Vector2 center, float range, LayerMask enemyLayer)
+  {
+    Collider2D[] results = new Collider2D[32];
+
+    int count = Physics2D.OverlapCircleNonAlloc(center, range, results, enemyLayer);
+
+    if (count > 0)
+    {
+      int randomIndex = Random.Range(0, count);
+      EnemyChasing enemy = results[randomIndex].GetComponent<EnemyChasing>();
+      return enemy;
+    }
+
+    return null;
+  }
+
+  public EnemyChasing GetNearestEnemy(Vector2 center, float range, LayerMask enemyLayer)
   {
     Collider2D[] results = new Collider2D[32];
 

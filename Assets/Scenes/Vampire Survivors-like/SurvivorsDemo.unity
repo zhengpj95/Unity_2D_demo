@@ -3062,6 +3062,8 @@ MonoBehaviour:
   sawWeaponPrefab: {fileID: 2400732400320537634, guid: cfd045f9d45c84544a3e63013c118f9b, type: 3}
   sawFireInterval: 15
   sawDestroyTime: 10
+  blueOvalWeaponPrefab: {fileID: 9104589825890431468, guid: fb19d800627dfbc4e8b7239b19b0ad42, type: 3}
+  blueOvalFireInterval: 5
 --- !u!4 &196190851
 Transform:
   m_ObjectHideFlags: 0

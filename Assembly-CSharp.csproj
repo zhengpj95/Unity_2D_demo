@@ -69,6 +69,7 @@
     <Compile Include="Assets\Scripts\Vampire Survivors-like\ArrowWeapon.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\StartGame.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\RpgPlayerHealth.cs" />
+    <Compile Include="Assets\Scripts\Vampire Survivors-like\BlueOvalWeapon.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\UIFruit.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\PlayerShooter.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\DestroyEvent.cs" />
