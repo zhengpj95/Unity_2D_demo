@@ -9,6 +9,7 @@ public class EnemyChasing : MonoBehaviour
   [SerializeField] private DropItemType dropItemType;
 
   private Transform player;
+  private Transform spriteTransform;
 
   public int Damage => damage;
   public DropItemType DropItemType => dropItemType;
@@ -16,6 +17,7 @@ public class EnemyChasing : MonoBehaviour
   void Start()
   {
     player = GameObject.FindGameObjectWithTag("Player").transform;
+    spriteTransform = transform.Find("Sprite").transform;
   }
 
   private void FixedUpdate()
@@ -25,11 +27,11 @@ public class EnemyChasing : MonoBehaviour
 
     if (player.position.x > transform.position.x)
     {
-      transform.localScale = new Vector3(-1, 1, 1);
+      spriteTransform.localScale = new Vector3(-1, 1, 1);
     }
     else
     {
-      transform.localScale = new Vector3(1, 1, 1);
+      spriteTransform.localScale = new Vector3(1, 1, 1);
     }
   }
 

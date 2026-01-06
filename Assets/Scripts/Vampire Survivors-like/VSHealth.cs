@@ -30,14 +30,10 @@ public class VSHealth : MonoBehaviour
 
   private void UpdateHpBar()
   {
-    GameObject hpBar = transform.Find("HpBar")?.gameObject;
-    if (hpBar)
+    HpBarUI hpBarUI = gameObject.GetComponent<HpBarUI>();
+    if (hpBarUI)
     {
-      HpBarUI hpBarUI = hpBar.GetComponent<HpBarUI>();
-      if (hpBarUI)
-      {
-        hpBarUI.SetPercent(Mathf.Max(0f, currentHealth / (maxHealth * 1f)));
-      }
+      hpBarUI.SetPercent(Mathf.Max(0f, currentHealth / (maxHealth * 1f)));
     }
   }
 }
