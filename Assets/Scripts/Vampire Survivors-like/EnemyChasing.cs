@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class EnemyChasing : MonoBehaviour
@@ -10,20 +11,39 @@ public class EnemyChasing : MonoBehaviour
 
   private Transform player;
   private Transform spriteTransform;
+  private Rigidbody2D rb;
 
   public int Damage => damage;
   public DropItemType DropItemType => dropItemType;
+
+  private void OnEnable()
+  {
+    if (EnemySpawnManager.Instance != null)
+    {
+      EnemySpawnManager.Instance.RegisterEnemy(this);
+    }
+  }
+
+  private void OnDisable()
+  {
+    if (EnemySpawnManager.Instance != null)
+    {
+      EnemySpawnManager.Instance.UnregisterEnemy(this);
+    }
+  }
 
   void Start()
   {
     player = GameObject.FindGameObjectWithTag("Player").transform;
     spriteTransform = transform.Find("Sprite").transform;
+    rb = GetComponent<Rigidbody2D>();
   }
 
   private void FixedUpdate()
   {
     Vector3 direction = (player.position - transform.position).normalized;
-    transform.position += direction * chaseSpeed * Time.fixedDeltaTime;
+    Vector2 newPosition = transform.position + direction * chaseSpeed * Time.fixedDeltaTime;
+    rb.MovePosition(newPosition);
 
     if (player.position.x > transform.position.x)
     {

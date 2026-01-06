@@ -83,7 +83,7 @@ public class WeaponManager : SingletonMono<WeaponManager>
 
   private void FireBullet()
   {
-    EnemyChasing nearestEnemy = GetNearestEnemy(player.position, attackRange, enemyLayer);
+    EnemyChasing nearestEnemy = EnemySpawnManager.Instance.GetCloseest(player.position, attackRange);
     if (nearestEnemy != null)
     {
       Transform bullet = Instantiate(bulletWeaponPrefab, player.position, Quaternion.identity, weaponContainer);
@@ -94,7 +94,7 @@ public class WeaponManager : SingletonMono<WeaponManager>
 
   private void FireLightning()
   {
-    var enemy = GetRandomEnemy(player.position, attackRange, enemyLayer);
+    var enemy = EnemySpawnManager.Instance.GetRandom(player.position, attackRange);
     if (enemy == null) return;
     Transform lightning = Instantiate(lightningWeaponPrefab, player.position, Quaternion.identity, weaponContainer);
     BlueOvalWeapon lightningWeapon = lightning.GetComponent<BlueOvalWeapon>();
@@ -103,7 +103,7 @@ public class WeaponManager : SingletonMono<WeaponManager>
 
   private void FireBlueOval()
   {
-    var enemy = GetRandomEnemy(player.position, attackRange, enemyLayer);
+    var enemy = EnemySpawnManager.Instance.GetRandom(player.position, attackRange);
     if (enemy == null) return;
     Transform blueOval = Instantiate(blueOvalWeaponPrefab, player.position, Quaternion.identity, weaponContainer);
     BlueOvalWeapon blueOvalWeapon = blueOval.GetComponent<BlueOvalWeapon>();
@@ -119,7 +119,7 @@ public class WeaponManager : SingletonMono<WeaponManager>
 
   private void FireArrow()
   {
-    EnemyChasing nearestEnemy = GetNearestEnemy(player.position, attackRange, enemyLayer);
+    EnemyChasing nearestEnemy = EnemySpawnManager.Instance.GetCloseest(player.position, attackRange);
     if (nearestEnemy != null)
     {
       Transform arrow = Instantiate(arrowWeaponPrefab, player.position, Quaternion.identity, weaponContainer);
@@ -128,72 +128,7 @@ public class WeaponManager : SingletonMono<WeaponManager>
     }
   }
 
-  public EnemyChasing GetRandomEnemy(Vector2 center, float range, LayerMask enemyLayer)
-  {
-    Collider2D[] results = new Collider2D[32];
-
-    int count = Physics2D.OverlapCircleNonAlloc(center, range, results, enemyLayer);
-
-    if (count > 0)
-    {
-      int randomIndex = Random.Range(0, count);
-      EnemyChasing enemy = results[randomIndex].GetComponent<EnemyChasing>();
-      return enemy;
-    }
-
-    return null;
-  }
-
-  public EnemyChasing GetNearestEnemy(Vector2 center, float range, LayerMask enemyLayer)
-  {
-    Collider2D[] results = new Collider2D[32];
-
-    int count = Physics2D.OverlapCircleNonAlloc(center, range, results, enemyLayer);
-
-    EnemyChasing nearest = null;
-    float minSqrDist = float.MaxValue;
-
-    for (int i = 0; i < count; i++)
-    {
-      EnemyChasing enemy = results[i].GetComponent<EnemyChasing>();
-      if (enemy == null) continue;
-
-      float sqrDist = ((Vector2)enemy.transform.position - center).sqrMagnitude;
-
-      if (sqrDist < minSqrDist)
-      {
-        minSqrDist = sqrDist;
-        nearest = enemy;
-      }
-    }
-
-    return nearest;
-  }
-
-  public List<EnemyChasing> GetEnemiesSortedByDistance(Vector2 center, float range, LayerMask enemyLayer)
-  {
-    Collider2D[] results = new Collider2D[32];
-    int count = Physics2D.OverlapCircleNonAlloc(center, range, results, enemyLayer);
-
-    List<EnemyChasing> enemies = new List<EnemyChasing>(count);
-    for (int i = 0; i < count; i++)
-    {
-      EnemyChasing e = results[i].GetComponent<EnemyChasing>();
-      if (e == null) continue;
-      enemies.Add(e);
-    }
-
-    enemies.Sort((a, b) =>
-    {
-      float da = ((Vector2)a.transform.position - center).sqrMagnitude;
-      float db = ((Vector2)b.transform.position - center).sqrMagnitude;
-      return da.CompareTo(db);
-    });
-
-    return enemies;
-  }
-
-  void OnDrawGizmosSelected()
+  private void OnDrawGizmosSelected()
   {
     Gizmos.color = Color.red;
     Gizmos.DrawWireSphere(transform.position, attackRange);
