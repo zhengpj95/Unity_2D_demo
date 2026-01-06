@@ -39,9 +39,6 @@ public class ArrowWeapon : MonoBehaviour
   {
     if (collision.gameObject.CompareTag("Enemy"))
     {
-      EnemyChasing enemyChasing = collision.gameObject.GetComponent<EnemyChasing>();
-      DamageController.Instance.ShowDamage(enemyChasing.Damage, enemyChasing.transform.position);
-      DropItemManager.Instance.SpawnDropItem(enemyChasing.transform.position, enemyChasing.DropItemType);
       VSHealth vSHealth = collision.gameObject.GetComponent<VSHealth>();
       vSHealth.TakeDamage(damage);
       Destroy(gameObject); // 销毁弓箭

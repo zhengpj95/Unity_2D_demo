@@ -19,15 +19,18 @@ public class VSHealth : MonoBehaviour
   {
     currentHealth -= damage;
     UpdateHpBar();
+    EnemyChasing enemyChasing = gameObject.GetComponent<EnemyChasing>();
+    DamageController.Instance.ShowDamage(damage, transform.position);
     if (currentHealth <= 0)
     {
       Destroy(gameObject);
+      DropItemManager.Instance.SpawnDropItem(transform.position, enemyChasing.DropItemType);
     }
   }
 
   private void UpdateHpBar()
   {
-    Transform hpBar = transform.Find("HpBar")?.transform;
+    GameObject hpBar = transform.Find("HpBar")?.gameObject;
     if (hpBar)
     {
       HpBarUI hpBarUI = hpBar.GetComponent<HpBarUI>();

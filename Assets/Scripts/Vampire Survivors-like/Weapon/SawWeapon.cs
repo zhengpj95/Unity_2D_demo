@@ -41,9 +41,6 @@ public class SawWeapon : MonoBehaviour
   {
     if (collision.gameObject.CompareTag("Enemy"))
     {
-      EnemyChasing enemyChasing = collision.gameObject.GetComponent<EnemyChasing>();
-      DamageController.Instance.ShowDamage(damage, enemyChasing.transform.position);
-      DropItemManager.Instance.SpawnDropItem(enemyChasing.transform.position, enemyChasing.DropItemType);
       VSHealth vSHealth = collision.gameObject.GetComponent<VSHealth>();
       vSHealth.TakeDamage(damage);
     }

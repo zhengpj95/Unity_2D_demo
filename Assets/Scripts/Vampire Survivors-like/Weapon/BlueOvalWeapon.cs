@@ -48,9 +48,6 @@ public class BlueOvalWeapon : MonoBehaviour
       if (i >= 0 && hitEnemies[i] != null)
       {
         var enemy = hitEnemies[i];
-        EnemyChasing enemyChasing = enemy.GetComponent<EnemyChasing>();
-        DamageController.Instance.ShowDamage(enemyChasing.Damage, enemy.position);
-        DropItemManager.Instance.SpawnDropItem(enemy.position, enemyChasing.DropItemType);
         VSHealth vSHealth = enemy.GetComponent<VSHealth>();
         vSHealth.TakeDamage(damage);
       }
