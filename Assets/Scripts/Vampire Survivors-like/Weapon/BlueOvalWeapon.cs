@@ -2,8 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/**
+ * 炸弹武器、闪电武器
+ */
 public class BlueOvalWeapon : MonoBehaviour
 {
+  [SerializeField] private int damage = 1;
+
   private List<Transform> hitEnemies = new List<Transform>();
 
   public void SetTarget(Transform target)
@@ -46,7 +51,8 @@ public class BlueOvalWeapon : MonoBehaviour
         EnemyChasing enemyChasing = enemy.GetComponent<EnemyChasing>();
         DamageController.Instance.ShowDamage(enemyChasing.Damage, enemy.position);
         DropItemManager.Instance.SpawnDropItem(enemy.position, enemyChasing.DropItemType);
-        Destroy(enemy.gameObject);
+        VSHealth vSHealth = enemy.GetComponent<VSHealth>();
+        vSHealth.TakeDamage(damage);
       }
     }
   }

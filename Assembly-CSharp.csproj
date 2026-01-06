@@ -98,6 +98,7 @@
     <Compile Include="Assets\Scripts\Rpg\Player\Hero.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Player\PlayerMovement.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\GameController.cs" />
+    <Compile Include="Assets\Scripts\Vampire Survivors-like\HpBarUI.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyCombat.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\PointUtil.cs" />
     <Compile Include="Assets\Scripts\Common\Manager\EventBus.cs" />
@@ -132,6 +133,7 @@
     <Compile Include="Assets\Scripts\Rpg\Player\RpgPlayerMovement.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyKnockBack.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\FruitCollect.cs" />
+    <Compile Include="Assets\Scripts\Vampire Survivors-like\VSHealth.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\CheckEndPoint.cs" />
   </ItemGroup>
   <ItemGroup>

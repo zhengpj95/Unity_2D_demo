@@ -2,11 +2,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/**
+ * 锯子武器
+ */
 public class SawWeapon : MonoBehaviour
 {
   [Header("Rotation")]
   [SerializeField] private float radius = 1.2f;
   [SerializeField] private float rotateSpeed = 180f; // 度/秒
+  [SerializeField] private int damage = 1;
 
   private float angle;
 
@@ -37,7 +41,11 @@ public class SawWeapon : MonoBehaviour
   {
     if (collision.gameObject.CompareTag("Enemy"))
     {
-      Destroy(collision.gameObject);
+      EnemyChasing enemyChasing = collision.gameObject.GetComponent<EnemyChasing>();
+      DamageController.Instance.ShowDamage(damage, enemyChasing.transform.position);
+      DropItemManager.Instance.SpawnDropItem(enemyChasing.transform.position, enemyChasing.DropItemType);
+      VSHealth vSHealth = collision.gameObject.GetComponent<VSHealth>();
+      vSHealth.TakeDamage(damage);
     }
   }
 }

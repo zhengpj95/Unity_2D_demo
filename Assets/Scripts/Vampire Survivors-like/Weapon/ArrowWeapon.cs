@@ -2,9 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/**
+ * 弓箭武器
+ */
 public class ArrowWeapon : MonoBehaviour
 {
   [SerializeField] private float speed = 2f;
+  [SerializeField] private int damage = 1;
 
   private Transform target;
 
@@ -36,10 +40,11 @@ public class ArrowWeapon : MonoBehaviour
     if (collision.gameObject.CompareTag("Enemy"))
     {
       EnemyChasing enemyChasing = collision.gameObject.GetComponent<EnemyChasing>();
-      DamageController.Instance.ShowDamage(enemyChasing.Damage, transform.position);
-      DropItemManager.Instance.SpawnDropItem(transform.position, enemyChasing.DropItemType);
-      Destroy(gameObject);
-      Destroy(collision.gameObject);
+      DamageController.Instance.ShowDamage(enemyChasing.Damage, enemyChasing.transform.position);
+      DropItemManager.Instance.SpawnDropItem(enemyChasing.transform.position, enemyChasing.DropItemType);
+      VSHealth vSHealth = collision.gameObject.GetComponent<VSHealth>();
+      vSHealth.TakeDamage(damage);
+      Destroy(gameObject); // 销毁弓箭
     }
   }
 }
