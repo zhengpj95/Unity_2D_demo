@@ -6,6 +6,7 @@ public class WeaponManager : SingletonMono<WeaponManager>
 {
   private Transform player;
 
+  [Header("Attack Setting")]
   [SerializeField] private float attackRange = 6f;
   [SerializeField] private LayerMask enemyLayer;
   [SerializeField] private Transform weaponContainer;
@@ -31,6 +32,12 @@ public class WeaponManager : SingletonMono<WeaponManager>
   [SerializeField] private Transform lightningWeaponPrefab;
   [SerializeField] private float lightningFireInterval = 5f;
   private float nextLightningTimer = 0f;
+
+  [Header("Bullet Weapon Settings")]
+  [SerializeField] private Transform bulletWeaponPrefab;
+  [SerializeField] private float bulletFireInterval = 0.8f;
+  [SerializeField] private float bulletDestroyTime = 10f;
+  private float nextBulletTimer = 0f;
 
   private float timer = 0f;
 
@@ -65,6 +72,23 @@ public class WeaponManager : SingletonMono<WeaponManager>
     {
       nextLightningTimer += lightningFireInterval;
       FireLightning();
+    }
+
+    if (timer >= nextBulletTimer)
+    {
+      nextBulletTimer += bulletFireInterval;
+      FireBullet();
+    }
+  }
+
+  private void FireBullet()
+  {
+    EnemyChasing nearestEnemy = GetNearestEnemy(player.position, attackRange, enemyLayer);
+    if (nearestEnemy != null)
+    {
+      Transform bullet = Instantiate(bulletWeaponPrefab, player.position, Quaternion.identity, weaponContainer);
+      ArrowWeapon arrowScript = bullet.GetComponent<ArrowWeapon>();
+      arrowScript.SetTarget(nearestEnemy.transform, bulletDestroyTime);
     }
   }
 
@@ -144,6 +168,29 @@ public class WeaponManager : SingletonMono<WeaponManager>
     }
 
     return nearest;
+  }
+
+  public List<EnemyChasing> GetEnemiesSortedByDistance(Vector2 center, float range, LayerMask enemyLayer)
+  {
+    Collider2D[] results = new Collider2D[32];
+    int count = Physics2D.OverlapCircleNonAlloc(center, range, results, enemyLayer);
+
+    List<EnemyChasing> enemies = new List<EnemyChasing>(count);
+    for (int i = 0; i < count; i++)
+    {
+      EnemyChasing e = results[i].GetComponent<EnemyChasing>();
+      if (e == null) continue;
+      enemies.Add(e);
+    }
+
+    enemies.Sort((a, b) =>
+    {
+      float da = ((Vector2)a.transform.position - center).sqrMagnitude;
+      float db = ((Vector2)b.transform.position - center).sqrMagnitude;
+      return da.CompareTo(db);
+    });
+
+    return enemies;
   }
 
   void OnDrawGizmosSelected()
