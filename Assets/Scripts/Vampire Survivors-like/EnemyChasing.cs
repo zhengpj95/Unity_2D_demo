@@ -8,13 +8,17 @@ public class EnemyChasing : MonoBehaviour
   [SerializeField] private float chaseSpeed = 0.5f;
   [SerializeField] private int damage = 1;
   [SerializeField] private DropItemType dropItemType;
+  [SerializeField]
+  [Tooltip("Probability of dropping an item when killed.")]
+  private float dropItemProb = 0.5f;
+
+  public int Damage { get => damage; }
+  public DropItemType DropItemType { get => dropItemType; }
+  public float DropItemProb { get => dropItemProb; }
 
   private Transform player;
   private Transform spriteTransform;
   private Rigidbody2D rb;
-
-  public int Damage => damage;
-  public DropItemType DropItemType => dropItemType;
 
   private void OnEnable()
   {

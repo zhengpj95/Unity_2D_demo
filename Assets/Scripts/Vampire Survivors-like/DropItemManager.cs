@@ -12,8 +12,12 @@ public class DropItemManager : SingletonMono<DropItemManager>
   private int speedUpScore = 0; // 速度提升积分
   private int speedUpRateScore = 100; // 每一次提升所需积分
 
-  public void SpawnDropItem(Vector3 position, DropItemType dropItemType)
+  public void SpawnDropItem(Vector3 position, DropItemType dropItemType, float dropItemProb)
   {
+    if (Random.value > dropItemProb)
+    {
+      return;
+    }
     var prefab = gemPrefab;
     switch (dropItemType)
     {

@@ -24,7 +24,7 @@ public class VSHealth : MonoBehaviour
     if (currentHealth <= 0)
     {
       Destroy(gameObject);
-      DropItemManager.Instance.SpawnDropItem(transform.position, enemyChasing.DropItemType);
+      DropItemManager.Instance.SpawnDropItem(transform.position, enemyChasing.DropItemType, enemyChasing.DropItemProb);
     }
   }
 

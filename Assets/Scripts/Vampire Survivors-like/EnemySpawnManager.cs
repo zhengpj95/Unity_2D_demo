@@ -32,23 +32,30 @@ public class EnemySpawnManager : SingletonMono<EnemySpawnManager>
 
   private void SpawnEnemy()
   {
-    int currentEnemyCount = GameObject.FindGameObjectsWithTag("Enemy").Length;
-    if (currentEnemyCount >= maxEnemies)
+    if (enemies.Count >= maxEnemies)
     {
       return;
     }
 
     if (enemyPrefab.Length > 0 && spawnPoints.Length > 0)
     {
-      int randomIndex = Random.Range(0, enemyPrefab.Length);
-      int spawnPointIndex = Random.Range(0, spawnPoints.Length);
-      var spawnPoint = spawnPoints[spawnPointIndex];
-      var point = PointUtil.RandomHorizontal(spawnPoint.position, 10f);
-      if (spawnPointIndex % 2 != 0)
+      Vector2 spawnPoint;
+      int randomEnemyIndex = Random.Range(0, enemyPrefab.Length);
+      var minPos = spawnPoints[0];
+      var maxPos = spawnPoints[1];
+      if (Random.Range(0f, 1f) > 0.5f)
       {
-        point = PointUtil.RandomVertical(spawnPoint.position, 6f);
+        // 上下
+        spawnPoint.x = Random.Range(minPos.position.x, maxPos.position.x);
+        spawnPoint.y = Random.Range(0f, 1f) > 0.5f ? maxPos.position.y : minPos.position.y;
       }
-      Instantiate(enemyPrefab[randomIndex], point, Quaternion.identity, enemyContainer);
+      else
+      {
+        // 左右
+        spawnPoint.y = Random.Range(minPos.position.y, maxPos.position.y);
+        spawnPoint.x = Random.Range(0f, 1f) > 0.5f ? maxPos.position.x : minPos.position.x;
+      }
+      Instantiate(enemyPrefab[randomEnemyIndex], spawnPoint, Quaternion.identity, enemyContainer);
     }
   }
 

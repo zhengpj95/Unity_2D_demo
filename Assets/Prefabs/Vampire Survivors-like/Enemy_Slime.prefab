@@ -200,6 +200,7 @@ MonoBehaviour:
   chaseSpeed: 0.5
   damage: 1
   dropItemType: 1
+  dropItemProb: 0.8
 --- !u!114 &2824921787735423005
 MonoBehaviour:
   m_ObjectHideFlags: 0
