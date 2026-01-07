@@ -8,7 +8,6 @@ public class WeaponManager : SingletonMono<WeaponManager>
 
   [Header("Attack Setting")]
   [SerializeField] private float attackRange = 6f;
-  [SerializeField] private LayerMask enemyLayer;
   [SerializeField] private Transform weaponContainer;
 
   [Header("Arrow Weapon Settings")]

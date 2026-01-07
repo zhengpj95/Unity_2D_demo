@@ -11,9 +11,9 @@ GameObject:
   - component: {fileID: 6549470668076876196}
   - component: {fileID: 4653344234631395318}
   - component: {fileID: 3741260864067144215}
-  - component: {fileID: 5870706770646319658}
   - component: {fileID: 8275634273920598648}
   - component: {fileID: 3674509716790129913}
+  - component: {fileID: 5870706770646319658}
   m_Layer: 7
   m_Name: Hero
   m_TagString: Player
@@ -109,19 +109,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &5870706770646319658
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6216488643197094208}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9593ffe69906b524aa23059441655144, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  runSpeed: 2
 --- !u!50 &8275634273920598648
 Rigidbody2D:
   serializedVersion: 4
@@ -184,3 +171,16 @@ CapsuleCollider2D:
   m_Offset: {x: 0.0046494603, y: -0.116235435}
   m_Size: {x: 0.3769778, y: 0.693138}
   m_Direction: 0
+--- !u!114 &5870706770646319658
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6216488643197094208}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9593ffe69906b524aa23059441655144, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  runSpeed: 2
