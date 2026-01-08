@@ -35,6 +35,6 @@ public class Arrow : MonoBehaviour
         .KnockBack(transform, 0.8f, 0.5f);
     }
     // 销毁箭头
-    Destroy(gameObject);
+    // Destroy(gameObject);
   }
 }
