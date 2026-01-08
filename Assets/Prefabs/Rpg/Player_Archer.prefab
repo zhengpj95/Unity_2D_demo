@@ -24,13 +24,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6219979889397620801}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: 0.38268343, w: 0.92387956}
-  m_LocalPosition: {x: 0.189, y: 0.102, z: 0}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.6, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 578333591119251713}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 45}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7365624081121074789
 GameObject:
   m_ObjectHideFlags: 0
@@ -45,8 +45,8 @@ GameObject:
   - component: {fileID: 8080538678013785753}
   - component: {fileID: 4913296759264387457}
   - component: {fileID: 179466836220756682}
-  - component: {fileID: 4988793569781408862}
   - component: {fileID: 486615150938009446}
+  - component: {fileID: 5665899463253799392}
   m_Layer: 7
   m_Name: Player_Archer
   m_TagString: Player
@@ -62,7 +62,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7365624081121074789}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -2.67, y: -1.61, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -110,7 +110,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 5
   m_Sprite: {fileID: -772661099, guid: f858425416e6fcf4885c71553d182454, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -217,26 +217,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 274df57cba8ed1043848bfdeea2be631, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &4988793569781408862
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7365624081121074789}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e498d01ea7bafa540903834dca49c51e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  attackCoolDownTime: 0
-  attackPoint: {fileID: 2968214554491825590}
-  enemyLayer:
-    serializedVersion: 2
-    m_Bits: 256
-  weaponRange: 0.8
-  knockBackForce: 2
-  stunTime: 0.5
 --- !u!114 &486615150938009446
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -249,3 +229,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8302860f1cb07df419c8c249415045e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &5665899463253799392
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7365624081121074789}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6db07cb5e544eb8429c6d26afff358fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  arrowPrefab: {fileID: 1959859628054320063, guid: deee3a3247026f94aabd70f1a76fb729, type: 3}
+  firePoint: {fileID: 2968214554491825590}

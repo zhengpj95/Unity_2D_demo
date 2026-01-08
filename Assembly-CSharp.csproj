@@ -92,6 +92,7 @@
     <Compile Include="Assets\Scripts\Rpg\ElevationEntry.cs" />
     <Compile Include="Assets\Scripts\Melee\EnemyHealth.cs" />
     <Compile Include="Assets\Scripts\Melee\PlayerController.cs" />
+    <Compile Include="Assets\Scripts\Rpg\Player\Arrow.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyHealth.cs" />
     <Compile Include="Assets\Arts\Bandits - Pixel Art\Demo\Bandit.cs" />
     <Compile Include="Assets\Scripts\Rpg\ElevationExit.cs" />
@@ -125,6 +126,7 @@
     <Compile Include="Assets\Scripts\Common\Manager\UIManager.cs" />
     <Compile Include="Assets\Scripts\Def\GameSortingLayers.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Enemy\Enemy_Bullet.cs" />
+    <Compile Include="Assets\Scripts\Rpg\Player\RpgPlayerArcherBow.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\Weapon\WeaponManager.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Enemy\Enemy_Mushroom.cs" />
     <Compile Include="Assets\Scripts\Common\UI\DestroyEvent.cs" />
