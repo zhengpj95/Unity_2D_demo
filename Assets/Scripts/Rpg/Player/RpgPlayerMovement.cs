@@ -7,7 +7,6 @@ public class RpgPlayerMovement : MonoBehaviour
 
   private Rigidbody2D _rb2d;
   private Animator _animator;
-  private SpriteRenderer _renderer;
 
   private Vector2 _movement;
   private bool _isKnockBack;
@@ -17,12 +16,6 @@ public class RpgPlayerMovement : MonoBehaviour
   {
     _rb2d = GetComponent<Rigidbody2D>();
     _animator = GetComponent<Animator>();
-    _renderer = GetComponent<SpriteRenderer>();
-  }
-
-  private void Update()
-  {
-    //
   }
 
   private void FixedUpdate()
