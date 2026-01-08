@@ -7,7 +7,9 @@ public class RpgPlayerArcherBow : MonoBehaviour
 {
   public GameObject arrowPrefab;
   public Transform firePoint;
+  public float shootCooldown = 0.5f;
 
+  private float shootTimer = 0f;
   private Vector2 aimDir = Vector2.right;
   private Animator animator;
 
@@ -18,8 +20,13 @@ public class RpgPlayerArcherBow : MonoBehaviour
 
   void Update()
   {
+    if (shootTimer > 0)
+    {
+      shootTimer -= Time.deltaTime;
+    }
+
     HandleAiming();
-    if (Input.GetButtonDown("Fire1"))
+    if (Input.GetButtonDown("Fire1") && shootTimer <= 0)
     {
       Fire();
     }
@@ -47,5 +54,6 @@ public class RpgPlayerArcherBow : MonoBehaviour
     GameObject arrow = Instantiate(arrowPrefab, firePoint.position, firePoint.rotation);
     Arrow arrowScript = arrow.GetComponent<Arrow>();
     arrowScript.direction = aimDir;
+    shootTimer = shootCooldown;
   }
 }
