@@ -2,11 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Xml.Serialization;
 using UnityEngine;
+using TMPro;
 
 public class Loot : MonoBehaviour
 {
   public ItemSO itemSO;
   public SpriteRenderer sr;
+  public TMP_Text text;
   public Animator animator;
 
   public int quantity;
@@ -17,6 +19,7 @@ public class Loot : MonoBehaviour
     if (itemSO != null && sr != null)
     {
       sr.sprite = itemSO.icon;
+      // text.text = quantity.ToString();
       this.name = itemSO.itemName;
     }
   }

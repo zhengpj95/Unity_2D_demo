@@ -32,9 +32,9 @@ public class Arrow : MonoBehaviour
       collision.gameObject.GetComponent<RpgEnemyHealth>()
         .ChangeHealth(-StatsManager.Instance.damage);
       collision.gameObject.GetComponent<RpgEnemyKnockBack>()
-        .KnockBack(transform, 0.8f, 0.5f);
+        .KnockBack(transform, 0.4f, 0.5f);
     }
     // 销毁箭头
-    // Destroy(gameObject);
+    Destroy(gameObject);
   }
 }
