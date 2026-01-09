@@ -29,12 +29,36 @@ public class Arrow : MonoBehaviour
   {
     if (collision.gameObject.CompareTag("Enemy"))
     {
+      // 伤害和击退
       collision.gameObject.GetComponent<RpgEnemyHealth>()
         .ChangeHealth(-StatsManager.Instance.damage);
       collision.gameObject.GetComponent<RpgEnemyKnockBack>()
         .KnockBack(transform, 0.4f, 0.5f);
+
+      // 箭插入敌人
+      // PinToEnemy(collision.gameObject);
+      Destroy(gameObject);
     }
-    // 销毁箭头
-    Destroy(gameObject);
+    else
+    {
+      Destroy(gameObject);
+    }
+  }
+
+  private void PinToEnemy(GameObject enemy)
+  {
+    // 记录箭相对于敌人的本地位置（这样敌人移动时箭会跟随）
+    transform.SetParent(enemy.transform);
+
+    // 停止物理移动
+    rb.velocity = Vector2.zero;
+    rb.angularVelocity = 0f;
+    rb.isKinematic = true;  // 改为动画刚体，不再受物理影响
+
+    // 禁用碰撞，避免重复触发或与其他物体碰撞
+    GetComponent<Collider2D>().enabled = false;
+
+    // 几秒后销毁（或者由敌人销毁时一起销毁）
+    Destroy(gameObject, 3f);
   }
 }
