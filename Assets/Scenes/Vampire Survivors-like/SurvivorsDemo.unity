@@ -19305,9 +19305,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   attackRange: 4
-  enemyLayer:
-    serializedVersion: 2
-    m_Bits: 256
   weaponContainer: {fileID: 1649546557}
   arrowWeaponPrefab: {fileID: 2408999292843277343, guid: de1c274bcceb7ee408c047cdeba7754e, type: 3}
   arrowFireInterval: 5
@@ -19322,6 +19319,8 @@ MonoBehaviour:
   bulletWeaponPrefab: {fileID: 3355015254684092096, guid: 092099cc74e0a6b42a23cc8674876789, type: 3}
   bulletFireInterval: 0.8
   bulletDestroyTime: 10
+  fireWeaponPrefab: {fileID: 4356462975594188332, guid: 08784c0e77ef46e45a87fd116840e331, type: 3}
+  fireFireInterval: 4
 --- !u!4 &196190851
 Transform:
   m_ObjectHideFlags: 0

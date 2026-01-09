@@ -38,6 +38,11 @@ public class WeaponManager : SingletonMono<WeaponManager>
   [SerializeField] private float bulletDestroyTime = 10f;
   private float nextBulletTimer = 0f;
 
+  [Header("Fire Weapon Settings")]
+  [SerializeField] private Transform fireWeaponPrefab;
+  [SerializeField] private float fireFireInterval = 10f;
+  private float nextFireTimer = 0f;
+
   private float timer = 0f;
 
   private void Start()
@@ -77,6 +82,21 @@ public class WeaponManager : SingletonMono<WeaponManager>
     {
       nextBulletTimer += bulletFireInterval;
       FireBullet();
+    }
+
+    if (timer >= nextFireTimer)
+    {
+      nextFireTimer += fireFireInterval;
+      FireFire();
+    }
+  }
+
+  private void FireFire()
+  {
+    EnemyChasing enemyChasing = EnemySpawnManager.Instance.GetRandom(player.position, attackRange);
+    if (enemyChasing != null)
+    {
+      Instantiate(fireWeaponPrefab, enemyChasing.transform.position, Quaternion.identity, weaponContainer);
     }
   }
 

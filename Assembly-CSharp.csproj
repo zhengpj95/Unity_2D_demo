@@ -139,6 +139,7 @@
     <Compile Include="Assets\Scripts\FrogAdventure\FruitCollect.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\VSHealth.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\CheckEndPoint.cs" />
+    <Compile Include="Assets\Scripts\Vampire Survivors-like\Weapon\FireWeapon.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />
