@@ -68,6 +68,7 @@
     <Compile Include="Assets\Scripts\FrogAdventure\UILevel.cs" />
     <Compile Include="Assets\Scripts\Common\Manager\TimerManager.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\StartGame.cs" />
+    <Compile Include="Assets\Scripts\Rpg\Invertory_Shop\ItemSO.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\RpgPlayerHealth.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\UIFruit.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\PlayerShooter.cs" />
@@ -117,6 +118,7 @@
     <Compile Include="Assets\Scripts\Common\Manager\AudioManager.cs" />
     <Compile Include="Assets\Arts\Hero Knight - Pixel Art\Demo\Sensor_HeroKnight.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\RpgPlayerCombat.cs" />
+    <Compile Include="Assets\Scripts\Rpg\Invertory_Shop\Loot.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\ShooterBullet.cs" />
     <Compile Include="Assets\Arts\Hero Knight - Pixel Art\Demo\DestroyEvent_HeroKnight.cs" />
     <Compile Include="Assets\Scripts\Def\GameTag.cs" />
