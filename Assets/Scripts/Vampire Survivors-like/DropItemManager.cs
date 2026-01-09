@@ -34,6 +34,8 @@ public class DropItemManager : SingletonMono<DropItemManager>
     }
   }
 
+  private bool addSaw = false;
+
   public void AddScore(int score)
   {
     totalScore += score;
@@ -45,6 +47,12 @@ public class DropItemManager : SingletonMono<DropItemManager>
       speedUpScore = 0;
       speedUpRateScore += 100;
       EnemySpawnManager.Instance.SpeedUpSpawnRate();
+    }
+
+    if (totalScore >= 10 && addSaw == false)
+    {
+      addSaw = true;
+      NewWeaponManager.Instance.AddOrUpgrade(NewWeaponManager.Instance.sawPrefab);
     }
   }
 }

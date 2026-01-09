@@ -4,6 +4,13 @@ using UnityEngine;
 
 public class NewWeaponManager : SingletonMono<NewWeaponManager>
 {
+  public WeaponSO bulletbPrefab;
+  public WeaponSO sawPrefab;
+  public WeaponSO arrowPrefab;
+  public WeaponSO firePrefab;
+  public WeaponSO buleOvalPrefab;
+  public WeaponSO lightningPrefab;
+
   private readonly List<WeaponController> weaponControllers = new List<WeaponController>();
 
   public bool HasWeapon(WeaponSO data)

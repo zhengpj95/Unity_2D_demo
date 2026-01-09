@@ -19515,6 +19515,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff145ba233e566f4882e02780c090ba6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  bulletbPrefab: {fileID: 11400000, guid: 5fdfc90248648f440aec43417856ee20, type: 2}
+  sawPrefab: {fileID: 11400000, guid: c22690a171e859d4bb74c7eb2702a8f9, type: 2}
+  arrowPrefab: {fileID: 2408999292843277343, guid: de1c274bcceb7ee408c047cdeba7754e, type: 3}
+  firePrefab: {fileID: 4356462975594188332, guid: 08784c0e77ef46e45a87fd116840e331, type: 3}
+  buleOvalPrefab: {fileID: 9104589825890431468, guid: fb19d800627dfbc4e8b7239b19b0ad42, type: 3}
+  lightningPrefab: {fileID: 858478033565469563, guid: 08d3acaf678cbe446b07597715ff201c, type: 3}
 --- !u!1 &702637126
 GameObject:
   m_ObjectHideFlags: 0
