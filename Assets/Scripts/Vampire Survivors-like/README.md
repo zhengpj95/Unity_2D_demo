@@ -61,3 +61,8 @@
      1. 不直接造成伤害
      2. 强化其他武器
      3. 比如：Attack Speed, Range, Cooldown Reduction
+
+## 武器结构布局
+
+![weapon_structure](../../../MdImg/weapon_structure.png)
+

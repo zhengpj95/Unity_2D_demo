@@ -10,7 +10,10 @@ using UnityEngine;
   */
 public class Hero : MonoBehaviour
 {
+  public WeaponSO baseWeapon;
   public float runSpeed = 2f;
+  public float attackRange = 4f;
+
   private Rigidbody2D _rb;
   private Animator _animator;
   private Vector2 _lastFacing = Vector2.down; // 初始朝向，默认向下
@@ -19,6 +22,7 @@ public class Hero : MonoBehaviour
   {
     _rb = GetComponent<Rigidbody2D>();
     _animator = GetComponent<Animator>();
+    NewWeaponManager.Instance.AddOrUpgrade(baseWeapon);
   }
 
   void Update()
@@ -52,5 +56,11 @@ public class Hero : MonoBehaviour
     if (Mathf.Abs(v.y) > dead)
       return new Vector2(0, Mathf.Sign(v.y));
     return _lastFacing;
+  }
+
+  void OnDrawGizmosSelected()
+  {
+    Gizmos.color = Color.red;
+    Gizmos.DrawWireSphere(transform.position, attackRange);
   }
 }
