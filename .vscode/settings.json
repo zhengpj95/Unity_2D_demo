@@ -65,6 +65,7 @@
     "Assets/Prefabs/": true,
     "Assets/TileAnimation/": true,
     "Assets/Resources/": true,
+    "MdImg": true,
   },
   "dotnet.defaultSolution": "Unity_2D_Demo.sln",
   "dotnet.preferCSharpExtension": true
