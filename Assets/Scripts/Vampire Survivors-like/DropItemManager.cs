@@ -52,7 +52,9 @@ public class DropItemManager : SingletonMono<DropItemManager>
     if (totalScore >= 10 && addSaw == false)
     {
       addSaw = true;
-      NewWeaponManager.Instance.AddOrUpgrade(NewWeaponManager.Instance.sawPrefab);
+      NewWeaponManager.Instance.AddOrUpgrade(NewWeaponManager.Instance.arrowSO);
+      NewWeaponManager.Instance.AddOrUpgrade(NewWeaponManager.Instance.fireSO);
+      NewWeaponManager.Instance.AddOrUpgrade(NewWeaponManager.Instance.blueOvalSO);
     }
   }
 }

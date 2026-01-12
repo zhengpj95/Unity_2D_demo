@@ -4,13 +4,6 @@ using UnityEngine;
 
 public class BulletbController : WeaponController
 {
-  private Transform player;
-
-  private void Start()
-  {
-    player = GameObject.FindGameObjectWithTag("Player").transform;
-  }
-
   protected override void Fire()
   {
     var hero = player.GetComponent<Hero>();

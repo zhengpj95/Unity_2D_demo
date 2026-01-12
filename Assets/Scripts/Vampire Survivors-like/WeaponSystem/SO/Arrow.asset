@@ -10,38 +10,38 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 515895085226891458ce35443a310fb1, type: 3}
-  m_Name: WeaponSaw
+  m_Name: Arrow
   m_EditorClassIdentifier: 
-  weaponId: WeaponSaw
-  prefab: {fileID: 2400732400320537634, guid: cfd045f9d45c84544a3e63013c118f9b, type: 3}
+  weaponId: WeaponArrow
+  prefab: {fileID: 2408999292843277343, guid: de1c274bcceb7ee408c047cdeba7754e, type: 3}
   levels:
   - level: 1
     damage: 1
-    count: 1
-    range: 1
+    count: 0
+    range: 0
     fireInterval: 1
-    duration: 3
+    duration: 1
   - level: 2
     damage: 2
-    count: 2
-    range: 2
+    count: 0
+    range: 0
     fireInterval: 0.8
-    duration: 5
+    duration: 1
   - level: 3
     damage: 3
-    count: 2
-    range: 2
-    fireInterval: 0.5
-    duration: 8
+    count: 0
+    range: 0
+    fireInterval: 0.6
+    duration: 1
   - level: 4
     damage: 4
-    count: 2
-    range: 2
-    fireInterval: 0.3
-    duration: 10
+    count: 0
+    range: 0
+    fireInterval: 0.4
+    duration: 1
   - level: 5
     damage: 5
-    count: 2
-    range: 2
-    fireInterval: 0.3
-    duration: 10
+    count: 0
+    range: 0
+    fireInterval: 0.2
+    duration: 1

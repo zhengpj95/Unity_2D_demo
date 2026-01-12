@@ -19515,12 +19515,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff145ba233e566f4882e02780c090ba6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bulletbPrefab: {fileID: 11400000, guid: 5fdfc90248648f440aec43417856ee20, type: 2}
-  sawPrefab: {fileID: 11400000, guid: c22690a171e859d4bb74c7eb2702a8f9, type: 2}
-  arrowPrefab: {fileID: 2408999292843277343, guid: de1c274bcceb7ee408c047cdeba7754e, type: 3}
-  firePrefab: {fileID: 4356462975594188332, guid: 08784c0e77ef46e45a87fd116840e331, type: 3}
-  buleOvalPrefab: {fileID: 9104589825890431468, guid: fb19d800627dfbc4e8b7239b19b0ad42, type: 3}
-  lightningPrefab: {fileID: 858478033565469563, guid: 08d3acaf678cbe446b07597715ff201c, type: 3}
+  bulletbSO: {fileID: 11400000, guid: 5fdfc90248648f440aec43417856ee20, type: 2}
+  sawSO: {fileID: 11400000, guid: c22690a171e859d4bb74c7eb2702a8f9, type: 2}
+  arrowSO: {fileID: 11400000, guid: e5c7d7f39931fbd4083f310ed993a95d, type: 2}
+  fireSO: {fileID: 11400000, guid: b83bfdf0d10ea4546b18d80147466cd5, type: 2}
+  blueOvalSO: {fileID: 11400000, guid: 1542076a0c35ac04384e195c84ba35b0, type: 2}
+  lightningSO: {fileID: 11400000, guid: d82c4c62e0e7a034ca2c627f6a2f178e, type: 2}
 --- !u!1 &702637126
 GameObject:
   m_ObjectHideFlags: 0
@@ -26789,6 +26789,7 @@ SceneRoots:
   - {fileID: 1806362109}
   - {fileID: 1972822215}
   - {fileID: 196190851}
+  - {fileID: 637123818}
   - {fileID: 1664855009}
   - {fileID: 1858539119}
   - {fileID: 492218514}
@@ -26798,4 +26799,3 @@ SceneRoots:
   - {fileID: 1053428956}
   - {fileID: 166185226}
   - {fileID: 1653446475}
-  - {fileID: 637123818}

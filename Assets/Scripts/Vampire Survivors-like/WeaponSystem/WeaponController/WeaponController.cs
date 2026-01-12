@@ -11,6 +11,14 @@ public abstract class WeaponController : MonoBehaviour
 
   public WeaponSO WeaponData => data;
 
+  public Transform player;
+
+  private void Start()
+  {
+    player = GameObject.FindGameObjectWithTag("Player").transform;
+  }
+
+
   public virtual void Init(WeaponSO weaponSO)
   {
     this.data = weaponSO;

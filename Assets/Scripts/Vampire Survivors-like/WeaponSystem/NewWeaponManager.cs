@@ -4,12 +4,12 @@ using UnityEngine;
 
 public class NewWeaponManager : SingletonMono<NewWeaponManager>
 {
-  public WeaponSO bulletbPrefab;
-  public WeaponSO sawPrefab;
-  public WeaponSO arrowPrefab;
-  public WeaponSO firePrefab;
-  public WeaponSO buleOvalPrefab;
-  public WeaponSO lightningPrefab;
+  public WeaponSO bulletbSO;
+  public WeaponSO sawSO;
+  public WeaponSO arrowSO;
+  public WeaponSO fireSO;
+  public WeaponSO blueOvalSO;
+  public WeaponSO lightningSO;
 
   private readonly List<WeaponController> weaponControllers = new List<WeaponController>();
 
@@ -18,15 +18,20 @@ public class NewWeaponManager : SingletonMono<NewWeaponManager>
     return weaponControllers.Exists(x => x.WeaponData == data);
   }
 
-  public void AddOrUpgrade(WeaponSO data)
+  public void AddOrUpgrade(WeaponSO soData)
   {
-    if (HasWeapon(data))
+    if (!soData)
     {
-      LevelUpWeapon(data);
+      Debug.LogError($"AddOrUpgrade: WeaponSO is null");
+      return;
+    }
+    if (HasWeapon(soData))
+    {
+      LevelUpWeapon(soData);
     }
     else
     {
-      AddWeapon(data);
+      AddWeapon(soData);
     }
   }
 
@@ -54,6 +59,10 @@ public class NewWeaponManager : SingletonMono<NewWeaponManager>
     {
       "WeaponSaw" => typeof(SawController),
       "WeaponBulletb" => typeof(BulletbController),
+      "WeaponLightning" => typeof(LightningController),
+      "WeaponFire" => typeof(FireController),
+      "WeaponArrow" => typeof(ArrowController),
+      "WeaponBlueOval" => typeof(BlueOvalCOntroller),
       _ => null,
     };
   }
