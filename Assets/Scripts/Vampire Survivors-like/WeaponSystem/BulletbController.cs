@@ -19,8 +19,9 @@ public class BulletbController : WeaponController
     {
       var bulletb = Instantiate(data.prefab, player.position, Quaternion.identity, player);
       var bulletbScript = bulletb.GetComponent<ArrowWeapon>();
-      bulletbScript.SetTarget(enemy.transform, data.duration);
-      Destroy(bulletb.gameObject, data.duration);
+      var levelData = GetLevelData();
+      bulletbScript.SetTarget(enemy.transform, levelData.duration);
+      Destroy(bulletb.gameObject, levelData.duration);
     }
   }
 }

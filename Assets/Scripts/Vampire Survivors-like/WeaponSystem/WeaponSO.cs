@@ -8,8 +8,8 @@ public class WeaponSO : ScriptableObject
   public string weaponId;
   public Transform prefab;
 
-  public float fireInterval;
-  public float duration;
+  // public float fireInterval;
+  // public float duration;
 
   public WeaponLevelData[] levels;
 }

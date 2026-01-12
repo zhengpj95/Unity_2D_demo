@@ -6,4 +6,7 @@ public class WeaponLevelData
   public float damage;
   public int count;
   public float range;
+
+  public float fireInterval;
+  public float duration;
 }
