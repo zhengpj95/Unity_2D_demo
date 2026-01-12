@@ -12,7 +12,7 @@ public class ArrowController : WeaponController
     {
       var arrow = Instantiate(data.prefab, transform.position, Quaternion.identity, transform);
       var levelData = GetLevelData();
-      arrow.GetComponent<ArrowWeapon>().SetTarget(enemy.transform, levelData.duration);
+      arrow.GetComponent<ArrowWeapon>().SetTarget(enemy.transform);
       Destroy(arrow.gameObject, levelData.duration);
     }
   }

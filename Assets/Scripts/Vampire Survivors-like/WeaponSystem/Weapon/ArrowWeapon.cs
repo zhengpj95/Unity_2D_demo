@@ -12,10 +12,9 @@ public class ArrowWeapon : MonoBehaviour
 
   private Transform target;
 
-  public void SetTarget(Transform targetTransform, float destoryTime)
+  public void SetTarget(Transform targetTransform)
   {
     target = targetTransform;
-    Destroy(gameObject, destoryTime);
   }
 
   private void Update()

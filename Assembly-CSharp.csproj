@@ -69,6 +69,7 @@
     <Compile Include="Assets\Scripts\Common\Manager\TimerManager.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\WeaponController\SawController.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\StartGame.cs" />
+    <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\WeaponManager.cs" />
     <Compile Include="Assets\Scripts\Rpg\Invertory_Shop\ItemSO.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\RpgPlayerHealth.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\UIFruit.cs" />
@@ -86,7 +87,6 @@
     <Compile Include="Assets\Scripts\Rpg\UI\UI_PlayerHealth.cs" />
     <Compile Include="Assets\Scripts\Def\SceneUIName.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\FruitCollectManager.cs" />
-    <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\Weapon\WeaponManager.cs" />
     <Compile Include="Assets\Scripts\Common\UI\ObjectFader.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\EnemyManager.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyTrace.cs" />
@@ -109,7 +109,6 @@
     <Compile Include="Assets\Scripts\Vampire Survivors-like\HpBarUI.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyCombat.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\PointUtil.cs" />
-    <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\NewWeaponManager.cs" />
     <Compile Include="Assets\Scripts\Common\Manager\EventBus.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\WeaponController\BulletbController.cs" />
     <Compile Include="Assets\Arts\Bandits - Pixel Art\Demo\Sensor_Bandit.cs" />

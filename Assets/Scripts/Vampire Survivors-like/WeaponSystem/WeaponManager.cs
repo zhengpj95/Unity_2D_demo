@@ -2,14 +2,19 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class NewWeaponManager : SingletonMono<NewWeaponManager>
+public class WeaponManager : SingletonMono<WeaponManager>
 {
-  public WeaponSO bulletbSO;
+  [Header("近战环绕型武器")]
   public WeaponSO sawSO;
+
+  [Header("投射型武器")]
   public WeaponSO arrowSO;
-  public WeaponSO fireSO;
+  public WeaponSO bulletbSO;
+
+  [Header("区域型武器")]
   public WeaponSO blueOvalSO;
   public WeaponSO lightningSO;
+  public WeaponSO fireSO;
 
   private readonly List<WeaponController> weaponControllers = new List<WeaponController>();
 

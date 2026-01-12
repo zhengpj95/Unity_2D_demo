@@ -22,7 +22,7 @@ public class Hero : MonoBehaviour
   {
     _rb = GetComponent<Rigidbody2D>();
     _animator = GetComponent<Animator>();
-    NewWeaponManager.Instance.AddOrUpgrade(baseWeapon);
+    WeaponManager.Instance.AddOrUpgrade(baseWeapon);
   }
 
   void Update()

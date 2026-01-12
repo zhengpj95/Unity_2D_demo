@@ -13,7 +13,7 @@ public class BulletbController : WeaponController
       var bulletb = Instantiate(data.prefab, player.position, Quaternion.identity, player);
       var bulletbScript = bulletb.GetComponent<ArrowWeapon>();
       var levelData = GetLevelData();
-      bulletbScript.SetTarget(enemy.transform, levelData.duration);
+      bulletbScript.SetTarget(enemy.transform);
       Destroy(bulletb.gameObject, levelData.duration);
     }
   }
