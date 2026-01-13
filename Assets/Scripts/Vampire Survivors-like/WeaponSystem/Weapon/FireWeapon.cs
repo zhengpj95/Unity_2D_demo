@@ -7,20 +7,22 @@ using UnityEngine;
  */
 public class FireWeapon : MonoBehaviour
 {
-  [SerializeField] private int damage = 1;
-  [SerializeField] private float damageInterval = 0.5f;
-
-  private List<Transform> hitEnemies = new List<Transform>();
+  private bool initialized;
+  private int damage = 1;
+  private float damageInterval = 0.5f;
   private float nextDamageTime = 0f;
+  private List<Transform> hitEnemies = new List<Transform>();
 
-  public void SetLevelData(WeaponLevelData data)
+  public void Init(WeaponLevelData data)
   {
     damage = data.damage;
     damageInterval = data.damageInterval;
+    initialized = true;
   }
 
   void Update()
   {
+    if (!initialized) return;
     if (nextDamageTime > 0)
     {
       nextDamageTime -= Time.deltaTime;
@@ -33,6 +35,7 @@ public class FireWeapon : MonoBehaviour
 
   private void DealDamage()
   {
+    if (!initialized) return;
     if (hitEnemies.Count <= 0) return;
     nextDamageTime = damageInterval;
     for (int i = 0; i < hitEnemies.Count; i++)
@@ -49,6 +52,7 @@ public class FireWeapon : MonoBehaviour
   // 敌人在武器范围时，添加到敌人列表
   private void OnTriggerStay2D(Collider2D collision)
   {
+    if (!initialized) return;
     if (collision.gameObject.CompareTag("Enemy"))
     {
       Transform enemyTransform = collision.transform;
@@ -61,6 +65,7 @@ public class FireWeapon : MonoBehaviour
 
   void OnTriggerExit2D(Collider2D collision)
   {
+    if (!initialized) return;
     if (collision.gameObject.CompareTag("Enemy"))
     {
       Transform enemyTransform = collision.transform;

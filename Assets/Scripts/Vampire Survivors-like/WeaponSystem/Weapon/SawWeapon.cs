@@ -7,28 +7,25 @@ using UnityEngine;
  */
 public class SawWeapon : MonoBehaviour
 {
+  private bool initialized;
   private float radius = 1.2f;
   private float rotateSpeed = 180f; // 度/秒
   private int damage = 1;
-
   private float angle;
 
-  public void SetLevelData(WeaponLevelData weaponLevelData)
+  public void Init(WeaponLevelData weaponLevelData)
   {
     radius = weaponLevelData.range;
     damage = weaponLevelData.damage;
     rotateSpeed = weaponLevelData.speed;
+    initialized = true;
   }
 
   void Update()
   {
+    if (!initialized) return;
     transform.Rotate(0, 0, 360 * Time.deltaTime);
     RotateAroundPlayer();
-  }
-
-  public void SetDestoryTime(float time)
-  {
-    Destroy(gameObject, time);
   }
 
   void RotateAroundPlayer()
@@ -45,6 +42,7 @@ public class SawWeapon : MonoBehaviour
 
   void OnTriggerEnter2D(Collider2D collision)
   {
+    if (!initialized) return;
     if (collision.gameObject.CompareTag("Enemy"))
     {
       VSHealth vSHealth = collision.gameObject.GetComponent<VSHealth>();

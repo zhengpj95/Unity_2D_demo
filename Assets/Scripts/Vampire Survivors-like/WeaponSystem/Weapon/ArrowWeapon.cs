@@ -7,24 +7,22 @@ using UnityEngine;
  */
 public class ArrowWeapon : MonoBehaviour
 {
+  private bool initialized;
   private float speed = 2f;
   private int damage = 1;
-
   private Transform target;
 
-  public void SetTarget(Transform targetTransform)
+  public void Init(Transform targetTransform, WeaponLevelData levelData)
   {
     target = targetTransform;
-  }
-
-  public void SetLevelData(WeaponLevelData levelData)
-  {
     speed = levelData.speed;
     damage = levelData.damage;
+    initialized = true;
   }
 
   private void Update()
   {
+    if (!initialized) return;
     if (target != null)
     {
       Vector3 dir = (target.position - transform.position).normalized;
@@ -42,6 +40,7 @@ public class ArrowWeapon : MonoBehaviour
 
   void OnTriggerEnter2D(Collider2D collision)
   {
+    if (!initialized) return;
     if (collision.gameObject.CompareTag("Enemy"))
     {
       VSHealth vSHealth = collision.gameObject.GetComponent<VSHealth>();

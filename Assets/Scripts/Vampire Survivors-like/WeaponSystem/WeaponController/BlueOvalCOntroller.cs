@@ -12,9 +12,8 @@ public class BlueOvalController : WeaponController
     {
       Transform blueOval = Instantiate(data.prefab, player.position, Quaternion.identity, transform);
       BlueOvalWeapon blueOvalWeapon = blueOval.GetComponent<BlueOvalWeapon>();
-      blueOvalWeapon.SetTarget(enemy.transform);
       var levelData = GetLevelData();
-      blueOvalWeapon.SetLevelData(levelData);
+      blueOvalWeapon.Init(enemy.transform, levelData);
       Destroy(blueOval.gameObject, levelData.duration);
     }
   }

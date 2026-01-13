@@ -7,22 +7,20 @@ using UnityEngine;
  */
 public class BlueOvalWeapon : MonoBehaviour
 {
+  private bool initialized;
   private int damage = 1;
-
   private List<Transform> hitEnemies = new List<Transform>();
 
-  public void SetTarget(Transform target)
+  public void Init(Transform target, WeaponLevelData data)
   {
     transform.position = target.position;
-  }
-
-  public void SetLevelData(WeaponLevelData data)
-  {
     damage = data.damage;
+    initialized = true;
   }
 
   void OnTriggerEnter2D(Collider2D collision)
   {
+    if (!initialized) return;
     if (collision.gameObject.CompareTag("Enemy"))
     {
       Transform enemyTransform = collision.transform;
@@ -35,6 +33,7 @@ public class BlueOvalWeapon : MonoBehaviour
 
   void OnTriggerExit2D(Collider2D collision)
   {
+    if (!initialized) return;
     if (collision.gameObject.CompareTag("Enemy"))
     {
       Transform enemyTransform = collision.transform;
