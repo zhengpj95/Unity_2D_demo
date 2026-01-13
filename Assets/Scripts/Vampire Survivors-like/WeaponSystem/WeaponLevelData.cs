@@ -3,7 +3,8 @@
 public class WeaponLevelData
 {
   public int level;
-  public float damage;
+  public int damage;
+  public float speed;
   public int count;
   public float range;
 

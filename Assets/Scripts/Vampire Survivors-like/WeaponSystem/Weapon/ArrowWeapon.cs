@@ -7,14 +7,20 @@ using UnityEngine;
  */
 public class ArrowWeapon : MonoBehaviour
 {
-  [SerializeField] private float speed = 2f;
-  [SerializeField] private int damage = 1;
+  private float speed = 2f;
+  private int damage = 1;
 
   private Transform target;
 
   public void SetTarget(Transform targetTransform)
   {
     target = targetTransform;
+  }
+
+  public void SetLevelData(WeaponLevelData levelData)
+  {
+    speed = levelData.speed;
+    damage = levelData.damage;
   }
 
   private void Update()

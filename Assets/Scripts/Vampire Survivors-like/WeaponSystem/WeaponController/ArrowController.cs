@@ -7,12 +7,14 @@ public class ArrowController : WeaponController
   protected override void Fire()
   {
     var hero = player.GetComponent<Hero>();
-    EnemyChasing enemy = EnemySpawnManager.Instance.GetCloseest(transform.position, hero.attackRange);
+    EnemyChasing enemy = EnemySpawnManager.Instance.GetCloseest(player.position, hero.attackRange);
     if (enemy)
     {
-      var arrow = Instantiate(data.prefab, transform.position, Quaternion.identity, transform);
+      var arrow = Instantiate(data.prefab, player.position, Quaternion.identity, transform);
       var levelData = GetLevelData();
-      arrow.GetComponent<ArrowWeapon>().SetTarget(enemy.transform);
+      var arrowScript = arrow.GetComponent<ArrowWeapon>();
+      arrowScript.SetTarget(enemy.transform);
+      arrowScript.SetLevelData(levelData);
       Destroy(arrow.gameObject, levelData.duration);
     }
   }
