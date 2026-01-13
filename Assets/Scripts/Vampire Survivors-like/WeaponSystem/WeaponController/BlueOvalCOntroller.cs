@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BlueOvalCOntroller : WeaponController
+public class BlueOvalController : WeaponController
 {
   protected override void Fire()
   {
@@ -13,7 +13,9 @@ public class BlueOvalCOntroller : WeaponController
       Transform blueOval = Instantiate(data.prefab, player.position, Quaternion.identity, transform);
       BlueOvalWeapon blueOvalWeapon = blueOval.GetComponent<BlueOvalWeapon>();
       blueOvalWeapon.SetTarget(enemy.transform);
-      Destroy(blueOval.gameObject, GetLevelData().duration);
+      var levelData = GetLevelData();
+      blueOvalWeapon.SetLevelData(levelData);
+      Destroy(blueOval.gameObject, levelData.duration);
     }
   }
 }

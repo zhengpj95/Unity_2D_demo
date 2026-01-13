@@ -13,7 +13,9 @@ public class LightningController : WeaponController
       Transform lightning = Instantiate(data.prefab, player.position, Quaternion.identity, transform);
       BlueOvalWeapon lightningWeapon = lightning.GetComponent<BlueOvalWeapon>();
       lightningWeapon.SetTarget(enemy.transform);
-      Destroy(lightning.gameObject, GetLevelData().duration);
+      var weaponLevelData = GetLevelData();
+      lightningWeapon.SetLevelData(weaponLevelData);
+      Destroy(lightning.gameObject, weaponLevelData.duration);
     }
   }
 }

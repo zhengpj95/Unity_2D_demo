@@ -53,8 +53,10 @@ public class DropItemManager : SingletonMono<DropItemManager>
     {
       addSaw = true;
       WeaponManager.Instance.AddOrUpgrade(WeaponManager.Instance.arrowSO);
+      WeaponManager.Instance.AddOrUpgrade(WeaponManager.Instance.sawSO);
       WeaponManager.Instance.AddOrUpgrade(WeaponManager.Instance.fireSO);
       WeaponManager.Instance.AddOrUpgrade(WeaponManager.Instance.blueOvalSO);
+      WeaponManager.Instance.AddOrUpgrade(WeaponManager.Instance.lightningSO);
     }
   }
 }

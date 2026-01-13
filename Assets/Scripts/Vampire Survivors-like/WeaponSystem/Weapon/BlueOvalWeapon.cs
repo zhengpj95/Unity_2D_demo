@@ -7,13 +7,18 @@ using UnityEngine;
  */
 public class BlueOvalWeapon : MonoBehaviour
 {
-  [SerializeField] private int damage = 1;
+  private int damage = 1;
 
   private List<Transform> hitEnemies = new List<Transform>();
 
   public void SetTarget(Transform target)
   {
     transform.position = target.position;
+  }
+
+  public void SetLevelData(WeaponLevelData data)
+  {
+    damage = data.damage;
   }
 
   void OnTriggerEnter2D(Collider2D collision)

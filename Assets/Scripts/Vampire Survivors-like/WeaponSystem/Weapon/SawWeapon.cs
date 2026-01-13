@@ -7,12 +7,18 @@ using UnityEngine;
  */
 public class SawWeapon : MonoBehaviour
 {
-  [Header("Rotation")]
-  [SerializeField] private float radius = 1.2f;
-  [SerializeField] private float rotateSpeed = 180f; // 度/秒
-  [SerializeField] private int damage = 1;
+  private float radius = 1.2f;
+  private float rotateSpeed = 180f; // 度/秒
+  private int damage = 1;
 
   private float angle;
+
+  public void SetLevelData(WeaponLevelData weaponLevelData)
+  {
+    radius = weaponLevelData.range;
+    damage = weaponLevelData.damage;
+    rotateSpeed = weaponLevelData.speed;
+  }
 
   void Update()
   {

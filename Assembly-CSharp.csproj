@@ -113,6 +113,7 @@
     <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\WeaponController\BulletbController.cs" />
     <Compile Include="Assets\Arts\Bandits - Pixel Art\Demo\Sensor_Bandit.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyMovement.cs" />
+    <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\WeaponController\BlueOvalController.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\VSPlayerHealth.cs" />
     <Compile Include="Assets\Scripts\Def\StateEnums.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\WeaponController\WeaponController.cs" />
@@ -123,7 +124,6 @@
     <Compile Include="Assets\Scripts\Common\UI\DamageController.cs" />
     <Compile Include="Assets\Scripts\Def\GameLayer.cs" />
     <Compile Include="Assets\Scripts\Common\Manager\AudioManager.cs" />
-    <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\WeaponController\BlueOvalCOntroller.cs" />
     <Compile Include="Assets\Arts\Hero Knight - Pixel Art\Demo\Sensor_HeroKnight.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\RpgPlayerCombat.cs" />
     <Compile Include="Assets\Scripts\Rpg\Invertory_Shop\Loot.cs" />

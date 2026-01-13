@@ -67,7 +67,7 @@ public class WeaponManager : SingletonMono<WeaponManager>
       "WeaponLightning" => typeof(LightningController),
       "WeaponFire" => typeof(FireController),
       "WeaponArrow" => typeof(ArrowController),
-      "WeaponBlueOval" => typeof(BlueOvalCOntroller),
+      "WeaponBlueOval" => typeof(BlueOvalController),
       _ => null,
     };
   }

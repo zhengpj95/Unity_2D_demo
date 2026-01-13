@@ -13,6 +13,12 @@ public class FireWeapon : MonoBehaviour
   private List<Transform> hitEnemies = new List<Transform>();
   private float nextDamageTime = 0f;
 
+  public void SetLevelData(WeaponLevelData data)
+  {
+    damage = data.damage;
+    damageInterval = data.damageInterval;
+  }
+
   void Update()
   {
     if (nextDamageTime > 0)
@@ -23,7 +29,6 @@ public class FireWeapon : MonoBehaviour
     {
       DealDamage();
     }
-
   }
 
   private void DealDamage()
