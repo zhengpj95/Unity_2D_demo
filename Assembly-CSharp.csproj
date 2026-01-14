@@ -74,6 +74,7 @@
     <Compile Include="Assets\Scripts\Rpg\Player\RpgPlayerHealth.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\UIFruit.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\PlayerShooter.cs" />
+    <Compile Include="Assets\Scripts\Vampire Survivors-like\SkillSelectPanel.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\DropItem.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\EnemySpawnManager.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Player\PlayerLifeController.cs" />
