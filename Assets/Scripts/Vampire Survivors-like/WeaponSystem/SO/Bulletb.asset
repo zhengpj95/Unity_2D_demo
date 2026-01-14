@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   weaponId: WeaponBulletb
   prefab: {fileID: 3355015254684092096, guid: 092099cc74e0a6b42a23cc8674876789, type: 3}
-  icon: {fileID: 1826611738, guid: 1a33cf70ec64dd948b69c7d612167cca, type: 3}
+  icon: {fileID: 21300000, guid: 994a944219cb04144827a79d7d50d64a, type: 3}
   weaponName: "\u5B50\u5F39"
   levels:
   - level: 1

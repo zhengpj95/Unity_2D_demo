@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   weaponId: WeaponSaw
   prefab: {fileID: 2400732400320537634, guid: cfd045f9d45c84544a3e63013c118f9b, type: 3}
-  icon: {fileID: -2087813107, guid: 1a33cf70ec64dd948b69c7d612167cca, type: 3}
+  icon: {fileID: 21300000, guid: ca5ce7f3f3ac3bb499d37119b1867d7e, type: 3}
   weaponName: "\u952F\u5B50"
   levels:
   - level: 1

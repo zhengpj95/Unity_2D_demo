@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   weaponId: WeaponArrow
   prefab: {fileID: 2408999292843277343, guid: de1c274bcceb7ee408c047cdeba7754e, type: 3}
-  icon: {fileID: 1248188489, guid: 1a33cf70ec64dd948b69c7d612167cca, type: 3}
+  icon: {fileID: 21300000, guid: 8ed37ca6b54e44a4b812cb38e0e8039d, type: 3}
   weaponName: "\u5C04\u7BAD"
   levels:
   - level: 1
