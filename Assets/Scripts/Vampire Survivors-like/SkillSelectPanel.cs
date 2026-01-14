@@ -33,8 +33,24 @@ public class SkillSelectPanel : MonoBehaviour
 
   void SelectSkill(int skillIndex)
   {
-    Debug.Log($"选择技能：{skillIndex}");
-
+    switch (skillIndex)
+    {
+      case 0:
+        Debug.Log("选择了技能0");
+        WeaponManager.Instance.AddOrUpgrade(WeaponManager.Instance.bulletbSO);
+        break;
+      case 1:
+        Debug.Log("选择了技能1");
+        WeaponManager.Instance.AddOrUpgrade(WeaponManager.Instance.fireSO);
+        break;
+      case 2:
+        Debug.Log("选择了技能2");
+        WeaponManager.Instance.AddOrUpgrade(WeaponManager.Instance.lightningSO);
+        break;
+      default:
+        Debug.Log("未知技能索引");
+        break;
+    }
     HideUI();
   }
 
@@ -56,6 +72,6 @@ public class SkillSelectPanel : MonoBehaviour
   void HideUI()
   {
     hidden = true;
-    VSUIManager.Instance.SetSkillSelect(false);
+    VSUIManager.Instance.ShowSkillSelectPanel(false);
   }
 }

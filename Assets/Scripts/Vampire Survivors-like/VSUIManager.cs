@@ -9,7 +9,7 @@ public class VSUIManager : SingletonMono<VSUIManager>
   [SerializeField] private Image rectBg;
   [SerializeField] private Transform skillSelectPanel;
 
-  public void SetRectBg(bool isVisible = true)
+  public void ShowRectBg(bool isVisible = true)
   {
     if (rectBg)
     {
@@ -31,9 +31,9 @@ public class VSUIManager : SingletonMono<VSUIManager>
     }
   }
 
-  public void SetSkillSelect(bool isVisible = true)
+  public void ShowSkillSelectPanel(bool isVisible = true)
   {
-    SetRectBg(isVisible);
+    ShowRectBg(isVisible);
     if (skillSelectPanel)
     {
       skillSelectPanel.gameObject.SetActive(isVisible);

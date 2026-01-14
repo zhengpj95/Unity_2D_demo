@@ -11,6 +11,7 @@ public class DropItemManager : SingletonMono<DropItemManager>
   private int totalScore = 0;
   private int speedUpScore = 0; // 速度提升积分
   private int speedUpRateScore = 100; // 每一次提升所需积分
+  private int skillUpScore = 0; // 技能升级积分
 
   public void SpawnDropItem(Vector3 position, DropItemType dropItemType, float dropItemProb)
   {
@@ -34,13 +35,11 @@ public class DropItemManager : SingletonMono<DropItemManager>
     }
   }
 
-  private bool addSaw = false;
-
   public void AddScore(int score)
   {
     totalScore += score;
     speedUpScore += score;
-    Debug.Log("Total Score: " + totalScore);
+    skillUpScore += score;
 
     if (speedUpScore > speedUpRateScore)
     {
@@ -49,14 +48,10 @@ public class DropItemManager : SingletonMono<DropItemManager>
       EnemySpawnManager.Instance.SpeedUpSpawnRate();
     }
 
-    if (totalScore >= 10 && addSaw == false)
+    if (skillUpScore >= 50)
     {
-      addSaw = true;
-      WeaponManager.Instance.AddOrUpgrade(WeaponManager.Instance.arrowSO);
-      WeaponManager.Instance.AddOrUpgrade(WeaponManager.Instance.sawSO);
-      WeaponManager.Instance.AddOrUpgrade(WeaponManager.Instance.fireSO);
-      WeaponManager.Instance.AddOrUpgrade(WeaponManager.Instance.blueOvalSO);
-      WeaponManager.Instance.AddOrUpgrade(WeaponManager.Instance.lightningSO);
+      skillUpScore = 0;
+      VSUIManager.Instance.ShowSkillSelectPanel(true);
     }
   }
 }

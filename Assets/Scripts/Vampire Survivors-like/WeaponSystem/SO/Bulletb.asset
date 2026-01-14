@@ -16,22 +16,25 @@ MonoBehaviour:
   prefab: {fileID: 3355015254684092096, guid: 092099cc74e0a6b42a23cc8674876789, type: 3}
   levels:
   - level: 1
+    speed: 2
     damage: 1
-    speed: 1
+    damageInterval: 0
     count: 1
     range: 1
     fireInterval: 0.6
     duration: 5
   - level: 2
+    speed: 3
     damage: 2
-    speed: 2
+    damageInterval: 0
     count: 2
     range: 2
     fireInterval: 0.5
     duration: 5
   - level: 3
+    speed: 4
     damage: 3
-    speed: 3
+    damageInterval: 0
     count: 2
     range: 2
     fireInterval: 0.3

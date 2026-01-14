@@ -39,6 +39,11 @@ public abstract class WeaponController : MonoBehaviour
 
   public void LevelUp()
   {
+    if (level >= data.levels.Length)
+    {
+      Debug.Log($"武器等级已达上限：{level}");
+      return;
+    }
     level++;
   }
 
