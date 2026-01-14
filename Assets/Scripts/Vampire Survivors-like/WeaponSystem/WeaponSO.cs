@@ -7,6 +7,8 @@ public class WeaponSO : ScriptableObject
 {
   public string weaponId;
   public Transform prefab;
+  public Sprite icon;
+  public string weaponName;
 
   public WeaponLevelData[] levels;
 }

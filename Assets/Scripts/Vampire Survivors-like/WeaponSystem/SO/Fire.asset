@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   weaponId: WeaponFire
   prefab: {fileID: 4356462975594188332, guid: 08784c0e77ef46e45a87fd116840e331, type: 3}
+  icon: {fileID: 609348855, guid: 1a33cf70ec64dd948b69c7d612167cca, type: 3}
+  weaponName: "\u706B\u5708"
   levels:
   - level: 1
     speed: 0

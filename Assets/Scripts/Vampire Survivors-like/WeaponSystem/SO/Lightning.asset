@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   weaponId: WeaponLightning
   prefab: {fileID: 858478033565469563, guid: 08d3acaf678cbe446b07597715ff201c, type: 3}
+  icon: {fileID: 619955246, guid: 1a33cf70ec64dd948b69c7d612167cca, type: 3}
+  weaponName: "\u95EA\u7535"
   levels:
   - level: 1
     speed: 0

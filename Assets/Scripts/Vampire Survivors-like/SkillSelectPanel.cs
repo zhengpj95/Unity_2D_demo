@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,6 +10,7 @@ public class SkillSelectPanel : MonoBehaviour
   public Button skill1;
   public Button skill2;
   public Text timerText; // UI 文本显示倒计时
+  public WeaponSO[] weapons; // 武器SO
 
   private float countdownDuration = 10f;
   private float remainingTime;
@@ -31,21 +33,49 @@ public class SkillSelectPanel : MonoBehaviour
     skill2.onClick.RemoveAllListeners();
   }
 
+  void Start()
+  {
+    for (int i = 0; i < 3; i++)
+    {
+      var skillItem = gameObject.transform.Find($"SkillItem{i}");
+      if (skillItem && weapons[i])
+      {
+        Debug.Log(skillItem);
+        Debug.Log(weapons[i]);
+        UpdateSkillItem(skillItem, weapons[i]);
+      }
+    }
+  }
+
+  void UpdateSkillItem(Transform skillItem, WeaponSO weapon)
+  {
+    var icon = skillItem.Find("Image");
+    if (icon != null)
+    {
+      icon.GetComponent<Image>().sprite = weapon.icon;
+    }
+    var text = skillItem.Find("Text");
+    if (text != null)
+    {
+      text.GetComponent<TextMeshProUGUI>().text = weapon.weaponName;
+    }
+  }
+
   void SelectSkill(int skillIndex)
   {
     switch (skillIndex)
     {
       case 0:
         Debug.Log("选择了技能0");
-        WeaponManager.Instance.AddOrUpgrade(WeaponManager.Instance.bulletbSO);
+        WeaponManager.Instance.AddOrUpgrade(weapons[0]);
         break;
       case 1:
         Debug.Log("选择了技能1");
-        WeaponManager.Instance.AddOrUpgrade(WeaponManager.Instance.fireSO);
+        WeaponManager.Instance.AddOrUpgrade(weapons[1]);
         break;
       case 2:
         Debug.Log("选择了技能2");
-        WeaponManager.Instance.AddOrUpgrade(WeaponManager.Instance.lightningSO);
+        WeaponManager.Instance.AddOrUpgrade(weapons[2]);
         break;
       default:
         Debug.Log("未知技能索引");

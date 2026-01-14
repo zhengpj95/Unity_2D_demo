@@ -14,24 +14,29 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   weaponId: WeaponArrow
   prefab: {fileID: 2408999292843277343, guid: de1c274bcceb7ee408c047cdeba7754e, type: 3}
+  icon: {fileID: 1248188489, guid: 1a33cf70ec64dd948b69c7d612167cca, type: 3}
+  weaponName: "\u5C04\u7BAD"
   levels:
   - level: 1
-    damage: 1
     speed: 1
+    damage: 1
+    damageInterval: 0
     count: 0
     range: 0
     fireInterval: 1
     duration: 1
   - level: 2
-    damage: 2
     speed: 2
+    damage: 2
+    damageInterval: 0
     count: 0
     range: 0
     fireInterval: 0.8
     duration: 1
   - level: 3
-    damage: 3
     speed: 3
+    damage: 3
+    damageInterval: 0
     count: 0
     range: 0
     fireInterval: 0.6

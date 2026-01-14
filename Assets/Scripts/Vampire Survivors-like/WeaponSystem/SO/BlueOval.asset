@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   weaponId: WeaponBlueOval
   prefab: {fileID: 9104589825890431468, guid: fb19d800627dfbc4e8b7239b19b0ad42, type: 3}
+  icon: {fileID: -1754049560, guid: 1a33cf70ec64dd948b69c7d612167cca, type: 3}
+  weaponName: "\u84DD\u7206"
   levels:
   - level: 1
     speed: 0
