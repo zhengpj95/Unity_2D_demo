@@ -6,8 +6,7 @@ public class BulletbController : WeaponController
 {
   protected override void Fire()
   {
-    var hero = player.GetComponent<Hero>();
-    var enemy = EnemySpawnManager.Instance.GetCloseest(player.position, hero.attackRange);
+    var enemy = EnemySpawnManager.Instance.GetCloseest(player.position, GetAttackRange());
     if (enemy)
     {
       var bulletb = Instantiate(data.prefab, player.position, Quaternion.identity, transform);

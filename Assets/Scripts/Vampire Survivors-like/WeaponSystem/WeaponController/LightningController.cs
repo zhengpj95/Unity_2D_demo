@@ -6,8 +6,7 @@ public class LightningController : WeaponController
 {
   protected override void Fire()
   {
-    var hero = player.GetComponent<Hero>();
-    var enemy = EnemySpawnManager.Instance.GetRandom(player.position, hero.attackRange);
+    var enemy = EnemySpawnManager.Instance.GetRandom(player.position, GetAttackRange());
     if (enemy)
     {
       Transform lightning = Instantiate(data.prefab, player.position, Quaternion.identity, transform);

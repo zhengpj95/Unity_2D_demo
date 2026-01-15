@@ -3,6 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/**
+ * 武器控制器基类
+ */
 public abstract class WeaponController : MonoBehaviour
 {
   protected WeaponSO data;
@@ -18,7 +21,7 @@ public abstract class WeaponController : MonoBehaviour
     player = GameObject.FindGameObjectWithTag("Player").transform;
   }
 
-
+  // 初始化武器
   public virtual void Init(WeaponSO weaponSO)
   {
     this.data = weaponSO;
@@ -37,6 +40,7 @@ public abstract class WeaponController : MonoBehaviour
 
   protected abstract void Fire();
 
+  // 升级武器
   public void LevelUp()
   {
     if (level >= data.levels.Length)
@@ -47,6 +51,7 @@ public abstract class WeaponController : MonoBehaviour
     level++;
   }
 
+  // 当前武器等级数据
   public WeaponLevelData GetLevelData()
   {
     if (data?.levels?.Length > 0)
@@ -65,5 +70,11 @@ public abstract class WeaponController : MonoBehaviour
       range = 1,
       fireInterval = 1,
     };
+  }
+
+  // 攻击范围
+  public float GetAttackRange()
+  {
+    return player.GetComponent<Hero>().attackRange;
   }
 }

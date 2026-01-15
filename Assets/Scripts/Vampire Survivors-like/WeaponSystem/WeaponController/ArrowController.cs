@@ -6,8 +6,7 @@ public class ArrowController : WeaponController
 {
   protected override void Fire()
   {
-    var hero = player.GetComponent<Hero>();
-    EnemyChasing enemy = EnemySpawnManager.Instance.GetCloseest(player.position, hero.attackRange);
+    EnemyChasing enemy = EnemySpawnManager.Instance.GetCloseest(player.position, GetAttackRange());
     if (enemy)
     {
       var arrow = Instantiate(data.prefab, player.position, Quaternion.identity, transform);

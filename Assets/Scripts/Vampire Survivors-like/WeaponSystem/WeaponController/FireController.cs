@@ -6,8 +6,7 @@ public class FireController : WeaponController
 {
   protected override void Fire()
   {
-    var hero = player.GetComponent<Hero>();
-    var enemy = EnemySpawnManager.Instance.GetCloseest(player.position, hero.attackRange);
+    var enemy = EnemySpawnManager.Instance.GetCloseest(player.position, GetAttackRange());
     if (enemy)
     {
       var weapon = Instantiate(data.prefab, enemy.transform.position, Quaternion.identity, transform);

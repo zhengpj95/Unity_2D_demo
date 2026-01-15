@@ -6,8 +6,7 @@ public class BlueOvalController : WeaponController
 {
   protected override void Fire()
   {
-    var hero = player.GetComponent<Hero>();
-    var enemy = EnemySpawnManager.Instance.GetRandom(transform.position, hero.attackRange);
+    var enemy = EnemySpawnManager.Instance.GetRandom(transform.position, GetAttackRange());
     if (enemy)
     {
       Transform blueOval = Instantiate(data.prefab, player.position, Quaternion.identity, transform);
