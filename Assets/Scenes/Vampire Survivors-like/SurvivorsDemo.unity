@@ -24781,6 +24781,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c3c50d7228ccdc47bfbf94cd3647358, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerSpeedSO: {fileID: 11400000, guid: 77e2432e924f94340b3f403756af6394, type: 2}
+  hero: {fileID: 1870446304}
 --- !u!1 &1410355585
 GameObject:
   m_ObjectHideFlags: 0
@@ -27815,6 +27817,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6549470668076876196, guid: f8387f00b35defe4ead998bc16d3611c, type: 3}
   m_PrefabInstance: {fileID: 1618317612}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1870446304 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5870706770646319658, guid: f8387f00b35defe4ead998bc16d3611c, type: 3}
+  m_PrefabInstance: {fileID: 1618317612}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 771136900}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9593ffe69906b524aa23059441655144, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &1870446309
 MonoBehaviour:
   m_ObjectHideFlags: 0

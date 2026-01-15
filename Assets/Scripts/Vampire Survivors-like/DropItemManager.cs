@@ -8,9 +8,11 @@ public class DropItemManager : SingletonMono<DropItemManager>
   [SerializeField] private Transform gemPrefab;
   [SerializeField] private Transform coinPrefab;
 
-  private int totalScore = 0;
+  [SerializeField] private int totalScore = 0; // 总积分
+
+  [SerializeField] private int speedUpRateScore = 100; // 每一次提升所需积分
   private int speedUpScore = 0; // 速度提升积分
-  private int speedUpRateScore = 100; // 每一次提升所需积分
+  [SerializeField] private int skillUpRateScore = 20; // 每一次升级所需积分
   private int skillUpScore = 0; // 技能升级积分
 
   public void SpawnDropItem(Vector3 position, DropItemType dropItemType, float dropItemProb)
@@ -48,10 +50,11 @@ public class DropItemManager : SingletonMono<DropItemManager>
       EnemySpawnManager.Instance.SpeedUpSpawnRate();
     }
 
-    if (skillUpScore >= 50)
+    if (skillUpScore >= skillUpRateScore)
     {
       skillUpScore = 0;
       VSUIManager.Instance.ShowSkillSelectPanel(true);
+      // BuffManager.Instance.hero.GetComponent<BuffHandler>().AddBuff(BuffManager.Instance.playerSpeedSO);
     }
   }
 }

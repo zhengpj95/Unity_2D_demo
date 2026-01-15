@@ -14,18 +14,23 @@ public class Hero : MonoBehaviour
   public float baseMoveSpeed = 2f;
   public float attackRange = 4f;
 
-  public float moveSpeedMultiplier = 1f;
-  public float moveSpeed => baseMoveSpeed * moveSpeedMultiplier;
+  public float debugSpeed;// todo test
+  public float moveSpeed
+  {
+    get => baseMoveSpeed * (1 + _buffHandler.GetMoveSpeedMultiplier());
+  }
 
   private Rigidbody2D _rb;
   private Animator _animator;
   private Vector2 _lastFacing = Vector2.down; // 初始朝向，默认向下
+  private BuffHandler _buffHandler;
 
   void Start()
   {
     _rb = GetComponent<Rigidbody2D>();
     _animator = GetComponent<Animator>();
     WeaponManager.Instance.AddOrUpgrade(baseWeapon);
+    _buffHandler = GetComponent<BuffHandler>();
   }
 
   void Update()
@@ -46,6 +51,7 @@ public class Hero : MonoBehaviour
       _animator.SetFloat("moveY", _lastFacing.y);
     }
     // _rb.MovePosition(rb.position + moveInput.normalized * moveSpeed * Time.deltaTime);
+    debugSpeed = moveSpeed;
     _rb.velocity = moveInput.normalized * moveSpeed;
   }
 

@@ -5,16 +5,14 @@ using UnityEngine;
 public abstract class BuffInstance
 {
   protected BuffSO data;
-  protected GameObject target;
 
   public int stack;
   public float timeLeft;
   public BuffSO Data => data;
 
-  protected BuffInstance(BuffSO data, GameObject target)
+  protected BuffInstance(BuffSO data)
   {
     this.data = data;
-    this.target = target;
     stack = 1;
     timeLeft = data.duration;
   }

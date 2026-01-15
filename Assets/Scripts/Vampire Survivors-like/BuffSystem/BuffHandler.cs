@@ -11,13 +11,16 @@ public class BuffHandler : MonoBehaviour
 
   public void AddBuff(BuffSO data)
   {
+
     var exist = buffs.Find(b => b.Data.GetType() == data.GetType());
     if (exist != null)
     {
+      Debug.Log($"buff已存在，叠加buff效果：{data.name}");
       HandleStack(exist, data);
       return;
     }
 
+    Debug.Log($"添加buff：{data.name}");
     var instance = data.CreateInstance(gameObject);
     instance.stack = 1;
     instance.OnAdd();
@@ -56,5 +59,19 @@ public class BuffHandler : MonoBehaviour
         buffs.RemoveAt(i);
       }
     }
+  }
+
+  // 获取移动速度
+  public float GetMoveSpeedMultiplier()
+  {
+    float moveSpeedMultiplier = 0f;
+    foreach (var buff in buffs)
+    {
+      if (buff is MoveSpeedBuffInstance moveSpeedBuff)
+      {
+        moveSpeedMultiplier += moveSpeedBuff.moveSpeedMultiplier;
+      }
+    }
+    return moveSpeedMultiplier;
   }
 }

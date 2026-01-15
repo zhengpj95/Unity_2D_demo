@@ -9,22 +9,21 @@ using UnityEngine;
  */
 public class MoveSpeedBuffInstance : BuffInstance
 {
-  private Hero hero;
   private float rate;
+  public float moveSpeedMultiplier = 0f;
 
-  public MoveSpeedBuffInstance(MoveSpeedBuffSO data, GameObject target) : base(data, target)
+  public MoveSpeedBuffInstance(MoveSpeedBuffSO data) : base(data)
   {
-    hero = target.GetComponent<Hero>();
     rate = data.speedRate;
   }
 
   public override void OnAdd()
   {
-    hero.moveSpeedMultiplier += rate;
+    moveSpeedMultiplier += rate;
   }
 
   public override void OnRemove()
   {
-    hero.moveSpeedMultiplier -= rate * stack;
+    moveSpeedMultiplier -= rate * stack;
   }
 }
