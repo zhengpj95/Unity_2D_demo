@@ -21,8 +21,8 @@ public class BuffHandler : MonoBehaviour
     }
 
     Debug.Log($"添加buff：{data.name}");
-    var instance = data.CreateInstance(gameObject);
-    instance.stack = 1;
+    var instance = data.CreateInstance();
+    instance.Init(gameObject, 1);
     instance.OnAdd();
     buffs.Add(instance);
   }

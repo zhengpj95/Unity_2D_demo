@@ -14,5 +14,5 @@ public abstract class BuffSO : ScriptableObject
   // 是百分比(10%)还是固定值(+10)
   public bool isPercent;
 
-  public abstract BuffInstance CreateInstance(GameObject target);
+  public abstract BuffInstance CreateInstance();
 }

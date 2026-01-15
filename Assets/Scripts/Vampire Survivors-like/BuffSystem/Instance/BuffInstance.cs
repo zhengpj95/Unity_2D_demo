@@ -5,6 +5,7 @@ using UnityEngine;
 public abstract class BuffInstance
 {
   protected BuffSO data;
+  protected GameObject target;
 
   public int stack;
   public float timeLeft;
@@ -20,6 +21,12 @@ public abstract class BuffInstance
   public virtual void OnAdd() { }
   public virtual void OnRemove() { }
   public virtual void OnTick(float deltaTime) { }
+
+  public void Init(GameObject target, int stack = 1)
+  {
+    this.target = target;
+    this.stack = stack;
+  }
 
   public void Update(float deltaTime)
   {
