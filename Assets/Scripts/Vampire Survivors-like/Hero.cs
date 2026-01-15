@@ -11,8 +11,11 @@ using UnityEngine;
 public class Hero : MonoBehaviour
 {
   public WeaponSO baseWeapon;
-  public float runSpeed = 2f;
+  public float baseMoveSpeed = 2f;
   public float attackRange = 4f;
+
+  public float moveSpeedMultiplier = 1f;
+  public float moveSpeed => baseMoveSpeed * moveSpeedMultiplier;
 
   private Rigidbody2D _rb;
   private Animator _animator;
@@ -42,8 +45,8 @@ public class Hero : MonoBehaviour
       _animator.SetFloat("moveX", _lastFacing.x);
       _animator.SetFloat("moveY", _lastFacing.y);
     }
-    // rb.MovePosition(rb.position + moveInput.normalized * runSpeed * Time.deltaTime);
-    _rb.velocity = moveInput.normalized * runSpeed;
+    // _rb.MovePosition(rb.position + moveInput.normalized * moveSpeed * Time.deltaTime);
+    _rb.velocity = moveInput.normalized * moveSpeed;
   }
 
   private Vector2 GetCardinal(Vector2 v)

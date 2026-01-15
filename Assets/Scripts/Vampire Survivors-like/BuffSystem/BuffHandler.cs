@@ -1,0 +1,60 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+/**
+ * buff处理类，需要挂载在需要处理buff的物体上
+ */
+public class BuffHandler : MonoBehaviour
+{
+  public List<BuffInstance> buffs = new List<BuffInstance>();
+
+  public void AddBuff(BuffSO data)
+  {
+    var exist = buffs.Find(b => b.Data.GetType() == data.GetType());
+    if (exist != null)
+    {
+      HandleStack(exist, data);
+      return;
+    }
+
+    var instance = data.CreateInstance(gameObject);
+    instance.stack = 1;
+    instance.OnAdd();
+    buffs.Add(instance);
+  }
+
+  private void HandleStack(BuffInstance exist, BuffSO data)
+  {
+    switch (data.stackType)
+    {
+      case BuffStackType.MoveSpeed:
+        // 时间重置，效果叠加
+        if (exist.stack < data.maxStack)
+        {
+          exist.stack = Mathf.Min(exist.stack + 1, data.maxStack);
+          exist.OnAdd();
+          exist.RefreshDuration();
+        }
+        break;
+      default:
+        Debug.LogWarning($"未处理的buff类型：{data.stackType}");
+        break;
+    }
+  }
+
+  private void Update()
+  {
+    // 遍历所有buff，更新时间
+    for (int i = buffs.Count - 1; i >= 0; i--)
+    {
+      var buff = buffs[i];
+      buff.Update(Time.deltaTime);
+      if (buff.IsExpired)
+      {
+        buff.OnRemove();
+        buffs.RemoveAt(i);
+      }
+    }
+  }
+}

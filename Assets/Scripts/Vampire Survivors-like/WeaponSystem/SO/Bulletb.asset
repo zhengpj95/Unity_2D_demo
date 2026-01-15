@@ -19,7 +19,7 @@ MonoBehaviour:
   levels:
   - level: 1
     speed: 2
-    damage: 1
+    damage: 10
     damageInterval: 0
     count: 1
     range: 1
