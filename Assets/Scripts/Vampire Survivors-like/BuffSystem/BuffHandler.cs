@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -40,6 +41,16 @@ public class BuffHandler : MonoBehaviour
           exist.RefreshDuration();
         }
         break;
+      case BuffStackType.Range:
+        // 多个buff叠加
+        if (exist.stack < data.maxStack)
+        {
+          var instance = data.CreateInstance();
+          instance.Init(gameObject, 1);
+          instance.OnAdd();
+          buffs.Add(instance);// 多个同buff存在
+        }
+        break;
       default:
         Debug.LogWarning($"未处理的buff类型：{data.stackType}");
         break;
@@ -73,5 +84,19 @@ public class BuffHandler : MonoBehaviour
       }
     }
     return moveSpeedMultiplier;
+  }
+
+  // 获取攻击范围
+  public float GetAttackRangeMultiplier()
+  {
+    float rangeMultiplier = 0f;
+    foreach (var buff in buffs)
+    {
+      if (buff is AttackRangeBuffInstance attackRangeBuff)
+      {
+        rangeMultiplier += attackRangeBuff.rangeMultiplier;
+      }
+    }
+    return rangeMultiplier;
   }
 }

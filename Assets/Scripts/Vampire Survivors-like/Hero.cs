@@ -12,12 +12,17 @@ public class Hero : MonoBehaviour
 {
   public WeaponSO baseWeapon;
   public float baseMoveSpeed = 2f;
-  public float attackRange = 4f;
+  public float baseAttackRange = 4f;
 
   public float debugSpeed;// todo test
-  public float moveSpeed
+  public float debugRange;// todo test
+  public float MoveSpeed
   {
-    get => baseMoveSpeed * (1 + _buffHandler.GetMoveSpeedMultiplier());
+    get => baseMoveSpeed * (1 + (_buffHandler?.GetMoveSpeedMultiplier() ?? 0));
+  }
+  public float AttackRange
+  {
+    get => baseAttackRange + (_buffHandler?.GetAttackRangeMultiplier() ?? 0);
   }
 
   private Rigidbody2D _rb;
@@ -50,9 +55,10 @@ public class Hero : MonoBehaviour
       _animator.SetFloat("moveX", _lastFacing.x);
       _animator.SetFloat("moveY", _lastFacing.y);
     }
-    // _rb.MovePosition(rb.position + moveInput.normalized * moveSpeed * Time.deltaTime);
-    debugSpeed = moveSpeed;
-    _rb.velocity = moveInput.normalized * moveSpeed;
+    // _rb.MovePosition(rb.position + moveInput.normalized * MoveSpeed * Time.deltaTime);
+    debugSpeed = MoveSpeed;
+    debugRange = AttackRange;
+    _rb.velocity = moveInput.normalized * MoveSpeed;
   }
 
   private Vector2 GetCardinal(Vector2 v)
@@ -70,6 +76,6 @@ public class Hero : MonoBehaviour
   void OnDrawGizmosSelected()
   {
     Gizmos.color = Color.red;
-    Gizmos.DrawWireSphere(transform.position, attackRange);
+    Gizmos.DrawWireSphere(transform.position, AttackRange);
   }
 }

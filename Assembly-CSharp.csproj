@@ -85,6 +85,7 @@
     <Compile Include="Assets\Scripts\Common\UI\UI_Damage.cs" />
     <Compile Include="Assets\Scripts\Rpg\StatsManager.cs" />
     <Compile Include="Assets\Arts\Hero Knight - Pixel Art\ColorSwap\ColorSwap_HeroKnight.cs" />
+    <Compile Include="Assets\Scripts\Vampire Survivors-like\BuffSystem\Instance\AttackRangeBuffSO.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Enemy\Enemy_Plant.cs" />
     <Compile Include="Assets\Scripts\Rpg\UI\UI_PlayerHealth.cs" />
     <Compile Include="Assets\Scripts\Def\SceneUIName.cs" />
@@ -105,12 +106,13 @@
     <Compile Include="Assets\Arts\Bandits - Pixel Art\Demo\Bandit.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\WeaponController\LightningController.cs" />
     <Compile Include="Assets\Scripts\Rpg\ElevationExit.cs" />
+    <Compile Include="Assets\Scripts\Vampire Survivors-like\BuffSystem\Instance\AttackRangeBuffInstance.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Player\PlayerMovement.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\WeaponController\ArrowController.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\WeaponController\FireController.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\GameController.cs" />
-    <Compile Include="Assets\Scripts\Vampire Survivors-like\HpBarUI.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\BuffSystem\Instance\MoveSpeedBuffInstance.cs" />
+    <Compile Include="Assets\Scripts\Vampire Survivors-like\HpBarUI.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyCombat.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\PointUtil.cs" />
     <Compile Include="Assets\Scripts\Common\Manager\EventBus.cs" />

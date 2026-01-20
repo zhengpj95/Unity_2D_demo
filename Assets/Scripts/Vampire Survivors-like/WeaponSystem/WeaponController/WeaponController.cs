@@ -75,6 +75,6 @@ public abstract class WeaponController : MonoBehaviour
   // 攻击范围
   public float GetAttackRange()
   {
-    return player.GetComponent<Hero>().attackRange;
+    return player.GetComponent<Hero>().AttackRange;
   }
 }

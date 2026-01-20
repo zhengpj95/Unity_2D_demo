@@ -24763,7 +24763,7 @@ Transform:
   m_GameObject: {fileID: 1101548402}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.822923, y: 0.5322462, z: -0.05927896}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -24782,6 +24782,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerSpeedSO: {fileID: 11400000, guid: 77e2432e924f94340b3f403756af6394, type: 2}
+  playerAttackRangeSO: {fileID: 11400000, guid: 0136ff85aac79a34a82bead0ad553522, type: 2}
   hero: {fileID: 1870446304}
 --- !u!1 &1410355585
 GameObject:
@@ -25133,7 +25134,7 @@ Transform:
   m_GameObject: {fileID: 1611382842}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.242601, y: -9.834314, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -27737,6 +27738,9 @@ MonoBehaviour:
   dropItemContainer: {fileID: 1053428956}
   gemPrefab: {fileID: 918514508827560968, guid: 5dcf5499ce5d9d7489a079d44983b1ae, type: 3}
   coinPrefab: {fileID: 5316678045360679653, guid: 5db0b62064492884096bc33a836641ac, type: 3}
+  totalScore: 0
+  speedUpRateScore: 100
+  skillUpRateScore: 20
 --- !u!1 &1869204053
 GameObject:
   m_ObjectHideFlags: 0
