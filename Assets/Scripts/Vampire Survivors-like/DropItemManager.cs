@@ -54,7 +54,7 @@ public class DropItemManager : SingletonMono<DropItemManager>
     {
       skillUpScore = 0;
       VSUIManager.Instance.ShowSkillSelectPanel(true);
-      // BuffManager.Instance.hero.GetComponent<BuffHandler>().AddBuff(BuffManager.Instance.playerSpeedSO);
+      // BuffManager.Instance.hero.GetComponent<BuffHandler>().AddBuff(BuffManager.Instance.playerAttackRangeSO);
     }
   }
 }

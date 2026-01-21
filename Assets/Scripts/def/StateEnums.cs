@@ -21,14 +21,17 @@ public enum DropItemType
 public enum BuffStackType
 {
   Refresh,   // 刷新时间
-  Stack,     // 叠加层数
+  Stack,     // 叠加层数，一个效果*层数
   Replace,   // 覆盖
+}
 
+public enum BuffType
+{
   Damage,
   Cooldown,
   Range,
 
-  MoveSpeed, // 移动速度，速度叠加，时间则重置
+  MoveSpeed,  // 移动速度，速度叠加，时间则重置
   MoveSpeed2, // 移动速度，速度叠加，时间叠加
   MoveSpeed3, // 移动速度，多个buff叠加，每个重置时间不同
 }

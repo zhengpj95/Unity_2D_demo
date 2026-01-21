@@ -32,24 +32,20 @@ public class BuffHandler : MonoBehaviour
   {
     switch (data.stackType)
     {
-      case BuffStackType.MoveSpeed:
-        // 时间重置，效果叠加
+      case BuffStackType.Refresh:
+        exist.RefreshDuration(data.duration);
+        break;
+      case BuffStackType.Stack:
         if (exist.stack < data.maxStack)
         {
+          exist.OnAdd(); // 效果加上去
           exist.stack = Mathf.Min(exist.stack + 1, data.maxStack);
-          exist.OnAdd();
-          exist.RefreshDuration();
         }
         break;
-      case BuffStackType.Range:
-        // 多个buff叠加
-        if (exist.stack < data.maxStack)
-        {
-          var instance = data.CreateInstance();
-          instance.Init(gameObject, 1);
-          instance.OnAdd();
-          buffs.Add(instance);// 多个同buff存在
-        }
+      case BuffStackType.Replace:
+        exist.OnRemove();
+        buffs.Remove(exist);
+        AddBuff(data);
         break;
       default:
         Debug.LogWarning($"未处理的buff类型：{data.stackType}");

@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: PlayerAttackRangeBuffSO
   m_EditorClassIdentifier: 
   buffId: 1002
-  stackType: 5
+  stackType: 1
+  buffType: 2
   duration: 10
   maxStack: 2
   isPercent: 0

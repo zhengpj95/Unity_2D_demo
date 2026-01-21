@@ -33,6 +33,7 @@ public class VSUIManager : SingletonMono<VSUIManager>
 
   public void ShowSkillSelectPanel(bool isVisible = true)
   {
+    Time.timeScale = isVisible ? 0 : 1;
     ShowRectBg(isVisible);
     if (skillSelectPanel)
     {

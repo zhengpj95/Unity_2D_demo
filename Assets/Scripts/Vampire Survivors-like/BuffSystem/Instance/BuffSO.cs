@@ -5,6 +5,7 @@ using UnityEngine;
 public abstract class BuffSO : ScriptableObject
 {
   public string buffId;
+  public Sprite icon;
   // Buff 类型
   public BuffStackType stackType;
   // 持续时间

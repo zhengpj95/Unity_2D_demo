@@ -35,9 +35,9 @@ public abstract class BuffInstance
   }
 
   // 刷新过期时间
-  public void RefreshDuration()
+  public void RefreshDuration(float? duration)
   {
-    timeLeft = data.duration;
+    timeLeft = duration ?? data.duration;
   }
 
   // 过期了否
