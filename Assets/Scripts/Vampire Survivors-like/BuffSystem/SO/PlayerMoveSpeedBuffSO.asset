@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: PlayerMoveSpeedBuffSO
   m_EditorClassIdentifier: 
   buffId: 1001
+  icon: {fileID: -863026611, guid: 151ee7e803903a0409031b1040334782, type: 3}
   stackType: 0
-  buffType: 3
   duration: 10
   maxStack: 2
   isPercent: 0
