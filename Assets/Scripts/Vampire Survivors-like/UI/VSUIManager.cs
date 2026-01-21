@@ -8,6 +8,7 @@ public class VSUIManager : SingletonMono<VSUIManager>
   [SerializeField] private Slider uiHp;
   [SerializeField] private Image rectBg;
   [SerializeField] private Transform skillSelectPanel;
+  [SerializeField] private UI_Inventory uiInventory;
 
   public void ShowRectBg(bool isVisible = true)
   {
@@ -38,6 +39,14 @@ public class VSUIManager : SingletonMono<VSUIManager>
     if (skillSelectPanel)
     {
       skillSelectPanel.gameObject.SetActive(isVisible);
+    }
+  }
+
+  public void UpdateInventory()
+  {
+    if (uiInventory)
+    {
+      uiInventory.UpdateSlot();
     }
   }
 }

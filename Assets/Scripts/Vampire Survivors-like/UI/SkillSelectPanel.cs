@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -86,10 +87,10 @@ public class SkillSelectPanel : MonoBehaviour
 
   void Update()
   {
-    if (!hidden && remainingTime > 0)
+    if (hidden == false && remainingTime > 0)
     {
-      remainingTime -= Time.deltaTime;
-      // timerText.text = "倒计时关闭：" + Mathf.Max(0, remainingTime).ToString("F0"); // 字符串拼接
+      remainingTime -= Time.unscaledDeltaTime;
+      // timerText.text = "倒计时关闭：" + Mathf.Max(0, remainingTime).ToString("F0") + "秒"; // 字符串拼接
       // timerText.text = string.Format("倒计时关闭：{0:F0}秒", Mathf.Max(0, remainingTime)); // string.Format()
       timerText.text = $"倒计时关闭：{Mathf.Max(0, remainingTime):F0}秒"; // 字符串插值
     }

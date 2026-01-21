@@ -15,6 +15,9 @@ public class DropItemManager : SingletonMono<DropItemManager>
   [SerializeField] private int skillUpRateScore = 20; // 每一次升级所需积分
   private int skillUpScore = 0; // 技能升级积分
 
+  public int CoinCount { get; set; } = 0;
+  public int GemCount { get; set; } = 0;
+
   public void SpawnDropItem(Vector3 position, DropItemType dropItemType, float dropItemProb)
   {
     if (Random.value > dropItemProb)
@@ -56,5 +59,19 @@ public class DropItemManager : SingletonMono<DropItemManager>
       VSUIManager.Instance.ShowSkillSelectPanel(true);
       // BuffManager.Instance.hero.GetComponent<BuffHandler>().AddBuff(BuffManager.Instance.playerAttackRangeSO);
     }
+  }
+
+  public void AddDropItem(DropItemType dropItemType, int count)
+  {
+    switch (dropItemType)
+    {
+      case DropItemType.Gem:
+        GemCount += count;
+        break;
+      case DropItemType.Coin:
+        CoinCount += count;
+        break;
+    }
+    VSUIManager.Instance.UpdateInventory();
   }
 }

@@ -6,13 +6,15 @@ using UnityEngine;
 public class DropItem : MonoBehaviour
 {
   [SerializeField] private int score = 1;
+  [SerializeField] private DropItemType dropItemType;
 
   void OnTriggerEnter2D(Collider2D other)
   {
     if (other.CompareTag("Player"))
     {
-      Destroy(gameObject);
       DropItemManager.Instance.AddScore(score);
+      DropItemManager.Instance.AddDropItem(dropItemType, 1);
+      Destroy(gameObject);
     }
   }
 }
