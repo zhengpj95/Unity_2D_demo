@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,6 +10,7 @@ public class VSUIManager : SingletonMono<VSUIManager>
   [SerializeField] private Image rectBg;
   [SerializeField] private Transform skillSelectPanel;
   [SerializeField] private UI_Inventory uiInventory;
+  [SerializeField] private Transform uiEnemyCount;
 
   public void ShowRectBg(bool isVisible = true)
   {
@@ -47,6 +49,18 @@ public class VSUIManager : SingletonMono<VSUIManager>
     if (uiInventory)
     {
       uiInventory.UpdateSlot();
+    }
+  }
+
+  public void UpdateEnemyKillCount()
+  {
+    if (uiEnemyCount)
+    {
+      TMP_Text killCount = uiEnemyCount.Find("KillCount")?.GetComponent<TMP_Text>();
+      if (killCount)
+      {
+        killCount.text = EnemySpawnManager.Instance.KillEnemyCount.ToString();
+      }
     }
   }
 }

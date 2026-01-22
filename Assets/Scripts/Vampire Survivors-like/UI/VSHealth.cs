@@ -23,6 +23,8 @@ public class VSHealth : MonoBehaviour
     DamageController.Instance.ShowDamage(damage, transform.position);
     if (currentHealth <= 0)
     {
+      EnemySpawnManager.Instance.KillEnemyCount++;
+      VSUIManager.Instance.UpdateEnemyKillCount();
       Destroy(gameObject);
       DropItemManager.Instance.SpawnDropItem(transform.position, enemyChasing.DropItemType, enemyChasing.DropItemProb);
     }

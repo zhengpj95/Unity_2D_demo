@@ -13,6 +13,7 @@ public class EnemySpawnManager : SingletonMono<EnemySpawnManager>
   private float timer = 0f;
 
   private readonly List<EnemyChasing> enemies = new List<EnemyChasing>();
+  public int KillEnemyCount { get; set; } = 0;
 
   void Start()
   {
