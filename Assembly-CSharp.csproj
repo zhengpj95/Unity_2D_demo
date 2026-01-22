@@ -82,7 +82,6 @@
     <Compile Include="Assets\Scripts\FrogAdventure\EndGame.cs" />
     <Compile Include="Assets\Scripts\Common\UI\UI_Damage.cs" />
     <Compile Include="Assets\Scripts\Rpg\StatsManager.cs" />
-    <Compile Include="Assets\Arts\Hero Knight - Pixel Art\ColorSwap\ColorSwap_HeroKnight.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\BuffSystem\Instance\AttackRangeBuffSO.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Enemy\Enemy_Plant.cs" />
     <Compile Include="Assets\Scripts\Rpg\UI\UI_PlayerHealth.cs" />
@@ -103,7 +102,6 @@
     <Compile Include="Assets\Scripts\Vampire Survivors-like\UI\UI_Inventory.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyHealth.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\Entity\EnemyChasing.cs" />
-    <Compile Include="Assets\Arts\Bandits - Pixel Art\Demo\Bandit.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\WeaponController\LightningController.cs" />
     <Compile Include="Assets\Scripts\Rpg\ElevationExit.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\BuffSystem\Instance\AttackRangeBuffInstance.cs" />
@@ -117,7 +115,6 @@
     <Compile Include="Assets\Scripts\Vampire Survivors-like\PointUtil.cs" />
     <Compile Include="Assets\Scripts\Common\Manager\EventBus.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\WeaponController\BulletbController.cs" />
-    <Compile Include="Assets\Arts\Bandits - Pixel Art\Demo\Sensor_Bandit.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyMovement.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\WeaponController\BlueOvalController.cs" />
     <Compile Include="Assets\Scripts\Def\StateEnums.cs" />
@@ -133,17 +130,14 @@
     <Compile Include="Assets\Scripts\Vampire Survivors-like\UI\VSPlayerHealth.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\UI\VSHealth.cs" />
     <Compile Include="Assets\Scripts\Common\Manager\AudioManager.cs" />
-    <Compile Include="Assets\Arts\Hero Knight - Pixel Art\Demo\Sensor_HeroKnight.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\RpgPlayerCombat.cs" />
     <Compile Include="Assets\Scripts\Rpg\Invertory_Shop\Loot.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\ShooterBullet.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\BuffSystem\Instance\MoveSpeedBuffSO.cs" />
-    <Compile Include="Assets\Arts\Hero Knight - Pixel Art\Demo\DestroyEvent_HeroKnight.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\WeaponLevelData.cs" />
     <Compile Include="Assets\Scripts\Def\GameTag.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\Weapon\SawWeapon.cs" />
     <Compile Include="Assets\Scripts\Common\Singleton\SingletonMono.cs" />
-    <Compile Include="Assets\Arts\Hero Knight - Pixel Art\Demo\HeroKnight.cs" />
     <Compile Include="Assets\Scripts\Common\Manager\UIManager.cs" />
     <Compile Include="Assets\Scripts\Def\GameSortingLayers.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Enemy\Enemy_Bullet.cs" />
@@ -185,7 +179,6 @@
     <None Include="Assets\Arts\GreenPig\credits.txt" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile.shader" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_Sprite.shader" />
-    <None Include="Assets\Arts\Hero Knight - Pixel Art\ColorSwap\Sprites-ColorSwap.shader" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
