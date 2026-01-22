@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 public class VSUIManager : SingletonMono<VSUIManager>
@@ -11,6 +12,7 @@ public class VSUIManager : SingletonMono<VSUIManager>
   [SerializeField] private Transform skillSelectPanel;
   [SerializeField] private UI_Inventory uiInventory;
   [SerializeField] private Transform uiEnemyCount;
+  [SerializeField] private UI_EXP uI_EXP;
 
   public void ShowRectBg(bool isVisible = true)
   {
@@ -63,4 +65,47 @@ public class VSUIManager : SingletonMono<VSUIManager>
       }
     }
   }
+
+
+  #region ==== exp ====
+
+  private int _curLevel = 0;
+  private int _curExp = 0;
+
+  private int GetNextLevelExp()
+  {
+    int baseVal = 20, grow = 5;
+    int nextLevel = _curLevel + 1;
+    int exp = baseVal * nextLevel + grow * nextLevel * nextLevel;
+    return exp;
+  }
+
+  // 临时使用，添加经验
+  public void UpdateExp(int addExp)
+  {
+    _curExp += addExp;
+    int nextLevelExp = GetNextLevelExp();
+    if (_curExp >= nextLevelExp)
+    {
+      _curExp = 0;
+      _curLevel++;
+      ShowSkillSelectPanel(true);
+      UpdateExpBar(_curExp, nextLevelExp, _curLevel - 1);
+    }
+    else
+    {
+      UpdateExpBar(_curExp, nextLevelExp, _curLevel);
+    }
+    // Debug.Log($"AddExp: {addExp} CurExp: {_curExp} NextLevelExp: {nextLevelExp} CurLevel: {_curLevel}");
+  }
+
+  public void UpdateExpBar(int currentExp, int expToNextLevel, int currentLevel)
+  {
+    if (uI_EXP)
+    {
+      uI_EXP.UpdateExp(currentExp, expToNextLevel);
+      uI_EXP.UpdateLevel(currentLevel);
+    }
+  }
+  #endregion
 }

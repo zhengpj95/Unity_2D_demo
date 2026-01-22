@@ -125,6 +125,7 @@
     <Compile Include="Assets\Scripts\Common\Singleton\Singleton.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Player\PlayerKnockBack.cs" />
     <Compile Include="Assets\Scripts\Melee\EnemyChase.cs" />
+    <Compile Include="Assets\Scripts\Vampire Survivors-like\UI\UI_EXP.cs" />
     <Compile Include="Assets\Scripts\Common\UI\DamageController.cs" />
     <Compile Include="Assets\Scripts\Def\GameLayer.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\UI\VSPlayerHealth.cs" />

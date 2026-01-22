@@ -56,9 +56,11 @@ public class DropItemManager : SingletonMono<DropItemManager>
     if (skillUpScore >= skillUpRateScore)
     {
       skillUpScore = 0;
-      VSUIManager.Instance.ShowSkillSelectPanel(true);
+      // VSUIManager.Instance.ShowSkillSelectPanel(true);
       // BuffManager.Instance.hero.GetComponent<BuffHandler>().AddBuff(BuffManager.Instance.playerAttackRangeSO);
     }
+
+    VSUIManager.Instance.UpdateExp(score);
   }
 
   public void AddDropItem(DropItemType dropItemType, int count)
