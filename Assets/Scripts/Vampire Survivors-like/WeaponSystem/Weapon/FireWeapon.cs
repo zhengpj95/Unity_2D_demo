@@ -43,7 +43,7 @@ public class FireWeapon : MonoBehaviour
       if (i >= 0 && hitEnemies[i] != null)
       {
         var enemy = hitEnemies[i];
-        VSHealth vSHealth = enemy.GetComponent<VSHealth>();
+        VSEnemyHealth vSHealth = enemy.GetComponent<VSEnemyHealth>();
         vSHealth.TakeDamage(damage);
       }
     }

@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class HpBarUI : MonoBehaviour
+public class UI_HpBar : MonoBehaviour
 {
   [SerializeField] private Transform fill;
 

@@ -64,9 +64,9 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\2022.3.62f2c1\Editor\Data\Tools\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\Vampire Survivors-like\UI\UI_SkillSelectPanel.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Trap.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\UILevel.cs" />
-    <Compile Include="Assets\Scripts\Vampire Survivors-like\UI\SkillSelectPanel.cs" />
     <Compile Include="Assets\Scripts\Common\Manager\TimerManager.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\WeaponController\SawController.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\StartGame.cs" />
@@ -99,6 +99,7 @@
     <Compile Include="Assets\Scripts\Melee\EnemyHealth.cs" />
     <Compile Include="Assets\Scripts\Melee\PlayerController.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\Arrow.cs" />
+    <Compile Include="Assets\Scripts\Vampire Survivors-like\UI\UI_HpBar.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\UI\UI_Inventory.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyHealth.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\Entity\EnemyChasing.cs" />
@@ -123,12 +124,10 @@
     <Compile Include="Assets\Scripts\Vampire Survivors-like\Entity\Hero.cs" />
     <Compile Include="Assets\Scripts\Common\Singleton\Singleton.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Player\PlayerKnockBack.cs" />
-    <Compile Include="Assets\Scripts\Vampire Survivors-like\UI\HpBarUI.cs" />
     <Compile Include="Assets\Scripts\Melee\EnemyChase.cs" />
     <Compile Include="Assets\Scripts\Common\UI\DamageController.cs" />
     <Compile Include="Assets\Scripts\Def\GameLayer.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\UI\VSPlayerHealth.cs" />
-    <Compile Include="Assets\Scripts\Vampire Survivors-like\UI\VSHealth.cs" />
     <Compile Include="Assets\Scripts\Common\Manager\AudioManager.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\RpgPlayerCombat.cs" />
     <Compile Include="Assets\Scripts\Rpg\Invertory_Shop\Loot.cs" />
@@ -149,6 +148,7 @@
     <Compile Include="Assets\Scripts\Vampire Survivors-like\Entity\DropItem.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\BuffSystem\Instance\BuffSO.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyKnockBack.cs" />
+    <Compile Include="Assets\Scripts\Vampire Survivors-like\UI\VSEnemyHealth.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\Weapon\ArrowWeapon.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\FruitCollect.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\CheckEndPoint.cs" />

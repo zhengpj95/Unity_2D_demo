@@ -43,7 +43,7 @@ public class ArrowWeapon : MonoBehaviour
     if (!initialized) return;
     if (collision.gameObject.CompareTag("Enemy"))
     {
-      VSHealth vSHealth = collision.gameObject.GetComponent<VSHealth>();
+      VSEnemyHealth vSHealth = collision.gameObject.GetComponent<VSEnemyHealth>();
       vSHealth.TakeDamage(damage);
       Destroy(gameObject); // 销毁弓箭
     }

@@ -5,7 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class SkillSelectPanel : MonoBehaviour
+public class UI_SkillSelectPanel : MonoBehaviour
 {
   public Button skill0;
   public Button skill1;
@@ -41,8 +41,6 @@ public class SkillSelectPanel : MonoBehaviour
       var skillItem = gameObject.transform.Find($"SkillItem{i}");
       if (skillItem && weapons[i])
       {
-        Debug.Log(skillItem);
-        Debug.Log(weapons[i]);
         UpdateSkillItem(skillItem, weapons[i]);
       }
     }
@@ -64,18 +62,16 @@ public class SkillSelectPanel : MonoBehaviour
 
   void SelectSkill(int skillIndex)
   {
+    Debug.Log($"选择了技能{skillIndex}");
     switch (skillIndex)
     {
       case 0:
-        Debug.Log("选择了技能0");
         WeaponManager.Instance.AddOrUpgrade(weapons[0]);
         break;
       case 1:
-        Debug.Log("选择了技能1");
         WeaponManager.Instance.AddOrUpgrade(weapons[1]);
         break;
       case 2:
-        Debug.Log("选择了技能2");
         WeaponManager.Instance.AddOrUpgrade(weapons[2]);
         break;
       default:

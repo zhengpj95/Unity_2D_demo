@@ -45,7 +45,7 @@ public class SawWeapon : MonoBehaviour
     if (!initialized) return;
     if (collision.gameObject.CompareTag("Enemy"))
     {
-      VSHealth vSHealth = collision.gameObject.GetComponent<VSHealth>();
+      VSEnemyHealth vSHealth = collision.gameObject.GetComponent<VSEnemyHealth>();
       vSHealth.TakeDamage(damage);
     }
   }

@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 3674509716790129913}
   - component: {fileID: 5870706770646319658}
   - component: {fileID: 4205470692218615625}
+  - component: {fileID: 2382974826686602781}
   m_Layer: 7
   m_Name: Hero
   m_TagString: Player
@@ -184,9 +185,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9593ffe69906b524aa23059441655144, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  baseWeapon: {fileID: 11400000, guid: c22690a171e859d4bb74c7eb2702a8f9, type: 2}
-  runSpeed: 2
-  attackRange: 3
+  baseWeapon: {fileID: 11400000, guid: 5fdfc90248648f440aec43417856ee20, type: 2}
+  baseMoveSpeed: 2
+  baseAttackRange: 4
+  debugSpeed: 0
+  debugRange: 0
 --- !u!114 &4205470692218615625
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -200,3 +203,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 100
+--- !u!114 &2382974826686602781
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6216488643197094208}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef2fe2e703c24ea4898f962c7d8eaff8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

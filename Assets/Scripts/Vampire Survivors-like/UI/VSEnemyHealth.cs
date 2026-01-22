@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class VSHealth : MonoBehaviour
+public class VSEnemyHealth : MonoBehaviour
 {
   [SerializeField] private int maxHealth;
   private int currentHealth;
@@ -32,7 +32,7 @@ public class VSHealth : MonoBehaviour
 
   private void UpdateHpBar()
   {
-    HpBarUI hpBarUI = gameObject.GetComponent<HpBarUI>();
+    UI_HpBar hpBarUI = gameObject.GetComponent<UI_HpBar>();
     if (hpBarUI)
     {
       hpBarUI.SetPercent(Mathf.Max(0f, currentHealth / (maxHealth * 1f)));

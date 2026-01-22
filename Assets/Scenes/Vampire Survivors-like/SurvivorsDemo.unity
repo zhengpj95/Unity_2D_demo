@@ -20332,11 +20332,6 @@ MonoBehaviour:
   m_CameraActivatedEvent:
     m_PersistentCalls:
       m_Calls: []
---- !u!1 &771136900 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6216488643197094208, guid: f8387f00b35defe4ead998bc16d3611c, type: 3}
-  m_PrefabInstance: {fileID: 1618317612}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &846535017
 GameObject:
   m_ObjectHideFlags: 0
@@ -25880,17 +25875,9 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 5870706770646319658, guid: f8387f00b35defe4ead998bc16d3611c, type: 3}
-      propertyPath: baseWeapon
-      value: 
-      objectReference: {fileID: 11400000, guid: 5fdfc90248648f440aec43417856ee20, type: 2}
     - target: {fileID: 6216488643197094208, guid: f8387f00b35defe4ead998bc16d3611c, type: 3}
       propertyPath: m_Name
       value: Hero
-      objectReference: {fileID: 0}
-    - target: {fileID: 6216488643197094208, guid: f8387f00b35defe4ead998bc16d3611c, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6549470668076876196, guid: f8387f00b35defe4ead998bc16d3611c, type: 3}
       propertyPath: m_LocalPosition.x
@@ -25935,10 +25922,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 6216488643197094208, guid: f8387f00b35defe4ead998bc16d3611c, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1870446309}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f8387f00b35defe4ead998bc16d3611c, type: 3}
 --- !u!1 &1649546556
 GameObject:
@@ -28748,22 +28732,10 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5870706770646319658, guid: f8387f00b35defe4ead998bc16d3611c, type: 3}
   m_PrefabInstance: {fileID: 1618317612}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 771136900}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9593ffe69906b524aa23059441655144, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &1870446309
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 771136900}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ef2fe2e703c24ea4898f962c7d8eaff8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &1924385555
@@ -29433,14 +29405,6 @@ PrefabInstance:
     - target: {fileID: 3154422892154613027, guid: 67ff5ec491cafbc49864bd98e914e2e7, type: 3}
       propertyPath: m_Name
       value: UI_HP
-      objectReference: {fileID: 0}
-    - target: {fileID: 3815609318268723901, guid: 67ff5ec491cafbc49864bd98e914e2e7, type: 3}
-      propertyPath: m_Value
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8063515574050320870, guid: 67ff5ec491cafbc49864bd98e914e2e7, type: 3}
-      propertyPath: m_AnchorMax.x
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8063515574050320870, guid: 67ff5ec491cafbc49864bd98e914e2e7, type: 3}
       propertyPath: m_AnchorMax.y
