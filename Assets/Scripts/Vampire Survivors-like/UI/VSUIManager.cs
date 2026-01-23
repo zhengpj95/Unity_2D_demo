@@ -87,25 +87,30 @@ public class VSUIManager : SingletonMono<VSUIManager>
     int nextLevelExp = GetNextLevelExp();
     if (_curExp >= nextLevelExp)
     {
+      uI_EXP?.UpdateExp(_curExp, nextLevelExp);
       _curExp = 0;
       _curLevel++;
       ShowSkillSelectPanel(true);
-      UpdateExpBar(_curExp, nextLevelExp, _curLevel - 1);
+      StartCoroutine(UpdateExpBarCoroutine(_curExp, nextLevelExp, _curLevel));
     }
     else
     {
-      UpdateExpBar(_curExp, nextLevelExp, _curLevel);
+      UpdateExp(_curExp, nextLevelExp, _curLevel);
     }
     // Debug.Log($"AddExp: {addExp} CurExp: {_curExp} NextLevelExp: {nextLevelExp} CurLevel: {_curLevel}");
   }
 
-  public void UpdateExpBar(int currentExp, int expToNextLevel, int currentLevel)
+  private IEnumerator UpdateExpBarCoroutine(int curExp, int nextExp, int currentLevel)
   {
-    if (uI_EXP)
-    {
-      uI_EXP.UpdateExp(currentExp, expToNextLevel);
-      uI_EXP.UpdateLevel(currentLevel);
-    }
+    yield return new WaitForSeconds(0.5f);
+    UpdateExp(curExp, nextExp, currentLevel);
   }
+
+  private void UpdateExp(int curExp, int nextExp, int currentLevel)
+  {
+    uI_EXP?.UpdateExp(curExp, nextExp);
+    uI_EXP?.UpdateLevel(currentLevel);
+  }
+
   #endregion
 }
