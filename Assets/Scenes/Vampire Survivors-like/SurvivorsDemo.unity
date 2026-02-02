@@ -19490,6 +19490,7 @@ MonoBehaviour:
   uiInventory: {fileID: 1786793419}
   uiEnemyCount: {fileID: 1738349911}
   uI_EXP: {fileID: 120155837}
+  bar: {fileID: 0}
 --- !u!1 &215779526
 GameObject:
   m_ObjectHideFlags: 3

@@ -91,6 +91,7 @@
     <Compile Include="Assets\Scripts\Common\UI\ObjectFader.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\EnemyManager.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyTrace.cs" />
+    <Compile Include="Assets\GameControllers.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\UI\UI_Slot.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Trampoline.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\WeaponSO.cs" />
@@ -118,6 +119,7 @@
     <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\WeaponController\BulletbController.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyMovement.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\WeaponController\BlueOvalController.cs" />
+    <Compile Include="Assets\Scripts\Common\UI\UIProgressBarMask.cs" />
     <Compile Include="Assets\Scripts\Def\StateEnums.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\WeaponController\WeaponController.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Trap_Saw.cs" />
@@ -139,6 +141,7 @@
     <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\Weapon\SawWeapon.cs" />
     <Compile Include="Assets\Scripts\Common\Singleton\SingletonMono.cs" />
     <Compile Include="Assets\Scripts\Common\Manager\UIManager.cs" />
+    <Compile Include="Assets\Scripts\Common\UI\UIProgressBar.cs" />
     <Compile Include="Assets\Scripts\Def\GameSortingLayers.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Enemy\Enemy_Bullet.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\RpgPlayerArcherBow.cs" />
