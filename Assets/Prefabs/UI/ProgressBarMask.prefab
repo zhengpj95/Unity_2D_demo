@@ -128,7 +128,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maskRect: {fileID: 1920260087668527311}
   imgExpPro: {fileID: 1618321902580307378}
-  label: {fileID: 7886833340940647323}
+  tmpTxt: {fileID: 0}
 --- !u!1 &2668654189154936888
 GameObject:
   m_ObjectHideFlags: 0
@@ -375,9 +375,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '100/100
-
-'
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
