@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -23,7 +24,8 @@ public class UIProgressBarMask : MonoBehaviour
   public void SetProgress(float progress)
   {
     progress = Mathf.Clamp01(progress);
-    maskRect.sizeDelta = new Vector2(_fullWidth * progress, maskRect.sizeDelta.y);
+    float width = Mathf.Min(_fullWidth, _fullWidth * progress);
+    maskRect.sizeDelta = new Vector2(width, maskRect.sizeDelta.y);
   }
 
   public void SetText(string text)

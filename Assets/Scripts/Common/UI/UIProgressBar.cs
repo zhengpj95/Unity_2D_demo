@@ -12,10 +12,7 @@ public class UIProgressBar : MonoBehaviour
   [SerializeField] private RectTransform fill;    // imgProgress
   [SerializeField] private TMP_Text label;        // tmpTxt
 
-  [Header("Settings")]
-  [Range(0f, 1f)]
-  [SerializeField] private float progress = 1f;   // 默认满格显示
-
+  private float progress = 0f;                  // 进度(0~1)
   private float _originalWidth;
 
   private void Start()
