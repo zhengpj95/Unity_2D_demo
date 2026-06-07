@@ -2,57 +2,63 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class EnemyHealth : MonoBehaviour
+namespace Melee
 {
-  [SerializeField] private float maxHealth = 100f;
-  [SerializeField][Tooltip("Y 轴低于此值时判定为掉落死亡")]
-  private float fallDeathY = -10f;
-
-  private EnemyChase enemyChase;
-  private float currentHealth;
-  private bool hasFallenToDeath;
-
-  void Start()
+  public class EnemyHealth : MonoBehaviour
   {
-    enemyChase = GetComponent<EnemyChase>();
-    currentHealth = maxHealth;
-  }
+    [SerializeField] private float maxHealth = 100f;
+    [SerializeField][Tooltip("Y 轴低于此值时判定为掉落死亡")]
+    private float fallDeathY = -10f;
 
-  void Update()
-  {
-    if (!hasFallenToDeath && transform.position.y <= fallDeathY)
+    private EnemyChase enemyChase;
+    private float currentHealth;
+    private bool hasFallenToDeath;
+
+    void Start()
     {
-      hasFallenToDeath = true;
-      currentHealth = 0;
+      enemyChase = GetComponent<EnemyChase>();
+      currentHealth = maxHealth;
+    }
+
+    void Update()
+    {
+      if (!hasFallenToDeath && transform.position.y <= fallDeathY)
+      {
+        hasFallenToDeath = true;
+        currentHealth = 0;
+        if (enemyChase != null)
+        {
+          enemyChase.ChangeState(EntityState.Death);
+        }
+        else
+        {
+          Destroy(gameObject);
+        }
+      }
+    }
+
+    public void TakeDamage(float damage)
+    {
+      if (currentHealth <= 0) return;
+
+      currentHealth -= damage;
       if (enemyChase != null)
       {
-        enemyChase.ChangeState(EntityState.Death);
+        if (currentHealth <= 0)
+        {
+          enemyChase.ChangeState(EntityState.Death);
+        }
+        else
+        {
+          enemyChase.ChangeState(EntityState.Hurt);
+        }
       }
-      else
-      {
-        Destroy(gameObject);
-      }
     }
-  }
 
-  public void TakeDamage(float damage)
-  {
-    if (currentHealth <= 0) return;
-
-    currentHealth -= damage;
-    if (currentHealth <= 0)
+    // Animation Event
+    private void Death()
     {
-      enemyChase.ChangeState(EntityState.Death);
+      Destroy(gameObject);
     }
-    else
-    {
-      enemyChase.ChangeState(EntityState.Hurt);
-    }
-  }
-
-  // Animation Event
-  private void Death()
-  {
-    Destroy(gameObject);
   }
 }
