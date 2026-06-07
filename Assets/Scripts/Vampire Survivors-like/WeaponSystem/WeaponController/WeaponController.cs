@@ -3,78 +3,82 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-/**
- * 武器控制器基类
- */
-public abstract class WeaponController : MonoBehaviour
-{
-  protected WeaponSO data;
-  protected int level = 1;
-  protected float timer;
+namespace VampireSurvivorsLike {
 
-  public WeaponSO WeaponData => data;
-
-  public Transform player;
-
-  private void Start()
+  /**
+   * 武器控制器基类
+   */
+  public abstract class WeaponController : MonoBehaviour
   {
-    player = GameObject.FindGameObjectWithTag("Player").transform;
-  }
+    protected WeaponSO data;
+    protected int level = 1;
+    protected float timer;
 
-  // 初始化武器
-  public virtual void Init(WeaponSO weaponSO)
-  {
-    this.data = weaponSO;
-  }
+    public WeaponSO WeaponData => data;
 
-  protected virtual void Update()
-  {
-    timer += Time.deltaTime;
-    var levelData = GetLevelData();
-    if (timer >= levelData.fireInterval)
+    public Transform player;
+
+    private void Start()
     {
-      timer = 0;
-      Fire();
+      player = GameObject.FindGameObjectWithTag("Player").transform;
     }
-  }
 
-  protected abstract void Fire();
-
-  // 升级武器
-  public void LevelUp()
-  {
-    if (level >= data.levels.Length)
+    // 初始化武器
+    public virtual void Init(WeaponSO weaponSO)
     {
-      Debug.Log($"武器等级已达上限：{level}");
-      return;
+      this.data = weaponSO;
     }
-    level++;
-  }
 
-  // 当前武器等级数据
-  public WeaponLevelData GetLevelData()
-  {
-    if (data?.levels?.Length > 0)
+    protected virtual void Update()
     {
-      if (level > data.levels.Length)
+      timer += Time.deltaTime;
+      var levelData = GetLevelData();
+      if (timer >= levelData.fireInterval)
       {
-        return data.levels[data.levels.Length - 1];
+        timer = 0;
+        Fire();
       }
-      return data.levels[Mathf.Max(0, level - 1)];
     }
-    return new WeaponLevelData
+
+    protected abstract void Fire();
+
+    // 升级武器
+    public void LevelUp()
     {
-      level = 1,
-      damage = 1,
-      count = 1,
-      range = 1,
-      fireInterval = 1,
-    };
+      if (level >= data.levels.Length)
+      {
+        Debug.Log($"武器等级已达上限：{level}");
+        return;
+      }
+      level++;
+    }
+
+    // 当前武器等级数据
+    public WeaponLevelData GetLevelData()
+    {
+      if (data?.levels?.Length > 0)
+      {
+        if (level > data.levels.Length)
+        {
+          return data.levels[data.levels.Length - 1];
+        }
+        return data.levels[Mathf.Max(0, level - 1)];
+      }
+      return new WeaponLevelData
+      {
+        level = 1,
+        damage = 1,
+        count = 1,
+        range = 1,
+        fireInterval = 1,
+      };
+    }
+
+    // 攻击范围
+    public float GetAttackRange()
+    {
+      return player.GetComponent<Hero>().AttackRange;
+    }
   }
 
-  // 攻击范围
-  public float GetAttackRange()
-  {
-    return player.GetComponent<Hero>().AttackRange;
-  }
 }

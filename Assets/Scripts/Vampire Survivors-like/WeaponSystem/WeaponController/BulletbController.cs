@@ -2,18 +2,22 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BulletbController : WeaponController
-{
-  protected override void Fire()
+namespace VampireSurvivorsLike {
+
+  public class BulletbController : WeaponController
   {
-    var enemy = EnemySpawnManager.Instance.GetCloseest(player.position, GetAttackRange());
-    if (enemy)
+    protected override void Fire()
     {
-      var bulletb = Instantiate(data.prefab, player.position, Quaternion.identity, transform);
-      var bulletbScript = bulletb.GetComponent<ArrowWeapon>();
-      var levelData = GetLevelData();
-      bulletbScript.Init(enemy.transform, levelData);
-      Destroy(bulletb.gameObject, levelData.duration);
+      var enemy = EnemySpawnManager.Instance.GetCloseest(player.position, GetAttackRange());
+      if (enemy)
+      {
+        var bulletb = Instantiate(data.prefab, player.position, Quaternion.identity, transform);
+        var bulletbScript = bulletb.GetComponent<ArrowWeapon>();
+        var levelData = GetLevelData();
+        bulletbScript.Init(enemy.transform, levelData);
+        Destroy(bulletb.gameObject, levelData.duration);
+      }
     }
   }
+
 }

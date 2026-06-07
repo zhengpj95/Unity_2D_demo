@@ -3,13 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UI_Slot : MonoBehaviour
-{
-  public Image Icon;
-  public Text CountText;
+namespace VampireSurvivorsLike {
 
-  public void UpdateCount(int count)
+  public class UI_Slot : MonoBehaviour
   {
-    CountText.text = count.ToString();
+    public Image Icon;
+    public Text CountText;
+
+    public void UpdateCount(int count)
+    {
+      CountText.text = count.ToString();
+    }
   }
+
 }

@@ -2,59 +2,63 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-/**
- * 炸弹武器、闪电武器
- */
-public class BlueOvalWeapon : MonoBehaviour
-{
-  private bool initialized;
-  private int damage = 1;
-  private List<Transform> hitEnemies = new List<Transform>();
+namespace VampireSurvivorsLike {
 
-  public void Init(Transform target, WeaponLevelData data)
+  /**
+   * 炸弹武器、闪电武器
+   */
+  public class BlueOvalWeapon : MonoBehaviour
   {
-    transform.position = target.position;
-    damage = data.damage;
-    initialized = true;
-  }
+    private bool initialized;
+    private int damage = 1;
+    private List<Transform> hitEnemies = new List<Transform>();
 
-  void OnTriggerEnter2D(Collider2D collision)
-  {
-    if (!initialized) return;
-    if (collision.gameObject.CompareTag("Enemy"))
+    public void Init(Transform target, WeaponLevelData data)
     {
-      Transform enemyTransform = collision.transform;
-      if (!hitEnemies.Contains(enemyTransform))
+      transform.position = target.position;
+      damage = data.damage;
+      initialized = true;
+    }
+
+    void OnTriggerEnter2D(Collider2D collision)
+    {
+      if (!initialized) return;
+      if (collision.gameObject.CompareTag("Enemy"))
       {
-        hitEnemies.Add(enemyTransform);
+        Transform enemyTransform = collision.transform;
+        if (!hitEnemies.Contains(enemyTransform))
+        {
+          hitEnemies.Add(enemyTransform);
+        }
+      }
+    }
+
+    void OnTriggerExit2D(Collider2D collision)
+    {
+      if (!initialized) return;
+      if (collision.gameObject.CompareTag("Enemy"))
+      {
+        Transform enemyTransform = collision.transform;
+        if (hitEnemies.Contains(enemyTransform))
+        {
+          hitEnemies.Remove(enemyTransform);
+        }
+      }
+    }
+
+    // Animation Event
+    public void DamageEnemy()
+    {
+      for (int i = 0; i < hitEnemies.Count; i++)
+      {
+        if (i >= 0 && hitEnemies[i] != null)
+        {
+          var enemy = hitEnemies[i];
+          VSEnemyHealth vSHealth = enemy.GetComponent<VSEnemyHealth>();
+          vSHealth.TakeDamage(damage);
+        }
       }
     }
   }
 
-  void OnTriggerExit2D(Collider2D collision)
-  {
-    if (!initialized) return;
-    if (collision.gameObject.CompareTag("Enemy"))
-    {
-      Transform enemyTransform = collision.transform;
-      if (hitEnemies.Contains(enemyTransform))
-      {
-        hitEnemies.Remove(enemyTransform);
-      }
-    }
-  }
-
-  // Animation Event
-  public void DamageEnemy()
-  {
-    for (int i = 0; i < hitEnemies.Count; i++)
-    {
-      if (i >= 0 && hitEnemies[i] != null)
-      {
-        var enemy = hitEnemies[i];
-        VSEnemyHealth vSHealth = enemy.GetComponent<VSEnemyHealth>();
-        vSHealth.TakeDamage(damage);
-      }
-    }
-  }
 }
