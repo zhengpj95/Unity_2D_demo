@@ -1,14 +1,17 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class CheckEndPoint : MonoBehaviour
-{
-  private void OnTriggerEnter2D(Collider2D other)
+namespace FrogAdventure {
+
+  public class CheckEndPoint : MonoBehaviour
   {
-    if (other.gameObject.CompareTag("Player"))
+    private void OnTriggerEnter2D(Collider2D other)
     {
-      Debug.Log("到达终点，切换关卡");
-      GameController.Instance.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+      if (other.gameObject.CompareTag("Player"))
+      {
+        Debug.Log("到达终点，切换关卡");
+        GameController.Instance.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+      }
     }
   }
 }

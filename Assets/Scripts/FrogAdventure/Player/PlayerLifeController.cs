@@ -1,23 +1,26 @@
 using System;
 using UnityEngine;
 
-public class PlayerLifeController : MonoBehaviour
-{
-  public GameObject playerPrefab;
-  public Transform spawnPoint;
+namespace FrogAdventure {
 
-  private void Start()
+  public class PlayerLifeController : MonoBehaviour
   {
-    EventBus.AddListener("PLAYER_REVIVE", Revive);
-  }
+    public GameObject playerPrefab;
+    public Transform spawnPoint;
 
-  private void OnDestroy()
-  {
-    EventBus.RemoveListener("PLAYER_REVIVE", Revive);
-  }
+    private void Start()
+    {
+      EventBus.AddListener("PLAYER_REVIVE", Revive);
+    }
 
-  private void Revive()
-  {
-    Instantiate(playerPrefab, spawnPoint.position, Quaternion.identity);
+    private void OnDestroy()
+    {
+      EventBus.RemoveListener("PLAYER_REVIVE", Revive);
+    }
+
+    private void Revive()
+    {
+      Instantiate(playerPrefab, spawnPoint.position, Quaternion.identity);
+    }
   }
 }

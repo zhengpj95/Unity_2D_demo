@@ -1,47 +1,50 @@
 using UnityEngine;
 
-public class Enemy_Plant : MonoBehaviour
-{
-  public Transform bullet;
-  public Transform firePoint;
+namespace FrogAdventure {
 
-  private Animator _animator;
-  private bool _isAttack;
-  private float _timer;
-  private readonly float _duration = 4f;
-
-  private void Start()
+  public class Enemy_Plant : MonoBehaviour
   {
-    _animator = GetComponent<Animator>();
-  }
+    public Transform bullet;
+    public Transform firePoint;
 
-  private void Update()
-  {
-    if (!_isAttack)
+    private Animator _animator;
+    private bool _isAttack;
+    private float _timer;
+    private readonly float _duration = 4f;
+
+    private void Start()
     {
-      _timer += Time.deltaTime;
-      if (_timer >= _duration)
+      _animator = GetComponent<Animator>();
+    }
+
+    private void Update()
+    {
+      if (!_isAttack)
       {
-        _timer = 0f;
-        Attack();
+        _timer += Time.deltaTime;
+        if (_timer >= _duration)
+        {
+          _timer = 0f;
+          Attack();
+        }
       }
     }
-  }
 
-  public void Attack()
-  {
-    _isAttack = true;
-    _animator.SetBool("isAttack", true);
-  }
+    public void Attack()
+    {
+      _isAttack = true;
+      _animator.SetBool("isAttack", true);
+    }
 
-  public void AttackEnd()
-  {
-    _isAttack = false;
-    _animator.SetBool("isAttack", false);
-  }
+    public void AttackEnd()
+    {
+      _isAttack = false;
+      _animator.SetBool("isAttack", false);
+    }
 
-  public void Fire()
-  {
-    Instantiate(bullet, firePoint.position, Quaternion.identity);
+    public void Fire()
+    {
+      Instantiate(bullet, firePoint.position, Quaternion.identity);
+    }
   }
 }

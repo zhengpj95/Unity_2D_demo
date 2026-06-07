@@ -1,59 +1,62 @@
 using System.Collections;
 using UnityEngine;
 
-public class PlayerKnockBack : MonoBehaviour
-{
-  private Rigidbody2D _rb2d;
-  private Animator _animator;
+namespace FrogAdventure {
 
-  [Tooltip("击退距离")]
-  public float knockBackForce = 2.5f;
-  [Tooltip("击退眩晕时间")]
-  public float knockBackStunTime = 0.6f;
-
-  void Start()
+  public class PlayerKnockBack : MonoBehaviour
   {
-    _rb2d = GetComponent<Rigidbody2D>();
-    _animator = GetComponent<Animator>();
-  }
+    private Rigidbody2D _rb2d;
+    private Animator _animator;
 
-  // 受击
-  public void KnockBack(Transform trap)
-  {
-    GameController.Instance.IsKnockBack = true;
+    [Tooltip("击退距离")]
+    public float knockBackForce = 2.5f;
+    [Tooltip("击退眩晕时间")]
+    public float knockBackStunTime = 0.6f;
 
-    GameController.Instance.UpdateHp(-1);
-    if (GameController.Instance.MaxHp == 0)
+    void Start()
     {
-      _animator.SetTrigger("isDeath");
-      return;
+      _rb2d = GetComponent<Rigidbody2D>();
+      _animator = GetComponent<Animator>();
     }
 
-    _animator.SetTrigger("isHit");
-    Vector2 direction = (transform.position - trap.position).normalized;
-    _rb2d.velocity = direction * knockBackForce;
-  }
+    // 受击
+    public void KnockBack(Transform trap)
+    {
+      GameController.Instance.IsKnockBack = true;
 
-  // 受击结束
-  public void StopKnockBack()
-  {
-    _animator.SetInteger("state", 0);
-    StartCoroutine(KnockBackCoroutine());
-  }
+      GameController.Instance.UpdateHp(-1);
+      if (GameController.Instance.MaxHp == 0)
+      {
+        _animator.SetTrigger("isDeath");
+        return;
+      }
 
-  private IEnumerator KnockBackCoroutine()
-  {
-    yield return new WaitForSeconds(knockBackStunTime);
-    GameController.Instance.IsKnockBack = false;
-  }
+      _animator.SetTrigger("isHit");
+      Vector2 direction = (transform.position - trap.position).normalized;
+      _rb2d.velocity = direction * knockBackForce;
+    }
 
-  // 死亡
-  private void Death()
-  {
-    Debug.Log("Death");
-    GameController.Instance.ResetHp();
-    GameController.Instance.IsKnockBack = false;
-    EventBus.Dispatch("PLAYER_REVIVE");
-    Destroy(gameObject);
+    // 受击结束
+    public void StopKnockBack()
+    {
+      _animator.SetInteger("state", 0);
+      StartCoroutine(KnockBackCoroutine());
+    }
+
+    private IEnumerator KnockBackCoroutine()
+    {
+      yield return new WaitForSeconds(knockBackStunTime);
+      GameController.Instance.IsKnockBack = false;
+    }
+
+    // 死亡
+    private void Death()
+    {
+      Debug.Log("Death");
+      GameController.Instance.ResetHp();
+      GameController.Instance.IsKnockBack = false;
+      EventBus.Dispatch("PLAYER_REVIVE");
+      Destroy(gameObject);
+    }
   }
 }

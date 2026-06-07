@@ -2,44 +2,47 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Trap_Saw : MonoBehaviour
-{
-  public GameObject[] waypoints;
-  public float speed = 2f;
-  public float rotationSpeed = 2f;
-  public float waitTime = 1.5f;
+namespace FrogAdventure {
 
-  private int _currentWayPointIndex = 0;
-  private bool _canMove = true;
-
-  public void Update()
+  public class Trap_Saw : MonoBehaviour
   {
-    transform.Rotate(0, 0, 360 * rotationSpeed * Time.deltaTime); // 旋转
+    public GameObject[] waypoints;
+    public float speed = 2f;
+    public float rotationSpeed = 2f;
+    public float waitTime = 1.5f;
 
-    if (_canMove == false)
+    private int _currentWayPointIndex = 0;
+    private bool _canMove = true;
+
+    public void Update()
     {
-      return;
-    }
+      transform.Rotate(0, 0, 360 * rotationSpeed * Time.deltaTime); // 旋转
 
-    transform.position = Vector2.MoveTowards(transform.position, waypoints[_currentWayPointIndex].transform.position,
-      speed * Time.deltaTime);
-
-    if (Vector2.Distance(waypoints[_currentWayPointIndex].transform.position, transform.position) < .1f)
-    {
-      StartCoroutine(WaitAtWaypoint());
-
-      _currentWayPointIndex++;
-      if (_currentWayPointIndex >= waypoints.Length)
+      if (_canMove == false)
       {
-        _currentWayPointIndex = 0;
+        return;
+      }
+
+      transform.position = Vector2.MoveTowards(transform.position, waypoints[_currentWayPointIndex].transform.position,
+        speed * Time.deltaTime);
+
+      if (Vector2.Distance(waypoints[_currentWayPointIndex].transform.position, transform.position) < .1f)
+      {
+        StartCoroutine(WaitAtWaypoint());
+
+        _currentWayPointIndex++;
+        if (_currentWayPointIndex >= waypoints.Length)
+        {
+          _currentWayPointIndex = 0;
+        }
       }
     }
-  }
 
-  private IEnumerator WaitAtWaypoint()
-  {
-    _canMove = false;
-    yield return new WaitForSeconds(waitTime);
-    _canMove = true;
+    private IEnumerator WaitAtWaypoint()
+    {
+      _canMove = false;
+      yield return new WaitForSeconds(waitTime);
+      _canMove = true;
+    }
   }
 }
