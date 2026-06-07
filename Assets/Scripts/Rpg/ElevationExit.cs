@@ -3,32 +3,35 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ElevationExit : MonoBehaviour
+namespace Rpg
 {
-  public Collider2D[] colliders;
-  public Collider2D[] boundaryColliders;
-
-  private void OnTriggerEnter2D(Collider2D other)
+  public class ElevationExit : MonoBehaviour
   {
-    if (other.gameObject.CompareTag("Player"))
+    public Collider2D[] colliders;
+    public Collider2D[] boundaryColliders;
+
+    private void OnTriggerEnter2D(Collider2D other)
     {
-      foreach (Collider2D collider1 in colliders)
+      if (other.gameObject.CompareTag("Player"))
       {
-        collider1.enabled = true;
-      }
+        foreach (Collider2D collider1 in colliders)
+        {
+          collider1.enabled = true;
+        }
 
-      foreach (Collider2D collider1 in boundaryColliders)
-      {
-        collider1.enabled = false;
-      }
+        foreach (Collider2D collider1 in boundaryColliders)
+        {
+          collider1.enabled = false;
+        }
 
-      other.gameObject.GetComponent<SpriteRenderer>().sortingOrder = 5; // 设置为默认层级
+        other.gameObject.GetComponent<SpriteRenderer>().sortingOrder = 5; // 设置为默认层级
       
-      Debug.Log("11111 exit2D");
-    }
-    if (other.gameObject.CompareTag("Enemy"))
-    {
-      other.gameObject.GetComponent<SpriteRenderer>().sortingOrder = 5;
+        Debug.Log("11111 exit2D");
+      }
+      if (other.gameObject.CompareTag("Enemy"))
+      {
+        other.gameObject.GetComponent<SpriteRenderer>().sortingOrder = 5;
+      }
     }
   }
 }

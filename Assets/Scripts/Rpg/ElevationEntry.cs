@@ -3,33 +3,36 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ElevationEntry : MonoBehaviour
+namespace Rpg
 {
-  public Collider2D[] colliders;
-  public Collider2D[] boundaryColliders;
-
-  private void OnTriggerEnter2D(Collider2D other)
+  public class ElevationEntry : MonoBehaviour
   {
-    if (other.gameObject.CompareTag("Player"))
+    public Collider2D[] colliders;
+    public Collider2D[] boundaryColliders;
+
+    private void OnTriggerEnter2D(Collider2D other)
     {
-      foreach (Collider2D collider1 in colliders)
+      if (other.gameObject.CompareTag("Player"))
       {
-        collider1.enabled = false;
+        foreach (Collider2D collider1 in colliders)
+        {
+          collider1.enabled = false;
+        }
+
+        foreach (Collider2D collider1 in boundaryColliders)
+        {
+          collider1.enabled = true;
+        }
+
+        other.gameObject.GetComponent<SpriteRenderer>().sortingOrder = 20; // 设置为高层级，在高地之上
+
+        Debug.Log("11111 enter2D");
       }
 
-      foreach (Collider2D collider1 in boundaryColliders)
+      if (other.gameObject.CompareTag("Enemy"))
       {
-        collider1.enabled = true;
+        other.gameObject.GetComponent<SpriteRenderer>().sortingOrder = 20;
       }
-
-      other.gameObject.GetComponent<SpriteRenderer>().sortingOrder = 20; // 设置为高层级，在高地之上
-
-      Debug.Log("11111 enter2D");
-    }
-
-    if (other.gameObject.CompareTag("Enemy"))
-    {
-      other.gameObject.GetComponent<SpriteRenderer>().sortingOrder = 20;
     }
   }
 }

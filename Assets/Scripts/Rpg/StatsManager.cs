@@ -4,38 +4,41 @@ using System.Collections.Generic;
 using System.ComponentModel.Design.Serialization;
 using UnityEngine;
 
-public class StatsManager : MonoBehaviour
+namespace Rpg
 {
-  public static StatsManager Instance { get; private set; }
-
-  private void Awake()
+  public class StatsManager : MonoBehaviour
   {
-    if (Instance == null)
+    public static StatsManager Instance { get; private set; }
+
+    private void Awake()
     {
-      Instance = this;
-      DontDestroyOnLoad(gameObject);
+      if (Instance == null)
+      {
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+      }
+      else if (Instance != this)
+      {
+        Destroy(gameObject);
+      }
     }
-    else if (Instance != this)
+
+    private void OnDestroy()
     {
-      Destroy(gameObject);
+      if (Instance == this)
+      {
+        Instance = null;
+      }
     }
+
+    [Header("Enemy Stats")]
+    public float enemySpeed;
+    public int enemyMaxHealth;
+
+    [Header("Player Stats")]
+    public float speed;
+    public int damage;
+    public int health;
+    public int MaxHealth;
   }
-
-  private void OnDestroy()
-  {
-    if (Instance == this)
-    {
-      Instance = null;
-    }
-  }
-
-  [Header("Enemy Stats")]
-  public float enemySpeed;
-  public int enemyMaxHealth;
-
-  [Header("Player Stats")]
-  public float speed;
-  public int damage;
-  public int health;
-  public int MaxHealth;
 }

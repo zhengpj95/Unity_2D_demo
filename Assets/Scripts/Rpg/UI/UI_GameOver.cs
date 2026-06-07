@@ -2,38 +2,41 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class UI_GameOver : MonoBehaviour
+namespace Rpg
 {
-  public GameObject gameOverPanel;
-  public Transform playerPrefab;
-
-  void Start()
+  public class UI_GameOver : MonoBehaviour
   {
-    EventBus.AddListener<bool>("Event_GameOver", UpdateActive);
-  }
+    public GameObject gameOverPanel;
+    public Transform playerPrefab;
 
-  void OnDestroy()
-  {
-    EventBus.RemoveListener<bool>("Event_GameOver", UpdateActive);
-  }
+    void Start()
+    {
+      EventBus.AddListener<bool>("Event_GameOver", UpdateActive);
+    }
 
-  void UpdateActive(bool active)
-  {
-    gameOverPanel.SetActive(active);
-  }
+    void OnDestroy()
+    {
+      EventBus.RemoveListener<bool>("Event_GameOver", UpdateActive);
+    }
 
-  // ui Button点击调用
-  public void RestartGame()
-  {
-    Debug.Log("Restart Game UI_GameOver");
-    UpdateActive(false);
+    void UpdateActive(bool active)
+    {
+      gameOverPanel.SetActive(active);
+    }
 
-    StartCoroutine(SpawnPlayerAfterDelay(0.5f));
-  }
+    // ui Button点击调用
+    public void RestartGame()
+    {
+      Debug.Log("Restart Game UI_GameOver");
+      UpdateActive(false);
 
-  private IEnumerator SpawnPlayerAfterDelay(float delay)
-  {
-    yield return new WaitForSeconds(delay);
-    Instantiate(playerPrefab, Vector3.down, Quaternion.identity);
+      StartCoroutine(SpawnPlayerAfterDelay(0.5f));
+    }
+
+    private IEnumerator SpawnPlayerAfterDelay(float delay)
+    {
+      yield return new WaitForSeconds(delay);
+      Instantiate(playerPrefab, Vector3.down, Quaternion.identity);
+    }
   }
 }

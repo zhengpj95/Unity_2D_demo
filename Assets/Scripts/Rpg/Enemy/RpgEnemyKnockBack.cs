@@ -1,37 +1,40 @@
 using System.Collections;
 using UnityEngine;
 
-public class RpgEnemyKnockBack : MonoBehaviour
+namespace Rpg
 {
-  private Rigidbody2D _rb2d;
-  private RpgEnemyMovement _rpgEnemyMovement;
-
-  void Start()
+  public class RpgEnemyKnockBack : MonoBehaviour
   {
-    _rb2d = GetComponent<Rigidbody2D>();
-    _rpgEnemyMovement = GetComponent<RpgEnemyMovement>();
-  }
+    private Rigidbody2D _rb2d;
+    private RpgEnemyMovement _rpgEnemyMovement;
 
-  public void KnockBack(Transform player, float knockBackForce, float stunTime)
-  {
-    if (_rpgEnemyMovement.enemyState == RpgEnemyMovement.EnemyState.Death)
+    void Start()
     {
-      return;
+      _rb2d = GetComponent<Rigidbody2D>();
+      _rpgEnemyMovement = GetComponent<RpgEnemyMovement>();
     }
 
-    // Goblin 没有damage受击状态和动画
-    var enemyType = _rpgEnemyMovement.enemyType;
-    _rpgEnemyMovement.ChangeState(EnemyType.Goblin == enemyType ? RpgEnemyMovement.EnemyState.KnockBack : RpgEnemyMovement.EnemyState.Damage);
-    StartCoroutine(KnockBackCounter(stunTime));
+    public void KnockBack(Transform player, float knockBackForce, float stunTime)
+    {
+      if (_rpgEnemyMovement.enemyState == RpgEnemyMovement.EnemyState.Death)
+      {
+        return;
+      }
 
-    Vector2 direction = (transform.position - player.position).normalized;
-    _rb2d.velocity = direction * knockBackForce;
-  }
+      // Goblin 没有damage受击状态和动画
+      var enemyType = _rpgEnemyMovement.enemyType;
+      _rpgEnemyMovement.ChangeState(EnemyType.Goblin == enemyType ? RpgEnemyMovement.EnemyState.KnockBack : RpgEnemyMovement.EnemyState.Damage);
+      StartCoroutine(KnockBackCounter(stunTime));
 
-  private IEnumerator KnockBackCounter(float stunTime)
-  {
-    yield return new WaitForSeconds(stunTime);
-    _rb2d.velocity = Vector2.zero;
-    _rpgEnemyMovement.ChangeState(RpgEnemyMovement.EnemyState.Idle);
+      Vector2 direction = (transform.position - player.position).normalized;
+      _rb2d.velocity = direction * knockBackForce;
+    }
+
+    private IEnumerator KnockBackCounter(float stunTime)
+    {
+      yield return new WaitForSeconds(stunTime);
+      _rb2d.velocity = Vector2.zero;
+      _rpgEnemyMovement.ChangeState(RpgEnemyMovement.EnemyState.Idle);
+    }
   }
 }
