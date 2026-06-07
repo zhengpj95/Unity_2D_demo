@@ -76,6 +76,7 @@
     <Compile Include="Assets\Scripts\def\StateEnums.cs" />
     <Compile Include="Assets\Scripts\Rpg\Enemy\RpgEnemyTrace.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\UI\UI_Slot.cs" />
+    <Compile Include="Assets\Scripts\Melee\CameraFollow.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Trampoline.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\WeaponSO.cs" />
     <Compile Include="Assets\Scripts\Rpg\UI\UI_GameOver.cs" />
