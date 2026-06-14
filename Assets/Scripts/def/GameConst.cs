@@ -5,5 +5,4 @@ public enum ScrollType
 {
   Vertical,
   Horizontal,
-  Grid
 }
