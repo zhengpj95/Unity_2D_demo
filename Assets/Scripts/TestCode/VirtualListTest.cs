@@ -13,6 +13,7 @@ public class RankData
 public class VirtualListTest : MonoBehaviour
 {
   [SerializeField] private VirtualList list;
+  [SerializeField] private VirtualList list2;
 
   private void Start()
   {
@@ -28,5 +29,6 @@ public class VirtualListTest : MonoBehaviour
     }
 
     list.RefreshData(datas);
+    list2.RefreshData(datas);
   }
 }

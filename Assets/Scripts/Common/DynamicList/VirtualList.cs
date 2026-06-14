@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 
 /**
  * 虚拟列表，支持 vertical, horizontal, grid
  */
+[ExecuteInEditMode]
 public class VirtualList : MonoBehaviour
 {
   [Header("引用")] [SerializeField] private ScrollRect scrollRect;
@@ -30,6 +34,11 @@ public class VirtualList : MonoBehaviour
   private readonly List<object> _dataList = new();
   private readonly Queue<VirtualListItem> _pool = new();
   private readonly List<VirtualListItem> _visibleItems = new();
+#if UNITY_EDITOR
+  private readonly List<VirtualListItem> _previewItems = new();
+  private Transform _previewRoot;
+  private bool _validateScheduled = false;
+#endif
 
   private int _visibleCount;
   private int _startIndex = -1;
@@ -45,6 +54,11 @@ public class VirtualList : MonoBehaviour
 
   private void Awake()
   {
+    if (Application.isPlaying)
+    {
+      ClearPreviewItems();
+    }
+
     CreateItemPrefab();
     scrollRect.onValueChanged.AddListener(OnScroll);
     scrollRect.vertical = scrollType == ScrollType.Vertical;
@@ -53,6 +67,7 @@ public class VirtualList : MonoBehaviour
 
   private void Start()
   {
+    if (!Application.isPlaying) return;
     // Ensure layout has been calculated so viewport sizes are valid
     Canvas.ForceUpdateCanvases();
 
@@ -66,6 +81,41 @@ public class VirtualList : MonoBehaviour
 
     InitRect();
   }
+
+  private void OnValidate()
+  {
+    if (Application.isPlaying)
+      return;
+
+    if (scrollRect == null || content == null || itemPrefab == null)
+      return;
+
+#if UNITY_EDITOR
+    if (!_validateScheduled)
+    {
+      _validateScheduled = true;
+      EditorApplication.delayCall += ValidateDelayed;
+    }
+#endif
+  }
+
+#if UNITY_EDITOR
+  private void ValidateDelayed()
+  {
+    _validateScheduled = false;
+    if (this == null) return;
+    if (Application.isPlaying) return;
+    if (scrollRect == null || content == null || itemPrefab == null)
+      return;
+
+    ClearPreviewItems();
+    Canvas.ForceUpdateCanvases();
+    CreateItemPrefab();
+    InitRect();
+    UpdateContentLayout();
+    RefreshVisible(true);
+  }
+#endif
 
   private void CreateItemPrefab()
   {
@@ -113,22 +163,115 @@ public class VirtualList : MonoBehaviour
       _visibleCount = visibleCols * _rows;
     }
 
-    CreateItems();
+    if (Application.isPlaying)
+    {
+      CreateItems();
+    }
+#if UNITY_EDITOR
+    else
+    {
+      CreatePreviewItems();
+    }
+#endif
   }
 
   private void CreateItems()
   {
-    for (int i = 0; i < _visibleCount; i++)
+    // adjust existing items to match the desired visible count
+    while (_visibleItems.Count < _visibleCount)
     {
       VirtualListItem item = Instantiate(itemPrefab, content, false);
-      // ensure instantiated clones are inactive until used
-      if (item != null && item.gameObject.activeSelf)
+      if (item != null)
       {
         item.gameObject.SetActive(false);
+        _visibleItems.Add(item);
+      }
+    }
+
+    while (_visibleItems.Count > _visibleCount)
+    {
+      var item = _visibleItems[_visibleItems.Count - 1];
+      _visibleItems.RemoveAt(_visibleItems.Count - 1);
+      if (item != null)
+      {
+        if (Application.isPlaying)
+        {
+          Destroy(item.gameObject);
+        }
+        else
+        {
+          DestroyImmediate(item.gameObject);
+        }
+      }
+    }
+  }
+
+#if UNITY_EDITOR
+  private void EnsurePreviewRoot()
+  {
+    if (content == null) return;
+    if (_previewRoot != null) return;
+
+    var root = content.Find("__PreviewVirtualListItems");
+    if (root == null)
+    {
+      var go = new GameObject("__PreviewVirtualListItems");
+      go.hideFlags = HideFlags.DontSave;
+      go.transform.SetParent(content, false);
+      _previewRoot = go.transform;
+    }
+    else
+    {
+      _previewRoot = root;
+    }
+  }
+
+  private void CreatePreviewItems()
+  {
+    EnsurePreviewRoot();
+    if (_previewRoot == null) return;
+
+    while (_previewItems.Count < _visibleCount)
+    {
+      VirtualListItem item = Instantiate(itemPrefab, _previewRoot, false);
+      if (item != null)
+      {
+        item.gameObject.SetActive(false);
+        _previewItems.Add(item);
+      }
+    }
+
+    while (_previewItems.Count > _visibleCount)
+    {
+      var item = _previewItems[_previewItems.Count - 1];
+      _previewItems.RemoveAt(_previewItems.Count - 1);
+      if (item != null)
+      {
+        DestroyImmediate(item.gameObject);
+      }
+    }
+  }
+#endif
+
+  private void ClearPreviewItems()
+  {
+#if UNITY_EDITOR
+    if (_previewRoot != null)
+    {
+      if (Application.isPlaying)
+      {
+        Destroy(_previewRoot.gameObject);
+      }
+      else
+      {
+        DestroyImmediate(_previewRoot.gameObject);
       }
 
-      _visibleItems.Add(item);
+      _previewRoot = null;
     }
+
+    _previewItems.Clear();
+#endif
   }
 
   public void RefreshData<T>(List<T> datas)
@@ -183,6 +326,21 @@ public class VirtualList : MonoBehaviour
 
   private void RefreshVisible(bool force)
   {
+    if (Application.isPlaying)
+    {
+      Runtime_RefreshVisible(force);
+    }
+#if UNITY_EDITOR
+    else
+    {
+      Editor_RefreshVisible(force);
+    }
+#endif
+  }
+
+  // Runtime-only refresh (clean, focused on _visibleItems)
+  private void Runtime_RefreshVisible(bool force)
+  {
     int newStartIndex = 0;
     if (scrollType == ScrollType.Vertical)
     {
@@ -197,18 +355,13 @@ public class VirtualList : MonoBehaviour
       newStartIndex = startCol * _rows;
     }
 
-    if (!force && newStartIndex == _startIndex)
-    {
-      return;
-    }
-
+    if (!force && newStartIndex == _startIndex) return;
     _startIndex = newStartIndex;
 
     for (int i = 0; i < _visibleItems.Count; i++)
     {
       int dataIndex = _startIndex + i;
-
-      VirtualListItem item = _visibleItems[i];
+      var item = _visibleItems[i];
       if (item == null) continue;
 
       if (dataIndex >= _dataList.Count)
@@ -221,38 +374,95 @@ public class VirtualList : MonoBehaviour
     }
   }
 
+#if UNITY_EDITOR
+  // Editor-only preview refresh (uses _previewItems and shows layout when no data)
+  private void Editor_RefreshVisible(bool force)
+  {
+    int newStartIndex = 0;
+    if (scrollType == ScrollType.Vertical)
+    {
+      int startRow = Mathf.FloorToInt(Mathf.Abs(content.anchoredPosition.y) / (_itemHeight + spaceY));
+      startRow = Mathf.Max(0, startRow);
+      newStartIndex = startRow * _columns;
+    }
+    else
+    {
+      int startCol = Mathf.FloorToInt(Mathf.Abs(content.anchoredPosition.x) / (_itemWidth + spaceX));
+      startCol = Mathf.Max(0, startCol);
+      newStartIndex = startCol * _rows;
+    }
+
+    if (!force && newStartIndex == _startIndex) return;
+    _startIndex = newStartIndex;
+
+    bool previewEmpty = _dataList.Count == 0;
+
+    for (int i = 0; i < _previewItems.Count; i++)
+    {
+      int dataIndex = _startIndex + i;
+      var item = _previewItems[i];
+      if (item == null) continue;
+
+      if (dataIndex >= _dataList.Count)
+      {
+        if (previewEmpty)
+        {
+          item.gameObject.SetActive(true);
+          item.name = "item" + dataIndex;
+          UpdateItemPosition(item, dataIndex);
+        }
+        else
+        {
+          item.gameObject.SetActive(false);
+        }
+
+        continue;
+      }
+
+      // has data
+      item.gameObject.SetActive(true);
+      item.name = "item" + dataIndex;
+      UpdateItemPosition(item, dataIndex);
+      // do not call item.Refresh in preview unless data exists
+      item.Refresh(dataIndex, _dataList.Count > dataIndex ? _dataList[dataIndex] : null);
+    }
+  }
+#endif
+
   private void RefreshItem(VirtualListItem item, int dataIndex)
   {
     if (item == null) return;
 
     item.gameObject.SetActive(true);
     item.name = "item" + dataIndex;
+    UpdateItemPosition(item, dataIndex);
+    item.Refresh(dataIndex, _dataList[dataIndex]);
+  }
 
+  private void UpdateItemPosition(VirtualListItem item, int dataIndex)
+  {
     RectTransform rt = item.transform as RectTransform;
-    if (rt != null)
+    if (rt == null) return;
+
+    float x, y;
+
+    if (scrollType == ScrollType.Vertical)
     {
-      float x, y;
-
-      if (scrollType == ScrollType.Vertical)
-      {
-        // row-major: row = index / columns, col = index % columns
-        int row = dataIndex / _columns;
-        int col = dataIndex % _columns;
-        x = col * (_itemWidth + spaceX);
-        y = -row * (_itemHeight + spaceY);
-      }
-      else
-      {
-        // column-major: col = index / rows, row = index % rows
-        int col = dataIndex / _rows;
-        int row = dataIndex % _rows;
-        x = col * (_itemWidth + spaceX);
-        y = -row * (_itemHeight + spaceY);
-      }
-
-      rt.anchoredPosition = new Vector2(x, y);
+      // row-major: row = index / columns, col = index % columns
+      int row = dataIndex / _columns;
+      int col = dataIndex % _columns;
+      x = col * (_itemWidth + spaceX);
+      y = -row * (_itemHeight + spaceY);
+    }
+    else
+    {
+      // column-major: col = index / rows, row = index % rows
+      int col = dataIndex / _rows;
+      int row = dataIndex % _rows;
+      x = col * (_itemWidth + spaceX);
+      y = -row * (_itemHeight + spaceY);
     }
 
-    item.Refresh(dataIndex, _dataList[dataIndex]);
+    rt.anchoredPosition = new Vector2(x, y);
   }
 }
