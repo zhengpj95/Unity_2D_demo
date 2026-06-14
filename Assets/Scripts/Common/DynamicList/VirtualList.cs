@@ -44,10 +44,25 @@ public class VirtualList : MonoBehaviour
   private void Awake()
   {
     CreateItemPrefab();
-    InitRect();
     scrollRect.onValueChanged.AddListener(OnScroll);
     scrollRect.vertical = scrollType == ScrollType.Vertical;
     scrollRect.horizontal = scrollType == ScrollType.Horizontal;
+  }
+
+  private void Start()
+  {
+    // Ensure layout has been calculated so viewport sizes are valid
+    Canvas.ForceUpdateCanvases();
+
+    // set content anchors/pivot once
+    if (content != null)
+    {
+      content.anchorMin = new Vector2(0, 1);
+      content.anchorMax = new Vector2(0, 1);
+      content.pivot = new Vector2(0, 1);
+    }
+
+    InitRect();
   }
 
   private void CreateItemPrefab()
@@ -81,7 +96,13 @@ public class VirtualList : MonoBehaviour
   {
     for (int i = 0; i < visibleCount; i++)
     {
-      VirtualListItem item = Instantiate(itemPrefab, content);
+      VirtualListItem item = Instantiate(itemPrefab, content, false);
+      // ensure instantiated clones are inactive until used
+      if (item != null && item.gameObject.activeSelf)
+      {
+        item.gameObject.SetActive(false);
+      }
+
       visibleItems.Add(item);
     }
   }
@@ -104,19 +125,24 @@ public class VirtualList : MonoBehaviour
   {
     if (scrollType == ScrollType.Vertical)
     {
-      float height = dataList.Count * _itemHeight + ((dataList.Count - 1) * spaceY);
+      float height = 0f;
+      if (dataList.Count > 0)
+      {
+        height = dataList.Count * _itemHeight + ((dataList.Count - 1) * spaceY);
+      }
+
       content.sizeDelta = new Vector2(content.sizeDelta.x, height);
     }
     else if (scrollType == ScrollType.Horizontal)
     {
-      float width = dataList.Count * _itemWidth + ((dataList.Count - 1) * spaceX);
+      float width = 0f;
+      if (dataList.Count > 0)
+      {
+        width = dataList.Count * _itemWidth + ((dataList.Count - 1) * spaceX);
+      }
+
       content.sizeDelta = new Vector2(width, content.sizeDelta.y);
     }
-
-    RectTransform rt = content.GetComponent<RectTransform>();
-    rt.anchorMin = new Vector2(0, 1);
-    rt.anchorMax = new Vector2(0, 1);
-    rt.pivot = new Vector2(0, 1);
   }
 
   private void OnScroll(Vector2 value)
@@ -155,13 +181,16 @@ public class VirtualList : MonoBehaviour
       item.name = "item" + dataIndex;
 
       RectTransform rt = item.transform as RectTransform;
-      if (scrollType == ScrollType.Vertical)
+      if (rt != null)
       {
-        rt.anchoredPosition = new Vector2(0, -dataIndex * _itemHeight - (spaceY * dataIndex));
-      }
-      else if (scrollType == ScrollType.Horizontal)
-      {
-        rt.anchoredPosition = new Vector2(dataIndex * _itemWidth + (spaceX * dataIndex), 0);
+        if (scrollType == ScrollType.Vertical)
+        {
+          rt.anchoredPosition = new Vector2(0, -dataIndex * _itemHeight - (spaceY * dataIndex));
+        }
+        else if (scrollType == ScrollType.Horizontal)
+        {
+          rt.anchoredPosition = new Vector2(dataIndex * _itemWidth + (spaceX * dataIndex), 0);
+        }
       }
 
       item.Refresh(dataIndex, dataList[dataIndex]);
