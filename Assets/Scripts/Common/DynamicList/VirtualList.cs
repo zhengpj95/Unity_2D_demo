@@ -31,6 +31,50 @@ public class VirtualList : MonoBehaviour
   [Tooltip("垂直方向显示的单元格数量")] [SerializeField]
   private int repeatY = 0;
 
+  public int SpaceX
+  {
+    get => spaceX;
+    set
+    {
+      if (spaceX == value) return;
+      spaceX = value;
+      ApplyLayoutSettings();
+    }
+  }
+
+  public int SpaceY
+  {
+    get => spaceY;
+    set
+    {
+      if (spaceY == value) return;
+      spaceY = value;
+      ApplyLayoutSettings();
+    }
+  }
+
+  public int RepeatX
+  {
+    get => repeatX;
+    set
+    {
+      if (repeatX == value) return;
+      repeatX = value;
+      ApplyLayoutSettings();
+    }
+  }
+
+  public int RepeatY
+  {
+    get => repeatY;
+    set
+    {
+      if (repeatY == value) return;
+      repeatY = value;
+      ApplyLayoutSettings();
+    }
+  }
+
   private readonly List<object> _dataList = new();
   private readonly Queue<VirtualListItem> _pool = new();
   private readonly List<VirtualListItem> _visibleItems = new();
@@ -39,6 +83,7 @@ public class VirtualList : MonoBehaviour
   private Transform _previewRoot;
   private bool _validateScheduled = false;
 #endif
+  
 
   private int _visibleCount;
   private int _startIndex = -1;
@@ -180,7 +225,7 @@ public class VirtualList : MonoBehaviour
     // adjust existing items to match the desired visible count
     while (_visibleItems.Count < _visibleCount)
     {
-      VirtualListItem item = Instantiate(itemPrefab, content, false);
+      VirtualListItem item = GetPooledItem();
       if (item != null)
       {
         item.gameObject.SetActive(false);
@@ -192,18 +237,38 @@ public class VirtualList : MonoBehaviour
     {
       var item = _visibleItems[_visibleItems.Count - 1];
       _visibleItems.RemoveAt(_visibleItems.Count - 1);
-      if (item != null)
+      ReleaseItemToPool(item);
+    }
+  }
+
+  private VirtualListItem GetPooledItem()
+  {
+    while (_pool.Count > 0)
+    {
+      var pooled = _pool.Dequeue();
+      if (pooled != null)
       {
-        if (Application.isPlaying)
-        {
-          Destroy(item.gameObject);
-        }
-        else
-        {
-          DestroyImmediate(item.gameObject);
-        }
+        pooled.transform.SetParent(content, false);
+        return pooled;
       }
     }
+
+    var item = Instantiate(itemPrefab, content, false);
+    if (item != null)
+    {
+      item.gameObject.SetActive(false);
+    }
+
+    return item;
+  }
+
+  private void ReleaseItemToPool(VirtualListItem item)
+  {
+    if (item == null) return;
+
+    item.gameObject.SetActive(false);
+    item.transform.SetParent(content, false);
+    _pool.Enqueue(item);
   }
 
 #if UNITY_EDITOR
@@ -285,6 +350,27 @@ public class VirtualList : MonoBehaviour
 
     UpdateContentLayout();
 
+    RefreshVisible(true);
+  }
+
+  private void ApplyLayoutSettings()
+  {
+    if (content == null || scrollRect == null || itemPrefab == null) return;
+
+#if UNITY_EDITOR
+    if (!Application.isPlaying)
+    {
+      ClearPreviewItems();
+    }
+#endif
+
+    if (!Application.isPlaying)
+    {
+      Canvas.ForceUpdateCanvases();
+    }
+
+    InitRect();
+    UpdateContentLayout();
     RefreshVisible(true);
   }
 
