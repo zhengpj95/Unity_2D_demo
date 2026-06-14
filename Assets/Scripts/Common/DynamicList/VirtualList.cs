@@ -27,19 +27,19 @@ public class VirtualList : MonoBehaviour
   [Tooltip("垂直方向显示的单元格数量")] [SerializeField]
   private int repeatY = 0;
 
-  private readonly List<object> dataList = new();
-  private readonly Queue<VirtualListItem> pool = new();
-  private readonly List<VirtualListItem> visibleItems = new();
+  private readonly List<object> _dataList = new();
+  private readonly Queue<VirtualListItem> _pool = new();
+  private readonly List<VirtualListItem> _visibleItems = new();
 
-  private int visibleCount;
-  private int startIndex = -1;
-  private int columns = 1;
-  private int rows = 1;
+  private int _visibleCount;
+  private int _startIndex = -1;
+  private int _columns = 1;
+  private int _rows = 1;
 
-  private float viewportHeight = 0;
-  private float viewportWidth = 0;
+  private float _viewportHeight = 0;
+  private float _viewportWidth = 0;
 
-  private int _extraCount = 3; // 额外缓存数量
+  private readonly int _extraCount = 2; // 额外缓存数量
   private float _itemHeight = 0;
   private float _itemWidth = 0;
 
@@ -85,32 +85,32 @@ public class VirtualList : MonoBehaviour
   {
     if (itemPrefab == null) return;
 
-    viewportHeight = scrollRect.viewport.rect.height;
-    viewportWidth = scrollRect.viewport.rect.width;
+    _viewportHeight = scrollRect.viewport.rect.height;
+    _viewportWidth = scrollRect.viewport.rect.width;
 
     // determine grid columns/rows based on scroll type
     if (scrollType == ScrollType.Vertical)
     {
       // Vertical: columns fixed (repeatX), rows auto-calculated
-      columns = repeatX > 0 ? repeatX : 1;
-      rows = Mathf.Max(1, Mathf.FloorToInt(viewportHeight / (_itemHeight + spaceY)));
+      _columns = repeatX > 0 ? repeatX : 1;
+      _rows = Mathf.Max(1, Mathf.FloorToInt(_viewportHeight / (_itemHeight + spaceY)));
     }
     else
     {
       // Horizontal: rows fixed (repeatY), columns auto-calculated
-      rows = repeatY > 0 ? repeatY : 1;
-      columns = Mathf.Max(1, Mathf.FloorToInt(viewportWidth / (_itemWidth + spaceX)));
+      _rows = repeatY > 0 ? repeatY : 1;
+      _columns = Mathf.Max(1, Mathf.FloorToInt(_viewportWidth / (_itemWidth + spaceX)));
     }
 
     if (scrollType == ScrollType.Vertical)
     {
-      int visibleRows = Mathf.CeilToInt(viewportHeight / (_itemHeight + spaceY)) + _extraCount;
-      visibleCount = visibleRows * columns;
+      int visibleRows = Mathf.CeilToInt(_viewportHeight / (_itemHeight + spaceY)) + _extraCount;
+      _visibleCount = visibleRows * _columns;
     }
     else
     {
-      int visibleCols = Mathf.CeilToInt(viewportWidth / (_itemWidth + spaceX)) + _extraCount;
-      visibleCount = visibleCols * rows;
+      int visibleCols = Mathf.CeilToInt(_viewportWidth / (_itemWidth + spaceX)) + _extraCount;
+      _visibleCount = visibleCols * _rows;
     }
 
     CreateItems();
@@ -118,7 +118,7 @@ public class VirtualList : MonoBehaviour
 
   private void CreateItems()
   {
-    for (int i = 0; i < visibleCount; i++)
+    for (int i = 0; i < _visibleCount; i++)
     {
       VirtualListItem item = Instantiate(itemPrefab, content, false);
       // ensure instantiated clones are inactive until used
@@ -127,17 +127,17 @@ public class VirtualList : MonoBehaviour
         item.gameObject.SetActive(false);
       }
 
-      visibleItems.Add(item);
+      _visibleItems.Add(item);
     }
   }
 
   public void RefreshData<T>(List<T> datas)
   {
-    dataList.Clear();
+    _dataList.Clear();
 
     foreach (var data in datas)
     {
-      dataList.Add(data);
+      _dataList.Add(data);
     }
 
     UpdateContentLayout();
@@ -148,9 +148,9 @@ public class VirtualList : MonoBehaviour
   private void UpdateContentLayout()
   {
     // compute content size based on grid columns/rows
-    int totalItems = dataList.Count;
-    int totalRows = Mathf.CeilToInt((float)totalItems / columns);
-    int totalCols = Mathf.CeilToInt((float)totalItems / rows);
+    int totalItems = _dataList.Count;
+    int totalRows = Mathf.CeilToInt((float)totalItems / _columns);
+    int totalCols = Mathf.CeilToInt((float)totalItems / _rows);
 
     if (scrollType == ScrollType.Vertical)
     {
@@ -161,7 +161,7 @@ public class VirtualList : MonoBehaviour
         height = totalRows * _itemHeight + ((totalRows - 1) * spaceY);
       }
 
-      content.sizeDelta = new Vector2(columns * _itemWidth + ((columns - 1) * spaceX), height);
+      content.sizeDelta = new Vector2(_columns * _itemWidth + ((_columns - 1) * spaceX), height);
     }
     else
     {
@@ -172,7 +172,7 @@ public class VirtualList : MonoBehaviour
         width = totalCols * _itemWidth + ((totalCols - 1) * spaceX);
       }
 
-      content.sizeDelta = new Vector2(width, rows * _itemHeight + ((rows - 1) * spaceY));
+      content.sizeDelta = new Vector2(width, _rows * _itemHeight + ((_rows - 1) * spaceY));
     }
   }
 
@@ -188,30 +188,30 @@ public class VirtualList : MonoBehaviour
     {
       int startRow = Mathf.FloorToInt(Mathf.Abs(content.anchoredPosition.y) / (_itemHeight + spaceY));
       startRow = Mathf.Max(0, startRow);
-      newStartIndex = startRow * columns;
+      newStartIndex = startRow * _columns;
     }
     else
     {
       int startCol = Mathf.FloorToInt(Mathf.Abs(content.anchoredPosition.x) / (_itemWidth + spaceX));
       startCol = Mathf.Max(0, startCol);
-      newStartIndex = startCol * rows;
+      newStartIndex = startCol * _rows;
     }
 
-    if (!force && newStartIndex == startIndex)
+    if (!force && newStartIndex == _startIndex)
     {
       return;
     }
 
-    startIndex = newStartIndex;
+    _startIndex = newStartIndex;
 
-    for (int i = 0; i < visibleItems.Count; i++)
+    for (int i = 0; i < _visibleItems.Count; i++)
     {
-      int dataIndex = startIndex + i;
+      int dataIndex = _startIndex + i;
 
-      VirtualListItem item = visibleItems[i];
+      VirtualListItem item = _visibleItems[i];
       if (item == null) continue;
 
-      if (dataIndex >= dataList.Count)
+      if (dataIndex >= _dataList.Count)
       {
         item.gameObject.SetActive(false);
         continue;
@@ -236,16 +236,16 @@ public class VirtualList : MonoBehaviour
       if (scrollType == ScrollType.Vertical)
       {
         // row-major: row = index / columns, col = index % columns
-        int row = dataIndex / columns;
-        int col = dataIndex % columns;
+        int row = dataIndex / _columns;
+        int col = dataIndex % _columns;
         x = col * (_itemWidth + spaceX);
         y = -row * (_itemHeight + spaceY);
       }
       else
       {
         // column-major: col = index / rows, row = index % rows
-        int col = dataIndex / rows;
-        int row = dataIndex % rows;
+        int col = dataIndex / _rows;
+        int row = dataIndex % _rows;
         x = col * (_itemWidth + spaceX);
         y = -row * (_itemHeight + spaceY);
       }
@@ -253,6 +253,6 @@ public class VirtualList : MonoBehaviour
       rt.anchoredPosition = new Vector2(x, y);
     }
 
-    item.Refresh(dataIndex, dataList[dataIndex]);
+    item.Refresh(dataIndex, _dataList[dataIndex]);
   }
 }
