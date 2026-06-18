@@ -512,12 +512,7 @@ public class VirtualList : MonoBehaviour
         continue;
       }
 
-      // has data
-      item.gameObject.SetActive(true);
-      item.name = "item" + dataIndex;
-      UpdateItemPosition(item, dataIndex);
-      // render item if handler is set
-      renderHandler?.Invoke(dataIndex, _dataList[dataIndex], item);
+      RefreshItem(item, dataIndex);
     }
   }
 #endif
