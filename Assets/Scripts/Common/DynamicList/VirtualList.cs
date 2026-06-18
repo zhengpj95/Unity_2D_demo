@@ -13,22 +13,26 @@ using UnityEditor;
 [ExecuteInEditMode]
 public class VirtualList : MonoBehaviour
 {
-  [Header("引用")] [SerializeField] private ScrollRect scrollRect;
+  [Header("引用")][SerializeField] private ScrollRect scrollRect;
   [SerializeField] private RectTransform content;
-  [SerializeField] private VirtualListItem itemPrefab;
+  [SerializeField] private RectTransform itemTemplate;
 
-  [Header("设置")] [SerializeField] private ScrollType scrollType;
+  [Header("设置")][SerializeField] private ScrollType scrollType;
 
-  [Tooltip("水平方向显示的单元格之间的间距")] [SerializeField]
+  [Tooltip("水平方向显示的单元格之间的间距")]
+  [SerializeField]
   private int spaceX = 0;
 
-  [Tooltip("垂直方向显示的单元格之间的间距")] [SerializeField]
+  [Tooltip("垂直方向显示的单元格之间的间距")]
+  [SerializeField]
   private int spaceY = 0;
 
-  [Tooltip("水平方向显示的单元格数量")] [SerializeField]
+  [Tooltip("水平方向显示的单元格数量")]
+  [SerializeField]
   private int repeatX = 0;
 
-  [Tooltip("垂直方向显示的单元格数量")] [SerializeField]
+  [Tooltip("垂直方向显示的单元格数量")]
+  [SerializeField]
   private int repeatY = 0;
 
   public int SpaceX
@@ -76,14 +80,18 @@ public class VirtualList : MonoBehaviour
   }
 
   private readonly List<object> _dataList = new();
-  private readonly Queue<VirtualListItem> _pool = new();
-  private readonly List<VirtualListItem> _visibleItems = new();
+  private readonly Queue<RectTransform> _pool = new();
+  private readonly List<RectTransform> _visibleItems = new();
 #if UNITY_EDITOR
-  private readonly List<VirtualListItem> _previewItems = new();
+  private readonly List<RectTransform> _previewItems = new();
   private Transform _previewRoot;
   private bool _validateScheduled = false;
 #endif
-  
+
+  /// <summary>
+  /// item 渲染回调：(索引, 数据, RectTransform)
+  /// </summary>
+  public System.Action<int, object, RectTransform> renderHandler;
 
   private int _visibleCount;
   private int _startIndex = -1;
@@ -104,7 +112,7 @@ public class VirtualList : MonoBehaviour
       ClearPreviewItems();
     }
 
-    CreateItemPrefab();
+    InitItemTemplate();
     scrollRect.onValueChanged.AddListener(OnScroll);
     scrollRect.vertical = scrollType == ScrollType.Vertical;
     scrollRect.horizontal = scrollType == ScrollType.Horizontal;
@@ -132,7 +140,7 @@ public class VirtualList : MonoBehaviour
     if (Application.isPlaying)
       return;
 
-    if (scrollRect == null || content == null || itemPrefab == null)
+    if (scrollRect == null || content == null || itemTemplate == null)
       return;
 
 #if UNITY_EDITOR
@@ -150,35 +158,34 @@ public class VirtualList : MonoBehaviour
     _validateScheduled = false;
     if (this == null) return;
     if (Application.isPlaying) return;
-    if (scrollRect == null || content == null || itemPrefab == null)
+    if (scrollRect == null || content == null || itemTemplate == null)
       return;
 
     ClearPreviewItems();
     Canvas.ForceUpdateCanvases();
-    CreateItemPrefab();
+    InitItemTemplate();
     InitRect();
     UpdateContentLayout();
     RefreshVisible(true);
   }
 #endif
 
-  private void CreateItemPrefab()
+  private void InitItemTemplate()
   {
-    if (itemPrefab == null)
+    if (itemTemplate == null)
     {
-      Debug.LogError("VirtualList itemPrefab is null, Please check your list.");
+      Debug.LogError("VirtualList itemTemplate is null, Please check your list.");
       return;
     }
 
-    RectTransform rt = itemPrefab.GetComponent<RectTransform>();
-    _itemHeight = rt.sizeDelta.y;
-    _itemWidth = rt.sizeDelta.x;
-    itemPrefab.gameObject.SetActive(false);
+    _itemHeight = itemTemplate.sizeDelta.y;
+    _itemWidth = itemTemplate.sizeDelta.x;
+    itemTemplate.gameObject.SetActive(false);
   }
 
   private void InitRect()
   {
-    if (itemPrefab == null) return;
+    if (itemTemplate == null) return;
 
     _viewportHeight = scrollRect.viewport.rect.height;
     _viewportWidth = scrollRect.viewport.rect.width;
@@ -225,7 +232,7 @@ public class VirtualList : MonoBehaviour
     // adjust existing items to match the desired visible count
     while (_visibleItems.Count < _visibleCount)
     {
-      VirtualListItem item = GetPooledItem();
+      RectTransform item = GetPooledItem();
       if (item != null)
       {
         item.gameObject.SetActive(false);
@@ -241,7 +248,7 @@ public class VirtualList : MonoBehaviour
     }
   }
 
-  private VirtualListItem GetPooledItem()
+  private RectTransform GetPooledItem()
   {
     while (_pool.Count > 0)
     {
@@ -253,7 +260,7 @@ public class VirtualList : MonoBehaviour
       }
     }
 
-    var item = Instantiate(itemPrefab, content, false);
+    var item = Instantiate(itemTemplate, content, false);
     if (item != null)
     {
       item.gameObject.SetActive(false);
@@ -262,7 +269,7 @@ public class VirtualList : MonoBehaviour
     return item;
   }
 
-  private void ReleaseItemToPool(VirtualListItem item)
+  private void ReleaseItemToPool(RectTransform item)
   {
     if (item == null) return;
 
@@ -298,7 +305,7 @@ public class VirtualList : MonoBehaviour
 
     while (_previewItems.Count < _visibleCount)
     {
-      VirtualListItem item = Instantiate(itemPrefab, _previewRoot, false);
+      RectTransform item = Instantiate(itemTemplate, _previewRoot, false);
       if (item != null)
       {
         item.gameObject.SetActive(false);
@@ -355,7 +362,7 @@ public class VirtualList : MonoBehaviour
 
   private void ApplyLayoutSettings()
   {
-    if (content == null || scrollRect == null || itemPrefab == null) return;
+    if (content == null || scrollRect == null || itemTemplate == null) return;
 
 #if UNITY_EDITOR
     if (!Application.isPlaying)
@@ -509,26 +516,25 @@ public class VirtualList : MonoBehaviour
       item.gameObject.SetActive(true);
       item.name = "item" + dataIndex;
       UpdateItemPosition(item, dataIndex);
-      // do not call item.Refresh in preview unless data exists
-      item.Refresh(dataIndex, _dataList.Count > dataIndex ? _dataList[dataIndex] : null);
+      // render item if handler is set
+      renderHandler?.Invoke(dataIndex, _dataList[dataIndex], item);
     }
   }
 #endif
 
-  private void RefreshItem(VirtualListItem item, int dataIndex)
+  private void RefreshItem(RectTransform item, int dataIndex)
   {
     if (item == null) return;
 
     item.gameObject.SetActive(true);
     item.name = "item" + dataIndex;
     UpdateItemPosition(item, dataIndex);
-    item.Refresh(dataIndex, _dataList[dataIndex]);
+    renderHandler?.Invoke(dataIndex, _dataList[dataIndex], item);
   }
 
-  private void UpdateItemPosition(VirtualListItem item, int dataIndex)
+  private void UpdateItemPosition(RectTransform itemTransform, int dataIndex)
   {
-    RectTransform rt = item.transform as RectTransform;
-    if (rt == null) return;
+    if (itemTransform == null) return;
 
     float x, y;
 
@@ -549,6 +555,6 @@ public class VirtualList : MonoBehaviour
       y = -row * (_itemHeight + spaceY);
     }
 
-    rt.anchoredPosition = new Vector2(x, y);
+    itemTransform.anchoredPosition = new Vector2(x, y);
   }
 }

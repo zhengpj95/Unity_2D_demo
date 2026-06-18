@@ -7207,7 +7207,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scrollRect: {fileID: 459452899}
   content: {fileID: 1037153472}
-  itemPrefab: {fileID: 8161762242279819287}
+  itemTemplate: {fileID: 4331059773925099812}
   scrollType: 1
   spaceX: 5
   spaceY: 5
@@ -7646,7 +7646,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scrollRect: {fileID: 640413228}
   content: {fileID: 332469894}
-  itemPrefab: {fileID: 1421080270}
+  itemTemplate: {fileID: 1421080269}
   scrollType: 0
   spaceX: 5
   spaceY: 5
@@ -8721,7 +8721,7 @@ Transform:
   m_GameObject: {fileID: 1277582388}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -6.597696, y: -1.61498, z: -10}
+  m_LocalPosition: {x: -6.6078024, y: -1.61497, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -9138,6 +9138,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   list: {fileID: 459452902}
   list2: {fileID: 640413231}
+  rankItemRenderer: {fileID: 8161762242279819287}
 --- !u!114 &1392643515
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11602,7 +11603,7 @@ Tilemap:
       - {fileID: 1237740553, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
       - {fileID: -2115587438, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
       - {fileID: -1361915345, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
-      m_AnimationSpeed: 5
+      m_AnimationSpeed: 5.0000005
       m_AnimationTimeOffset: 0
       m_Flags: 0
   - first: {x: 5, y: -8, z: 0}
@@ -11976,7 +11977,7 @@ Tilemap:
       - {fileID: 1237740553, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
       - {fileID: -2115587438, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
       - {fileID: -1361915345, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
-      m_AnimationSpeed: 5
+      m_AnimationSpeed: 5.0000005
       m_AnimationTimeOffset: 0
       m_Flags: 0
   - first: {x: 18, y: 5, z: 0}
@@ -12137,7 +12138,7 @@ Tilemap:
       - {fileID: 1237740553, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
       - {fileID: -2115587438, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
       - {fileID: -1361915345, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
-      m_AnimationSpeed: 5
+      m_AnimationSpeed: 5.0000005
       m_AnimationTimeOffset: 0
       m_Flags: 0
   - first: {x: 14, y: 7, z: 0}

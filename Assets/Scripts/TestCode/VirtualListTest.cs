@@ -28,7 +28,24 @@ public class VirtualListTest : MonoBehaviour
       });
     }
 
+    // 设置 renderHandler 回调
+    list.renderHandler = OnRenderItem;
+    list2.renderHandler = OnRenderItem;
+
     list.RefreshData(datas);
     list2.RefreshData(datas);
+  }
+
+  /// <summary>
+  /// item 渲染回调函数
+  /// </summary>
+  private void OnRenderItem(int index, object data, RectTransform itemTransform)
+  {
+    // 从 itemTransform 获取 RankItem 组件
+    var rankItem = itemTransform.GetComponent<RankItem>();
+    if (rankItem != null && data is RankData rankData)
+    {
+      rankItem.Refresh(index, rankData);
+    }
   }
 }
