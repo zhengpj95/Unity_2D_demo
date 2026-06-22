@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -9,9 +10,18 @@ using UnityEditor;
 
 /**
  * 虚拟列表，支持 vertical, horizontal, grid
+ * 
+ * 点击处理采用矩形区域点击判断方式：
+ * - 在VirtualList上统一处理点击，计算是否击中某个item
+ * - 优点：内存高效、性能优秀、与虚拟列表完美配合
+ * - 缺点：需要自己实现点击计算和坐标转换
+ * 
+ * 防滑动误触：
+ * - 记录按下和释放的屏幕位置
+ * - 如果偏移超过阈值，认为是滑动而不是点击
  */
 [ExecuteInEditMode]
-public class VirtualList : MonoBehaviour
+public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHandler
 {
   [Header("引用")][SerializeField] private ScrollRect scrollRect;
   [SerializeField] private RectTransform content;
@@ -92,6 +102,22 @@ public class VirtualList : MonoBehaviour
   /// item 渲染回调：(索引, 数据, RectTransform)
   /// </summary>
   public System.Action<int, object, RectTransform> renderHandler;
+
+  /// <summary>
+  /// item 点击回调：(索引, 数据)
+  /// </summary>
+  public System.Action<int, object> onItemClick;
+
+  /// <summary>
+  /// 点击阈值：超过这个距离就认为是滑动而不是点击（单位：像素）
+  /// </summary>
+  [SerializeField]
+  private float clickThreshold = 10f;
+
+  /// <summary>
+  /// 记录按下时的屏幕位置，用于判断是否是滑动
+  /// </summary>
+  private Vector2 _pointerDownPosition = Vector2.zero;
 
   private int _visibleCount;
   private int _startIndex = -1;
@@ -551,5 +577,126 @@ public class VirtualList : MonoBehaviour
     }
 
     itemTransform.anchoredPosition = new Vector2(x, y);
+  }
+
+  /// <summary>
+  /// 处理点击事件
+  /// 采用矩形区域点击判断方式：
+  /// 1. 获取点击位置（世界坐标）
+  /// 2. 转换为content相对坐标
+  /// 3. 计算点击落在哪个item
+  /// 4. 调用onItemClick回调
+  /// </summary>
+  public void OnPointerClick(PointerEventData eventData)
+  {
+    if (!Application.isPlaying)
+      return;
+
+    if (scrollRect == null || content == null)
+      return;
+
+    if (_dataList.Count == 0)
+      return;
+
+    // 检查是否是滑动操作而不是点击
+    float dragDistance = Vector2.Distance(eventData.position, _pointerDownPosition);
+    if (dragDistance > clickThreshold)
+    {
+      // 超过阈值，认为是滑动，不触发点击
+      return;
+    }
+
+    // 将屏幕坐标转换为content本地坐标
+    if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+      content,
+      eventData.position,
+      eventData.pressEventCamera,
+      out Vector2 localPoint))
+    {
+      return;
+    }
+
+    // 根据滚动方向计算点击的item索引
+    int clickedIndex = GetItemIndexFromClickPosition(localPoint);
+
+    if (clickedIndex >= 0 && clickedIndex < _dataList.Count)
+    {
+      onItemClick?.Invoke(clickedIndex, _dataList[clickedIndex]);
+    }
+  }
+
+  /// <summary>
+  /// 处理按下事件，记录初始按下位置
+  /// </summary>
+  public void OnPointerDown(PointerEventData eventData)
+  {
+    if (!Application.isPlaying)
+      return;
+
+    _pointerDownPosition = eventData.position;
+  }
+
+  /// <summary>
+  /// 根据点击位置计算item的索引
+  /// </summary>
+  private int GetItemIndexFromClickPosition(Vector2 localPoint)
+  {
+    // 计算点击相对于顶部/左侧的距离
+    float clickDistance = scrollType == ScrollType.Vertical
+      ? -localPoint.y  // 垂直滚动：计算距离顶部的距离
+      : localPoint.x;  // 水平滚动：计算距离左侧的距离
+
+    if (clickDistance < 0)
+      return -1;
+
+    // 计算在第几行或第几列
+    float itemSizeWithSpace = scrollType == ScrollType.Vertical
+      ? (_itemHeight + spaceY)
+      : (_itemWidth + spaceX);
+
+    int lineIndex = Mathf.FloorToInt(clickDistance / itemSizeWithSpace);
+
+    if (scrollType == ScrollType.Vertical)
+    {
+      // 垂直滚动：计算点击在grid中的行列位置
+      float xInGrid = localPoint.x;
+      float yInGrid = clickDistance % itemSizeWithSpace;
+
+      if (xInGrid < 0 || yInGrid < 0)
+        return -1;
+
+      // 计算点击在哪一列
+      int col = Mathf.FloorToInt(xInGrid / (_itemWidth + spaceX));
+      if (col < 0 || col >= _columns || xInGrid > _columns * _itemWidth + (_columns - 1) * spaceX)
+        return -1;
+
+      // 检查是否在item内（不在间距区域）
+      if (yInGrid > _itemHeight)
+        return -1;
+
+      int row = lineIndex;
+      return row * _columns + col;
+    }
+    else
+    {
+      // 水平滚动：计算点击在grid中的行列位置
+      float xInGrid = clickDistance % itemSizeWithSpace;
+      float yInGrid = -localPoint.y;
+
+      if (xInGrid < 0 || yInGrid < 0)
+        return -1;
+
+      // 计算点击在哪一行
+      int row = Mathf.FloorToInt(yInGrid / (_itemHeight + spaceY));
+      if (row < 0 || row >= _rows || yInGrid > _rows * _itemHeight + (_rows - 1) * spaceY)
+        return -1;
+
+      // 检查是否在item内（不在间距区域）
+      if (xInGrid > _itemWidth)
+        return -1;
+
+      int col = lineIndex;
+      return col * _rows + row;
+    }
   }
 }

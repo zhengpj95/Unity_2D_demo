@@ -32,6 +32,10 @@ public class VirtualListTest : MonoBehaviour
     list.renderHandler = OnRenderItem;
     list2.renderHandler = OnRenderItem;
 
+    // 设置点击回调
+    list.onItemClick = OnListItemClick;
+    list2.onItemClick = OnListItemClick;
+
     list.RefreshData(datas);
     list2.RefreshData(datas);
   }
@@ -46,6 +50,17 @@ public class VirtualListTest : MonoBehaviour
     if (rankItem != null && data is RankData rankData)
     {
       rankItem.Refresh(index, rankData);
+    }
+  }
+
+  /// <summary>
+  /// item 点击回调函数
+  /// </summary>
+  private void OnListItemClick(int index, object data)
+  {
+    if (data is RankData rankData)
+    {
+      Debug.Log($"点击了第 {index} 个 item: {rankData.Name} - 分数: {rankData.Score}");
     }
   }
 }
