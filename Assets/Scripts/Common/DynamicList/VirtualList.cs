@@ -99,14 +99,36 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
 #endif
 
   /// <summary>
-  /// item 渲染回调：(索引, 数据, RectTransform)
+  /// item 渲染回调：(索引, 数据, RectTransform, 是否被选中)
   /// </summary>
-  public System.Action<int, object, RectTransform> renderHandler;
+  public System.Action<int, object, RectTransform, bool> renderHandler;
 
   /// <summary>
   /// item 点击回调：(索引, 数据)
   /// </summary>
   public System.Action<int, object> onItemClick;
+
+  /// <summary>
+  /// 当前选中的item索引，-1表示未选中
+  /// </summary>
+  private int _selectedIndex = -1;
+
+  /// <summary>
+  /// 获取当前选中的索引
+  /// </summary>
+  public int SelectedIndex
+  {
+    get => _selectedIndex;
+    set
+    {
+      if (_selectedIndex == value)
+        return;
+
+      _selectedIndex = value;
+      // 选中状态改变时，重新刷新可见区域
+      RefreshVisible(true);
+    }
+  }
 
   /// <summary>
   /// 点击阈值：超过这个距离就认为是滑动而不是点击（单位：像素）
@@ -550,7 +572,10 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
     item.gameObject.SetActive(true);
     item.name = "item" + dataIndex;
     UpdateItemPosition(item, dataIndex);
-    renderHandler?.Invoke(dataIndex, _dataList[dataIndex], item);
+
+    // 判断该item是否被选中
+    bool isSelected = (dataIndex == _selectedIndex);
+    renderHandler?.Invoke(dataIndex, _dataList[dataIndex], item, isSelected);
   }
 
   private void UpdateItemPosition(RectTransform itemTransform, int dataIndex)
@@ -621,7 +646,14 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
 
     if (clickedIndex >= 0 && clickedIndex < _dataList.Count)
     {
+      // 更新选中索引
+      _selectedIndex = clickedIndex;
+
+      // 触发点击回调
       onItemClick?.Invoke(clickedIndex, _dataList[clickedIndex]);
+
+      // 重新刷新可见区域，以更新选中状态的显示
+      RefreshVisible(true);
     }
   }
 

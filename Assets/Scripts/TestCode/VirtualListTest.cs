@@ -43,13 +43,13 @@ public class VirtualListTest : MonoBehaviour
   /// <summary>
   /// item 渲染回调函数
   /// </summary>
-  private void OnRenderItem(int index, object data, RectTransform itemTransform)
+  private void OnRenderItem(int index, object data, RectTransform itemTransform, bool isSelected)
   {
     // 从 itemTransform 获取 RankItem 组件
     var rankItem = itemTransform.GetComponent<RankItem>();
     if (rankItem != null && data is RankData rankData)
     {
-      rankItem.Refresh(index, rankData);
+      rankItem.Refresh(index, rankData, isSelected);
     }
   }
 
