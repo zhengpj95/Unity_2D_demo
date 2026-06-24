@@ -1,7 +1,7 @@
 ﻿/**
  * 虚拟列表类型
  */
-public enum ScrollType
+public enum LayoutType
 {
   Vertical,
   Horizontal,

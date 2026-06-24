@@ -27,7 +27,7 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
   [SerializeField] private RectTransform content;
   [SerializeField] private RectTransform itemTemplate;
 
-  [Header("设置")][SerializeField] private ScrollType scrollType;
+  [Header("设置")][SerializeField] private LayoutType layoutType;
 
   [Tooltip("水平方向显示的单元格之间的间距")]
   [SerializeField]
@@ -131,6 +131,11 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
   }
 
   /// <summary>
+  /// 是否是垂直布局
+  /// </summary>
+  private bool IsVertical => layoutType == LayoutType.Vertical;
+
+  /// <summary>
   /// 点击阈值：超过这个距离就认为是滑动而不是点击（单位：像素）
   /// </summary>
   [SerializeField]
@@ -162,8 +167,8 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
 
     InitItemTemplate();
     scrollRect.onValueChanged.AddListener(OnScroll);
-    scrollRect.vertical = scrollType == ScrollType.Vertical;
-    scrollRect.horizontal = scrollType == ScrollType.Horizontal;
+    scrollRect.vertical = IsVertical;
+    scrollRect.horizontal = !IsVertical;
   }
 
   private void Start()
@@ -239,7 +244,7 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
     _viewportWidth = scrollRect.viewport.rect.width;
 
     // determine grid columns/rows based on scroll type
-    if (scrollType == ScrollType.Vertical)
+    if (IsVertical)
     {
       // Vertical: columns fixed (repeatX), rows auto-calculated
       _columns = repeatX > 0 ? repeatX : 1;
@@ -252,7 +257,7 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
       _columns = Mathf.Max(1, Mathf.FloorToInt(_viewportWidth / (_itemWidth + spaceX)));
     }
 
-    if (scrollType == ScrollType.Vertical)
+    if (IsVertical)
     {
       int visibleRows = Mathf.CeilToInt(_viewportHeight / (_itemHeight + spaceY)) + _extraCount;
       _visibleCount = visibleRows * _columns;
@@ -436,7 +441,7 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
     int totalRows = Mathf.CeilToInt((float)totalItems / _columns);
     int totalCols = Mathf.CeilToInt((float)totalItems / _rows);
 
-    if (scrollType == ScrollType.Vertical)
+    if (IsVertical)
     {
       // 垂直方向
       float height = 0f;
@@ -483,7 +488,7 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
   private void Runtime_RefreshVisible(bool force)
   {
     int newStartIndex = 0;
-    if (scrollType == ScrollType.Vertical)
+    if (IsVertical)
     {
       int startRow = Mathf.FloorToInt(Mathf.Abs(content.anchoredPosition.y) / (_itemHeight + spaceY));
       startRow = Mathf.Max(0, startRow);
@@ -520,7 +525,7 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
   private void Editor_RefreshVisible(bool force)
   {
     int newStartIndex = 0;
-    if (scrollType == ScrollType.Vertical)
+    if (IsVertical)
     {
       int startRow = Mathf.FloorToInt(Mathf.Abs(content.anchoredPosition.y) / (_itemHeight + spaceY));
       startRow = Mathf.Max(0, startRow);
@@ -584,7 +589,7 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
 
     float x, y;
 
-    if (scrollType == ScrollType.Vertical)
+    if (IsVertical)
     {
       // row-major: row = index / columns, col = index % columns
       int row = dataIndex / _columns;
@@ -674,7 +679,7 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
   private int GetItemIndexFromClickPosition(Vector2 localPoint)
   {
     // 计算点击相对于顶部/左侧的距离
-    float clickDistance = scrollType == ScrollType.Vertical
+    float clickDistance = IsVertical
       ? -localPoint.y  // 垂直滚动：计算距离顶部的距离
       : localPoint.x;  // 水平滚动：计算距离左侧的距离
 
@@ -682,13 +687,11 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
       return -1;
 
     // 计算在第几行或第几列
-    float itemSizeWithSpace = scrollType == ScrollType.Vertical
-      ? (_itemHeight + spaceY)
-      : (_itemWidth + spaceX);
+    float itemSizeWithSpace = IsVertical ? (_itemHeight + spaceY) : (_itemWidth + spaceX);
 
     int lineIndex = Mathf.FloorToInt(clickDistance / itemSizeWithSpace);
 
-    if (scrollType == ScrollType.Vertical)
+    if (IsVertical)
     {
       // 垂直滚动：计算点击在grid中的行列位置
       float xInGrid = localPoint.x;
