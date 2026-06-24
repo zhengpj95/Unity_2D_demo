@@ -7,6 +7,17 @@ using UnityEngine.EventSystems;
 using UnityEditor;
 #endif
 
+/// <summary>
+/// 虚拟列表项信息结构体
+/// </summary>
+/// <remarks>注意：点击回调中 itemTransform 可能为 null</remarks>
+public struct VirtualListRenderInfo
+{
+  public int index;
+  public object data;
+  public int selectedIndex;
+  public RectTransform itemTransform;
+}
 
 /**
  * 虚拟列表，支持 vertical, horizontal, grid
@@ -21,13 +32,16 @@ using UnityEditor;
  * - 如果偏移超过阈值，认为是滑动而不是点击
  */
 [ExecuteInEditMode]
+[RequireComponent(typeof(RectTransform), typeof(ScrollRect))]
 public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHandler
 {
   [Header("引用")][SerializeField] private ScrollRect scrollRect;
   [SerializeField] private RectTransform content;
   [SerializeField] private RectTransform itemTemplate;
 
-  [Header("设置")][SerializeField] private LayoutType layoutType;
+  [Header("设置")]
+  [Tooltip("布局类型：Vertical垂直、Horizontal水平")]
+  [SerializeField] private LayoutType layoutType;
 
   [Tooltip("水平方向显示的单元格之间的间距")]
   [SerializeField]
@@ -101,12 +115,12 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
   /// <summary>
   /// item 渲染回调：(索引, 数据, RectTransform, 是否被选中)
   /// </summary>
-  public System.Action<int, object, RectTransform, bool> renderHandler;
+  public System.Action<VirtualListRenderInfo> renderHandler;
 
   /// <summary>
   /// item 点击回调：(索引, 数据)
   /// </summary>
-  public System.Action<int, object> onItemClick;
+  public System.Action<VirtualListRenderInfo> onItemClick;
 
   /// <summary>
   /// 当前选中的item索引，-1表示未选中
@@ -138,7 +152,6 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
   /// <summary>
   /// 点击阈值：超过这个距离就认为是滑动而不是点击（单位：像素）
   /// </summary>
-  [SerializeField]
   private float clickThreshold = 10f;
 
   /// <summary>
@@ -154,9 +167,11 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
   private float _viewportHeight = 0;
   private float _viewportWidth = 0;
 
-  private readonly int _extraCount = 2; // 额外缓存数量
+  private readonly int _bufferCnt = 2; // 额外缓存行或列数
   private float _itemHeight = 0;
   private float _itemWidth = 0;
+  // 缓存的VirtualListRenderInfo，避免重复new
+  private VirtualListRenderInfo _cachedRenderInfo = new VirtualListRenderInfo();
 
   private void Awake()
   {
@@ -259,12 +274,12 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
 
     if (IsVertical)
     {
-      int visibleRows = Mathf.CeilToInt(_viewportHeight / (_itemHeight + spaceY)) + _extraCount;
+      int visibleRows = Mathf.CeilToInt(_viewportHeight / (_itemHeight + spaceY)) + _bufferCnt;
       _visibleCount = visibleRows * _columns;
     }
     else
     {
-      int visibleCols = Mathf.CeilToInt(_viewportWidth / (_itemWidth + spaceX)) + _extraCount;
+      int visibleCols = Mathf.CeilToInt(_viewportWidth / (_itemWidth + spaceX)) + _bufferCnt;
       _visibleCount = visibleCols * _rows;
     }
 
@@ -578,9 +593,12 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
     item.name = "item" + dataIndex;
     UpdateItemPosition(item, dataIndex);
 
-    // 判断该item是否被选中
-    bool isSelected = (dataIndex == _selectedIndex);
-    renderHandler?.Invoke(dataIndex, _dataList[dataIndex], item, isSelected);
+    // 复用缓存的实例，避免重复new
+    _cachedRenderInfo.index = dataIndex;
+    _cachedRenderInfo.data = _dataList[dataIndex];
+    _cachedRenderInfo.selectedIndex = _selectedIndex;
+    _cachedRenderInfo.itemTransform = item;
+    renderHandler?.Invoke(_cachedRenderInfo);
   }
 
   private void UpdateItemPosition(RectTransform itemTransform, int dataIndex)
@@ -654,8 +672,24 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
       // 更新选中索引
       _selectedIndex = clickedIndex;
 
-      // 触发点击回调
-      onItemClick?.Invoke(clickedIndex, _dataList[clickedIndex]);
+      // // 查找对应的item
+      // RectTransform itemTransform = null;
+      // for (int i = 0; i < _visibleItems.Count; i++)
+      // {
+      //   int dataIndex = _startIndex + i;
+      //   if (dataIndex == clickedIndex && _visibleItems[i] != null)
+      //   {
+      //     itemTransform = _visibleItems[i];
+      //     break;
+      //   }
+      // }
+
+      // 复用缓存的实例，避免重复new
+      _cachedRenderInfo.index = clickedIndex;
+      _cachedRenderInfo.data = _dataList[clickedIndex];
+      _cachedRenderInfo.selectedIndex = _selectedIndex;
+      _cachedRenderInfo.itemTransform = null;
+      onItemClick?.Invoke(_cachedRenderInfo);
 
       // 重新刷新可见区域，以更新选中状态的显示
       RefreshVisible(true);

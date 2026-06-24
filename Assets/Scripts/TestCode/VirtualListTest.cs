@@ -43,24 +43,24 @@ public class VirtualListTest : MonoBehaviour
   /// <summary>
   /// item 渲染回调函数
   /// </summary>
-  private void OnRenderItem(int index, object data, RectTransform itemTransform, bool isSelected)
+  private void OnRenderItem(VirtualListRenderInfo info)
   {
     // 从 itemTransform 获取 RankItem 组件
-    var rankItem = itemTransform.GetComponent<RankItem>();
-    if (rankItem != null && data is RankData rankData)
+    var rankItem = info.itemTransform.GetComponent<RankItem>();
+    if (rankItem != null && info.data is RankData rankData)
     {
-      rankItem.Refresh(index, rankData, isSelected);
+      rankItem.Refresh(info.index, rankData, info.selectedIndex == info.index);
     }
   }
 
   /// <summary>
   /// item 点击回调函数
   /// </summary>
-  private void OnListItemClick(int index, object data)
+  private void OnListItemClick(VirtualListRenderInfo info)
   {
-    if (data is RankData rankData)
+    if (info.data is RankData rankData)
     {
-      Debug.Log($"点击了第 {index} 个 item: {rankData.Name} - 分数: {rankData.Score}");
+      Debug.Log($"点击了第 {info.index} 个 item: {rankData.Name} - 分数: {rankData.Score}");
     }
   }
 }

@@ -7208,7 +7208,7 @@ MonoBehaviour:
   scrollRect: {fileID: 459452899}
   content: {fileID: 1037153472}
   itemTemplate: {fileID: 4331059773925099812}
-  scrollType: 1
+  layoutType: 1
   spaceX: 5
   spaceY: 5
   repeatX: 3
@@ -7647,7 +7647,7 @@ MonoBehaviour:
   scrollRect: {fileID: 640413228}
   content: {fileID: 332469894}
   itemTemplate: {fileID: 1421080269}
-  scrollType: 0
+  layoutType: 0
   spaceX: 5
   spaceY: 5
   repeatX: 2
@@ -9138,7 +9138,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   list: {fileID: 459452902}
   list2: {fileID: 640413231}
-  rankItemRenderer: {fileID: 8161762242279819287}
 --- !u!114 &1392643515
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9231,6 +9230,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   txtName: {fileID: 457512693}
   txtScore: {fileID: 2053280529}
+  canvasGroup: {fileID: 0}
+  selectedColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &1421080271
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11603,7 +11605,7 @@ Tilemap:
       - {fileID: 1237740553, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
       - {fileID: -2115587438, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
       - {fileID: -1361915345, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
-      m_AnimationSpeed: 5.0000005
+      m_AnimationSpeed: 5
       m_AnimationTimeOffset: 0
       m_Flags: 0
   - first: {x: 5, y: -8, z: 0}
@@ -11977,7 +11979,7 @@ Tilemap:
       - {fileID: 1237740553, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
       - {fileID: -2115587438, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
       - {fileID: -1361915345, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
-      m_AnimationSpeed: 5.0000005
+      m_AnimationSpeed: 5
       m_AnimationTimeOffset: 0
       m_Flags: 0
   - first: {x: 18, y: 5, z: 0}
@@ -12138,7 +12140,7 @@ Tilemap:
       - {fileID: 1237740553, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
       - {fileID: -2115587438, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
       - {fileID: -1361915345, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
-      m_AnimationSpeed: 5.0000005
+      m_AnimationSpeed: 5
       m_AnimationTimeOffset: 0
       m_Flags: 0
   - first: {x: 14, y: 7, z: 0}
@@ -12291,7 +12293,7 @@ Tilemap:
       - {fileID: 1237740553, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
       - {fileID: -2115587438, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
       - {fileID: -1361915345, guid: eff35f2049dbbb444b249dfcbfc4acad, type: 3}
-      m_AnimationSpeed: 5
+      m_AnimationSpeed: 5.0000005
       m_AnimationTimeOffset: 0
       m_Flags: 0
   - first: {x: -10, y: 9, z: 0}
@@ -13429,6 +13431,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   txtName: {fileID: 6183128376934530876}
   txtScore: {fileID: 9019463626654497500}
+  canvasGroup: {fileID: 0}
+  selectedColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1001 &8458654205116963704
 PrefabInstance:
   m_ObjectHideFlags: 0

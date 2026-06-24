@@ -1,5 +1,5 @@
 ﻿/**
- * 虚拟列表类型
+ * 虚拟列表布局类型
  */
 public enum LayoutType
 {

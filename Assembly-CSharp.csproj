@@ -85,7 +85,6 @@
     <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\Weapon\FireWeapon.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\BuffSystem\Instance\BuffInstance.cs" />
     <Compile Include="Assets\Scripts\Common\Pool\SimplePool.cs" />
-    <Compile Include="Assets\Scripts\Common\DynamicList\VirtualListItem.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\EndGame.cs" />
     <Compile Include="Assets\Scripts\Common\UI\UI_Damage.cs" />
     <Compile Include="Assets\Scripts\Rpg\StatsManager.cs" />
