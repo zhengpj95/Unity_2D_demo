@@ -72,7 +72,6 @@
     <Compile Include="Assets\Scripts\Def\GameConst.cs" />
     <Compile Include="Assets\Scripts\Common\Manager\TimerManager.cs" />
     <Compile Include="Assets\Scripts\TestCode\OffSetUI.cs" />
-    <Compile Include="Assets\Scripts\Common\DynamicList\VirtualList.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\WeaponController\SawController.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\StartGame.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\WeaponManager.cs" />
@@ -137,6 +136,7 @@
     <Compile Include="Assets\Scripts\FrogAdventure\Trap_Saw.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\Entity\Hero.cs" />
     <Compile Include="Assets\Scripts\Common\Singleton\Singleton.cs" />
+    <Compile Include="Assets\Scripts\Common\UI\VirtualList.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Player\PlayerKnockBack.cs" />
     <Compile Include="Assets\Scripts\Melee\EnemyChase.cs" />
     <Compile Include="Assets\Scripts\TestCode\RankItem.cs" />
@@ -151,6 +151,7 @@
     <Compile Include="Assets\Scripts\Rpg\Invertory_Shop\Loot.cs" />
     <Compile Include="Assets\Scripts\Rpg\Player\ShooterBullet.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\BuffSystem\Instance\MoveSpeedBuffSO.cs" />
+    <Compile Include="Assets\Scripts\Common\UI\UISizeFitter.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\WeaponLevelData.cs" />
     <Compile Include="Assets\Scripts\Def\GameTag.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\WeaponSystem\Weapon\SawWeapon.cs" />

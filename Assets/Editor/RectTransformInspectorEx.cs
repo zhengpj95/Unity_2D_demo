@@ -45,6 +45,7 @@ public class RectTransformInspectorEx : Editor
 
     EditorGUI.BeginDisabledGroup(true); // 只读
 
+    EditorGUILayout.Vector2Field("Rect Size", rt.rect.size);
     EditorGUILayout.Vector2Field("Size Delta", rt.sizeDelta);
     EditorGUILayout.Vector3Field("Local Position", rt.localPosition);
     EditorGUILayout.Vector3Field("World Position", rt.position);
