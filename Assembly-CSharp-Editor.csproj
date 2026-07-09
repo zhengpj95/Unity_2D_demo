@@ -69,6 +69,7 @@
     <Compile Include="Assets\Editor\TagLayerGenerator.cs" />
     <Compile Include="Assets\Editor\SceneUINameGenerator.cs" />
     <Compile Include="Assets\Editor\SortingLayerGenerator.cs" />
+    <Compile Include="Assets\Editor\RectTransformPresetEditor.cs" />
     <Compile Include="Assets\Editor\SceneEditorUtils.cs" />
     <Compile Include="Assets\Editor\SpriteBatchSlicerEditor.cs" />
   </ItemGroup>
