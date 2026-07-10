@@ -6,6 +6,7 @@ using UnityEngine;
 public class RectTransformInspectorEx : Editor
 {
   private Editor _defaultEditor;
+  private bool _showDebugInfo;
 
   private void OnEnable()
   {
@@ -30,7 +31,7 @@ public class RectTransformInspectorEx : Editor
       _defaultEditor.OnInspectorGUI();
     }
 
-    // ② 再画我们自己的 Debug 信息
+    // ② 再画我们自己的 Debug 信息，默认收起，点击后展开
     DrawDebugInfo();
   }
 
@@ -40,18 +41,27 @@ public class RectTransformInspectorEx : Editor
     if (rt == null) return;
 
     EditorGUILayout.Space(8);
-    EditorGUILayout.LabelField("RectTransform Debug Info", EditorStyles.boldLabel);
-    EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
 
-    EditorGUI.BeginDisabledGroup(true); // 只读
+    EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+    _showDebugInfo = EditorGUILayout.Foldout(_showDebugInfo, "RectTransform Debug Info", true);
 
-    EditorGUILayout.Vector2Field("Rect Size", rt.rect.size);
-    EditorGUILayout.Vector2Field("Size Delta", rt.sizeDelta);
-    EditorGUILayout.Vector3Field("Local Position", rt.localPosition);
-    EditorGUILayout.Vector3Field("World Position", rt.position);
-    EditorGUILayout.Vector2Field("Anchored Position", rt.anchoredPosition);
-    EditorGUILayout.Vector3Field("Anchored Position 3D", rt.anchoredPosition3D);
+    if (_showDebugInfo)
+    {
+      EditorGUILayout.Space(4);
+      EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
 
-    EditorGUI.EndDisabledGroup();
+      EditorGUI.BeginDisabledGroup(true); // 只读
+
+      EditorGUILayout.Vector2Field("Rect Size", rt.rect.size);
+      EditorGUILayout.Vector2Field("Size Delta", rt.sizeDelta);
+      EditorGUILayout.Vector3Field("Local Position", rt.localPosition);
+      EditorGUILayout.Vector3Field("World Position", rt.position);
+      EditorGUILayout.Vector2Field("Anchored Position", rt.anchoredPosition);
+      EditorGUILayout.Vector3Field("Anchored Position 3D", rt.anchoredPosition3D);
+
+      EditorGUI.EndDisabledGroup();
+    }
+
+    EditorGUILayout.EndVertical();
   }
 }
