@@ -172,6 +172,8 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
   private float _itemWidth = 0;
   // 缓存的VirtualListRenderInfo，避免重复new
   private VirtualListRenderInfo _cachedRenderInfo = new VirtualListRenderInfo();
+  // 当前进行的平滑滚动协程引用
+  private Coroutine _scrollCoroutine = null;
 
   private void Awake()
   {
@@ -672,18 +674,6 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
       // 更新选中索引
       _selectedIndex = clickedIndex;
 
-      // // 查找对应的item
-      // RectTransform itemTransform = null;
-      // for (int i = 0; i < _visibleItems.Count; i++)
-      // {
-      //   int dataIndex = _startIndex + i;
-      //   if (dataIndex == clickedIndex && _visibleItems[i] != null)
-      //   {
-      //     itemTransform = _visibleItems[i];
-      //     break;
-      //   }
-      // }
-
       // 复用缓存的实例，避免重复new
       _cachedRenderInfo.index = clickedIndex;
       _cachedRenderInfo.data = _dataList[clickedIndex];
@@ -767,5 +757,86 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
       int col = lineIndex;
       return col * _rows + row;
     }
+  }
+
+  /// <summary>
+  /// Programmatically scrolls the list so the item at <paramref name="index"/> becomes visible.
+  /// </summary>
+  /// <param name="index">目标项索引</param>
+  /// <param name="smooth">是否平滑滚动</param>
+  /// <param name="duration">平滑滚动的持续时间（秒），仅在 smooth 为 true 时有效</param>
+  /// <remarks>
+  /// 注意：调用此方法时，布局测量应已更新，以确保滚动位置计算正确。
+  /// 若有问题，请在调用前使用 Canvas.ForceUpdateCanvases() 强制更新布局
+  /// 或修改VirtualList的布局设置后，确保布局已更新再调用此方法。
+  /// </remarks>
+  public void ScrollToIndex(int index, bool smooth = false, float duration = 0.25f)
+  {
+    if (content == null || itemTemplate == null) return;
+    if (_dataList == null || index < 0 || index >= _dataList.Count) return;
+
+    // layout measurements are expected to be up-to-date when calling ScrollToIndex
+
+    Vector2 targetAnchored = content.anchoredPosition;
+
+    if (IsVertical)
+    {
+      int row = index / _columns;
+      float target = row * (_itemHeight + spaceY);
+      float max = Mathf.Max(0f, content.rect.height - _viewportHeight);
+      float clamped = Mathf.Clamp(target, 0f, max);
+      targetAnchored.y = clamped;
+    }
+    else
+    {
+      int col = index / _rows;
+      float target = col * (_itemWidth + spaceX);
+      float max = Mathf.Max(0f, content.rect.width - _viewportWidth);
+      float clamped = Mathf.Clamp(target, 0f, max);
+      targetAnchored.x = -clamped;
+    }
+
+    if (smooth && duration > 0f)
+    {
+      if (_scrollCoroutine != null)
+      {
+        StopCoroutine(_scrollCoroutine);
+        _scrollCoroutine = null;
+      }
+
+      _scrollCoroutine = StartCoroutine(SmoothScrollToAnchored(targetAnchored, duration));
+    }
+    else
+    {
+      content.anchoredPosition = targetAnchored;
+      RefreshVisible(true);
+    }
+  }
+
+  /// <summary>
+  /// 平滑滚动到目标位置的协程
+  /// </summary>
+  /// <param name="targetAnchored">目标锚点位置</param>
+  /// <param name="duration">滚动持续时间</param>
+  /// <returns></returns>
+  private System.Collections.IEnumerator SmoothScrollToAnchored(Vector2 targetAnchored, float duration)
+  {
+    Vector2 start = content.anchoredPosition;
+    float elapsed = 0f;
+
+    while (elapsed < duration)
+    {
+      elapsed += Time.unscaledDeltaTime;
+      float t = Mathf.Clamp01(elapsed / duration);
+      // smoothstep easing
+      t = t * t * (3f - 2f * t);
+      content.anchoredPosition = Vector2.Lerp(start, targetAnchored, t);
+      RefreshVisible(false);
+      yield return null;
+    }
+
+    content.anchoredPosition = targetAnchored;
+    RefreshVisible(true);
+    _scrollCoroutine = null;
   }
 }

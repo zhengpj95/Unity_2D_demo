@@ -14,6 +14,7 @@ public class VirtualListTest : MonoBehaviour
 {
   [SerializeField] private VirtualList list;
   [SerializeField] private VirtualList list2;
+  [SerializeField] private Transform btnRefresh;
 
   private void Start()
   {
@@ -38,6 +39,17 @@ public class VirtualListTest : MonoBehaviour
 
     list.RefreshData(datas);
     list2.RefreshData(datas);
+
+    btnRefresh.GetChild(0).GetComponent<TMP_Text>().text = "点击跳转";
+    // btnRefresh.GetComponentInChildren<TMP_Text>().text = "点击跳转";
+  }
+
+  public void OnClickJump()
+  {
+    if (list2 != null)
+    {
+      list2.ScrollToIndex(5, true);
+    }
   }
 
   /// <summary>
