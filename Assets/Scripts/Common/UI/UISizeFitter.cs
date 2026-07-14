@@ -64,6 +64,7 @@ public class UISizeFitter : MonoBehaviour, ILayoutSelfController
   private RectTransform m_rectTransform;
   private Vector2 m_lastTargetRectSize = Vector2.zero;
   private DrivenRectTransformTracker m_tracker = new DrivenRectTransformTracker();
+  private LayoutGroup m_parentLayoutGroup;
 
   public bool IsActive()
   {
@@ -73,6 +74,7 @@ public class UISizeFitter : MonoBehaviour, ILayoutSelfController
   private void Awake()
   {
     m_rectTransform = GetComponent<RectTransform>();
+    RefreshParentLayoutGroup();
   }
 
   private void OnEnable()
@@ -84,8 +86,13 @@ public class UISizeFitter : MonoBehaviour, ILayoutSelfController
   private void OnDisable()
   {
     m_tracker.Clear();
-    // 告诉布局系统，我们不再控制它了
-    LayoutRebuilder.MarkLayoutForRebuild(m_rectTransform);
+    NotifyLayoutRebuild();
+  }
+
+  private void OnTransformParentChanged()
+  {
+    RefreshParentLayoutGroup();
+    NotifyLayoutRebuild();
   }
 
   private void Update()
@@ -112,16 +119,52 @@ public class UISizeFitter : MonoBehaviour, ILayoutSelfController
 
     // 计算新尺寸：基于目标的真实 rect 尺寸计算
     Vector2 targetSize = target.rect.size;
+    bool sizeChanged = false;
 
     if (followWidth)
     {
       float finalWidth = Mathf.Clamp(targetSize.x * widthScale + widthOffset, minWidth, maxWidth);
-      m_rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, finalWidth);
+      if (!Mathf.Approximately(m_rectTransform.rect.width, finalWidth))
+      {
+        m_rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, finalWidth);
+        sizeChanged = true;
+      }
     }
     if (followHeight)
     {
       float finalHeight = Mathf.Clamp(targetSize.y * heightScale + heightOffset, minHeight, maxHeight);
-      m_rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, finalHeight);
+      if (!Mathf.Approximately(m_rectTransform.rect.height, finalHeight))
+      {
+        m_rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, finalHeight);
+        sizeChanged = true;
+      }
+    }
+
+    if (sizeChanged)
+    {
+      NotifyLayoutRebuild();
+    }
+  }
+
+  private void RefreshParentLayoutGroup()
+  {
+    m_parentLayoutGroup = GetComponentInParent<LayoutGroup>();
+  }
+
+  private void NotifyLayoutRebuild()
+  {
+    if (m_rectTransform != null)
+    {
+      LayoutRebuilder.MarkLayoutForRebuild(m_rectTransform);
+    }
+
+    if (m_parentLayoutGroup != null)
+    {
+      RectTransform parentRectTransform = m_parentLayoutGroup.transform as RectTransform;
+      if (parentRectTransform != null)
+      {
+        LayoutRebuilder.MarkLayoutForRebuild(parentRectTransform);
+      }
     }
   }
 
