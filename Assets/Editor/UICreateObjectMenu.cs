@@ -15,71 +15,50 @@ public class UICreateObjectMenu
     rect.localPosition = new Vector3(rect.localPosition.x, rect.localPosition.y, 0f);
   }
 
-  [MenuItem("GameObject/UI/Virtual List", false, 0)]
-  private static void CreateVirtualList()
+  private static GameObject CreateVirtualListUIObject(string name, Transform parent, Vector2 sizeDelta, Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot)
   {
-    var parent = Selection.activeTransform;
-
-    var root = new GameObject("List", typeof(RectTransform));
-    Undo.RegisterCreatedObjectUndo(root, "Create Virtual List");
-    root.layer = LayerMask.NameToLayer("UI");
+    var go = new GameObject(name, typeof(RectTransform));
+    Undo.RegisterCreatedObjectUndo(go, "Create Virtual List");
+    go.layer = LayerMask.NameToLayer("UI");
 
     if (parent != null)
     {
-      Undo.SetTransformParent(root.transform, parent, "Create Virtual List");
+      GameObjectUtility.SetParentAndAlign(go, parent.gameObject);
     }
 
+    var rect = go.GetComponent<RectTransform>();
+    rect.anchorMin = anchorMin;
+    rect.anchorMax = anchorMax;
+    rect.pivot = pivot;
+    rect.sizeDelta = sizeDelta;
+    rect.anchoredPosition = Vector2.zero;
+    ResetRectTransform(rect);
+    return go;
+  }
+
+  [MenuItem("GameObject/UI/Virtual List", false, 0)]
+  private static void CreateVirtualList(MenuCommand menuCommand)
+  {
+    var parent = (menuCommand.context as GameObject)?.transform ?? Selection.activeTransform;
+
+    var root = CreateVirtualListUIObject("List", parent, new Vector2(300f, 200f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
     var rootRect = root.GetComponent<RectTransform>();
-    rootRect.anchorMin = new Vector2(0.5f, 0.5f);
-    rootRect.anchorMax = new Vector2(0.5f, 0.5f);
-    rootRect.sizeDelta = new Vector2(300f, 200f);
-    rootRect.anchoredPosition = Vector2.zero;
-    ResetRectTransform(rootRect);
 
     var list = root.AddComponent<VirtualListEx>();
     var image = root.AddComponent<Image>();
     image.color = new Color(1f, 1f, 1f, 0f);
 
-    var viewportGo = new GameObject("Viewport", typeof(RectTransform));
-    Undo.RegisterCreatedObjectUndo(viewportGo, "Create Virtual List");
-    viewportGo.layer = LayerMask.NameToLayer("UI");
-    viewportGo.transform.SetParent(root.transform, false);
-
+    var viewportGo = CreateVirtualListUIObject("Viewport", root.transform, Vector2.zero, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f));
     var viewportRect = viewportGo.GetComponent<RectTransform>();
-    viewportRect.anchorMin = Vector2.zero;
-    viewportRect.anchorMax = Vector2.one;
     viewportRect.offsetMin = Vector2.zero;
     viewportRect.offsetMax = Vector2.zero;
-    viewportRect.sizeDelta = Vector2.zero;
-    ResetRectTransform(viewportRect);
-
     viewportGo.AddComponent<RectMask2D>();
 
-    var contentGo = new GameObject("Content", typeof(RectTransform));
-    Undo.RegisterCreatedObjectUndo(contentGo, "Create Virtual List");
-    contentGo.layer = LayerMask.NameToLayer("UI");
-    contentGo.transform.SetParent(viewportGo.transform, false);
-
+    var contentGo = CreateVirtualListUIObject("Content", viewportGo.transform, Vector2.zero, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
     var contentRect = contentGo.GetComponent<RectTransform>();
-    contentRect.anchorMin = new Vector2(0f, 1f);
-    contentRect.anchorMax = new Vector2(0f, 1f);
-    contentRect.pivot = new Vector2(0f, 1f);
-    contentRect.sizeDelta = new Vector2(0f, 0f);
-    contentRect.anchoredPosition = Vector2.zero;
-    ResetRectTransform(contentRect);
 
-    var renderGo = new GameObject("render", typeof(RectTransform));
-    Undo.RegisterCreatedObjectUndo(renderGo, "Create Virtual List");
-    renderGo.layer = LayerMask.NameToLayer("UI");
-    renderGo.transform.SetParent(root.transform, false);
-
+    var renderGo = CreateVirtualListUIObject("render", root.transform, new Vector2(300f, 40f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
     var renderRect = renderGo.GetComponent<RectTransform>();
-    renderRect.anchorMin = new Vector2(0f, 1f);
-    renderRect.anchorMax = new Vector2(0f, 1f);
-    renderRect.pivot = new Vector2(0f, 1f);
-    renderRect.sizeDelta = new Vector2(300f, 40f);
-    renderRect.anchoredPosition = Vector2.zero;
-    ResetRectTransform(renderRect);
     renderGo.SetActive(false);
 
     Undo.RecordObject(list, "Create Virtual List");
