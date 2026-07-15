@@ -4,80 +4,83 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 
-/**
- * Tag和Layer生成
- */
-public class TagLayerGenerator : EditorWindow
+namespace EditorTools
 {
-  private const string OutputFolder = "Assets/Scripts/def";
-
-  [MenuItem("Tools/02 TagLayer Generator")]
-  public static void Generate()
+  /**
+   * Tag和Layer生成
+   */
+  public class TagLayerGenerator : EditorWindow
   {
-    if (!Directory.Exists(OutputFolder))
-      Directory.CreateDirectory(OutputFolder);
+    private const string OutputFolder = "Assets/Scripts/def";
 
-    GenerateTagClass();
-    GenerateLayerClass();
-
-    AssetDatabase.Refresh();
-    Debug.Log("✅ Tag & Layer 常量类已生成！");
-  }
-
-  private static void GenerateTagClass()
-  {
-    string[] tags = InternalEditorUtility.tags;
-    StringBuilder sb = new StringBuilder();
-    sb.AppendLine("/**");
-    sb.AppendLine(" * 自动生成的 Tag 常量类");
-    sb.AppendLine(" * 生成时间：" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-    sb.AppendLine(" * 请勿手动修改！使用菜单 Tools > 02 TagLayer Generator 重新生成");
-    sb.AppendLine(" */");
-    sb.AppendLine();
-    sb.AppendLine("public static class GameTag");
-    sb.AppendLine("{");
-
-    foreach (string tag in tags)
+    [MenuItem("Tools/02 TagLayer Generator", false, 0)]
+    public static void Generate()
     {
-      string fieldName = SanitizeIdentifier(tag);
-      sb.AppendLine($"  public const string {fieldName} = \"{tag}\";");
+      if (!Directory.Exists(OutputFolder))
+        Directory.CreateDirectory(OutputFolder);
+
+      GenerateTagClass();
+      GenerateLayerClass();
+
+      AssetDatabase.Refresh();
+      Debug.Log("✅ Tag & Layer 常量类已生成！");
     }
 
-    sb.AppendLine("}");
-
-    File.WriteAllText(Path.Combine(OutputFolder, "GameTag.cs"), sb.ToString(), Encoding.UTF8);
-  }
-
-  private static void GenerateLayerClass()
-  {
-    string[] layers = InternalEditorUtility.layers;
-    StringBuilder sb = new StringBuilder();
-    sb.AppendLine("/**");
-    sb.AppendLine(" * 自动生成的 Layer 常量类");
-    sb.AppendLine(" * 生成时间：" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-    sb.AppendLine(" * 请勿手动修改！使用菜单 Tools > 02 TagLayer Generator 重新生成");
-    sb.AppendLine(" */");
-    sb.AppendLine();
-    sb.AppendLine("public static class GameLayer");
-    sb.AppendLine("{");
-
-    foreach (string layer in layers)
+    private static void GenerateTagClass()
     {
-      string fieldName = SanitizeIdentifier(layer);
-      int layerIndex = LayerMask.NameToLayer(layer);
-      sb.AppendLine($"  public const int {fieldName} = {layerIndex};");
+      string[] tags = InternalEditorUtility.tags;
+      StringBuilder sb = new StringBuilder();
+      sb.AppendLine("/**");
+      sb.AppendLine(" * 自动生成的 Tag 常量类");
+      sb.AppendLine(" * 生成时间：" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+      sb.AppendLine(" * 请勿手动修改！使用菜单 Tools > 02 TagLayer Generator 重新生成");
+      sb.AppendLine(" */");
+      sb.AppendLine();
+      sb.AppendLine("public static class GameTag");
+      sb.AppendLine("{");
+
+      foreach (string tag in tags)
+      {
+        string fieldName = SanitizeIdentifier(tag);
+        sb.AppendLine($"  public const string {fieldName} = \"{tag}\";");
+      }
+
+      sb.AppendLine("}");
+
+      File.WriteAllText(Path.Combine(OutputFolder, "GameTag.cs"), sb.ToString(), Encoding.UTF8);
     }
 
-    sb.AppendLine("}");
+    private static void GenerateLayerClass()
+    {
+      string[] layers = InternalEditorUtility.layers;
+      StringBuilder sb = new StringBuilder();
+      sb.AppendLine("/**");
+      sb.AppendLine(" * 自动生成的 Layer 常量类");
+      sb.AppendLine(" * 生成时间：" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+      sb.AppendLine(" * 请勿手动修改！使用菜单 Tools > 02 TagLayer Generator 重新生成");
+      sb.AppendLine(" */");
+      sb.AppendLine();
+      sb.AppendLine("public static class GameLayer");
+      sb.AppendLine("{");
 
-    File.WriteAllText(Path.Combine(OutputFolder, "GameLayer.cs"), sb.ToString(), Encoding.UTF8);
-  }
+      foreach (string layer in layers)
+      {
+        string fieldName = SanitizeIdentifier(layer);
+        int layerIndex = LayerMask.NameToLayer(layer);
+        sb.AppendLine($"  public const int {fieldName} = {layerIndex};");
+      }
 
-  private static string SanitizeIdentifier(string name)
-  {
-    // 去掉空格、非法字符，并首字母大写
-    string clean = name.Replace(" ", "_").Replace("-", "_");
-    if (char.IsDigit(clean[0])) clean = "_" + clean;
-    return clean;
+      sb.AppendLine("}");
+
+      File.WriteAllText(Path.Combine(OutputFolder, "GameLayer.cs"), sb.ToString(), Encoding.UTF8);
+    }
+
+    private static string SanitizeIdentifier(string name)
+    {
+      // 去掉空格、非法字符，并首字母大写
+      string clean = name.Replace(" ", "_").Replace("-", "_");
+      if (char.IsDigit(clean[0])) clean = "_" + clean;
+      return clean;
+    }
   }
 }

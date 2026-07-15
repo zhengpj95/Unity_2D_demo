@@ -1,15 +1,18 @@
 using UnityEditor;
 using UnityEditor.SceneManagement;
 
-public static class SceneEditorUtils
+namespace EditorTools
 {
-  [MenuItem("Tools/01 Start Game")]
-  private static void OpenGameStartScene()
+  public static class SceneEditorUtils
   {
-    if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+    [MenuItem("Tools/01 Start Game", false, 0)]
+    private static void OpenGameStartScene()
     {
-      EditorSceneManager.OpenScene("Assets/Scenes/FrogAdventure/StartGame.unity", OpenSceneMode.Single);
-      EditorApplication.isPlaying = true;
+      if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+      {
+        EditorSceneManager.OpenScene("Assets/Scenes/FrogAdventure/StartGame.unity", OpenSceneMode.Single);
+        EditorApplication.isPlaying = true;
+      }
     }
   }
 }

@@ -1,67 +1,70 @@
 using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(RectTransform))]
-[CanEditMultipleObjects]
-public class RectTransformInspectorEx : Editor
+namespace EditorTools
 {
-  private Editor _defaultEditor;
-  private bool _showDebugInfo;
-
-  private void OnEnable()
+  [CustomEditor(typeof(RectTransform))]
+  [CanEditMultipleObjects]
+  public class RectTransformInspectorEx : Editor
   {
-    // 拿到 Unity 原生 RectTransform Inspector
-    var type = typeof(Editor).Assembly.GetType("UnityEditor.RectTransformEditor");
-    _defaultEditor = CreateEditor(targets, type);
-  }
+    private Editor _defaultEditor;
+    private bool _showDebugInfo;
 
-  private void OnDisable()
-  {
-    if (_defaultEditor != null)
+    private void OnEnable()
     {
-      DestroyImmediate(_defaultEditor);
-    }
-  }
-
-  public override void OnInspectorGUI()
-  {
-    // ① 先画 Unity 原生 RectTransform Inspector
-    if (_defaultEditor != null)
-    {
-      _defaultEditor.OnInspectorGUI();
+      // 拿到 Unity 原生 RectTransform Inspector
+      var type = typeof(Editor).Assembly.GetType("UnityEditor.RectTransformEditor");
+      _defaultEditor = CreateEditor(targets, type);
     }
 
-    // ② 再画我们自己的 Debug 信息，默认收起，点击后展开
-    DrawDebugInfo();
-  }
-
-  private void DrawDebugInfo()
-  {
-    RectTransform rt = target as RectTransform;
-    if (rt == null) return;
-
-    EditorGUILayout.Space(8);
-
-    EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-    _showDebugInfo = EditorGUILayout.Foldout(_showDebugInfo, "RectTransform Debug Info", true);
-
-    if (_showDebugInfo)
+    private void OnDisable()
     {
-      EditorGUILayout.Space(4);
-      EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
-
-      EditorGUI.BeginDisabledGroup(true); // 只读
-
-      EditorGUILayout.Vector2Field("Rect Size", rt.rect.size);
-      EditorGUILayout.Vector2Field("Size Delta", rt.sizeDelta);
-      EditorGUILayout.Vector3Field("Local Position", rt.localPosition);
-      EditorGUILayout.Vector3Field("World Position", rt.position);
-      EditorGUILayout.Vector2Field("Anchored Position", rt.anchoredPosition);
-      EditorGUILayout.Vector3Field("Anchored Position 3D", rt.anchoredPosition3D);
-
-      EditorGUI.EndDisabledGroup();
+      if (_defaultEditor != null)
+      {
+        DestroyImmediate(_defaultEditor);
+      }
     }
 
-    EditorGUILayout.EndVertical();
+    public override void OnInspectorGUI()
+    {
+      // ① 先画 Unity 原生 RectTransform Inspector
+      if (_defaultEditor != null)
+      {
+        _defaultEditor.OnInspectorGUI();
+      }
+
+      // ② 再画我们自己的 Debug 信息，默认收起，点击后展开
+      DrawDebugInfo();
+    }
+
+    private void DrawDebugInfo()
+    {
+      RectTransform rt = target as RectTransform;
+      if (rt == null) return;
+
+      EditorGUILayout.Space(8);
+
+      EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+      _showDebugInfo = EditorGUILayout.Foldout(_showDebugInfo, "RectTransform Debug Info", true);
+
+      if (_showDebugInfo)
+      {
+        EditorGUILayout.Space(4);
+        EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+
+        EditorGUI.BeginDisabledGroup(true); // 只读
+
+        EditorGUILayout.Vector2Field("Rect Size", rt.rect.size);
+        EditorGUILayout.Vector2Field("Size Delta", rt.sizeDelta);
+        EditorGUILayout.Vector3Field("Local Position", rt.localPosition);
+        EditorGUILayout.Vector3Field("World Position", rt.position);
+        EditorGUILayout.Vector2Field("Anchored Position", rt.anchoredPosition);
+        EditorGUILayout.Vector3Field("Anchored Position 3D", rt.anchoredPosition3D);
+
+        EditorGUI.EndDisabledGroup();
+      }
+
+      EditorGUILayout.EndVertical();
+    }
   }
 }
