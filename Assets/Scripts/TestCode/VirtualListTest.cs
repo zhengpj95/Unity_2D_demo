@@ -14,6 +14,7 @@ public class VirtualListTest : MonoBehaviour
 {
   [SerializeField] private VirtualList list;
   [SerializeField] private VirtualList list2;
+  [SerializeField] private VirtualListEx list3;
   [SerializeField] private Transform btnRefresh;
 
   private void Start()
@@ -32,13 +33,16 @@ public class VirtualListTest : MonoBehaviour
     // 设置 renderHandler 回调
     list.renderHandler = OnRenderItem;
     list2.renderHandler = OnRenderItem;
+    list3.renderHandler = OnRenderItem;
 
     // 设置点击回调
     list.onItemClick = OnListItemClick;
     list2.onItemClick = OnListItemClick;
+    list3.onItemClick = OnListItemClick;
 
     list.RefreshData(datas);
     list2.RefreshData(datas);
+    list3.RefreshData(datas);
 
     btnRefresh.GetChild(0).GetComponent<TMP_Text>().text = "点击跳转";
     // btnRefresh.GetComponentInChildren<TMP_Text>().text = "点击跳转";
@@ -46,9 +50,9 @@ public class VirtualListTest : MonoBehaviour
 
   public void OnClickJump()
   {
-    if (list2 != null)
+    if (list3 != null)
     {
-      list2.ScrollToIndex(5, true);
+      list3.ScrollToIndex(5, true);
     }
   }
 

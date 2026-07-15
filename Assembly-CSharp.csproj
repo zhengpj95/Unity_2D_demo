@@ -136,6 +136,7 @@
     <Compile Include="Assets\Scripts\FrogAdventure\Trap_Saw.cs" />
     <Compile Include="Assets\Scripts\Vampire Survivors-like\Entity\Hero.cs" />
     <Compile Include="Assets\Scripts\Common\Singleton\Singleton.cs" />
+    <Compile Include="Assets\Scripts\Common\UI\VirtualListEx.cs" />
     <Compile Include="Assets\Scripts\Common\UI\VirtualList.cs" />
     <Compile Include="Assets\Scripts\FrogAdventure\Player\PlayerKnockBack.cs" />
     <Compile Include="Assets\Scripts\Melee\EnemyChase.cs" />
