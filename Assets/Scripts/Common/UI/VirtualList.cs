@@ -116,11 +116,14 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
   /// item 渲染回调：(索引, 数据, RectTransform, 是否被选中)
   /// </summary>
   public System.Action<VirtualListRenderInfo> renderHandler;
-
   /// <summary>
   /// item 点击回调：(索引, 数据)
   /// </summary>
   public System.Action<VirtualListRenderInfo> onItemClick;
+  /// <summary>
+  /// 滚动位置改变回调：(当前滚动位置)
+  /// </summary>
+  public System.Action<Vector2> onScrollChange;
 
   /// <summary>
   /// 当前选中的item索引，-1表示未选中
@@ -233,6 +236,7 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
     }
 
     InitItemTemplate();
+    scrollRect.onValueChanged.RemoveListener(OnScroll);
     scrollRect.onValueChanged.AddListener(OnScroll);
     scrollRect.vertical = IsVertical;
     scrollRect.horizontal = !IsVertical;
@@ -546,6 +550,7 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
   private void OnScroll(Vector2 value)
   {
     RefreshVisible(false);
+    onScrollChange?.Invoke(value);
   }
 
   private void RefreshVisible(bool force)
