@@ -177,8 +177,56 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
   // 滚动速度（像素/秒），用于计算平滑滚动的持续时间
   private float _scrollSpeed = 1000f;
 
+  /// <summary>
+  /// 在编辑器中，Reset 会在组件添加到 GameObject 时被调用。用于自动分配引用。
+  /// 官方API，编辑器专用回调，只执行一次。
+  /// 它最适合做两件事：
+  ///   自动获取和绑定组件引用（如 GetComponent、GetComponentInChildren）。
+  ///   初始化序列化字段的默认值。
+  /// </summary>
+  /// <remarks>
+  /// 不要把运行时初始化逻辑放在 Reset() 中，因为它在发布后的游戏（包括微信小游戏）中不会执行。运行时初始化应放在 Awake()、OnEnable() 或 Start() 中。
+  /// </remarks>
+  private void Reset()
+  {
+    AutoAssignReferences();
+  }
+
+  private void AutoAssignReferences()
+  {
+    if (scrollRect == null)
+      scrollRect = GetComponent<ScrollRect>();
+
+    if (scrollRect != null && content == null)
+      content = scrollRect.content;
+
+    if (content == null && scrollRect != null)
+    {
+      if (scrollRect.viewport != null)
+      {
+        var contentTransform = scrollRect.viewport.Find("Content");
+        if (contentTransform != null)
+          content = contentTransform as RectTransform;
+      }
+    }
+
+    if (content == null)
+    {
+      var direct = transform.Find("Content");
+      if (direct != null)
+        content = direct as RectTransform;
+    }
+
+    if (itemTemplate == null && scrollRect.viewport != null)
+    {
+      itemTemplate = scrollRect.viewport.Find("render") as RectTransform;
+    }
+  }
+
   private void Awake()
   {
+    AutoAssignReferences();
+
     if (Application.isPlaying)
     {
       ClearPreviewItems();
@@ -207,10 +255,18 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
     InitRect();
   }
 
+  /// <summary>
+  /// 在编辑器中，OnValidate 会在 Inspector 面板中修改属性时被频繁调用。为了避免重复执行昂贵的操作，可以使用标志位或延迟调用机制来优化性能。
+  /// </summary>
+  /// <remarks>
+  /// （OnValidate 属性发生变化就执行）
+  /// </remarks>
   private void OnValidate()
   {
     if (Application.isPlaying)
       return;
+
+    AutoAssignReferences();
 
     if (scrollRect == null || content == null || itemTemplate == null)
       return;
@@ -252,7 +308,10 @@ public class VirtualList : MonoBehaviour, IPointerClickHandler, IPointerDownHand
 
     _itemHeight = itemTemplate.sizeDelta.y;
     _itemWidth = itemTemplate.sizeDelta.x;
-    itemTemplate.gameObject.SetActive(false);
+    if (Application.isPlaying)
+    {
+      itemTemplate.gameObject.SetActive(false);
+    }
   }
 
   private void InitRect()
