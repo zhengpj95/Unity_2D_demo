@@ -72,6 +72,7 @@
     <Compile Include="Assets\Editor\RectTransformPresetEditor.cs" />
     <Compile Include="Assets\Editor\SceneEditorUtils.cs" />
     <Compile Include="Assets\Editor\VirtualListEditor.cs" />
+    <Compile Include="Assets\Editor\UICreateObjectMenu.cs" />
     <Compile Include="Assets\Editor\SpriteBatchSlicerEditor.cs" />
   </ItemGroup>
   <ItemGroup>

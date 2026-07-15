@@ -46,6 +46,18 @@ public class VirtualListEx : ScrollRect, IPointerClickHandler, IPointerDownHandl
   [SerializeField]
   private int repeatY = 0;
 
+  public RectTransform ItemTemplate
+  {
+    get => itemTemplate;
+    set
+    {
+      if (itemTemplate == value) return;
+      itemTemplate = value;
+      InitItemTemplate();
+      ApplyLayoutSettings();
+    }
+  }
+
   public int SpaceX
   {
     get => spaceX;
@@ -319,7 +331,7 @@ public class VirtualListEx : ScrollRect, IPointerClickHandler, IPointerDownHandl
   {
     if (itemTemplate == null)
     {
-      Debug.LogError("VirtualList itemTemplate is null, Please check your list.");
+      // Debug.LogError("VirtualList itemTemplate is null, Please check your list.");
       return;
     }
 
