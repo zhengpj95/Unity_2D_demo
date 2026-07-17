@@ -65,15 +65,36 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Editor\RectTransformInspectorEx.cs" />
+    <Compile Include="Assets\XLua\Editor\ExampleConfig.cs" />
     <Compile Include="Assets\Editor\ProjectSpriteHelper.cs" />
     <Compile Include="Assets\Editor\TagLayerGenerator.cs" />
     <Compile Include="Assets\Editor\SceneUINameGenerator.cs" />
+    <Compile Include="Assets\XLua\Src\Editor\Generator.cs" />
     <Compile Include="Assets\Editor\SortingLayerGenerator.cs" />
+    <Compile Include="Assets\XLua\Src\Editor\Hotfix.cs" />
     <Compile Include="Assets\Editor\RectTransformPresetEditor.cs" />
+    <Compile Include="Assets\XLua\Src\Editor\TemplateRef.cs" />
     <Compile Include="Assets\Editor\SceneEditorUtils.cs" />
     <Compile Include="Assets\Editor\VirtualListEditor.cs" />
+    <Compile Include="Assets\XLua\Examples\13_BuildFromCLI\Editor\BuildFromCLI.cs" />
     <Compile Include="Assets\Editor\UICreateObjectMenu.cs" />
+    <Compile Include="Assets\XLua\Src\Editor\LinkXmlGen\LinkXmlGen.cs" />
     <Compile Include="Assets\Editor\SpriteBatchSlicerEditor.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Assets\XLua\Src\Editor\Template\LuaInterfaceBridge.tpl.txt" />
+    <None Include="Assets\XLua\Src\Editor\Template\LuaWrapPusher.tpl.txt" />
+    <None Include="Assets\XLua\Src\Editor\Template\LuaDelegateWrap.tpl.txt" />
+    <None Include="Assets\XLua\Src\Editor\Template\LuaRegister.tpl.txt" />
+    <None Include="Assets\XLua\Src\Editor\Template\LuaClassWrap.tpl.txt" />
+    <None Include="Assets\XLua\Src\Editor\Template\LuaRegisterGCM.tpl.txt" />
+    <None Include="Assets\XLua\Src\Editor\LinkXmlGen\LinkXmlGen.tpl.txt" />
+    <None Include="Assets\XLua\Src\Editor\Template\PackUnpack.tpl.txt" />
+    <None Include="Assets\XLua\Src\Editor\Template\LuaEnumWrapGCM.tpl.txt" />
+    <None Include="Assets\XLua\Src\Editor\Template\LuaClassWrapGCM.tpl.txt" />
+    <None Include="Assets\XLua\Src\Editor\Template\TemplateCommon.lua.txt" />
+    <None Include="Assets\XLua\Src\Editor\Template\LuaDelegateBridge.tpl.txt" />
+    <None Include="Assets\XLua\Src\Editor\Template\LuaEnumWrap.tpl.txt" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
