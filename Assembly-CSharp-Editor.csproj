@@ -76,7 +76,6 @@
     <Compile Include="Assets\XLua\Src\Editor\TemplateRef.cs" />
     <Compile Include="Assets\Editor\SceneEditorUtils.cs" />
     <Compile Include="Assets\Editor\VirtualListEditor.cs" />
-    <Compile Include="Assets\XLua\Examples\13_BuildFromCLI\Editor\BuildFromCLI.cs" />
     <Compile Include="Assets\Editor\UICreateObjectMenu.cs" />
     <Compile Include="Assets\XLua\Src\Editor\LinkXmlGen\LinkXmlGen.cs" />
     <Compile Include="Assets\Editor\SpriteBatchSlicerEditor.cs" />
