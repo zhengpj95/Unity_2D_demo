@@ -107,8 +107,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 16
-  m_fontSizeBase: 16
+  m_fontSize: 22
+  m_fontSizeBase: 22
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -200,8 +200,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42de46ce22b36944fbb5e8661042aa24, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fill: {fileID: 5654408921722070960}
-  label: {fileID: 786717028828658599}
+  barMode: 0
+  img: {fileID: 5654408921722070960}
+  tmpTxt: {fileID: 786717028828658599}
 --- !u!1 &7496749893467553370
 GameObject:
   m_ObjectHideFlags: 0
@@ -214,7 +215,7 @@ GameObject:
   - component: {fileID: 7315736017519457185}
   - component: {fileID: 2697558374974302156}
   m_Layer: 5
-  m_Name: Image
+  m_Name: imgBg
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

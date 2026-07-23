@@ -96,8 +96,8 @@
     <Compile Include="Assets\XLua\Src\CopyByValue.cs" />
     <Compile Include="Assets\Scripts\Common\UI\ObjectFader.cs" />
     <Compile Include="Assets\Scripts\Modules\Vampire Survivors-like\WeaponSystem\WeaponLevelData.cs" />
-    <Compile Include="Assets\Scripts\Define\StateEnums.cs" />
     <Compile Include="Assets\Scripts\Modules\FrogAdventure\EndGame.cs" />
+    <Compile Include="Assets\Scripts\Define\StateEnums.cs" />
     <Compile Include="Assets\XLua\Src\LuaDLL.cs" />
     <Compile Include="Assets\XLua\Src\LuaException.cs" />
     <Compile Include="Assets\Scripts\Modules\Vampire Survivors-like\Entity\DropItemManager.cs" />
@@ -133,9 +133,9 @@
     <Compile Include="Assets\Scripts\Modules\FrogAdventure\Player\PlayerLifeController.cs" />
     <Compile Include="Assets\Scripts\Modules\Vampire Survivors-like\WeaponSystem\WeaponController\WeaponController.cs" />
     <Compile Include="Assets\XLua\Src\MethodWarpsCache.cs" />
+    <Compile Include="Assets\Scripts\Modules\FrogAdventure\Trap_Saw.cs" />
     <Compile Include="Assets\Scripts\Common\Manager\EventBus.cs" />
     <Compile Include="Assets\XLua\Src\ObjectPool.cs" />
-    <Compile Include="Assets\Scripts\Modules\FrogAdventure\Trap_Saw.cs" />
     <Compile Include="Assets\Scripts\Modules\Vampire Survivors-like\UI\VSEnemyHealth.cs" />
     <Compile Include="Assets\Scripts\Modules\Rpg\Player\RpgPlayerHealth.cs" />
     <Compile Include="Assets\Scripts\Modules\Vampire Survivors-like\Entity\DropItem.cs" />
@@ -196,9 +196,9 @@
     <Compile Include="Assets\XLua\Tutorial\LoadLuaScript\ByString\ByString.cs" />
     <Compile Include="Assets\Scripts\Modules\Vampire Survivors-like\WeaponSystem\Weapon\BlueOvalWeapon.cs" />
     <Compile Include="Assets\XLua\Src\CodeEmit.cs" />
+    <Compile Include="Assets\Scripts\Modules\Vampire Survivors-like\BuffSystem\Instance\BuffSO.cs" />
     <Compile Include="Assets\Scripts\Common\Pool\PoolManager.cs" />
     <Compile Include="Assets\Scripts\Modules\Vampire Survivors-like\UI\UI_EXP.cs" />
-    <Compile Include="Assets\Scripts\Modules\Vampire Survivors-like\BuffSystem\Instance\BuffSO.cs" />
     <Compile Include="Assets\XLua\Tutorial\LuaCallCSharp\LuaCallCs.cs" />
     <Compile Include="Assets\Scripts\Modules\FrogAdventure\GameController.cs" />
     <Compile Include="Assets\XLua\Src\ObjectTranslatorPool.cs" />
