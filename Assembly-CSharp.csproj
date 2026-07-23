@@ -139,7 +139,6 @@
     <Compile Include="Assets\Scripts\Modules\Vampire Survivors-like\UI\VSEnemyHealth.cs" />
     <Compile Include="Assets\Scripts\Modules\Rpg\Player\RpgPlayerHealth.cs" />
     <Compile Include="Assets\Scripts\Modules\Vampire Survivors-like\Entity\DropItem.cs" />
-    <Compile Include="Assets\Scripts\Common\UI\UIProgressBarMask.cs" />
     <Compile Include="Assets\Scripts\Modules\Rpg\ElevationExit.cs" />
     <Compile Include="Assets\Scripts\Modules\Vampire Survivors-like\WeaponSystem\WeaponController\LightningController.cs" />
     <Compile Include="Assets\XLua\Src\RawObject.cs" />
