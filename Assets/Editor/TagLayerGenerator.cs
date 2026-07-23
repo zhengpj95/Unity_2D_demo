@@ -11,7 +11,7 @@ namespace EditorTools
    */
   public class TagLayerGenerator : EditorWindow
   {
-    private const string OutputFolder = "Assets/Scripts/def";
+    private const string OutputFolder = "Assets/Scripts/Define";
 
     [MenuItem("Tools/02 TagLayer Generator", false, 0)]
     public static void Generate()

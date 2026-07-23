@@ -23,7 +23,7 @@ namespace EditorTools
       string classCode = GenerateClassCode(sortingLayerNames);
 
       // 保存到文件
-      string filePath = "Assets/Scripts/Def/GameSortingLayers.cs";
+      string filePath = "Assets/Scripts/Define/GameSortingLayers.cs";
       SaveCodeToFile(filePath, classCode);
 
       // 刷新 Asset 数据库

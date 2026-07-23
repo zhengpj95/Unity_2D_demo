@@ -6,7 +6,7 @@ namespace EditorTools
 {
   public static class SceneUINameGenerator
   {
-    private const string FilePath = "Assets/Scripts/def/SceneUIName.cs";
+    private const string FilePath = "Assets/Scripts/Define/SceneUIName.cs";
 
     [MenuItem("Tools/03 SceneUIName Generator", false, 0)]
     public static void Generate()
