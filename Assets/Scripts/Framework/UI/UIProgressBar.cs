@@ -11,9 +11,9 @@ public enum ProgressBarMode
 }
 public enum ProgressBarTextType
 {
+  None,
   Value,
-  Percent,
-  Custom
+  Percent
 }
 
 /**
@@ -28,7 +28,7 @@ public class UIProgressBar : MonoBehaviour
 
   private Image _fillImg;
   private RectMask2D _mask2D;
-  private float _progress = 0f; // 进度(0~1)
+  private float _normalizedValue = 0f; // 归一化的进度值 (0 到 1)
 
   private void Start()
   {
@@ -44,12 +44,58 @@ public class UIProgressBar : MonoBehaviour
   }
 
   /// <summary>
-  /// 设置进度(0~1)
+  /// 设置进度值
   /// </summary>
-  public void SetProgress(float value)
+  public void SetValue(float value, ProgressBarTextType textType = ProgressBarTextType.Percent)
   {
-    _progress = Mathf.Clamp01(value);
+    _normalizedValue = Mathf.Clamp01(value);
     RefreshView();
+    if (textType == ProgressBarTextType.Value)
+    {
+      SetText($"{value}");
+    }
+    else if (textType == ProgressBarTextType.Percent)
+    {
+      SetText($"{_normalizedValue * 100}%");
+    }
+    else if (textType == ProgressBarTextType.None)
+    {
+      SetText("");
+    }
+  }
+  public void SetValue(float value, float maxValue, ProgressBarTextType textType = ProgressBarTextType.Value)
+  {
+    _normalizedValue = Mathf.Clamp01(value / maxValue);
+    RefreshView();
+    if (textType == ProgressBarTextType.Value)
+    {
+      SetText($"{value}/{maxValue}");
+    }
+    else if (textType == ProgressBarTextType.Percent)
+    {
+      SetText($"{_normalizedValue * 100}%");
+    }
+    else if (textType == ProgressBarTextType.None)
+    {
+      SetText("");
+    }
+  }
+  public void SetValue(float value, float minValue, float maxValue, ProgressBarTextType textType = ProgressBarTextType.Value)
+  {
+    _normalizedValue = Mathf.Clamp01((value - minValue) / (maxValue - minValue));
+    RefreshView();
+    if (textType == ProgressBarTextType.Value)
+    {
+      SetText($"{value}/{maxValue}");
+    }
+    else if (textType == ProgressBarTextType.Percent)
+    {
+      SetText($"{_normalizedValue * 100}%");
+    }
+    else if (textType == ProgressBarTextType.None)
+    {
+      SetText("");
+    }
   }
 
   /// <summary>
@@ -66,7 +112,7 @@ public class UIProgressBar : MonoBehaviour
   private void Reset()
   {
     SetText("");
-    SetProgress(0);
+    SetValue(0);
   }
 
   private void RefreshView()
@@ -78,12 +124,12 @@ public class UIProgressBar : MonoBehaviour
 
     if (barMode == ProgressBarMode.Fill)
     {
-      _fillImg.fillAmount = _progress;
+      _fillImg.fillAmount = _normalizedValue;
     }
     else if (barMode == ProgressBarMode.Mask)
     {
       Vector4 padding = _mask2D.padding;
-      padding.z = img.rect.width * (1 - _progress);
+      padding.z = img.rect.width * (1 - _normalizedValue);
       _mask2D.padding = padding;
     }
   }
