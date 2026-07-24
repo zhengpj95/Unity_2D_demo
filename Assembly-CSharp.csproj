@@ -134,8 +134,8 @@
     <Compile Include="Assets\Scripts\Modules\FrogAdventure\Player\PlayerLifeController.cs" />
     <Compile Include="Assets\Scripts\Modules\Vampire Survivors-like\WeaponSystem\WeaponController\WeaponController.cs" />
     <Compile Include="Assets\XLua\Src\MethodWarpsCache.cs" />
-    <Compile Include="Assets\Scripts\Framework\Player\FSM\BaseState.cs" />
     <Compile Include="Assets\Scripts\Framework\Core\Callback.cs" />
+    <Compile Include="Assets\Scripts\Framework\Player\FSM\BaseState.cs" />
     <Compile Include="Assets\Scripts\Modules\FrogAdventure\Trap_Saw.cs" />
     <Compile Include="Assets\XLua\Src\ObjectPool.cs" />
     <Compile Include="Assets\Scripts\Modules\Vampire Survivors-like\UI\VSEnemyHealth.cs" />
