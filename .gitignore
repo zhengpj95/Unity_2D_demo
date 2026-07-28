@@ -12,6 +12,7 @@ UserSettings/
 
 # IDE 配置
 .vs/
+.claude
 
 # 系统文件
 .DS_Store
