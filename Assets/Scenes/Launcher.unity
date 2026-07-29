@@ -602,7 +602,7 @@ GameObject:
   - component: {fileID: 1450040209}
   - component: {fileID: 1450040208}
   - component: {fileID: 1450040207}
-  - component: {fileID: 1450040206}
+  - component: {fileID: 1450040211}
   m_Layer: 5
   m_Name: UIRoot
   m_TagString: Untagged
@@ -610,22 +610,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1450040206
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1450040205}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 151ac88c534b41647b383e3c82d30e30, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  mainLayer: {fileID: 42804595}
-  windowLayer: {fileID: 973352973}
-  modelLayer: {fileID: 1727260631}
-  tipLayer: {fileID: 1148981421}
 --- !u!114 &1450040207
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -713,6 +697,23 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &1450040211
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1450040205}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fffa2504a8d98b249858163454991cdf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _mainLayer: {fileID: 42804595}
+  _windowLayer: {fileID: 973352973}
+  _modelLayer: {fileID: 1727260631}
+  _tipLayer: {fileID: 1148981421}
+  _dontDestroyOnLoad: 1
 --- !u!1001 &1573054022
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -4,6 +4,63 @@
 
 > **注意：** 本框架的所有类都在全局命名空间中，无需添加命名空间引用即可使用。
 
+## 快速开始
+
+### 1. 场景设置
+
+在场景中创建 UI 层级结构：
+
+```
+Canvas
+├── MainLayer      (主界面层)
+├── WindowLayer    (弹窗层)
+├── ModelLayer     (模态层)
+└── TipLayer       (提示层)
+```
+
+### 2. 初始化 UIManager
+
+**方式一：使用 UILauncher（推荐）**
+
+1. 创建一个空 GameObject，命名为 "Launcher"
+2. 挂载 `UILauncher` 脚本
+3. 在 Inspector 中分配 UI 层级引用
+
+**方式二：手动初始化**
+
+```csharp
+public class GameInitializer : MonoBehaviour
+{
+    [SerializeField] private Transform mainLayer;
+    [SerializeField] private Transform windowLayer;
+    [SerializeField] private Transform modelLayer;
+    [SerializeField] private Transform tipLayer;
+
+    private void Awake()
+    {
+        UIManager.Instance.Initialize(mainLayer, windowLayer, modelLayer, tipLayer);
+    }
+
+    private void OnDestroy()
+    {
+        UIManager.Instance.Release();
+    }
+}
+```
+
+### 3. 使用 UIManager
+
+```csharp
+// 显示UI
+UIManager.Instance.ShowUI("UI/MyPanel", UILayerIndex.Window);
+
+// 隐藏UI
+UIManager.Instance.HideUI("UI/MyPanel");
+
+// 销毁UI
+UIManager.Instance.DestroyUI("UI/MyPanel");
+```
+
 ## 架构概览
 
 ```
@@ -238,6 +295,51 @@ var controller = UIControllerFactory.Create<MyController, MyData>(view);
 
 - **ConfirmDialog**: 确认弹窗实现
 - **MVCUsageExample**: 完整使用流程演示
+
+## 扩展UIManager
+
+框架提供了UIManager的扩展方法，可以直接集成MVC：
+
+```csharp
+// 显示UI并自动创建Controller
+var controller = UIManager.Instance.ShowUIWithController
+    <MyView, MyController, MyData>(
+    "UI/MyPanel",
+    UILayerIndex.Window,
+    new MyData { Message = "Test" }
+);
+```
+
+## 架构设计
+
+### 纯C#设计
+
+UIManager 采用纯 C# 实现，具有以下优势：
+
+1. **解耦合**：不依赖 MonoBehaviour，逻辑更清晰
+2. **易测试**：可以编写单元测试，无需运行 Unity 场景
+3. **灵活初始化**：通过配置注入，支持场景切换
+4. **生命周期管理**：明确的 Initialize/Release 流程
+
+### 初始化流程
+
+```
+场景启动
+    ↓
+UILauncher.Awake()
+    ↓
+UIManager.Instance.Initialize(config)
+    ↓
+UIManager 就绪，可正常使用
+    ↓
+场景销毁
+    ↓
+UILauncher.OnDestroy()
+    ↓
+UIManager.Instance.Release()
+    ↓
+清理所有资源
+```
 
 ## 扩展UIManager
 
