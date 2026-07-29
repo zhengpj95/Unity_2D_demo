@@ -87,20 +87,20 @@ public class MessageData : UIData
 {
   public string Message;
   public float Duration = 2f;
-  public MessageType Type = MessageType.Info;
+  public UIMessageType Type = UIMessageType.Info;
 
   public override void Reset()
   {
     Message = string.Empty;
     Duration = 2f;
-    Type = MessageType.Info;
+    Type = UIMessageType.Info;
   }
 }
 
 /// <summary>
 /// 消息类型
 /// </summary>
-public enum MessageType
+public enum UIMessageType
 {
   Info,
   Success,

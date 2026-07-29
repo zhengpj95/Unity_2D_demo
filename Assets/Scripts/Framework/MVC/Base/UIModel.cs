@@ -112,3 +112,13 @@ public abstract class UIModel<TData> : IModel<TData> where TData : UIData, new()
   /// </summary>
   protected virtual void OnCleanup() { }
 }
+
+/// <summary>
+/// 简单Model实现
+/// 可直接使用，无需继承
+/// </summary>
+/// <typeparam name="TData">数据类型</typeparam>
+public class SimpleModel<TData> : UIModel<TData> where TData : UIData, new()
+{
+  // 使用基类的所有实现，无需额外代码
+}

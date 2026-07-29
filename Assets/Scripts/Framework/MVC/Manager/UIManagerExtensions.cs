@@ -58,7 +58,7 @@ public static class UIManagerExtensions
       string prefabPath,
       bool isDestroy = false
   )
-      where TController : UIController<TData>
+      where TController : class, IController<TData>
       where TData : UIData, new()
   {
     // 获取Controller并清理

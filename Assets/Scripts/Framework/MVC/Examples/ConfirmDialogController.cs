@@ -12,7 +12,7 @@ public class ConfirmDialogController : UIController<DialogData>
 
   protected override UIModel<DialogData> CreateModel()
   {
-    return new UIModel<DialogData>();
+    return new SimpleModel<DialogData>();
   }
 
   protected override void OnInit()

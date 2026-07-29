@@ -11,12 +11,7 @@ public class UIControllerManager : Singleton<UIControllerManager>
   /// <summary>
   /// 控制器缓存
   /// </summary>
-  private readonly Dictionary<string, IController<UIData>> _controllers = new Dictionary<string, IController<UIData>>();
-
-  /// <summary>
-  /// View到Controller的映射
-  /// </summary>
-  private readonly Dictionary<IView<UIData>, IController<UIData>> _viewToController = new Dictionary<IView<UIData>, IController<UIData>>();
+  private readonly Dictionary<string, IController> _controllers = new Dictionary<string, IController>();
 
   /// <summary>
   /// 注册控制器
@@ -37,7 +32,7 @@ public class UIControllerManager : Singleton<UIControllerManager>
       return;
     }
 
-    _controllers[controllerKey] = controller as IController<UIData>;
+    _controllers[controllerKey] = controller;
     Debug.Log($"[{GetType().Name}] Registered controller: {controllerKey}");
   }
 
@@ -47,7 +42,7 @@ public class UIControllerManager : Singleton<UIControllerManager>
   /// <typeparam name="TController">控制器类型</typeparam>
   /// <param name="key">键名（可选）</param>
   /// <returns>控制器实例</returns>
-  public TController Get<TController>(string key = null) where TController : class, IController<UIData>
+  public TController Get<TController>(string key = null) where TController : class, IController
   {
     string controllerKey = key ?? typeof(TController).Name;
     _controllers.TryGetValue(controllerKey, out var controller);
@@ -72,7 +67,7 @@ public class UIControllerManager : Singleton<UIControllerManager>
   /// 注销控制器
   /// </summary>
   /// <typeparam name="TController">控制器类型</typeparam>
-  public void Unregister<TController>() where TController : IController<UIData>
+  public void Unregister<TController>() where TController : IController
   {
     Unregister(typeof(TController).Name);
   }
@@ -87,13 +82,12 @@ public class UIControllerManager : Singleton<UIControllerManager>
       kvp.Value.Cleanup();
     }
     _controllers.Clear();
-    _viewToController.Clear();
   }
 
   /// <summary>
   /// 获取所有控制器
   /// </summary>
-  public Dictionary<string, IController<UIData>>.ValueCollection GetAllControllers()
+  public Dictionary<string, IController>.ValueCollection GetAllControllers()
   {
     return _controllers.Values;
   }
@@ -109,7 +103,7 @@ public class UIControllerManager : Singleton<UIControllerManager>
   /// <summary>
   /// 检查控制器是否存在
   /// </summary>
-  public bool HasController<TController>() where TController : IController<UIData>
+  public bool HasController<TController>() where TController : IController
   {
     return HasController(typeof(TController).Name);
   }

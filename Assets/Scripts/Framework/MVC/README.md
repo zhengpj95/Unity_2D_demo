@@ -93,10 +93,17 @@ public class MyUIView : UIView<MyUIData>
 ```csharp
 public class MyUIController : UIController<MyUIData>
 {
+    // 使用 SimpleModel（推荐，简单场景）
     protected override UIModel<MyUIData> CreateModel()
     {
-        return new UIModel<MyUIData>();
+        return new SimpleModel<MyUIData>();
     }
+
+    // 或创建自定义 Model（复杂场景）
+    // protected override UIModel<MyUIData> CreateModel()
+    // {
+    //     return new MyCustomModel();
+    // }
 
     public void UpdateScore(int newScore)
     {
@@ -126,6 +133,41 @@ controller.HideView();
 ```
 
 ## 核心功能
+
+### Model 类型
+
+框架提供两种 Model 使用方式：
+
+1. **SimpleModel\<TData\>**（推荐，简单场景）
+   - 直接使用，无需继承
+   - 适合简单的数据管理场景
+
+```csharp
+// 在 Controller 中直接使用
+protected override UIModel<MyData> CreateModel()
+{
+    return new SimpleModel<MyData>();
+}
+```
+
+2. **自定义 Model**（复杂场景）
+   - 继承 `UIModel<TData>` 创建自定义 Model
+   - 适合需要额外业务逻辑的场景
+
+```csharp
+public class MyCustomModel : UIModel<MyData>
+{
+    protected override void OnInit()
+    {
+        // 自定义初始化逻辑
+    }
+
+    public void DoSomething()
+    {
+        // 自定义业务逻辑
+    }
+}
+```
 
 ### 数据绑定
 

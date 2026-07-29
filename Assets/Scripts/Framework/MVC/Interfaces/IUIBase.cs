@@ -89,10 +89,42 @@ public interface IView<TData> where TData : IUIData
 }
 
 /// <summary>
-/// Controller接口 - 负责连接Model和View，处理业务逻辑
+/// Controller非泛型基接口
+/// 用于管理器统一管理不同类型的Controller
+/// </summary>
+public interface IController
+{
+  /// <summary>
+  /// 是否已初始化
+  /// </summary>
+  bool IsInitialized { get; }
+
+  /// <summary>
+  /// 是否正在运行
+  /// </summary>
+  bool IsRunning { get; }
+
+  /// <summary>
+  /// 启动控制器
+  /// </summary>
+  void Start();
+
+  /// <summary>
+  /// 停止控制器
+  /// </summary>
+  void Stop();
+
+  /// <summary>
+  /// 清理控制器
+  /// </summary>
+  void Cleanup();
+}
+
+/// <summary>
+/// Controller泛型接口 - 负责连接Model和View，处理业务逻辑
 /// </summary>
 /// <typeparam name="TData">数据类型</typeparam>
-public interface IController<TData> where TData : IUIData
+public interface IController<TData> : IController where TData : IUIData
 {
   /// <summary>
   /// 关联的Model
@@ -109,19 +141,4 @@ public interface IController<TData> where TData : IUIData
   /// </summary>
   /// <param name="view">视图实例</param>
   void Initialize(IView<TData> view);
-
-  /// <summary>
-  /// 启动控制器（开始业务逻辑）
-  /// </summary>
-  void Start();
-
-  /// <summary>
-  /// 停止控制器
-  /// </summary>
-  void Stop();
-
-  /// <summary>
-  /// 清理控制器
-  /// </summary>
-  void Cleanup();
 }
