@@ -7,6 +7,10 @@ Build/
 Builds/
 MemoryCaptures/
 
+/*.csproj
+/*.sln
+/*.DotSettings.user
+
 # 用户设置
 UserSettings/
 
