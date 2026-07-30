@@ -22,7 +22,7 @@ public class UIControllerManager : Singleton<UIControllerManager>
   /// <param name="key">键名（可选，默认为类型名）</param>
   public void Register<TController, TData>(TController controller, string key = null)
       where TController : IController<TData>
-      where TData : UIData, new()
+      where TData : new()
   {
     string controllerKey = key ?? typeof(TController).Name;
 
@@ -125,7 +125,7 @@ public static class UIControllerFactory
   /// <returns>控制器实例</returns>
   public static TController Create<TController, TData>(IView<TData> view, bool register = true)
       where TController : UIController<TData>, new()
-      where TData : UIData, new()
+      where TData : new()
   {
     var controller = new TController();
     controller.Initialize(view);
@@ -143,7 +143,7 @@ public static class UIControllerFactory
   /// </summary>
   public static TController GetOrCreate<TController, TData>(IView<TData> view)
       where TController : UIController<TData>, new()
-      where TData : UIData, new()
+      where TData : new()
   {
     var controller = UIControllerManager.Instance.Get<TController>();
     if (controller == null)

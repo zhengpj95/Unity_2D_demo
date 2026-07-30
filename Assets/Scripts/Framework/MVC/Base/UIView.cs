@@ -9,7 +9,7 @@ using UnityEngine.Events;
 /// 绑定到UI GameObject上，作为UI的入口点
 /// </summary>
 /// <typeparam name="TData">数据类型</typeparam>
-public abstract class UIView<TData> : MonoBehaviour, IView<TData> where TData : UIData
+public abstract class UIView<TData> : MonoBehaviour, IView<TData>
 {
   [Header("View Settings")]
   [SerializeField] private bool _autoFindComponents = true;

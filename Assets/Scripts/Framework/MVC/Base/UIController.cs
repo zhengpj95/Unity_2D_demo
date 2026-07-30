@@ -6,7 +6,7 @@ using UnityEngine;
 /// 负责连接Model和View，处理业务逻辑
 /// </summary>
 /// <typeparam name="TData">数据类型</typeparam>
-public abstract class UIController<TData> : IController<TData> where TData : UIData, new()
+public abstract class UIController<TData> : IController<TData> where TData : new()
 {
   /// <summary>
   /// 关联的Model
@@ -229,7 +229,7 @@ public abstract class UIController<TData> : IController<TData> where TData : UID
   /// </summary>
   public TData GetData()
   {
-    return _model?.Data;
+    return _model != null ? _model.Data : default;
   }
 
   /// <summary>

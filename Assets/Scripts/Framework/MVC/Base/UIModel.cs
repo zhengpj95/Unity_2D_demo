@@ -5,7 +5,7 @@ using System;
 /// 负责数据管理和业务逻辑处理
 /// </summary>
 /// <typeparam name="TData">数据类型</typeparam>
-public abstract class UIModel<TData> : IModel<TData> where TData : UIData, new()
+public abstract class UIModel<TData> : IModel<TData> where TData : new()
 {
   /// <summary>
   /// 数据实例
@@ -88,11 +88,18 @@ public abstract class UIModel<TData> : IModel<TData> where TData : UIData, new()
   }
 
   /// <summary>
-  /// 重置数据
+  /// 重置数据（如果数据实现了IUIData接口）
   /// </summary>
   public void ResetData()
   {
-    _data.Reset();
+    if (_data is IUIData uidata)
+    {
+      uidata.Reset();
+    }
+    else
+    {
+      _data = new TData();
+    }
     OnDataChanged?.Invoke(_data);
   }
 
@@ -102,7 +109,10 @@ public abstract class UIModel<TData> : IModel<TData> where TData : UIData, new()
   public virtual void Cleanup()
   {
     OnDataChanged = null;
-    _data?.Reset();
+    if (_data is IUIData uidata)
+    {
+      uidata.Reset();
+    }
     IsInitialized = false;
     OnCleanup();
   }
@@ -118,7 +128,7 @@ public abstract class UIModel<TData> : IModel<TData> where TData : UIData, new()
 /// 可直接使用，无需继承
 /// </summary>
 /// <typeparam name="TData">数据类型</typeparam>
-public class SimpleModel<TData> : UIModel<TData> where TData : UIData, new()
+public class SimpleModel<TData> : UIModel<TData> where TData : new()
 {
   // 使用基类的所有实现，无需额外代码
 }

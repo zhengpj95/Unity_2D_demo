@@ -74,7 +74,7 @@ UIManager.Instance.DestroyUI("UI/MyPanel");
 ### 核心组件
 
 1. **Model（模型层）**
-   - 管理UI数据
+   - 管理模块数据
    - 数据变化通知
    - 业务逻辑处理
 
@@ -95,7 +95,6 @@ Assets/Scripts/Framework/MVC/
 ├── Interfaces/          # 接口定义
 │   └── IUIBase.cs
 ├── Base/                # 基类实现
-│   ├── UIData.cs        # 数据基类
 │   ├── UIModel.cs       # Model基类
 │   ├── UIView.cs        # View基类
 │   └── UIController.cs  # Controller基类
@@ -105,6 +104,7 @@ Assets/Scripts/Framework/MVC/
 ├── Utils/               # 工具类
 │   └── UIBinding.cs     # 数据绑定工具
 └── Examples/            # 示例代码
+    ├── DialogData.cs
     ├── ConfirmDialogView.cs
     ├── ConfirmDialogController.cs
     └── MVCUsageExample.cs
@@ -114,14 +114,31 @@ Assets/Scripts/Framework/MVC/
 
 ### 1. 定义数据模型
 
+**方式一：简单数据类（推荐）**
+
+数据类不需要继承任何基类，可以自由定义：
+
 ```csharp
 [Serializable]
-public class MyUIData : UIData
+public class MyUIData
+{
+    public string Title;
+    public int Score;
+}
+```
+
+**方式二：实现 IUIData 接口（可选）**
+
+如果需要 Reset 功能，可以实现 `IUIData` 接口：
+
+```csharp
+[Serializable]
+public class MyUIData : IUIData
 {
     public string Title;
     public int Score;
 
-    public override void Reset()
+    public void Reset()
     {
         Title = string.Empty;
         Score = 0;
@@ -275,11 +292,13 @@ var controller = UIControllerManager.Instance.Get<MyController>();
 var controller = UIControllerFactory.Create<MyController, MyData>(view);
 ```
 
-## 内置数据类型
+## 数据设计理念
 
-- **DialogData**: 弹窗数据（标题、内容、按钮回调）
-- **MessageData**: 提示消息数据（消息内容、持续时间、消息类型）
-- **SimpleData\<T\>**: 简单值类型数据
+本框架的设计理念是让每个模块的数据由对应的 Model 独立管理：
+
+- **数据类无需继承 UIData**：模块数据类可以自由定义，不需要继承任何基类
+- **IUIData 接口可选**：如果需要 Reset 功能，可以实现 `IUIData` 接口，但不是强制的
+- **数据定义灵活**：每个模块可以根据自己的需求定义数据结构
 
 ## 最佳实践
 
@@ -341,24 +360,11 @@ UIManager.Instance.Release()
 清理所有资源
 ```
 
-## 扩展UIManager
-
-框架提供了UIManager的扩展方法，可以直接集成MVC：
-
-```csharp
-// 显示UI并自动创建Controller
-var controller = UIManager.Instance.ShowUIWithController<MyView, MyController, MyData>(
-    "UI/MyUI",
-    UILayerIndex.Window,
-    new MyData { Title = "Test" }
-);
-```
-
 ## 注意事项
 
 1. View必须继承自UIView\<TData\>并实现UpdateView方法
 2. Controller必须继承自UIController\<TData\>并实现CreateModel方法
-3. 数据类必须继承自UIData
+3. 数据类不需要继承任何基类（IUIData接口是可选的）
 4. 建议使用UIEventBinder管理事件，避免内存泄漏
 
 ## 依赖
@@ -378,4 +384,5 @@ UIManager 和 UIManagerExtensions 保持分离的原因：
 
 ## 版本历史
 
+- v1.1.0 - 移除 UIData 基类，数据类可自由定义
 - v1.0.0 - 初始版本，包含核心MVC架构和基础示例

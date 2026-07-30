@@ -18,11 +18,11 @@ public static class UIManagerExtensions
       this UIManager uiManager,
       string prefabPath,
       UILayerIndex layer,
-      TData data = null
+      TData data = default
   )
       where TView : UIView<TData>
       where TController : UIController<TData>, new()
-      where TData : UIData, new()
+      where TData : new()
   {
     // 显示UI
     uiManager.ShowUI(prefabPath, layer);
@@ -59,7 +59,7 @@ public static class UIManagerExtensions
       bool isDestroy = false
   )
       where TController : class, IController<TData>
-      where TData : UIData, new()
+      where TData : new()
   {
     // 获取Controller并清理
     var controller = UIControllerManager.Instance.Get<TController>();
@@ -84,7 +84,7 @@ public static class UIManagerExtensions
   )
       where TView : UIView<TData>
       where TController : UIController<TData>, new()
-      where TData : UIData, new()
+      where TData : new()
   {
     // 预加载UI（隐藏状态）
     if (!uiManager.HasUI(prefabPath))

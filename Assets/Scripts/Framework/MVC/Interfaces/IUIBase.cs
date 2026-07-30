@@ -1,13 +1,13 @@
 using System;
 
 /// <summary>
-/// UI数据基类接口
-/// 所有UI数据模型都应继承此接口
+/// UI数据基类接口（可选）
+/// 模块数据可以选择实现此接口以支持Reset功能
 /// </summary>
 public interface IUIData
 {
   /// <summary>
-  /// 重置数据到默认状态
+  /// 重置数据到默认状态（可选实现）
   /// </summary>
   void Reset();
 }
@@ -16,7 +16,7 @@ public interface IUIData
 /// Model接口 - 负责数据管理
 /// </summary>
 /// <typeparam name="TData">数据类型</typeparam>
-public interface IModel<TData> where TData : IUIData
+public interface IModel<TData>
 {
   /// <summary>
   /// 获取数据
@@ -49,7 +49,7 @@ public interface IModel<TData> where TData : IUIData
 /// View接口 - 负责UI显示和用户交互
 /// </summary>
 /// <typeparam name="TData">数据类型</typeparam>
-public interface IView<TData> where TData : IUIData
+public interface IView<TData>
 {
   /// <summary>
   /// 获取对应的GameObject
@@ -124,7 +124,7 @@ public interface IController
 /// Controller泛型接口 - 负责连接Model和View，处理业务逻辑
 /// </summary>
 /// <typeparam name="TData">数据类型</typeparam>
-public interface IController<TData> : IController where TData : IUIData
+public interface IController<TData> : IController
 {
   /// <summary>
   /// 关联的Model
