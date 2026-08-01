@@ -5,7 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UIRefCodeGenerator : Editor
+public class UIAutoGenerator : Editor
 {
   // 自动生成代码存放的路径
   private const string GENERATED_SCRIPT_PATH = "Assets/Scripts/Define/UI_Generated/";
@@ -25,7 +25,7 @@ public class UIRefCodeGenerator : Editor
         { "dropdown_", typeof(Dropdown) },
     };
 
-  [MenuItem("GameObject/UI 工具/生成 UI View 绑定代码", false, 0)]
+  [MenuItem("GameObject/UI 工具/生成 UI View 并绑定代码", false, 0)]
   public static void GenerateUICode()
   {
     GameObject selectedObj = Selection.activeGameObject;
