@@ -107,6 +107,8 @@ public class UIRefCodeGenerator : Editor
     sb.AppendLine("using UnityEngine;");
     sb.AppendLine("using UnityEngine.UI;");
     sb.AppendLine();
+    sb.AppendLine("[RequireComponent(typeof(RectTransform))]");
+    sb.AppendLine("[DisallowMultipleComponent]");
     sb.AppendLine($"public class {className} : UIView");
     sb.AppendLine("{");
 

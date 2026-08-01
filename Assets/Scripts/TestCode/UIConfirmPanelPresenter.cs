@@ -9,7 +9,7 @@ public class UIConfirmPanelPresenter : UIPresenter
   {
     Debug.Log("UIConfirmPanelPresenter OnOpen called with args: " + args);
     base.OnOpen(args);
-    UIConfirmPanel panel = View as UIConfirmPanel;
+    ConfirmPanelView panel = View as ConfirmPanelView;
     if (panel != null && args != null)
     {
       var type = args.GetType();
@@ -26,7 +26,7 @@ public class UIConfirmPanelPresenter : UIPresenter
   public override void OnClose()
   {
     base.OnClose();
-    UIConfirmPanel panel = View as UIConfirmPanel;
+    ConfirmPanelView panel = View as ConfirmPanelView;
     if (panel != null)
     {
       panel.btn_confirm.onClick.RemoveAllListeners();

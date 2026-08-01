@@ -6,6 +6,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+[RequireComponent(typeof(RectTransform))]
+[DisallowMultipleComponent]
 public class ConfirmPanelView : UIView
 {
   public Image img_bg;
@@ -18,7 +20,7 @@ public class ConfirmPanelView : UIView
   {
     base.InitView();
     img_bg = transform.Find("ConfirmPanel/img_bg")?.GetComponent<Image>();
-    txt_title = transform.Find("ConfirmPanel/txt_title")?.GetComponent<Text>();
+    txt_title = transform.Find("ConfirmPanel/Image/txt_title")?.GetComponent<Text>();
     txt_desc = transform.Find("ConfirmPanel/txt_desc")?.GetComponent<Text>();
     btn_cancel = transform.Find("ConfirmPanel/btn_cancel")?.GetComponent<Button>();
     btn_confirm = transform.Find("ConfirmPanel/btn_confirm")?.GetComponent<Button>();
