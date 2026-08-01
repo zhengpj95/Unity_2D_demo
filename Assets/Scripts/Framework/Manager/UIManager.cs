@@ -299,4 +299,79 @@ public class UIManager : Singleton<UIManager>
   }
 
   #endregion
+
+  #region UIPresenter处理
+  // 保存所有已实例化的 Presenter
+  private readonly Dictionary<Type, UIPresenter> _presenterCache = new Dictionary<Type, UIPresenter>();
+  // 界面打开栈 (主要用于 PopUp 层管理)
+  private readonly Stack<UIPresenter> _uiStack = new Stack<UIPresenter>();
+
+  /// <summary>
+  /// 打开界面
+  /// </summary>
+  public T OpenWindow<T>(string prefabPath, UILayerIndex layer, object args = null) where T : UIPresenter, new()
+  {
+    Type type = typeof(T);
+    if (!_presenterCache.TryGetValue(type, out UIPresenter presenter))
+    {
+      // 1. 模拟异步/同步加载 Prefab (实际项目中可替换为 Addressables / AssetBundle)
+      GameObject prefab = Resources.Load<GameObject>(prefabPath);
+      if (prefab == null)
+      {
+        Debug.LogError($"[UIManager] Prefab not found: {prefabPath}");
+        return null;
+      }
+
+      Transform parent = GetLayerParent(layer);
+      GameObject go = UnityEngine.Object.Instantiate(prefab, parent);
+
+      UIView view = go.GetComponent<UIView>();
+
+      // 2. 实例化 Presenter 并初始化
+      presenter = new T();
+      presenter.OnInit(view);
+      _presenterCache.Add(type, presenter);
+    }
+
+    // 3. 入栈控制（如果是 PopUp 类型的弹窗，可以压栈管理）
+    if (layer == UILayerIndex.Model)
+    {
+      _uiStack.Push(presenter);
+    }
+
+    // 4. 调用 Open 生命周期
+    presenter.OnOpen(args);
+    return (T)presenter;
+  }
+
+  /// <summary>
+  /// 关闭指定界面
+  /// </summary>
+  public void CloseWindow<T>() where T : UIPresenter
+  {
+    Type type = typeof(T);
+    if (_presenterCache.TryGetValue(type, out UIPresenter presenter))
+    {
+      if (presenter.IsVisible)
+      {
+        presenter.OnClose();
+        presenter.OnDestroy();
+        _presenterCache.Remove(type);
+      }
+    }
+  }
+
+  /// <summary>
+  /// 出栈 (关闭最顶层的弹窗)
+  /// </summary>
+  public void PopWindow()
+  {
+    if (_uiStack.Count > 0)
+    {
+      UIPresenter topPresenter = _uiStack.Pop();
+      topPresenter.OnClose();
+    }
+  }
+
+  #endregion
 }
