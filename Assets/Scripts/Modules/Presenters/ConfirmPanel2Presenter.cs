@@ -28,11 +28,13 @@ public class ConfirmPanel2Presenter : UIPresenter
   private void OnCancelClicked()
   {
     Debug.Log("OnCancelClicked Triggered!");
+    Close(); // 关闭当前界面
   }
 
   private void OnConfirmClicked()
   {
     Debug.Log("OnConfirmClicked Triggered!");
+    Close(); // 关闭当前界面
   }
 
 }

@@ -36,6 +36,12 @@ public abstract class UIPresenter
     if (View != null) View.gameObject.SetActive(false);
   }
 
+  // 关闭自己
+  public void Close()
+  {
+    UIManager.Instance.CloseWindow(this);
+  }
+
   // 销毁界面
   public virtual void OnDestroy()
   {

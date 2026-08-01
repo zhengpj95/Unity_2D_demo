@@ -345,18 +345,39 @@ public class UIManager : Singleton<UIManager>
   }
 
   /// <summary>
-  /// 关闭指定界面
+  /// 泛型关闭界面：UIManager.Instance.CloseWindow<ConfirmPresenter>();
   /// </summary>
   public void CloseWindow<T>() where T : UIPresenter
   {
-    Type type = typeof(T);
-    if (_presenterCache.TryGetValue(type, out UIPresenter presenter))
+    CloseWindow(typeof(T));
+  }
+
+  /// <summary>
+  /// 实例关闭界面：关闭指定界面（通过 UIPresenter 实例）
+  /// 在 Presenter 中调用 CloseWindow(this) 可以关闭当前界面
+  /// </summary>
+  /// <param name="presenter"></param>
+  public void CloseWindow(UIPresenter presenter)
+  {
+    if (presenter != null && _presenterCache.ContainsKey(presenter.GetType()))
+    {
+      CloseWindow(presenter.GetType());
+    }
+  }
+
+  /// <summary>
+  /// 核心关闭逻辑
+  /// </summary>
+  /// <param name="presenterType"></param>
+  public void CloseWindow(Type presenterType)
+  {
+    if (_presenterCache.TryGetValue(presenterType, out UIPresenter presenter))
     {
       if (presenter.IsVisible)
       {
         presenter.OnClose();
-        presenter.OnDestroy();
-        _presenterCache.Remove(type);
+        presenter.OnDestroy(); // TODO 延迟关闭处理，或定时检测关闭
+        _presenterCache.Remove(presenterType);
       }
     }
   }
