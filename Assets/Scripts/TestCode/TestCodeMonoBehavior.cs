@@ -6,6 +6,6 @@ public class TestCodeMonoBehavior : MonoBehaviour
   {
     // UIManager.Instance.OpenWindow<ConfirmPanel2Presenter>("Prefabs/ConfirmPanel2", UILayerIndex.Model, new { title = "提示", desc = "Are you sure? \nAre you close?" });
 
-    UIManager.Instance.OpenWindow<ConfirmPanel3Presenter>("Prefabs/ConfirmPanel3", UILayerIndex.Model, new ConfirmPanel3Args("提示3", "Are you sure? \nAre you close 333?"));
+    UIManager.Instance.OpenWindow<AlertTipsPanelPresenter>("Prefabs/AlertTipsPanel", UILayerIndex.Model, new AlertTipsPanelArgs("警告标题", "警告信息！不允许随便修改！"));
   }
 }
