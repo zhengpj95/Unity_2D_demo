@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 /// <summary>
@@ -392,6 +393,64 @@ public class UIManager : Singleton<UIManager>
       UIPresenter topPresenter = _uiStack.Pop();
       topPresenter.OnClose();
     }
+  }
+
+  #endregion
+
+  #region Presenter 生命周期管理
+
+  /// <summary>
+  /// 显示已缓存的 Presenter（调用 OnShow）
+  /// </summary>
+  public void ShowPresenter(UIPresenter presenter)
+  {
+    if (presenter != null && !presenter.IsVisible)
+    {
+      presenter.OnOpen(null);
+    }
+  }
+
+  /// <summary>
+  /// 隐藏 Presenter（调用 OnHide，不销毁）
+  /// </summary>
+  public void HidePresenter(UIPresenter presenter)
+  {
+    if (presenter != null && presenter.IsVisible)
+    {
+      presenter.OnClose();
+    }
+  }
+
+  /// <summary>
+  /// 获取所有活跃的 Presenter
+  /// </summary>
+  public IEnumerable<UIPresenter> GetAllActivePresenters()
+  {
+    return _presenterCache.Values.Where(p => p.IsVisible);
+  }
+
+  /// <summary>
+  /// 获取所有缓存的 Presenter
+  /// </summary>
+  public IEnumerable<UIPresenter> GetAllCachedPresenters()
+  {
+    return _presenterCache.Values;
+  }
+
+  /// <summary>
+  /// 检查指定类型的 Presenter 是否存在
+  /// </summary>
+  public bool HasPresenter<T>() where T : UIPresenter
+  {
+    return _presenterCache.ContainsKey(typeof(T));
+  }
+
+  /// <summary>
+  /// 获取指定类型的 Presenter
+  /// </summary>
+  public T GetPresenter<T>() where T : UIPresenter
+  {
+    return _presenterCache.TryGetValue(typeof(T), out var presenter) ? (T)presenter : null;
   }
 
   #endregion

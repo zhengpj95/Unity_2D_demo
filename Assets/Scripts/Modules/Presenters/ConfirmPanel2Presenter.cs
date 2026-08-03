@@ -10,9 +10,17 @@ public class ConfirmPanel2Presenter : UIPresenter
     base.OnInit(view);
     _view = view as ConfirmPanel2View;
 
-    // 自动注册按钮事件绑定模板
-    _view.btn_cancel?.onClick.AddListener(OnCancelClicked);
-    _view.btn_confirm?.onClick.AddListener(OnConfirmClicked);
+    if (_view == null)
+    {
+      Debug.LogError($"[{GetType().Name}] View type mismatch: expected ConfirmPanel2View, got {view?.GetType()}");
+      return;
+    }
+
+    // 在 Init 中绑定事件（只执行一次）
+    if (_view.btn_cancel != null)
+      _view.btn_cancel.onClick.AddListener(OnCancelClicked);
+    if (_view.btn_confirm != null)
+      _view.btn_confirm.onClick.AddListener(OnConfirmClicked);
   }
 
   public override void OnOpen(object args = null)
@@ -23,6 +31,19 @@ public class ConfirmPanel2Presenter : UIPresenter
   public override void OnClose()
   {
     base.OnClose();
+    // 不再需要移除监听器，事件在 OnDestroy 中解绑
+  }
+
+  public override void OnDestroy()
+  {
+    if (_view != null)
+    {
+      if (_view.btn_cancel != null)
+        _view.btn_cancel.onClick.RemoveListener(OnCancelClicked);
+      if (_view.btn_confirm != null)
+        _view.btn_confirm.onClick.RemoveListener(OnConfirmClicked);
+    }
+    base.OnDestroy();
   }
 
   private void OnCancelClicked()

@@ -4,38 +4,69 @@ using UnityEngine.UI;
 
 public class UIConfirmPanelPresenter : UIPresenter
 {
+  private ConfirmPanelView _panel;
+
+  public override void OnInit(UIView view)
+  {
+    base.OnInit(view);
+    _panel = view as ConfirmPanelView;
+
+    if (_panel == null)
+    {
+      Debug.LogError($"[{GetType().Name}] View type mismatch: expected ConfirmPanelView, got {view?.GetType()}");
+      return;
+    }
+
+    // 在 Init 中绑定事件（只执行一次）
+    _panel.btn_confirm.onClick.AddListener(OnConfirmClicked);
+    _panel.btn_cancel.onClick.AddListener(OnCancelClicked);
+  }
 
   public override void OnOpen(object args = null)
   {
-    Debug.Log("UIConfirmPanelPresenter OnOpen called with args: " + args);
     base.OnOpen(args);
-    ConfirmPanelView panel = View as ConfirmPanelView;
-    if (panel != null && args != null)
+
+    if (_panel == null) return;
+
+    // 设置文本内容
+    if (args != null)
     {
       var type = args.GetType();
       var titleProp = type.GetProperty("title");
       var descProp = type.GetProperty("desc");
-      panel.txt_title.text = titleProp.GetValue(args)?.ToString();
-      panel.txt_desc.text = descProp.GetValue(args)?.ToString();
-    }
 
-    panel.btn_confirm.onClick.AddListener(OnConfirmClicked);
-    panel.btn_cancel.onClick.AddListener(OnConfirmClicked);
+      if (titleProp != null)
+        _panel.txt_title.text = titleProp.GetValue(args)?.ToString() ?? "";
+      if (descProp != null)
+        _panel.txt_desc.text = descProp.GetValue(args)?.ToString() ?? "";
+    }
   }
 
   public override void OnClose()
   {
     base.OnClose();
-    ConfirmPanelView panel = View as ConfirmPanelView;
-    if (panel != null)
+    // 不再需要 RemoveAllListeners，事件在 OnDestroy 中解绑
+  }
+
+  public override void OnDestroy()
+  {
+    if (_panel != null)
     {
-      panel.btn_confirm.onClick.RemoveAllListeners();
-      panel.btn_cancel.onClick.RemoveAllListeners();
+      _panel.btn_confirm.onClick.RemoveListener(OnConfirmClicked);
+      _panel.btn_cancel.onClick.RemoveListener(OnCancelClicked);
     }
+    base.OnDestroy();
   }
 
   private void OnConfirmClicked()
   {
-    UIManager.Instance.CloseWindow<UIConfirmPanelPresenter>();
+    Debug.Log("OnConfirmClicked Triggered!");
+    Close();
+  }
+
+  private void OnCancelClicked()
+  {
+    Debug.Log("OnCancelClicked Triggered!");
+    Close();
   }
 }
