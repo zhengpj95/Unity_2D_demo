@@ -31,6 +31,11 @@ public class UILauncher : MonoBehaviour
     }
   }
 
+  protected void Update()
+  {
+    // TimerManager.Instance.OnUpdate();
+  }
+
   private void OnDestroy()
   {
     if (UIManager.IsCreated)

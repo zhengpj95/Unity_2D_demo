@@ -22,28 +22,13 @@ public class Timer
   public Action Callback; // 计时器结束时的回调函数
 }
 
-public class TimerManager : MonoBehaviour
+public class TimerManager : Singleton<TimerManager>
 {
-  public static TimerManager Instance { get; private set; }
-
   private readonly List<Timer> timers = new List<Timer>();
   private uint _idSeed;
   private bool _globalPaused;
 
-  private void Awake()
-  {
-    if (Instance == null)
-    {
-      Instance = this;
-      DontDestroyOnLoad(gameObject);
-    }
-    else
-    {
-      Destroy(gameObject);
-    }
-  }
-
-  private void Update()
+  public void OnUpdate()
   {
     if (_globalPaused)
     {
