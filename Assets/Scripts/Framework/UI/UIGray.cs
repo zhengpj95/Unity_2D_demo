@@ -64,6 +64,9 @@ public class UIGray : MonoBehaviour
   /// TMP Underlay Color。
   /// </summary>
   private static readonly int UnderlayColor = Shader.PropertyToID("_UnderlayColor");
+  // 共享material，避免重复创建。
+  private static readonly Dictionary<Material, Material> s_tmpGrayMaterials = new();
+  private static Material s_grayMaterial;
 
   public bool IsGray
   {
@@ -154,9 +157,15 @@ public class UIGray : MonoBehaviour
      */
     if (graphic is TMP_Text)
     {
+      // 使用缓存的 TMP 灰度材质。
+      if (s_tmpGrayMaterials.TryGetValue(originalMaterial, out var gray))
+      {
+        return gray;
+      }
       material = new Material(originalMaterial);
       material.name = $"{originalMaterial.name}_Gray";
       SetupTMPGrayMaterial(material);
+      s_tmpGrayMaterials.Add(originalMaterial, material);
       grayMaterials.Add(graphic, material);
       return material;
     }
@@ -167,14 +176,18 @@ public class UIGray : MonoBehaviour
      * ============================
      */
 
-    var shader = Shader.Find("UI/Grayscale");
-    if (shader == null)
+    if (s_grayMaterial == null)
     {
-      Debug.LogError("UIGray: 找不到 Shader：UI/UIGray", this);
-      return null;
+      var shader = Shader.Find("UI/UIGrayscale");
+      if (shader == null)
+      {
+        Debug.LogError("UIGray: 找不到 Shader：UI/UIGrayscale", this);
+        return null;
+      }
+      s_grayMaterial = new Material(shader);
     }
 
-    material = new Material(shader);
+    material = new Material(s_grayMaterial);
     material.name = $"{graphic.name}_Gray";
 
     /*
@@ -351,7 +364,6 @@ public class UIGray : MonoBehaviour
   {
     if (!originalRaycastTargets.TryGetValue(graphic, out var originalRaycast))
     {
-      Debug.Log("111111111111");
       return;
     }
 

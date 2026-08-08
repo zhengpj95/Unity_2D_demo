@@ -1,4 +1,4 @@
-Shader "UI/Grayscale"
+Shader "UI/UIGrayscale"
 {
     Properties
     {
