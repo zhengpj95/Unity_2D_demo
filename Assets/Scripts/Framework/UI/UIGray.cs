@@ -20,6 +20,8 @@ using UnityEngine.UI;
 ///     同时处理 TMP 材质颜色和 TMP 顶点颜色。
 /// </summary>
 [ExecuteAlways]
+[DisallowMultipleComponent]
+[RequireComponent(typeof(RectTransform))]
 public class UIGray : MonoBehaviour
 {
   [Header("只置灰，不影响交互")]
@@ -119,8 +121,7 @@ public class UIGray : MonoBehaviour
        */
       if (graphic is TMP_Text tmp)
       {
-        originalTMPColors[tmp] =
-            tmp.color;
+        originalTMPColors[tmp] = tmp.color;
       }
     }
   }
@@ -247,10 +248,7 @@ public class UIGray : MonoBehaviour
   /// </summary>
   private static Color ToGray(Color color)
   {
-    float gray =
-        color.r * 0.299f +
-        color.g * 0.587f +
-        color.b * 0.114f;
+    float gray = color.r * 0.299f + color.g * 0.587f + color.b * 0.114f;
     return new Color(gray, gray, gray, color.a);
   }
 
@@ -260,12 +258,10 @@ public class UIGray : MonoBehaviour
 
     bool needGray = isGray || isDisable;
 
-
     foreach (var graphic in graphics)
     {
       if (graphic == null)
         continue;
-
 
       if (needGray)
       {
@@ -285,7 +281,6 @@ public class UIGray : MonoBehaviour
   {
     Material material = GetGrayMaterial(graphic);
 
-
     if (material == null)
       return;
 
@@ -299,13 +294,11 @@ public class UIGray : MonoBehaviour
       return;
     }
 
-
     /*
      * Image / RawImage
      */
     graphic.material = material;
   }
-
 
   /// <summary>
   /// TMP 颜色置灰。
@@ -328,7 +321,6 @@ public class UIGray : MonoBehaviour
     tmp.color = ToGray(originalColor);
   }
 
-
   private void Restore(Graphic graphic)
   {
     if (!originalMaterials.TryGetValue(graphic, out var originalMaterial))
@@ -336,14 +328,12 @@ public class UIGray : MonoBehaviour
       return;
     }
 
-
     /*
      * TMP
      */
     if (graphic is TMP_Text tmp)
     {
       tmp.fontSharedMaterial = originalMaterial;
-
 
       if (originalTMPColors.TryGetValue(tmp, out var originalColor))
       {
@@ -370,7 +360,6 @@ public class UIGray : MonoBehaviour
     graphic.raycastTarget = isDisable ? false : originalRaycast;
   }
 
-
   /// <summary>
   /// 重新扫描整个 UI 节点树。
   ///
@@ -389,12 +378,10 @@ public class UIGray : MonoBehaviour
     Refresh();
   }
 
-
   private void RestoreAll()
   {
     if (graphics == null)
       return;
-
 
     foreach (var graphic in graphics)
     {
@@ -424,14 +411,12 @@ public class UIGray : MonoBehaviour
     ReleaseMaterials();
   }
 
-
   private void ReleaseMaterials()
   {
     foreach (var material in grayMaterials.Values)
     {
       if (material == null)
         continue;
-
 
 #if UNITY_EDITOR
 
@@ -445,7 +430,6 @@ public class UIGray : MonoBehaviour
         Destroy(material);
       }
     }
-
     grayMaterials.Clear();
   }
 }

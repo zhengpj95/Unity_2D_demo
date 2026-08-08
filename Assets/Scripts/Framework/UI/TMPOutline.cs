@@ -6,6 +6,7 @@ using UnityEngine;
 /// TMP文字描边组件
 /// 自动缓存材质，避免重复创建Material
 /// </summary>
+[DisallowMultipleComponent]
 [RequireComponent(typeof(TMP_Text))]
 public class TMPOutline : MonoBehaviour
 {
