@@ -18,12 +18,10 @@ using Scene = UnityEngine.SceneManagement.Scene;
 ///
 /// IsDisable: 置灰，并禁止 UI 交互。
 ///
-/// Image / RawImage:
-///     使用 UIGray Shader。
-///
-/// TMP_Text:
-///     保留原 TMP Shader。
-///     同时处理 TMP 材质颜色和 TMP 顶点颜色。
+/// 实现方式：
+///   - Image / RawImage: 使用 UI/UIGrayscale shader，通过 _GrayAmount 参数控制灰度
+///   - TMP_Text: 使用 TextMeshPro/Grayscale shader，通过 _GrayAmount 参数控制灰度
+///   - 不再修改 TMP 顶点颜色或材质属性，纯 shader 实现
 /// </summary>
 [ExecuteAlways]
 [DisallowMultipleComponent]
@@ -49,27 +47,12 @@ public class UIGray : MonoBehaviour
   /// </summary>
   private readonly Dictionary<Graphic, bool> originalRaycastTargets = new();
   /// <summary>
-  /// TMP 原始颜色。
-  /// </summary>
-  private readonly Dictionary<TMP_Text, Color> originalTMPColors = new();
-  /// <summary>
-  /// Image Shader 的灰度参数。
+  /// 灰度参数 Shader Property ID。
   /// </summary>
   private static readonly int GrayAmount = Shader.PropertyToID("_GrayAmount");
-  /// <summary>
-  /// TMP Face Color。
-  /// </summary>
-  private static readonly int FaceColor = Shader.PropertyToID("_FaceColor");
-  /// <summary>
-  /// TMP Outline Color。
-  /// </summary>
-  private static readonly int OutlineColor = Shader.PropertyToID("_OutlineColor");
-  /// <summary>
-  /// TMP Underlay Color。
-  /// </summary>
-  private static readonly int UnderlayColor = Shader.PropertyToID("_UnderlayColor");
+
   // 共享 TMP 灰度材质：按"原始共享材质"缓存，全局复用。
-  // 注意：不随单个实例销毁，避免其它实例引用到已销毁的材质（见 GetGrayMaterial 的兜底判断）。
+  // 不随单个实例销毁，避免其它实例引用到已销毁的材质（见 GetGrayMaterial 的兜底判断）。
   private static readonly Dictionary<Material, Material> s_tmpGrayMaterials = new();
   // 共享 Image/RawImage 灰度材质：_MainTex 是 [PerRendererData]，纹理由 CanvasRenderer 按 graphic 注入。
   private static Material s_grayMaterial;
@@ -200,12 +183,15 @@ public class UIGray : MonoBehaviour
   /// 一键恢复被污染的灰度材质。
   ///
   /// 用于修复修复前的历史版本已写入场景的灰度材质（原材质已被灰度材质覆盖，无法自动还原）。
-  /// 判定依据：material 使用的 Shader 是 "UI/UIGrayscale"，则必为 UIGray 写入的污染。
+  /// 判定依据：
+  ///   - material.shader.name == "UI/UIGrayscale"（Image/RawImage 灰度）
+  ///   - material.shader.name == "TextMeshPro/Grayscale"（TMP 灰度）
+  /// 则必为 UIGray 写入的污染。
   ///   - TMP_Text：原始材质从字体资源恢复（tmp.font.material，即字体默认材质）；
   ///   - Image/RawImage：重置为 null（Unity UI 默认材质）。
   ///
   /// 注意：
-  ///   - 若你的项目有自定义材质恰好也使用 UI/UIGrayscale Shader，会被一并重置，请慎用；
+  ///   - 若你的项目有自定义材质恰好也使用这些 Shader，会被一并重置，请慎用；
   ///   - 若 TMP 原本使用了自定义共享材质，此处只能回退到字体默认材质，无法完全复原。
   /// </summary>
   [MenuItem("Tools/UIGray/恢复被污染的灰度材质")]
@@ -220,7 +206,6 @@ public class UIGray : MonoBehaviour
 
       instance.graphics = instance.GetComponentsInChildren<Graphic>(true);
       instance.originalMaterials.Clear();
-      instance.originalTMPColors.Clear();
 
       foreach (var graphic in instance.graphics)
       {
@@ -228,7 +213,17 @@ public class UIGray : MonoBehaviour
           continue;
 
         Material current = instance.GetCurrentMaterial(graphic);
-        if (current == null || current.shader == null || current.shader.name != "UI/UIGrayscale")
+        if (current == null || current.shader == null)
+        {
+          instance.originalMaterials[graphic] = current;
+          continue;
+        }
+
+        // 判断是否为灰度污染材质
+        string shaderName = current.shader.name;
+        bool isPolluted = shaderName == "UI/UIGrayscale" || shaderName == "TextMeshPro/Grayscale";
+
+        if (!isPolluted)
         {
           // 非灰度材质：视为原始材质，重新捕获。
           instance.originalMaterials[graphic] = current;
@@ -279,13 +274,6 @@ public class UIGray : MonoBehaviour
         continue;
       originalMaterials[graphic] = GetCurrentMaterial(graphic);
       originalRaycastTargets[graphic] = graphic.raycastTarget;
-      /*
-       * TMP 原始颜色。
-       */
-      if (graphic is TMP_Text tmp)
-      {
-        originalTMPColors[tmp] = tmp.color;
-      }
     }
   }
 
@@ -330,11 +318,41 @@ public class UIGray : MonoBehaviour
         }
       }
 
-      var grayMaterial = new Material(originalMaterial)
+      // 创建 TMP 灰度材质：使用 TextMeshPro/Grayscale shader
+      Shader grayShader = Shader.Find("TextMeshPro/Grayscale");
+      if (grayShader == null)
       {
-        name = $"{originalMaterial.name}_Gray",
-      };
-      SetupTMPGrayMaterial(grayMaterial);
+        Debug.LogError("UIGray: 找不到 Shader：TextMeshPro/Grayscale", null);
+        return null;
+      }
+
+      var grayMaterial = new Material(grayShader);
+      grayMaterial.name = $"{originalMaterial.name}_Gray";
+      grayMaterial.renderQueue = originalMaterial.renderQueue;
+
+      // 复制原始材质的纹理属性
+      if (originalMaterial.HasProperty("_MainTex"))
+        grayMaterial.SetTexture("_MainTex", originalMaterial.GetTexture("_MainTex"));
+      if (originalMaterial.HasProperty("_FaceTex"))
+        grayMaterial.SetTexture("_FaceTex", originalMaterial.GetTexture("_FaceTex"));
+      if (originalMaterial.HasProperty("_OutlineTex"))
+        grayMaterial.SetTexture("_OutlineTex", originalMaterial.GetTexture("_OutlineTex"));
+
+      // 复制必要的数值属性
+      if (originalMaterial.HasProperty("_TextureWidth"))
+        grayMaterial.SetFloat("_TextureWidth", originalMaterial.GetFloat("_TextureWidth"));
+      if (originalMaterial.HasProperty("_TextureHeight"))
+        grayMaterial.SetFloat("_TextureHeight", originalMaterial.GetFloat("_TextureHeight"));
+      if (originalMaterial.HasProperty("_GradientScale"))
+        grayMaterial.SetFloat("_GradientScale", originalMaterial.GetFloat("_GradientScale"));
+      if (originalMaterial.HasProperty("_WeightNormal"))
+        grayMaterial.SetFloat("_WeightNormal", originalMaterial.GetFloat("_WeightNormal"));
+      if (originalMaterial.HasProperty("_WeightBold"))
+        grayMaterial.SetFloat("_WeightBold", originalMaterial.GetFloat("_WeightBold"));
+
+      // 设置灰度参数
+      grayMaterial.SetFloat(GrayAmount, 1);
+
       s_tmpGrayMaterials.Add(originalMaterial, grayMaterial);
       return grayMaterial;
     }
@@ -362,47 +380,6 @@ public class UIGray : MonoBehaviour
     }
 
     return s_grayMaterial;
-  }
-
-
-  /// <summary>
-  /// 设置 TMP 灰度材质。
-  ///
-  /// 注意：
-  /// 这里只处理 TMP Material。
-  /// TMP 顶点颜色在 ApplyTMPGray 中处理。
-  /// </summary>
-  private void SetupTMPGrayMaterial(Material material)
-  {
-    if (material.HasProperty(FaceColor))
-    {
-      Color color = material.GetColor(FaceColor);
-      material.SetColor(FaceColor, ToGray(color));
-    }
-
-    if (material.HasProperty(OutlineColor))
-    {
-      Color color = material.GetColor(OutlineColor);
-
-      material.SetColor(OutlineColor, ToGray(color));
-    }
-
-    if (material.HasProperty(UnderlayColor))
-    {
-      Color color = material.GetColor(UnderlayColor);
-
-      material.SetColor(UnderlayColor, ToGray(color));
-    }
-  }
-
-  /// <summary>
-  /// RGB 转灰度。
-  /// </summary>
-  private static Color ToGray(Color color)
-  {
-    // Color.grayscale 权重与 Shader 中的 0.299 / 0.587 / 0.114 一致。
-    float gray = color.grayscale;
-    return new Color(gray, gray, gray, color.a);
   }
 
   private void Refresh()
@@ -445,7 +422,6 @@ public class UIGray : MonoBehaviour
       // 统一用 fontSharedMaterial，避免 fontMaterial 触发材质实例化。
       if (!ReferenceEquals(tmp.fontSharedMaterial, material))
         tmp.fontSharedMaterial = material;
-      ApplyTMPGray(tmp);
       return;
     }
 
@@ -454,29 +430,6 @@ public class UIGray : MonoBehaviour
      */
     if (!ReferenceEquals(graphic.material, material))
       graphic.material = material;
-  }
-
-  /// <summary>
-  /// TMP 颜色置灰。
-  ///
-  /// 这是解决：
-  ///
-  /// TMP 原本是红色
-  /// ↓
-  /// 修改 FaceColor 后仍然红色
-  ///
-  /// 的关键。
-  /// </summary>
-  private void ApplyTMPGray(TMP_Text tmp)
-  {
-    if (!originalTMPColors.TryGetValue(tmp, out var originalColor))
-    {
-      originalColor = tmp.color;
-      originalTMPColors[tmp] = originalColor;
-    }
-    Color grayColor = ToGray(originalColor);
-    if (tmp.color != grayColor)
-      tmp.color = grayColor;
   }
 
   private void Restore(Graphic graphic)
@@ -496,13 +449,6 @@ public class UIGray : MonoBehaviour
     {
       if (!ReferenceEquals(tmp.fontSharedMaterial, originalMaterial))
         tmp.fontSharedMaterial = originalMaterial;
-
-      if (originalTMPColors.TryGetValue(tmp, out var originalColor))
-      {
-        if (tmp.color != originalColor)
-          tmp.color = originalColor;
-      }
-
       return;
     }
 
@@ -534,7 +480,6 @@ public class UIGray : MonoBehaviour
     graphics = null;
     originalMaterials.Clear();
     originalRaycastTargets.Clear();
-    originalTMPColors.Clear();
     Initialize();
     Refresh();
   }
