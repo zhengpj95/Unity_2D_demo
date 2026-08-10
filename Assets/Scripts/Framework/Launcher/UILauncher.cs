@@ -33,7 +33,8 @@ public class UILauncher : MonoBehaviour
 
   protected void Update()
   {
-    // TimerManager.Instance.OnUpdate();
+    TimerManager.Instance.OnUpdate();
+    PoolManager.Instance.OnUpdate();
   }
 
   private void OnDestroy()
