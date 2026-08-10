@@ -20,6 +20,15 @@ public class UILauncher : MonoBehaviour
     InitializeUIManager();
   }
 
+  private void Start()
+  {
+    // 初始化 UI 池
+    if (!PoolManager.IsCreated)
+    {
+      PoolManager.Instance.InitializeUIPool(GetComponentInChildren<Canvas>());
+    }
+  }
+
   private void InitializeUIManager()
   {
     var config = new UIManagerConfig(_mainLayer, _windowLayer, _modelLayer, _tipLayer);
