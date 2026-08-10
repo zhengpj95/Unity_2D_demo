@@ -11,6 +11,8 @@ Shader "UI/UIGrayscale"
         _StencilWriteMask ("Stencil Write Mask", Float) = 255
         _StencilReadMask ("Stencil Read Mask", Float) = 255
         _ColorMask ("Color Mask", Float) = 15
+
+        _GrayAmount ("Gray Amount", Range(0, 1)) = 0 // 0 = 正常 1 = 完全灰 0.5 = 半灰
     }
 
     SubShader
@@ -65,6 +67,7 @@ Shader "UI/UIGrayscale"
 
             sampler2D _MainTex;
             fixed4 _Color;
+            float _GrayAmount;
             float4 _ClipRect;
             float4 _MainTex_TexelSize;
             float _TextureSampleAdd = 0; // Unity UI 内部使用，防止未声明错误
@@ -82,14 +85,15 @@ Shader "UI/UIGrayscale"
             fixed4 frag(v2f IN) : SV_Target
             {
                 half4 color = (tex2D(_MainTex, IN.texcoord) + _TextureSampleAdd) * IN.color;
-                
-                // 1. 转换为灰度值
-                fixed gray = dot(color.rgb, fixed3(0.299, 0.587, 0.114));
-                color.rgb = fixed3(gray, gray, gray);
 
-                // 2. 剪裁判断 (支持 ScrollView 剪裁)
+                // 1. 转换为灰度值（权重与 UIGray.ToGray / TMP_SDF_GRAY 一致）
+                fixed gray = dot(color.rgb, fixed3(0.299, 0.587, 0.114));
+                // 2. 按 _GrayAmount 在 原色 与 灰度 间插值：0 = 正常 1 = 完全灰
+                color.rgb = lerp(color.rgb, fixed3(gray, gray, gray), _GrayAmount);
+
+                // 3. 剪裁判断 (支持 ScrollView 剪裁)
                 #ifdef UNITY_UI_CLIP_RECT
-                color.a *= UnityGet2DClipRect:IN.worldPosition, _ClipRect);
+                color.a *= UnityGet2DClipRect(IN.worldPosition, _ClipRect);
                 #endif
 
                 #ifdef UNITY_UI_ALPHATEST

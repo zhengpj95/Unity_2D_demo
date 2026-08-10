@@ -39,10 +39,6 @@ public class UIGray : MonoBehaviour
   /// </summary>
   private readonly Dictionary<Graphic, Material> originalMaterials = new();
   /// <summary>
-  /// 灰度材质。
-  /// </summary>
-  private readonly Dictionary<Graphic, Material> grayMaterials = new();
-  /// <summary>
   /// 原始 Raycast 状态。
   /// </summary>
   private readonly Dictionary<Graphic, bool> originalRaycastTargets = new();
@@ -66,8 +62,10 @@ public class UIGray : MonoBehaviour
   /// TMP Underlay Color。
   /// </summary>
   private static readonly int UnderlayColor = Shader.PropertyToID("_UnderlayColor");
-  // 共享material，避免重复创建。
+  // 共享 TMP 灰度材质：按"原始共享材质"缓存，全局复用。
+  // 注意：不随单个实例销毁，避免其它实例引用到已销毁的材质（见 GetGrayMaterial 的兜底判断）。
   private static readonly Dictionary<Material, Material> s_tmpGrayMaterials = new();
+  // 共享 Image/RawImage 灰度材质：_MainTex 是 [PerRendererData]，纹理由 CanvasRenderer 按 graphic 注入。
   private static Material s_grayMaterial;
 
   public bool IsGray
@@ -105,6 +103,14 @@ public class UIGray : MonoBehaviour
     Refresh();
   }
 
+  private void OnDisable()
+  {
+    // 组件被禁用时还原 UI 状态（材质与 Raycast），与 OnEnable 对称。
+    if (graphics == null)
+      return;
+    RestoreAll();
+  }
+
   private void Initialize()
   {
     if (graphics != null)
@@ -137,11 +143,6 @@ public class UIGray : MonoBehaviour
 
   private Material GetGrayMaterial(Graphic graphic)
   {
-    if (grayMaterials.TryGetValue(graphic, out var material))
-    {
-      return material;
-    }
-
     if (!originalMaterials.TryGetValue(graphic, out var originalMaterial))
     {
       originalMaterial = GetCurrentMaterial(graphic);
@@ -158,17 +159,27 @@ public class UIGray : MonoBehaviour
      */
     if (graphic is TMP_Text)
     {
-      // 使用缓存的 TMP 灰度材质。
+      // 按"原始共享材质"缓存灰度材质，全局复用，避免重复创建。
       if (s_tmpGrayMaterials.TryGetValue(originalMaterial, out var gray))
       {
-        return gray;
+        // 兜底：缓存可能持有已被销毁的材质（如 AssetBundle 卸载）。
+        if (gray == null)
+        {
+          s_tmpGrayMaterials.Remove(originalMaterial);
+        }
+        else
+        {
+          return gray;
+        }
       }
-      material = new Material(originalMaterial);
-      material.name = $"{originalMaterial.name}_Gray";
-      SetupTMPGrayMaterial(material);
-      s_tmpGrayMaterials.Add(originalMaterial, material);
-      grayMaterials.Add(graphic, material);
-      return material;
+
+      var grayMaterial = new Material(originalMaterial)
+      {
+        name = $"{originalMaterial.name}_Gray",
+      };
+      SetupTMPGrayMaterial(grayMaterial);
+      s_tmpGrayMaterials.Add(originalMaterial, grayMaterial);
+      return grayMaterial;
     }
 
     /*
@@ -177,6 +188,10 @@ public class UIGray : MonoBehaviour
      * ============================
      */
 
+    // 所有 Image / RawImage 共享同一个灰度材质，不按 graphic 克隆：
+    // 1. _MainTex 声明为 [PerRendererData]，纹理由 CanvasRenderer 按 graphic 注入，无需拷贝；
+    // 2. 颜色 tint 走顶点色（IN.color * _Color），_Color 保持默认白色即可；
+    // 3. 材质从 N 份降到 1 份，且不破坏合批。
     if (s_grayMaterial == null)
     {
       var shader = Shader.Find("UI/UIGrayscale");
@@ -186,30 +201,10 @@ public class UIGray : MonoBehaviour
         return null;
       }
       s_grayMaterial = new Material(shader);
+      s_grayMaterial.SetFloat(GrayAmount, 1);
     }
 
-    material = new Material(s_grayMaterial);
-    material.name = $"{graphic.name}_Gray";
-
-    /*
-     * 保留原始纹理。
-     */
-    if (originalMaterial.HasProperty("_MainTex"))
-    {
-      material.SetTexture("_MainTex", originalMaterial.GetTexture("_MainTex"));
-    }
-
-    /*
-     * 保留原始颜色。
-     */
-    if (originalMaterial.HasProperty("_Color"))
-    {
-      material.SetColor("_Color", originalMaterial.GetColor("_Color"));
-    }
-
-    material.SetFloat(GrayAmount, 1);
-    grayMaterials.Add(graphic, material);
-    return material;
+    return s_grayMaterial;
   }
 
 
@@ -248,7 +243,8 @@ public class UIGray : MonoBehaviour
   /// </summary>
   private static Color ToGray(Color color)
   {
-    float gray = color.r * 0.299f + color.g * 0.587f + color.b * 0.114f;
+    // Color.grayscale 权重与 Shader 中的 0.299 / 0.587 / 0.114 一致。
+    float gray = color.grayscale;
     return new Color(gray, gray, gray, color.a);
   }
 
@@ -289,7 +285,9 @@ public class UIGray : MonoBehaviour
      */
     if (graphic is TMP_Text tmp)
     {
-      tmp.fontMaterial = material;
+      // 统一用 fontSharedMaterial，避免 fontMaterial 触发材质实例化。
+      if (!ReferenceEquals(tmp.fontSharedMaterial, material))
+        tmp.fontSharedMaterial = material;
       ApplyTMPGray(tmp);
       return;
     }
@@ -297,7 +295,8 @@ public class UIGray : MonoBehaviour
     /*
      * Image / RawImage
      */
-    graphic.material = material;
+    if (!ReferenceEquals(graphic.material, material))
+      graphic.material = material;
   }
 
   /// <summary>
@@ -318,7 +317,9 @@ public class UIGray : MonoBehaviour
       originalColor = tmp.color;
       originalTMPColors[tmp] = originalColor;
     }
-    tmp.color = ToGray(originalColor);
+    Color grayColor = ToGray(originalColor);
+    if (tmp.color != grayColor)
+      tmp.color = grayColor;
   }
 
   private void Restore(Graphic graphic)
@@ -328,18 +329,22 @@ public class UIGray : MonoBehaviour
       return;
     }
 
+    if (originalMaterial == null)
+      return;
+
     /*
      * TMP
      */
     if (graphic is TMP_Text tmp)
     {
-      tmp.fontSharedMaterial = originalMaterial;
+      if (!ReferenceEquals(tmp.fontSharedMaterial, originalMaterial))
+        tmp.fontSharedMaterial = originalMaterial;
 
       if (originalTMPColors.TryGetValue(tmp, out var originalColor))
       {
-        tmp.color = originalColor;
+        if (tmp.color != originalColor)
+          tmp.color = originalColor;
       }
-
 
       return;
     }
@@ -347,7 +352,8 @@ public class UIGray : MonoBehaviour
     /*
      * Image / RawImage
      */
-    graphic.material = originalMaterial;
+    if (!ReferenceEquals(graphic.material, originalMaterial))
+      graphic.material = originalMaterial;
   }
 
   private void ApplyInteractableState(Graphic graphic)
@@ -368,12 +374,10 @@ public class UIGray : MonoBehaviour
   public void Rebuild()
   {
     RestoreAll();
-    ReleaseMaterials();
     graphics = null;
     originalMaterials.Clear();
     originalRaycastTargets.Clear();
     originalTMPColors.Clear();
-    grayMaterials.Clear();
     Initialize();
     Refresh();
   }
@@ -405,31 +409,16 @@ public class UIGray : MonoBehaviour
   }
 #endif
 
-
-  private void OnDestroy()
+  /// <summary>
+  /// 进入运行时前重置静态缓存。
+  ///
+  /// 编辑器启用了 "Enter Play Mode Options (Disable Domain Reload)" 时，
+  /// 静态字段会跨会话保留，需要手动清空，避免持有旧材质。
+  /// </summary>
+  [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+  private static void ResetStatics()
   {
-    ReleaseMaterials();
-  }
-
-  private void ReleaseMaterials()
-  {
-    foreach (var material in grayMaterials.Values)
-    {
-      if (material == null)
-        continue;
-
-#if UNITY_EDITOR
-
-      if (!Application.isPlaying)
-      {
-        DestroyImmediate(material);
-      }
-      else
-#endif
-      {
-        Destroy(material);
-      }
-    }
-    grayMaterials.Clear();
+    s_tmpGrayMaterials.Clear();
+    s_grayMaterial = null;
   }
 }
