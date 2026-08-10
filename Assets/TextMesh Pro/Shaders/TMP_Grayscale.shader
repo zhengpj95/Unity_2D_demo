@@ -14,12 +14,6 @@ Properties {
 	_OutlineWidth		("Outline Thickness", Range(0, 1)) = 0
 	_OutlineSoftness	("Outline Softness", Range(0,1)) = 0
 
-	[HDR]_UnderlayColor	("Border Color", Color) = (0,0,0, 0.5)
-	_UnderlayOffsetX	("Border OffsetX", Range(-1,1)) = 0
-	_UnderlayOffsetY	("Border OffsetY", Range(-1,1)) = 0
-	_UnderlayDilate		("Border Dilate", Range(-1,1)) = 0
-	_UnderlaySoftness	("Border Softness", Range(0,1)) = 0
-
 	_WeightNormal		("Weight Normal", float) = 0
 	_WeightBold			("Weight Bold", float) = 0.5
 
@@ -87,8 +81,6 @@ SubShader {
 		#pragma target 3.0
 		#pragma vertex VertShader
 		#pragma fragment PixShader
-		#pragma shader_feature __ UNDERLAY_ON UNDERLAY_INNER
-
 		#pragma multi_compile __ UNITY_UI_CLIP_RECT
 		#pragma multi_compile __ UNITY_UI_ALPHACLIP
 
@@ -114,11 +106,6 @@ SubShader {
 			float2	atlas			: TEXCOORD0;
 			float4	param			: TEXCOORD1;
 			float4	mask			: TEXCOORD2;
-
-		#if (UNDERLAY_ON || UNDERLAY_INNER)
-			float4	texcoord2		: TEXCOORD3;
-			fixed4	underlayColor	: COLOR1;
-		#endif
 		};
 
 		float4 _FaceTex_ST;
@@ -162,22 +149,7 @@ SubShader {
 			float alphaClip = (1.0 - _OutlineWidth * _ScaleRatioA - _OutlineSoftness * _ScaleRatioA);
 			alphaClip = alphaClip / 2.0 - ( .5 / scale) - weight;
 
-		#if (UNDERLAY_ON || UNDERLAY_INNER)
-			float4 underlayColor = _UnderlayColor;
-			underlayColor.rgb *= underlayColor.a;
-
-			float bScale = scale;
-			bScale /= 1 + ((_UnderlaySoftness*_ScaleRatioC) * bScale);
-			float bBias = (0.5 - weight) * bScale - 0.5 - ((_UnderlayDilate * _ScaleRatioC) * 0.5 * bScale);
-
-			float x = -(_UnderlayOffsetX * _ScaleRatioC) * _GradientScale / _TextureWidth;
-			float y = -(_UnderlayOffsetY * _ScaleRatioC) * _GradientScale / _TextureHeight;
-			float2 bOffset = float2(x, y);
-		#endif
-
 			float4 clampedRect = clamp(_ClipRect, -2e10, 2e10);
-			float2 maskUV = (vert.xy - clampedRect.xy) / (clampedRect.zw - clampedRect.xy);
-
 			float2 textureUV = UnpackUV(input.texcoord1.x);
 			float2 faceUV = TRANSFORM_TEX(textureUV, _FaceTex);
 
@@ -186,11 +158,6 @@ SubShader {
 			output.atlas = input.texcoord0;
 			output.param = float4(alphaClip, scale, bias, weight);
 			output.mask = half4(vert.xy * 2 - clampedRect.xy - clampedRect.zw, 0.25 / (0.25 * half2(_MaskSoftnessX, _MaskSoftnessY) + pixelSize.xy));
-
-		#if (UNDERLAY_ON || UNDERLAY_INNER)
-			output.texcoord2 = float4(input.texcoord0 + bOffset, bScale, bBias);
-			output.underlayColor = underlayColor;
-		#endif
 
 			return output;
 		}
@@ -222,16 +189,6 @@ SubShader {
 			outlineColor *= tex2D(_OutlineTex, input.atlas / _TextureWidth + float2(_OutlineUVSpeedX, _OutlineUVSpeedY) * _Time.y);
 
 			faceColor = GetColor(sd, faceColor, outlineColor, outline, softness);
-
-		#if UNDERLAY_ON
-			float d = tex2D(_MainTex, input.texcoord2.xy).a * input.texcoord2.z;
-			faceColor += input.underlayColor * saturate(d - input.texcoord2.w) * (1 - faceColor.a);
-		#endif
-
-		#if UNDERLAY_INNER
-			float d = tex2D(_MainTex, input.texcoord2.xy).a * input.texcoord2.z;
-			faceColor += input.underlayColor * (1 - saturate(d - input.texcoord2.w)) * saturate(1 - sd) * (1 - faceColor.a);
-		#endif
 
 			// 灰度处理：按 _GrayAmount 在原色与灰度间插值
 			// 权重与 UIGray.ToGray / UI_Grayscale.Shader 一致 (0.299, 0.587, 0.114)

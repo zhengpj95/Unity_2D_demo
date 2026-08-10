@@ -297,57 +297,50 @@ public class UIGray : MonoBehaviour
     if (originalMaterial == null)
       return null;
 
-    /*
-     * ============================
-     * TMP
-     * ============================
-     */
     if (graphic is TMP_Text)
     {
-      // 按"原始共享材质"缓存灰度材质，全局复用，避免重复创建。
-      if (s_tmpGrayMaterials.TryGetValue(originalMaterial, out var gray))
-      {
-        // 兜底：缓存可能持有已被销毁的材质（如 AssetBundle 卸载）。
-        if (gray == null)
-        {
-          s_tmpGrayMaterials.Remove(originalMaterial);
-        }
-        else
-        {
-          return gray;
-        }
-      }
-
-      // 创建 TMP 灰度材质：使用 TextMeshPro/Grayscale shader
-      Shader grayShader = Shader.Find("TextMeshPro/Grayscale");
-      if (grayShader == null)
-      {
-        Debug.LogError("UIGray: 找不到 Shader：TextMeshPro/Grayscale", null);
-        return null;
-      }
-
-      var grayMaterial = new Material(grayShader);
-      grayMaterial.hideFlags = HideFlags.DontSave;
-      grayMaterial.name = $"{originalMaterial.name}_Gray";
-      grayMaterial.renderQueue = originalMaterial.renderQueue;
-
-      // 直接从原始材质拷贝可用属性，避免手工维护一堆纹理/数值字段。
-      grayMaterial.CopyPropertiesFromMaterial(originalMaterial);
-      grayMaterial.shaderKeywords = originalMaterial.shaderKeywords;
-
-      // 设置灰度参数
-      grayMaterial.SetFloat(GrayAmount, 1);
-
-      s_tmpGrayMaterials.Add(originalMaterial, grayMaterial);
-      return grayMaterial;
+      return GetTmpGrayMaterial(originalMaterial);
     }
 
-    /*
-     * ============================
-     * Image / RawImage
-     * ============================
-     */
+    return GetNormalGrayMaterial();
+  }
 
+  private Material GetTmpGrayMaterial(Material originalMaterial)
+  {
+    if (s_tmpGrayMaterials.TryGetValue(originalMaterial, out var gray))
+    {
+      if (gray == null)
+      {
+        s_tmpGrayMaterials.Remove(originalMaterial);
+      }
+      else
+      {
+        return gray;
+      }
+    }
+
+    Shader grayShader = Shader.Find("TextMeshPro/Grayscale");
+    if (grayShader == null)
+    {
+      Debug.LogError("UIGray: 找不到 Shader：TextMeshPro/Grayscale", null);
+      return null;
+    }
+
+    var grayMaterial = new Material(grayShader);
+    grayMaterial.hideFlags = HideFlags.DontSave;
+    grayMaterial.name = $"{originalMaterial.name}_Gray";
+    grayMaterial.renderQueue = originalMaterial.renderQueue;
+
+    grayMaterial.CopyPropertiesFromMaterial(originalMaterial);
+    grayMaterial.shaderKeywords = originalMaterial.shaderKeywords;
+    grayMaterial.SetFloat(GrayAmount, 1);
+
+    s_tmpGrayMaterials.Add(originalMaterial, grayMaterial);
+    return grayMaterial;
+  }
+
+  private Material GetNormalGrayMaterial()
+  {
     // 所有 Image / RawImage 共享同一个灰度材质，不按 graphic 克隆：
     // 1. _MainTex 声明为 [PerRendererData]，纹理由 CanvasRenderer 按 graphic 注入，无需拷贝；
     // 2. 颜色 tint 走顶点色（IN.color * _Color），_Color 保持默认白色即可；
@@ -400,9 +393,6 @@ public class UIGray : MonoBehaviour
     if (material == null)
       return;
 
-    /*
-     * TMP
-     */
     if (graphic is TMP_Text tmp)
     {
       // 统一用 fontSharedMaterial，避免 fontMaterial 触发材质实例化。
@@ -411,9 +401,6 @@ public class UIGray : MonoBehaviour
       return;
     }
 
-    /*
-     * Image / RawImage
-     */
     if (!ReferenceEquals(graphic.material, material))
       graphic.material = material;
   }
@@ -428,9 +415,6 @@ public class UIGray : MonoBehaviour
     if (originalMaterial == null)
       return;
 
-    /*
-     * TMP
-     */
     if (graphic is TMP_Text tmp)
     {
       if (!ReferenceEquals(tmp.fontSharedMaterial, originalMaterial))
@@ -438,9 +422,6 @@ public class UIGray : MonoBehaviour
       return;
     }
 
-    /*
-     * Image / RawImage
-     */
     if (!ReferenceEquals(graphic.material, originalMaterial))
       graphic.material = originalMaterial;
   }
