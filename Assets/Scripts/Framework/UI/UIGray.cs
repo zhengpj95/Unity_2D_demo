@@ -327,28 +327,13 @@ public class UIGray : MonoBehaviour
       }
 
       var grayMaterial = new Material(grayShader);
+      grayMaterial.hideFlags = HideFlags.DontSave;
       grayMaterial.name = $"{originalMaterial.name}_Gray";
       grayMaterial.renderQueue = originalMaterial.renderQueue;
 
-      // 复制原始材质的纹理属性
-      if (originalMaterial.HasProperty("_MainTex"))
-        grayMaterial.SetTexture("_MainTex", originalMaterial.GetTexture("_MainTex"));
-      if (originalMaterial.HasProperty("_FaceTex"))
-        grayMaterial.SetTexture("_FaceTex", originalMaterial.GetTexture("_FaceTex"));
-      if (originalMaterial.HasProperty("_OutlineTex"))
-        grayMaterial.SetTexture("_OutlineTex", originalMaterial.GetTexture("_OutlineTex"));
-
-      // 复制必要的数值属性
-      if (originalMaterial.HasProperty("_TextureWidth"))
-        grayMaterial.SetFloat("_TextureWidth", originalMaterial.GetFloat("_TextureWidth"));
-      if (originalMaterial.HasProperty("_TextureHeight"))
-        grayMaterial.SetFloat("_TextureHeight", originalMaterial.GetFloat("_TextureHeight"));
-      if (originalMaterial.HasProperty("_GradientScale"))
-        grayMaterial.SetFloat("_GradientScale", originalMaterial.GetFloat("_GradientScale"));
-      if (originalMaterial.HasProperty("_WeightNormal"))
-        grayMaterial.SetFloat("_WeightNormal", originalMaterial.GetFloat("_WeightNormal"));
-      if (originalMaterial.HasProperty("_WeightBold"))
-        grayMaterial.SetFloat("_WeightBold", originalMaterial.GetFloat("_WeightBold"));
+      // 直接从原始材质拷贝可用属性，避免手工维护一堆纹理/数值字段。
+      grayMaterial.CopyPropertiesFromMaterial(originalMaterial);
+      grayMaterial.shaderKeywords = originalMaterial.shaderKeywords;
 
       // 设置灰度参数
       grayMaterial.SetFloat(GrayAmount, 1);
@@ -376,6 +361,7 @@ public class UIGray : MonoBehaviour
         return null;
       }
       s_grayMaterial = new Material(shader);
+      s_grayMaterial.hideFlags = HideFlags.DontSave;
       s_grayMaterial.SetFloat(GrayAmount, 1);
     }
 

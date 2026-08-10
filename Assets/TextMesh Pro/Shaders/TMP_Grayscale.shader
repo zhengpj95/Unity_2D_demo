@@ -54,7 +54,7 @@ Properties {
 	_ColorMask			("Color Mask", Float) = 15
 
 	// 灰度控制参数：0 = 正常，1 = 完全灰度，0.5 = 半灰
-	_GrayAmount			("Gray Amount", Range(0, 1)) = 1
+	_GrayAmount			("Gray Amount", Range(0, 1)) = 0
 }
 
 SubShader {
@@ -124,6 +124,12 @@ SubShader {
 		float4 _FaceTex_ST;
 		float4 _OutlineTex_ST;
 		float _GrayAmount;
+
+		inline half3 ApplyGray(half3 color, half amount)
+		{
+			half gray = dot(color, half3(0.299, 0.587, 0.114));
+			return lerp(color, half3(gray, gray, gray), amount);
+		}
 
 		pixel_t VertShader(vertex_t input)
 		{
@@ -229,8 +235,7 @@ SubShader {
 
 			// 灰度处理：按 _GrayAmount 在原色与灰度间插值
 			// 权重与 UIGray.ToGray / UI_Grayscale.Shader 一致 (0.299, 0.587, 0.114)
-			float gray = dot(faceColor.rgb, float3(0.299, 0.587, 0.114));
-			faceColor.rgb = lerp(faceColor.rgb, float3(gray, gray, gray), _GrayAmount);
+			faceColor.rgb = ApplyGray(faceColor.rgb, _GrayAmount);
 
 		#if UNITY_UI_CLIP_RECT
 			half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(input.mask.xy)) * input.mask.zw);
