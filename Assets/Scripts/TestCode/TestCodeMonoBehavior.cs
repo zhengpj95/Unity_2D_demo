@@ -13,7 +13,7 @@ public class TestCodeMonoBehavior : MonoBehaviour
     {
       AccountId = 1001,
     };
-    await NetworkMgr.Instance.Send<c2s_user_login>(Cmd.C2S_USER_LOGIN, message);
+    await NetworkMgr.Instance.Send<c2s_user_login>(MessageId.C2S_USER_LOGIN, message);
   }
 
   // 测试 Protobuf 序列化和反序列化

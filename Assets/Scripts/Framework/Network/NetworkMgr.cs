@@ -20,7 +20,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
     ProtoRegister.RegisterAll(); // 注册解析 TODO 暂时
     _socketMgr = new SocketMgr();
     _dispatcher = new MessageDispatcher();
-    _dispatcher.Register<s2c_user_login>(Cmd.S2C_USER_LOGIN, s2cUserLogin);
+    _dispatcher.Register<s2c_user_login>(MessageId.S2C_USER_LOGIN, s2cUserLogin);
     _socketMgr.OnMessage += ReceiveMessage;
     await _socketMgr.Connect(url);
   }

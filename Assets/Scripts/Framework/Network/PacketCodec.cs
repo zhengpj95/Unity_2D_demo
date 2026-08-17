@@ -3,19 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-public static class Cmd
-{
-  public const uint C2S_USER_REGISTER = 1;
-  public const uint S2C_USER_REGISTER = 2;
-  public const uint C2S_USER_LOGIN = 3;
-  public const uint S2C_USER_LOGIN = 4;
-  public const uint C2S_CONFIG = 5;
-  public const uint S2C_CONFIG = 6;
-  public const uint S2C_ERROR = 7;
-  public const uint C2S_PING = 8;
-  public const uint S2C_PONG = 9;
-}
-
 public readonly struct Packet
 {
   public readonly uint Cmd;
