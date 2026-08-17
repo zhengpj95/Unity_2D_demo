@@ -1,18 +1,89 @@
 using UnityEngine;
 using System.Threading.Tasks;
-using NativeWebSocket;
 using System;
 using Google.Protobuf;
-using Msg;
+using System.Collections.Generic;
 
 public class NetworkMgr : Singleton<NetworkMgr>
 {
   private SocketMgr _socketMgr;
   private MessageDispatcher _dispatcher;
+  private readonly Dictionary<string, IMessageModule> _modules = new();
+  private readonly List<Action> _pendingRegistrations = new();
 
-  public void s2cUserLogin(s2c_user_login data)
+  private void FlushPendingRegistrations()
   {
-    Debug.Log($"s2c_user_login: {data}");
+    if (_dispatcher == null)
+    {
+      return;
+    }
+
+    foreach (Action registration in _pendingRegistrations)
+    {
+      registration();
+    }
+
+    _pendingRegistrations.Clear();
+  }
+
+  public void RegisterModule(IMessageModule module)
+  {
+    if (module == null)
+    {
+      throw new ArgumentNullException(nameof(module));
+    }
+
+    if (_modules.ContainsKey(module.ModuleName))
+    {
+      throw new InvalidOperationException($"Module already registered: {module.ModuleName}");
+    }
+
+    _modules[module.ModuleName] = module;
+
+    if (_dispatcher == null)
+    {
+      _pendingRegistrations.Add(() => module.Register(this));
+      return;
+    }
+
+    module.Register(this);
+  }
+
+  public void RegisterHandler<T>(uint cmd, Action<T> handler) where T : IMessage<T>
+  {
+    if (handler == null)
+    {
+      throw new ArgumentNullException(nameof(handler));
+    }
+
+    if (_dispatcher == null)
+    {
+      _pendingRegistrations.Add(() =>
+      {
+        _dispatcher.Register(cmd, handler);
+        MessageCommandTable.Register(cmd, "Unspecified");
+      });
+      return;
+    }
+
+    _dispatcher.Register(cmd, handler);
+    MessageCommandTable.Register(cmd, "Unspecified");
+  }
+
+  public void RegisterHandler<T>(string moduleName, uint cmd, Action<T> handler) where T : IMessage<T>
+  {
+    if (string.IsNullOrWhiteSpace(moduleName))
+    {
+      throw new ArgumentException("Module name cannot be empty.", nameof(moduleName));
+    }
+
+    MessageCommandTable.Register(cmd, moduleName);
+    RegisterHandler(cmd, handler);
+  }
+
+  public bool UnregisterHandler(uint cmd)
+  {
+    return _dispatcher != null && _dispatcher.Unregister(cmd);
   }
 
   public async Task Connect(string url)
@@ -20,7 +91,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
     ProtoRegister.RegisterAll(); // 注册解析 TODO 暂时
     _socketMgr = new SocketMgr();
     _dispatcher = new MessageDispatcher();
-    _dispatcher.Register<s2c_user_login>(MessageId.S2C_USER_LOGIN, s2cUserLogin);
+    FlushPendingRegistrations();
     _socketMgr.OnMessage += ReceiveMessage;
     await _socketMgr.Connect(url);
   }
