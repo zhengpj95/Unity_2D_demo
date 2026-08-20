@@ -61,13 +61,11 @@ public class NetworkMgr : Singleton<NetworkMgr>
       _pendingRegistrations.Add(() =>
       {
         _dispatcher.Register(cmd, handler);
-        MessageCommandTable.Register(cmd, "Unspecified");
       });
       return;
     }
 
     _dispatcher.Register(cmd, handler);
-    MessageCommandTable.Register(cmd, "Unspecified");
   }
 
   public void RegisterHandler<T>(string moduleName, uint cmd, Action<T> handler) where T : IMessage<T>
@@ -77,7 +75,6 @@ public class NetworkMgr : Singleton<NetworkMgr>
       throw new ArgumentException("Module name cannot be empty.", nameof(moduleName));
     }
 
-    MessageCommandTable.Register(cmd, moduleName);
     RegisterHandler(cmd, handler);
   }
 
@@ -104,16 +101,15 @@ public class NetworkMgr : Singleton<NetworkMgr>
     }
     byte[] body = ProtoMgr.Encode(message);
     byte[] packet = PacketCodec.Encode(cmd, body);
-    Debug.Log("Send -- " + cmd + " -- " + message);
+    Debug.Log("[Client] Send -- " + cmd + " -- " + message);
     await _socketMgr.Send(packet);
   }
 
   public void ReceiveMessage(byte[] data)
   {
     Packet packet = PacketCodec.Decode(data);
-    Debug.Log($"Received Packet: Cmd={packet.Cmd}, BodyLength={packet.Body.Length}");
     IMessage message = ProtoMgr.Decode(packet.Cmd, packet.Body);
-    Debug.Log($"Received message: {message}");
+    Debug.Log($"Received Cmd={packet.Cmd}, message: {message}");
     _dispatcher.Dispatch(packet.Cmd, message);
   }
 

@@ -113,7 +113,7 @@ public sealed class SocketMgr : IDisposable
 
   private void HandleMessage(byte[] data)
   {
-    Debug.Log($"Receive: {data.Length} bytes");
+    // Debug.Log($"Receive: {data.Length} bytes");
     OnMessage?.Invoke(data);
   }
 
@@ -130,7 +130,7 @@ public sealed class SocketMgr : IDisposable
   private void HandleClose(WebSocketCloseCode code)
   {
     State = SocketState.Closed;
-    Debug.Log($"WebSocket Closed: {code}");
+    Debug.LogError($"WebSocket Closed: {code}");
 
     OnClosed?.Invoke(code);
   }
@@ -146,7 +146,6 @@ public sealed class SocketMgr : IDisposable
 
     try
     {
-      Debug.Log("send: ---- ");
       await _socket.Send(data);
     }
     catch (Exception e)

@@ -44,10 +44,20 @@ public class UILauncher : MonoBehaviour
   {
     TimerManager.Instance.OnUpdate();
     PoolManager.Instance.OnUpdate();
+
+    if (ModuleManager.IsCreated)
+    {
+      ModuleManager.Instance.Update();
+    }
   }
 
   private void OnDestroy()
   {
+    if (ModuleManager.IsCreated)
+    {
+      ModuleManager.Instance.ReleaseAll();
+    }
+
     if (UIManager.IsCreated)
     {
       UIManager.Instance.Release();

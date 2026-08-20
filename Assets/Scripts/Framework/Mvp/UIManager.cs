@@ -367,6 +367,36 @@ public class UIManager : Singleton<UIManager>
   }
 
   /// <summary>
+  /// 销毁指定 Presenter，无论当前是否可见。
+  /// </summary>
+  public void DestroyWindow(UIPresenter presenter)
+  {
+    if (presenter == null)
+    {
+      return;
+    }
+
+    if (_presenterCache.TryGetValue(presenter.GetType(), out UIPresenter cachedPresenter)
+        && ReferenceEquals(cachedPresenter, presenter))
+    {
+      if (presenter.IsVisible)
+      {
+        presenter.OnClose();
+      }
+
+      presenter.OnDestroy();
+      _presenterCache.Remove(presenter.GetType());
+      return;
+    }
+
+    if (presenter.IsVisible)
+    {
+      presenter.OnClose();
+    }
+    presenter.OnDestroy();
+  }
+
+  /// <summary>
   /// 核心关闭逻辑
   /// </summary>
   /// <param name="presenterType"></param>
