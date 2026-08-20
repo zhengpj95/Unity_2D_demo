@@ -10,6 +10,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
   private MessageDispatcher _dispatcher;
   private readonly Dictionary<string, IMessageModule> _modules = new();
   private readonly List<Action> _pendingRegistrations = new();
+  private readonly Dictionary<uint, int> _commandVersions = new();
 
   private void FlushPendingRegistrations()
   {
@@ -56,11 +57,16 @@ public class NetworkMgr : Singleton<NetworkMgr>
       throw new ArgumentNullException(nameof(handler));
     }
 
+    int commandVersion = GetNextCommandVersion(cmd);
+
     if (_dispatcher == null)
     {
       _pendingRegistrations.Add(() =>
       {
-        _dispatcher.Register(cmd, handler);
+        if (IsCurrentCommandVersion(cmd, commandVersion))
+        {
+          _dispatcher.Register(cmd, handler);
+        }
       });
       return;
     }
@@ -68,19 +74,25 @@ public class NetworkMgr : Singleton<NetworkMgr>
     _dispatcher.Register(cmd, handler);
   }
 
-  public void RegisterHandler<T>(string moduleName, uint cmd, Action<T> handler) where T : IMessage<T>
-  {
-    if (string.IsNullOrWhiteSpace(moduleName))
-    {
-      throw new ArgumentException("Module name cannot be empty.", nameof(moduleName));
-    }
-
-    RegisterHandler(cmd, handler);
-  }
-
   public bool UnregisterHandler(uint cmd)
   {
+    GetNextCommandVersion(cmd);
     return _dispatcher != null && _dispatcher.Unregister(cmd);
+  }
+
+  private int GetNextCommandVersion(uint cmd)
+  {
+    int version = _commandVersions.TryGetValue(cmd, out int currentVersion)
+      ? currentVersion + 1
+      : 1;
+    _commandVersions[cmd] = version;
+    return version;
+  }
+
+  private bool IsCurrentCommandVersion(uint cmd, int version)
+  {
+    return _commandVersions.TryGetValue(cmd, out int currentVersion)
+      && currentVersion == version;
   }
 
   public async Task Connect(string url)

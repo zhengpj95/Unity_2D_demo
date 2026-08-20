@@ -8,15 +8,9 @@ public sealed class LoginProxy : BaseProxy
 {
   protected override void OnInit()
   {
-    NetworkMgr.Instance.RegisterHandler<s2c_user_login>(
-      "Login",
+    RegisterHandler<s2c_user_login>(
       MessageId.S2C_USER_LOGIN,
       OnS2CUserLogin);
-  }
-
-  protected override void OnRelease()
-  {
-    NetworkMgr.Instance.UnregisterHandler(MessageId.S2C_USER_LOGIN);
   }
 
   private void OnS2CUserLogin(s2c_user_login data)
