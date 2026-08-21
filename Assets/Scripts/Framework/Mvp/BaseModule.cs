@@ -124,6 +124,11 @@ public abstract class BaseModule
     return proxy;
   }
 
+  protected T RegisterProxy<T>() where T : BaseProxy, new()
+  {
+    return RegisterProxy(new T());
+  }
+
   protected T RegisterCommand<T>(T command) where T : BaseCommand
   {
     if (command == null)
@@ -137,6 +142,11 @@ public abstract class BaseModule
       command.Initialize(this);
     }
     return command;
+  }
+
+  protected T RegisterCommand<T>() where T : BaseCommand, new()
+  {
+    return RegisterCommand(new T());
   }
 
   public T GetPresenter<T>() where T : UIPresenter

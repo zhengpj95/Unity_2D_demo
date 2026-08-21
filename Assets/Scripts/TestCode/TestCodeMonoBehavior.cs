@@ -6,12 +6,8 @@ public class TestCodeMonoBehavior : MonoBehaviour
 {
   private void Awake()
   {
-    if (!ModuleManager.Instance.TryGetModule(ModuleName.Login, out _))
-    {
-      ModuleManager.Instance.RegisterModule(new LoginModule());
-    }
-
-    ModuleManager.Instance.InitializeModule(ModuleName.Login);
+    ModuleManager.Instance.PushModules<LoginModule>();
+    ModuleManager.Instance.InitializeAll();
   }
 
   public async void OnClickConfirm()

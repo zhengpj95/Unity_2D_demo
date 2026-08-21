@@ -8,6 +8,7 @@ using UnityEngine;
 public sealed class ModuleManager : Singleton<ModuleManager>
 {
   private readonly Dictionary<ModuleName, BaseModule> _modules = new();
+  private readonly List<Type> _moduleTypes = new();
 
   private ModuleManager()
   {
@@ -31,6 +32,67 @@ public sealed class ModuleManager : Singleton<ModuleManager>
     }
 
     _modules.Add(module.ModuleName, module);
+  }
+
+  /// <summary>
+  /// 批量注册业务模块。模块的初始化由 InitializeAll 统一执行。
+  /// </summary>
+  public void RegisterModules(params BaseModule[] modules)
+  {
+    if (modules == null)
+    {
+      throw new ArgumentNullException(nameof(modules));
+    }
+
+    foreach (BaseModule module in modules)
+    {
+      RegisterModule(module);
+    }
+  }
+
+  /// <summary>
+  /// 延迟加入模块类型。调用时不会创建模块实例。
+  /// </summary>
+  public void PushModules<T>() where T : BaseModule, new()
+  {
+    PushModules(typeof(T));
+  }
+
+  /// <summary>
+  /// 延迟加入多个模块类型。调用时不会创建模块实例。
+  /// </summary>
+  public void PushModules(params Type[] moduleTypes)
+  {
+    if (moduleTypes == null)
+    {
+      throw new ArgumentNullException(nameof(moduleTypes));
+    }
+
+    foreach (Type moduleType in moduleTypes)
+    {
+      if (moduleType == null || !typeof(BaseModule).IsAssignableFrom(moduleType)
+          || moduleType.IsAbstract || moduleType.GetConstructor(Type.EmptyTypes) == null)
+      {
+        throw new ArgumentException(
+          $"Module type must be a concrete BaseModule with a parameterless constructor: {moduleType}",
+          nameof(moduleTypes));
+      }
+
+      bool isCreated = false;
+      foreach (BaseModule module in _modules.Values)
+      {
+        if (module.GetType() == moduleType)
+        {
+          isCreated = true;
+          break;
+        }
+      }
+
+      if (!isCreated && !_moduleTypes.Contains(moduleType))
+      {
+        _moduleTypes.Add(moduleType);
+      }
+    }
   }
 
   public bool TryGetModule(ModuleName moduleName, out BaseModule module)
@@ -57,6 +119,13 @@ public sealed class ModuleManager : Singleton<ModuleManager>
 
   public void InitializeAll()
   {
+    foreach (Type moduleType in _moduleTypes)
+    {
+      BaseModule module = (BaseModule)Activator.CreateInstance(moduleType);
+      RegisterModule(module);
+    }
+    _moduleTypes.Clear();
+
     foreach (BaseModule module in _modules.Values)
     {
       module.Initialize(this);
@@ -87,5 +156,6 @@ public sealed class ModuleManager : Singleton<ModuleManager>
       module.Release();
     }
     _modules.Clear();
+    _moduleTypes.Clear();
   }
 }

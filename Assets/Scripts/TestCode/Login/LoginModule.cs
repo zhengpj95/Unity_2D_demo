@@ -9,7 +9,7 @@ public sealed class LoginModule : BaseModule
 
   protected override void OnInit()
   {
-    RegisterProxy(new LoginProxy());
+    RegisterProxy<LoginProxy>();
     Debug.Log("[LoginModule] Initialized");
   }
 
