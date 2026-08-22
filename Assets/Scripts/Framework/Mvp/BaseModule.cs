@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 /// <summary>
-/// 业务模块基类。一个模块集中管理自己的 Presenter、Proxy 和 Command。
+/// 业务模块根节点，统一持有本模块的 Command、Proxy、Presenter 与事件订阅。
 /// </summary>
 public abstract class BaseModule
 {
   private readonly Dictionary<Type, UIPresenter> _presenters = new();
   private readonly Dictionary<Type, BaseProxy> _proxies = new();
   private readonly Dictionary<Type, BaseCommand> _commands = new();
+  private readonly List<Action> _eventUnregisterActions = new();
 
   public abstract ModuleName ModuleName { get; }
   public ModuleManager Manager { get; private set; }
@@ -18,61 +18,37 @@ public abstract class BaseModule
 
   internal void Initialize(ModuleManager manager)
   {
-    if (IsInitialized)
-    {
-      return;
-    }
+    if (IsInitialized) return;
 
     Manager = manager ?? throw new ArgumentNullException(nameof(manager));
     OnInit();
 
-    foreach (BaseProxy proxy in _proxies.Values)
-    {
-      proxy.Initialize(this);
-    }
-
-    foreach (BaseCommand command in _commands.Values)
-    {
-      command.Initialize(this);
-    }
-
+    foreach (BaseProxy proxy in _proxies.Values) proxy.Initialize(this);
     IsInitialized = true;
     IsRunning = true;
   }
 
   internal void UpdateModule()
   {
-    if (IsInitialized && IsRunning)
-    {
-      OnUpdate();
-    }
+    if (IsInitialized && IsRunning) OnUpdate();
   }
 
   internal void Release()
   {
-    if (!IsInitialized)
-    {
-      return;
-    }
+    if (!IsInitialized) return;
 
     IsRunning = false;
+
+    // 先解绑事件和协议，避免释放期间收到回调访问已释放对象。
+    for (int i = _eventUnregisterActions.Count - 1; i >= 0; i--)
+      _eventUnregisterActions[i].Invoke();
+    _eventUnregisterActions.Clear();
+
+    foreach (BaseProxy proxy in _proxies.Values) proxy.Release();
+    foreach (UIPresenter presenter in _presenters.Values) UIManager.Instance.DestroyWindow(presenter);
+
     OnRelease();
-
-    foreach (UIPresenter presenter in _presenters.Values)
-    {
-      UIManager.Instance.DestroyWindow(presenter);
-    }
-
-    foreach (BaseCommand command in _commands.Values)
-    {
-      command.Release();
-    }
-
-    foreach (BaseProxy proxy in _proxies.Values)
-    {
-      proxy.Release();
-    }
-
+    foreach (BaseCommand command in _commands.Values) command.SetModule(null);
     _presenters.Clear();
     _commands.Clear();
     _proxies.Clear();
@@ -80,98 +56,85 @@ public abstract class BaseModule
     IsInitialized = false;
   }
 
-  protected virtual void OnInit()
-  {
-  }
+  protected virtual void OnInit() { }
+  protected virtual void OnUpdate() { }
+  protected virtual void OnRelease() { }
 
-  protected virtual void OnUpdate()
+  /// <summary>登记本模块持有的 Presenter；模块释放时自动销毁。</summary>
+  protected T RegPresenter<T>(T presenter) where T : UIPresenter
   {
-  }
-
-  protected virtual void OnRelease()
-  {
-  }
-
-  protected T RegisterPresenter<T>(T presenter) where T : UIPresenter
-  {
-    if (presenter == null)
-    {
-      throw new ArgumentNullException(nameof(presenter));
-    }
-
+    if (presenter == null) throw new ArgumentNullException(nameof(presenter));
     RegisterUnique(_presenters, presenter, "Presenter");
     return presenter;
   }
 
-  protected T OpenWindow<T>(string prefabPath, UILayerIndex layer, object args = null)
-    where T : UIPresenter, new()
+  /// <summary>打开界面并登记 Presenter，使其生命周期归属当前模块。</summary>
+  protected T OpenWindow<T>(string prefabPath, UILayerIndex layer, object args = null) where T : UIPresenter, new()
   {
-    return RegisterPresenter(UIManager.Instance.OpenWindow<T>(prefabPath, layer, args));
+    T presenter = UIManager.Instance.OpenWindow<T>(prefabPath, layer, args);
+    return presenter == null ? null : RegPresenter(presenter);
   }
 
-  protected T RegisterProxy<T>(T proxy) where T : BaseProxy
+  /// <summary>登记 Proxy；模块已运行时会立即初始化该 Proxy。</summary>
+  protected T RegProxy<T>(T proxy) where T : BaseProxy
   {
-    if (proxy == null)
-    {
-      throw new ArgumentNullException(nameof(proxy));
-    }
-
+    if (proxy == null) throw new ArgumentNullException(nameof(proxy));
     RegisterUnique(_proxies, proxy, "Proxy");
-    if (IsInitialized)
-    {
-      proxy.Initialize(this);
-    }
+    if (IsInitialized) proxy.Initialize(this);
     return proxy;
   }
 
-  protected T RegisterProxy<T>() where T : BaseProxy, new()
-  {
-    return RegisterProxy(new T());
-  }
+  protected T RegProxy<T>() where T : BaseProxy, new() => RegProxy(new T());
 
-  protected T RegisterCommand<T>(T command) where T : BaseCommand
+  /// <summary>将无参数事件绑定到 Command；模块释放时自动取消监听。</summary>
+  protected T RegCmd<T>(string eventName, T command) where T : BaseCommand
   {
-    if (command == null)
-    {
-      throw new ArgumentNullException(nameof(command));
-    }
+    if (command == null) throw new ArgumentNullException(nameof(command));
+    ValidateEventName(eventName);
+    RegisterCommand(command);
 
-    RegisterUnique(_commands, command, "Command");
-    if (IsInitialized)
-    {
-      command.Initialize(this);
-    }
+    Action listener = () => command.Execute();
+    EventBus.AddListener(eventName, listener);
+    _eventUnregisterActions.Add(() => EventBus.RemoveListener(eventName, listener));
     return command;
   }
 
-  protected T RegisterCommand<T>() where T : BaseCommand, new()
+  protected T RegCmd<T>(string eventName) where T : BaseCommand, new() => RegCmd(eventName, new T());
+
+  /// <summary>将带参数事件绑定到 Command；事件参数会作为 Execute 的 args 传入。</summary>
+  protected TCommand RegCmd<TCommand, TArgs>(string eventName, TCommand command) where TCommand : BaseCommand
   {
-    return RegisterCommand(new T());
+    if (command == null) throw new ArgumentNullException(nameof(command));
+    ValidateEventName(eventName);
+    RegisterCommand(command);
+
+    Action<TArgs> listener = args => command.Execute(args);
+    EventBus.AddListener(eventName, listener);
+    _eventUnregisterActions.Add(() => EventBus.RemoveListener(eventName, listener));
+    return command;
   }
 
-  public T GetPresenter<T>() where T : UIPresenter
-  {
-    return _presenters.TryGetValue(typeof(T), out UIPresenter presenter) ? presenter as T : null;
-  }
+  public T GetPresenter<T>() where T : UIPresenter => _presenters.TryGetValue(typeof(T), out UIPresenter value) ? value as T : null;
+  public T GetProxy<T>() where T : BaseProxy => _proxies.TryGetValue(typeof(T), out BaseProxy value) ? value as T : null;
+  public T GetCommand<T>() where T : BaseCommand => _commands.TryGetValue(typeof(T), out BaseCommand value) ? value as T : null;
 
-  public T GetProxy<T>() where T : BaseProxy
+  private void RegisterCommand(BaseCommand command)
   {
-    return _proxies.TryGetValue(typeof(T), out BaseProxy proxy) ? proxy as T : null;
-  }
-
-  public T GetCommand<T>() where T : BaseCommand
-  {
-    return _commands.TryGetValue(typeof(T), out BaseCommand command) ? command as T : null;
+    RegisterUnique(_commands, command, "Command");
+    command.SetModule(this);
   }
 
   private void RegisterUnique<T>(Dictionary<Type, T> items, T item, string itemType)
   {
     Type type = item.GetType();
     if (items.ContainsKey(type))
-    {
       throw new InvalidOperationException($"[{GetType().Name}] {itemType} already registered: {type.Name}");
-    }
-
     items.Add(type, item);
+  }
+
+  private static void ValidateEventName(string eventName)
+  {
+    if (string.IsNullOrWhiteSpace(eventName))
+      throw new ArgumentException("Event name cannot be null or empty.", nameof(eventName));
   }
 }
