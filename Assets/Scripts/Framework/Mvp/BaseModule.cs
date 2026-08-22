@@ -86,33 +86,21 @@ public abstract class BaseModule
 
   protected T RegProxy<T>() where T : BaseProxy, new() => RegProxy(new T());
 
-  /// <summary>将无参数事件绑定到 Command；模块释放时自动取消监听。</summary>
+  /// <summary>将事件绑定到 Command；参数由 Dispatch 在触发时传入，模块释放时自动取消监听。</summary>
   protected T RegCmd<T>(string eventName, T command) where T : BaseCommand
   {
     if (command == null) throw new ArgumentNullException(nameof(command));
     ValidateEventName(eventName);
     RegisterCommand(command);
 
-    Action listener = () => command.Execute();
+    // 统一使用 Action<object>，这样无参和有参 Dispatch 都能进入同一个 Command。
+    Action<object> listener = args => command.Execute(args);
     EventBus.AddListener(eventName, listener);
     _eventUnregisterActions.Add(() => EventBus.RemoveListener(eventName, listener));
     return command;
   }
 
   protected T RegCmd<T>(string eventName) where T : BaseCommand, new() => RegCmd(eventName, new T());
-
-  /// <summary>将带参数事件绑定到 Command；事件参数会作为 Execute 的 args 传入。</summary>
-  protected TCommand RegCmd<TCommand, TArgs>(string eventName, TCommand command) where TCommand : BaseCommand
-  {
-    if (command == null) throw new ArgumentNullException(nameof(command));
-    ValidateEventName(eventName);
-    RegisterCommand(command);
-
-    Action<TArgs> listener = args => command.Execute(args);
-    EventBus.AddListener(eventName, listener);
-    _eventUnregisterActions.Add(() => EventBus.RemoveListener(eventName, listener));
-    return command;
-  }
 
   public T GetPresenter<T>() where T : UIPresenter => _presenters.TryGetValue(typeof(T), out UIPresenter value) ? value as T : null;
   public T GetProxy<T>() where T : BaseProxy => _proxies.TryGetValue(typeof(T), out BaseProxy value) ? value as T : null;

@@ -30,6 +30,6 @@ public class TestCodeMonoBehavior : MonoBehaviour
 
   public void OnClickBtnCmd()
   {
-    EventBus.Dispatch("login_cmd");
+    EventBus.Dispatch("login_cmd", "你好");
   }
 }

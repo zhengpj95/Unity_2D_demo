@@ -21,6 +21,17 @@ public static class EventBus
     EventTable[eventName] = (Action)EventTable[eventName] + listener;
   }
 
+  /// <summary>
+  /// 统一参数事件监听。无参 Dispatch 会传入 null，有参 Dispatch 会传入实际参数。
+  /// </summary>
+  public static void AddListener(string eventName, Action<object> listener)
+  {
+    if (!EventTable.ContainsKey(eventName))
+      EventTable[eventName] = null;
+
+    EventTable[eventName] = (Action<object>)EventTable[eventName] + listener;
+  }
+
   public static void AddListener<T>(string eventName, Action<T> listener)
   {
     if (!EventTable.ContainsKey(eventName))
@@ -41,6 +52,12 @@ public static class EventBus
       EventTable[eventName] = (Action)EventTable[eventName] - listener;
   }
 
+  public static void RemoveListener(string eventName, Action<object> listener)
+  {
+    if (EventTable.ContainsKey(eventName))
+      EventTable[eventName] = (Action<object>)EventTable[eventName] - listener;
+  }
+
   public static void RemoveListener<T>(string eventName, Action<T> listener)
   {
     if (EventTable.ContainsKey(eventName))
@@ -57,6 +74,14 @@ public static class EventBus
   {
     if (EventTable.ContainsKey(eventName))
     {
+      // Action<object> 是模块统一事件通道；命中后直接返回，避免与委托逆变匹配的 Action<T> 重复调用。
+      var objectAction = EventTable[eventName] as Action<object>;
+      if (objectAction != null)
+      {
+        objectAction.Invoke(null);
+        return;
+      }
+
       var action = EventTable[eventName] as Action;
       action?.Invoke();
     }
@@ -66,6 +91,14 @@ public static class EventBus
   {
     if (EventTable.ContainsKey(eventName))
     {
+      // Action<object> 可因逆变关系转换为 Action<T>，必须优先处理并只调用一次。
+      var objectAction = EventTable[eventName] as Action<object>;
+      if (objectAction != null)
+      {
+        objectAction.Invoke(arg);
+        return;
+      }
+
       var action = EventTable[eventName] as Action<T>;
       action?.Invoke(arg);
     }
