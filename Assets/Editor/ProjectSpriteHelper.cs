@@ -37,7 +37,6 @@ namespace EditorTools
 
           if (Event.current.type == EventType.MouseDown && Event.current.button == 1 && rect.Contains(Event.current.mousePosition))
           {
-            ShowTextureContextMenu(path);
             Event.current.Use();
           }
         }
@@ -60,73 +59,6 @@ namespace EditorTools
       };
 
       GUI.Label(badgeRect, spriteCount > 99 ? "99+" : spriteCount.ToString(), style);
-    }
-
-    private static void ShowTextureContextMenu(string texturePath)
-    {
-      GenericMenu menu = new GenericMenu();
-
-      menu.AddItem(new GUIContent("打开精灵切割器"), false, () =>
-      {
-        var window = EditorWindow.GetWindow<SpriteBatchSlicerEditor>("精灵切割器");
-        Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
-        window.SetSelectedTexture(texture);
-        window.Focus();
-      });
-
-      menu.AddSeparator("");
-
-      menu.AddItem(new GUIContent("快速切割/2×2网格"), false, () =>
-      {
-        QuickSliceTextureNewAPI(texturePath, new Vector2Int(2, 2));
-      });
-
-      menu.AddItem(new GUIContent("快速切割/3×3网格"), false, () =>
-      {
-        QuickSliceTextureNewAPI(texturePath, new Vector2Int(3, 3));
-      });
-
-      menu.AddItem(new GUIContent("快速切割/4×4网格"), false, () =>
-      {
-        QuickSliceTextureNewAPI(texturePath, new Vector2Int(4, 4));
-      });
-
-      menu.AddSeparator("");
-
-      menu.AddItem(new GUIContent("展开显示精灵"), false, () =>
-      {
-        var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
-        Selection.activeObject = texture;
-
-        System.Type projectType = typeof(EditorWindow).Assembly.GetType("UnityEditor.ProjectBrowser");
-        var browser = EditorWindow.GetWindow(projectType);
-
-        if (browser != null)
-        {
-          var expandMethod = projectType.GetMethod("SetExpandedRecursive",
-                  System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-          if (expandMethod != null)
-          {
-            expandMethod.Invoke(browser, new object[] { texture, true });
-          }
-        }
-      });
-
-      menu.AddItem(new GUIContent("选中所有精灵"), false, () =>
-      {
-        var sprites = AssetDatabase.LoadAllAssetsAtPath(texturePath)
-                .Where(obj => obj is Sprite)
-                .Cast<Sprite>()
-                .ToArray();
-
-        if (sprites.Length > 0)
-        {
-          Selection.objects = sprites;
-          EditorGUIUtility.PingObject(sprites[0]);
-        }
-      });
-
-      menu.ShowAsContext();
     }
 
     private static void QuickSliceTextureNewAPI(string texturePath, Vector2Int grid)
@@ -188,34 +120,7 @@ namespace EditorTools
   // 右键菜单扩展
   public class TextureContextMenu
   {
-    [MenuItem("Assets/快速切割精灵/4×4网格", true)]
-    [MenuItem("Assets/快速切割精灵/3×3网格", true)]
-    [MenuItem("Assets/快速切割精灵/2×2网格", true)]
-    [MenuItem("Assets/打开精灵切割器", true)]
-    private static bool ValidateTextureMenu()
-    {
-      return Selection.activeObject is Texture2D;
-    }
-
-    [MenuItem("Assets/快速切割精灵/4×4网格")]
-    private static void QuickSlice4x4()
-    {
-      QuickSlice(new Vector2Int(4, 4));
-    }
-
-    [MenuItem("Assets/快速切割精灵/3×3网格")]
-    private static void QuickSlice3x3()
-    {
-      QuickSlice(new Vector2Int(3, 3));
-    }
-
-    [MenuItem("Assets/快速切割精灵/2×2网格")]
-    private static void QuickSlice2x2()
-    {
-      QuickSlice(new Vector2Int(2, 2));
-    }
-
-    [MenuItem("Assets/打开精灵切割器")]
+    [MenuItem("Assets/精灵切割/打开精灵切割器", false, 0)]
     private static void OpenSpriteSlicer()
     {
       var window = EditorWindow.GetWindow<SpriteBatchSlicerEditor>("精灵切割器");
@@ -226,6 +131,66 @@ namespace EditorTools
       }
 
       window.Focus();
+    }
+
+    [MenuItem("Assets/精灵切割/打开精灵切割器", true, 0)]
+    private static bool ValidateOpenSpriteSlicer()
+    {
+      return IsValidTextureSelection();
+    }
+
+    [MenuItem("Assets/精灵切割/快速切割4×4网格", false, 10)]
+    private static void QuickSlice4x4()
+    {
+      QuickSlice(new Vector2Int(4, 4));
+    }
+
+    [MenuItem("Assets/精灵切割/快速切割4×4网格", true, 10)]
+    private static bool ValidateQuickSlice4x4()
+    {
+      return IsValidTextureSelection();
+    }
+
+    [MenuItem("Assets/精灵切割/快速切割3×3网格", false, 11)]
+    private static void QuickSlice3x3()
+    {
+      QuickSlice(new Vector2Int(3, 3));
+    }
+
+    [MenuItem("Assets/精灵切割/快速切割3×3网格", true, 11)]
+    private static bool ValidateQuickSlice3x3()
+    {
+      return IsValidTextureSelection();
+    }
+
+    [MenuItem("Assets/精灵切割/快速切割2×2网格", false, 12)]
+    private static void QuickSlice2x2()
+    {
+      QuickSlice(new Vector2Int(2, 2));
+    }
+
+    [MenuItem("Assets/精灵切割/快速切割2×2网格", true, 12)]
+    private static bool ValidateQuickSlice2x2()
+    {
+      return IsValidTextureSelection();
+    }
+
+    private static bool IsValidTextureSelection()
+    {
+      if (Selection.objects == null || Selection.objects.Length == 0)
+      {
+        return false;
+      }
+
+      foreach (var obj in Selection.objects)
+      {
+        if (obj is Texture2D)
+        {
+          return true;
+        }
+      }
+
+      return false;
     }
 
     private static void QuickSlice(Vector2Int grid)
