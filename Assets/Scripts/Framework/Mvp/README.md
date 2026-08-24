@@ -71,7 +71,7 @@ ModuleManager.Instance.InitializeAll();
 
 ## 事件命令示例
 
-Module 通过统一的 `RegCmd(eventName, command)` 将事件和 Command 绑定，参数类型不需要在注册时声明；框架会在模块释放时自动取消订阅。Command 不负责事件监听，只实现 `Execute`。
+Module 通过统一的 `RegCmd<TCommand>(eventName)` 将事件和 Command 绑定，Command 实例由 BaseModule 内部创建；参数类型不需要在注册时声明，框架会在模块释放时自动取消订阅。Command 不负责事件监听，只实现 `Execute`。
 
 ```csharp
 public sealed class OpenShopCommand : BaseCommand
@@ -83,8 +83,8 @@ public sealed class OpenShopCommand : BaseCommand
 }
 
 // 在 ShopModule.OnInit 中：
-RegCmd("shop.open", new OpenShopCommand());
-RegCmd("shop.select_item", new SelectShopItemCommand());
+RegCmd<OpenShopCommand>("shop.open");
+RegCmd<SelectShopItemCommand>("shop.select_item");
 ```
 
 对应派发：`EventBus.Dispatch("shop.open");` 或 `EventBus.Dispatch("shop.select_item", itemId);`。同一事件名的有参/无参版本不可混用，因为 EventBus 会按委托类型分发。

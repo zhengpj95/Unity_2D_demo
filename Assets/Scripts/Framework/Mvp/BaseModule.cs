@@ -87,10 +87,10 @@ public abstract class BaseModule
   protected T RegProxy<T>() where T : BaseProxy, new() => RegProxy(new T());
 
   /// <summary>将事件绑定到 Command；参数由 Dispatch 在触发时传入，模块释放时自动取消监听。</summary>
-  protected T RegCmd<T>(string eventName, T command) where T : BaseCommand
+  protected T RegCmd<T>(string eventName) where T : BaseCommand, new()
   {
-    if (command == null) throw new ArgumentNullException(nameof(command));
     ValidateEventName(eventName);
+    T command = new T();
     RegisterCommand(command);
 
     // 统一使用 Action<object>，这样无参和有参 Dispatch 都能进入同一个 Command。
@@ -99,8 +99,6 @@ public abstract class BaseModule
     _eventUnregisterActions.Add(() => EventBus.RemoveListener(eventName, listener));
     return command;
   }
-
-  protected T RegCmd<T>(string eventName) where T : BaseCommand, new() => RegCmd(eventName, new T());
 
   public T GetPresenter<T>() where T : BasePresenter => _presenters.TryGetValue(typeof(T), out BasePresenter value) ? value as T : null;
   public T GetProxy<T>() where T : BaseProxy => _proxies.TryGetValue(typeof(T), out BaseProxy value) ? value as T : null;
