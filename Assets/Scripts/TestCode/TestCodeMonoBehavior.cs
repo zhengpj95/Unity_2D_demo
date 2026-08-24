@@ -6,6 +6,7 @@ public class TestCodeMonoBehavior : MonoBehaviour
 {
   private void Awake()
   {
+    ModuleManager.Instance.PushModules<MiscModule>();
     ModuleManager.Instance.PushModules<LoginModule>();
     ModuleManager.Instance.InitializeAll();
   }

@@ -18,13 +18,8 @@ public enum SocketState
 public sealed class SocketMgr : IDisposable
 {
   private WebSocket _socket;
-
   private string _url;
-
   public SocketState State { get; private set; }
-
-  public bool IsConnected => _socket != null && _socket.State == WebSocketState.Open;
-
 
   /// <summary>
   /// WebSocket连接成功
@@ -46,6 +41,7 @@ public sealed class SocketMgr : IDisposable
   /// </summary>
   public event Action<WebSocketCloseCode> OnClosed;
 
+  public bool IsConnected => _socket != null && _socket.State == WebSocketState.Open;
 
   public async Task Connect(string url)
   {
@@ -60,11 +56,8 @@ public sealed class SocketMgr : IDisposable
     }
 
     _url = url;
-
     State = SocketState.Connecting;
-
     _socket = new WebSocket(_url);
-
     RegisterEvents();
 
     try
@@ -74,11 +67,9 @@ public sealed class SocketMgr : IDisposable
     catch (Exception e)
     {
       State = SocketState.Error;
-
       OnError?.Invoke(e.Message);
     }
   }
-
 
   private void RegisterEvents()
   {
@@ -87,7 +78,6 @@ public sealed class SocketMgr : IDisposable
     _socket.OnError += HandleError;
     _socket.OnClose += HandleClose;
   }
-
 
   private void UnregisterEvents()
   {
@@ -102,39 +92,28 @@ public sealed class SocketMgr : IDisposable
     _socket.OnClose -= HandleClose;
   }
 
-
   private void HandleOpen()
   {
     State = SocketState.Connected;
-    Debug.Log("WebSocket Connected!");
     OnConnected?.Invoke();
   }
 
-
   private void HandleMessage(byte[] data)
   {
-    // Debug.Log($"Receive: {data.Length} bytes");
     OnMessage?.Invoke(data);
   }
-
 
   private void HandleError(string error)
   {
     State = SocketState.Error;
-    Debug.LogError($"WebSocket Error: {error}");
-
     OnError?.Invoke(error);
   }
-
 
   private void HandleClose(WebSocketCloseCode code)
   {
     State = SocketState.Closed;
-    Debug.LogError($"WebSocket Closed: {code}");
-
     OnClosed?.Invoke(code);
   }
-
 
   public async Task Send(byte[] data)
   {
@@ -153,7 +132,6 @@ public sealed class SocketMgr : IDisposable
       OnError?.Invoke(e.Message);
     }
   }
-
 
   public async Task Close()
   {
@@ -179,7 +157,6 @@ public sealed class SocketMgr : IDisposable
     }
   }
 
-
   public void Dispose()
   {
     UnregisterEvents();
@@ -193,6 +170,4 @@ public sealed class SocketMgr : IDisposable
     _socket = null;
     State = SocketState.None;
   }
-
-
 }

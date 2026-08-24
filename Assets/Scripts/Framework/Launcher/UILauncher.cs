@@ -7,6 +7,9 @@ using UnityEngine;
 /// </summary>
 public class UILauncher : MonoBehaviour
 {
+  private static UILauncher _instance;
+  private bool _isDuplicate;
+
   // [Header("UI Layers")]
   [SerializeField] private Transform _mainLayer;
   [SerializeField] private Transform _windowLayer;
@@ -17,11 +20,23 @@ public class UILauncher : MonoBehaviour
 
   private void Awake()
   {
+    // UILauncher 会跨场景保留；场景重载时销毁新场景中的重复实例，
+    // 避免其子节点 EventSystem 与旧场景的 EventSystem 同时存在。
+    if (_instance != null && _instance != this)
+    {
+      _isDuplicate = true;
+      Destroy(gameObject);
+      return;
+    }
+
+    _instance = this;
     InitializeUIManager();
   }
 
   private void Start()
   {
+    if (_isDuplicate) return;
+
     // 初始化 UI 池
     if (!PoolManager.IsCreated)
     {
@@ -42,6 +57,8 @@ public class UILauncher : MonoBehaviour
 
   protected void Update()
   {
+    if (_isDuplicate) return;
+
     TimerManager.Instance.OnUpdate();
     PoolManager.Instance.OnUpdate();
 
@@ -53,6 +70,13 @@ public class UILauncher : MonoBehaviour
 
   private void OnDestroy()
   {
+    if (_instance != this)
+    {
+      return;
+    }
+
+    _instance = null;
+
     if (ModuleManager.IsCreated)
     {
       ModuleManager.Instance.ReleaseAll();
