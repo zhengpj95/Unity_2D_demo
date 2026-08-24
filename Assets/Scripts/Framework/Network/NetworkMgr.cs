@@ -8,7 +8,6 @@ public class NetworkMgr : Singleton<NetworkMgr>
 {
   private SocketMgr _socketMgr;
   private MessageDispatcher _dispatcher;
-  private readonly Dictionary<string, IMessageModule> _modules = new();
   private readonly List<Action> _pendingRegistrations = new();
   private readonly Dictionary<uint, int> _commandVersions = new();
 
@@ -25,29 +24,6 @@ public class NetworkMgr : Singleton<NetworkMgr>
     }
 
     _pendingRegistrations.Clear();
-  }
-
-  public void RegisterModule(IMessageModule module)
-  {
-    if (module == null)
-    {
-      throw new ArgumentNullException(nameof(module));
-    }
-
-    if (_modules.ContainsKey(module.ModuleName))
-    {
-      throw new InvalidOperationException($"Module already registered: {module.ModuleName}");
-    }
-
-    _modules[module.ModuleName] = module;
-
-    if (_dispatcher == null)
-    {
-      _pendingRegistrations.Add(() => module.Register(this));
-      return;
-    }
-
-    module.Register(this);
   }
 
   public void RegisterHandler<T>(uint cmd, Action<T> handler) where T : IMessage<T>
