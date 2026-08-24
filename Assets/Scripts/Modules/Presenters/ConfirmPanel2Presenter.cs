@@ -1,7 +1,7 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 
-public class ConfirmPanel2Presenter : UIPresenter
+public class ConfirmPanel2Presenter : BasePresenter
 {
   private ConfirmPanel2View _view;
 

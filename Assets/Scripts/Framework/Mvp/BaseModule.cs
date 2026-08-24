@@ -6,7 +6,7 @@ using System.Collections.Generic;
 /// </summary>
 public abstract class BaseModule
 {
-  private readonly Dictionary<Type, UIPresenter> _presenters = new();
+  private readonly Dictionary<Type, BasePresenter> _presenters = new();
   private readonly Dictionary<Type, BaseProxy> _proxies = new();
   private readonly Dictionary<Type, BaseCommand> _commands = new();
   private readonly List<Action> _eventUnregisterActions = new();
@@ -45,7 +45,7 @@ public abstract class BaseModule
     _eventUnregisterActions.Clear();
 
     foreach (BaseProxy proxy in _proxies.Values) proxy.Release();
-    foreach (UIPresenter presenter in _presenters.Values) UIManager.Instance.DestroyWindow(presenter);
+    foreach (BasePresenter presenter in _presenters.Values) UIManager.Instance.DestroyWindow(presenter);
 
     OnRelease();
     foreach (BaseCommand command in _commands.Values) command.SetModule(null);
@@ -61,7 +61,7 @@ public abstract class BaseModule
   protected virtual void OnRelease() { }
 
   /// <summary>登记本模块持有的 Presenter；模块释放时自动销毁。</summary>
-  protected T RegPresenter<T>(T presenter) where T : UIPresenter
+  protected T RegPresenter<T>(T presenter) where T : BasePresenter
   {
     if (presenter == null) throw new ArgumentNullException(nameof(presenter));
     RegisterUnique(_presenters, presenter, "Presenter");
@@ -69,7 +69,7 @@ public abstract class BaseModule
   }
 
   /// <summary>打开界面并登记 Presenter，使其生命周期归属当前模块。</summary>
-  protected T OpenWindow<T>(string prefabPath, UILayerIndex layer, object args = null) where T : UIPresenter, new()
+  protected T OpenWindow<T>(string prefabPath, UILayerIndex layer, object args = null) where T : BasePresenter, new()
   {
     T presenter = UIManager.Instance.OpenWindow<T>(prefabPath, layer, args);
     return presenter == null ? null : RegPresenter(presenter);
@@ -102,7 +102,7 @@ public abstract class BaseModule
 
   protected T RegCmd<T>(string eventName) where T : BaseCommand, new() => RegCmd(eventName, new T());
 
-  public T GetPresenter<T>() where T : UIPresenter => _presenters.TryGetValue(typeof(T), out UIPresenter value) ? value as T : null;
+  public T GetPresenter<T>() where T : BasePresenter => _presenters.TryGetValue(typeof(T), out BasePresenter value) ? value as T : null;
   public T GetProxy<T>() where T : BaseProxy => _proxies.TryGetValue(typeof(T), out BaseProxy value) ? value as T : null;
   public T GetCommand<T>() where T : BaseCommand => _commands.TryGetValue(typeof(T), out BaseCommand value) ? value as T : null;
 

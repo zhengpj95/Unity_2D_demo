@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UIConfirmPanelPresenter : UIPresenter
+public class UIConfirmPanelPresenter : BasePresenter
 {
   private ConfirmPanelView _panel;
 

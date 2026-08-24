@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 
 public struct AlertTipsPanelArgs
@@ -13,7 +13,7 @@ public struct AlertTipsPanelArgs
   }
 }
 
-public class AlertTipsPanelPresenter : UIPresenter<AlertTipsPanelView, AlertTipsPanelArgs>
+public class AlertTipsPanelPresenter : BasePresenter<AlertTipsPanelView, AlertTipsPanelArgs>
 {
 
   public override void OnInit(UIView view)

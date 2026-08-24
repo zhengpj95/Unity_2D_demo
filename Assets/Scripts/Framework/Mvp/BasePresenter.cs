@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
@@ -13,7 +13,7 @@ public abstract class UIView : MonoBehaviour
 }
 
 // UI 控制器/逻辑基类 (纯 C# 类)
-public abstract class UIPresenter
+public abstract class BasePresenter
 {
   public UIView View { get; private set; }
   public bool IsVisible { get; private set; }
@@ -150,10 +150,10 @@ public abstract class UIPresenter
 #region 泛型版本（类型安全）
 
 /// <summary>
-/// 泛型 UIPresenter（类型安全的 View）
+/// 泛型 BasePresenter（类型安全的 View）
 /// </summary>
 /// <typeparam name="TView">视图类型</typeparam>
-public abstract class UIPresenter<TView> : UIPresenter where TView : UIView
+public abstract class BasePresenter<TView> : BasePresenter where TView : UIView
 {
   /// <summary>
   /// 强类型视图引用
@@ -172,11 +172,11 @@ public abstract class UIPresenter<TView> : UIPresenter where TView : UIView
 }
 
 /// <summary>
-/// 泛型 UIPresenter（类型安全的 View 和参数）
+/// 泛型 BasePresenter（类型安全的 View 和参数）
 /// </summary>
 /// <typeparam name="TView">视图类型</typeparam>
 /// <typeparam name="TArgs">参数类型（建议使用 struct）</typeparam>
-public abstract class UIPresenter<TView, TArgs> : UIPresenter<TView>
+public abstract class BasePresenter<TView, TArgs> : BasePresenter<TView>
     where TView : UIView
     where TArgs : struct
 {

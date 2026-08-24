@@ -301,19 +301,19 @@ public class UIManager : Singleton<UIManager>
 
   #endregion
 
-  #region UIPresenter处理
+  #region BasePresenter处理
   // 保存所有已实例化的 Presenter
-  private readonly Dictionary<Type, UIPresenter> _presenterCache = new Dictionary<Type, UIPresenter>();
+  private readonly Dictionary<Type, BasePresenter> _presenterCache = new Dictionary<Type, BasePresenter>();
   // 界面打开栈 (主要用于 PopUp 层管理)
-  private readonly Stack<UIPresenter> _uiStack = new Stack<UIPresenter>();
+  private readonly Stack<BasePresenter> _uiStack = new Stack<BasePresenter>();
 
   /// <summary>
   /// 打开界面
   /// </summary>
-  public T OpenWindow<T>(string prefabPath, UILayerIndex layer, object args = null) where T : UIPresenter, new()
+  public T OpenWindow<T>(string prefabPath, UILayerIndex layer, object args = null) where T : BasePresenter, new()
   {
     Type type = typeof(T);
-    if (!_presenterCache.TryGetValue(type, out UIPresenter presenter))
+    if (!_presenterCache.TryGetValue(type, out BasePresenter presenter))
     {
       // 1. 模拟异步/同步加载 Prefab (实际项目中可替换为 Addressables / AssetBundle)
       GameObject prefab = Resources.Load<GameObject>(prefabPath);
@@ -348,17 +348,17 @@ public class UIManager : Singleton<UIManager>
   /// <summary>
   /// 泛型关闭界面：UIManager.Instance.CloseWindow<ConfirmPresenter>();
   /// </summary>
-  public void CloseWindow<T>() where T : UIPresenter
+  public void CloseWindow<T>() where T : BasePresenter
   {
     CloseWindow(typeof(T));
   }
 
   /// <summary>
-  /// 实例关闭界面：关闭指定界面（通过 UIPresenter 实例）
+  /// 实例关闭界面：关闭指定界面（通过 BasePresenter 实例）
   /// 在 Presenter 中调用 CloseWindow(this) 可以关闭当前界面
   /// </summary>
   /// <param name="presenter"></param>
-  public void CloseWindow(UIPresenter presenter)
+  public void CloseWindow(BasePresenter presenter)
   {
     if (presenter != null && _presenterCache.ContainsKey(presenter.GetType()))
     {
@@ -369,14 +369,14 @@ public class UIManager : Singleton<UIManager>
   /// <summary>
   /// 销毁指定 Presenter，无论当前是否可见。
   /// </summary>
-  public void DestroyWindow(UIPresenter presenter)
+  public void DestroyWindow(BasePresenter presenter)
   {
     if (presenter == null)
     {
       return;
     }
 
-    if (_presenterCache.TryGetValue(presenter.GetType(), out UIPresenter cachedPresenter)
+    if (_presenterCache.TryGetValue(presenter.GetType(), out BasePresenter cachedPresenter)
         && ReferenceEquals(cachedPresenter, presenter))
     {
       if (presenter.IsVisible)
@@ -402,7 +402,7 @@ public class UIManager : Singleton<UIManager>
   /// <param name="presenterType"></param>
   public void CloseWindow(Type presenterType)
   {
-    if (_presenterCache.TryGetValue(presenterType, out UIPresenter presenter))
+    if (_presenterCache.TryGetValue(presenterType, out BasePresenter presenter))
     {
       if (presenter.IsVisible)
       {
@@ -420,7 +420,7 @@ public class UIManager : Singleton<UIManager>
   {
     if (_uiStack.Count > 0)
     {
-      UIPresenter topPresenter = _uiStack.Pop();
+      BasePresenter topPresenter = _uiStack.Pop();
       topPresenter.OnClose();
     }
   }
@@ -432,7 +432,7 @@ public class UIManager : Singleton<UIManager>
   /// <summary>
   /// 显示已缓存的 Presenter（调用 OnShow）
   /// </summary>
-  public void ShowPresenter(UIPresenter presenter)
+  public void ShowPresenter(BasePresenter presenter)
   {
     if (presenter != null && !presenter.IsVisible)
     {
@@ -443,7 +443,7 @@ public class UIManager : Singleton<UIManager>
   /// <summary>
   /// 隐藏 Presenter（调用 OnHide，不销毁）
   /// </summary>
-  public void HidePresenter(UIPresenter presenter)
+  public void HidePresenter(BasePresenter presenter)
   {
     if (presenter != null && presenter.IsVisible)
     {
@@ -454,7 +454,7 @@ public class UIManager : Singleton<UIManager>
   /// <summary>
   /// 获取所有活跃的 Presenter
   /// </summary>
-  public IEnumerable<UIPresenter> GetAllActivePresenters()
+  public IEnumerable<BasePresenter> GetAllActivePresenters()
   {
     return _presenterCache.Values.Where(p => p.IsVisible);
   }
@@ -462,7 +462,7 @@ public class UIManager : Singleton<UIManager>
   /// <summary>
   /// 获取所有缓存的 Presenter
   /// </summary>
-  public IEnumerable<UIPresenter> GetAllCachedPresenters()
+  public IEnumerable<BasePresenter> GetAllCachedPresenters()
   {
     return _presenterCache.Values;
   }
@@ -470,7 +470,7 @@ public class UIManager : Singleton<UIManager>
   /// <summary>
   /// 检查指定类型的 Presenter 是否存在
   /// </summary>
-  public bool HasPresenter<T>() where T : UIPresenter
+  public bool HasPresenter<T>() where T : BasePresenter
   {
     return _presenterCache.ContainsKey(typeof(T));
   }
@@ -478,7 +478,7 @@ public class UIManager : Singleton<UIManager>
   /// <summary>
   /// 获取指定类型的 Presenter
   /// </summary>
-  public T GetPresenter<T>() where T : UIPresenter
+  public T GetPresenter<T>() where T : BasePresenter
   {
     return _presenterCache.TryGetValue(typeof(T), out var presenter) ? (T)presenter : null;
   }
