@@ -1,5 +1,8 @@
 
-public enum UIEventDefine
+/// <summary>
+/// UI 事件名称常量。使用字符串可直接作为 EventBus 的事件键。
+/// </summary>
+public static class UIEventDefine
 {
-  MISC_OPEN_ALERT = 1
+  public const string MISC_OPEN_ALERT = "MISC_OPEN_ALERT";
 }

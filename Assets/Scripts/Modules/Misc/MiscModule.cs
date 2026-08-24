@@ -5,6 +5,6 @@ public sealed class MiscModule : BaseModule
 
   protected override void OnInit()
   {
-    RegCmd<OpenAlertTipsCmd>(UIEventDefine.MISC_OPEN_ALERT.ToString());
+    RegCmd<OpenAlertTipsCmd>(UIEventDefine.MISC_OPEN_ALERT);
   }
 }
