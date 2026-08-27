@@ -1478,6 +1478,7 @@ GameObject:
   - component: {fileID: 1450040208}
   - component: {fileID: 1450040207}
   - component: {fileID: 1450040211}
+  - component: {fileID: 1450040212}
   m_Layer: 5
   m_Name: UIRoot
   m_TagString: Untagged
@@ -1589,6 +1590,18 @@ MonoBehaviour:
   _windowLayer: {fileID: 973352973}
   _modelLayer: {fileID: 1727260631}
   _tipLayer: {fileID: 1148981421}
+--- !u!114 &1450040212
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1450040205}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f7c7d3e8d4c4d4b9b0e4f0c6a2f1d83, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1554587571
 GameObject:
   m_ObjectHideFlags: 0

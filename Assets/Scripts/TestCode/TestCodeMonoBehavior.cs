@@ -4,13 +4,6 @@ using Google.Protobuf;
 
 public class TestCodeMonoBehavior : MonoBehaviour
 {
-  private void Awake()
-  {
-    ModuleManager.Instance.PushModules<MiscModule>();
-    ModuleManager.Instance.PushModules<LoginModule>();
-    ModuleManager.Instance.InitializeAll();
-  }
-
   public async void OnSendLogin()
   {
     // UIManager.Instance.OpenWindow<ConfirmPanel2Presenter>("Prefabs/ConfirmPanel2", UILayerIndex.Model, new { title = "提示", desc = "Are you sure? \nAre you close?" });

@@ -55,19 +55,6 @@ public class UILauncher : MonoBehaviour
     }
   }
 
-  protected void Update()
-  {
-    if (_isDuplicate) return;
-
-    TimerManager.Instance.OnUpdate();
-    PoolManager.Instance.OnUpdate();
-
-    if (ModuleManager.IsCreated)
-    {
-      ModuleManager.Instance.Update();
-    }
-  }
-
   private void OnDestroy()
   {
     if (_instance != this)
@@ -76,11 +63,6 @@ public class UILauncher : MonoBehaviour
     }
 
     _instance = null;
-
-    if (ModuleManager.IsCreated)
-    {
-      ModuleManager.Instance.ReleaseAll();
-    }
 
     if (UIManager.IsCreated)
     {
