@@ -1,0 +1,3 @@
+interface:
+  display_name: "Unity MVC Development"
+  short_description: "按项目 Module/Proxy/Command 约定开发 Unity MVC 业务"
