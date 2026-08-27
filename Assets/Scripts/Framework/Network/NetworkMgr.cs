@@ -18,6 +18,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
   private string _url;
   private Task _reconnectTask;
   private bool _manualClose;
+  private bool _hasEstablishedConnection;
   private bool _connectionFailurePromptShown;
 
   /// <summary>是否已连接。</summary>
@@ -73,6 +74,12 @@ public class NetworkMgr : Singleton<NetworkMgr>
       throw new ArgumentException("URL cannot be empty.", nameof(url));
     }
 
+    bool isNewConnection = !string.Equals(_url, url, StringComparison.Ordinal) || _manualClose;
+    if (isNewConnection)
+    {
+      _hasEstablishedConnection = false;
+    }
+
     _url = url;
     _manualClose = false;
     _connectionFailurePromptShown = false;
@@ -81,10 +88,10 @@ public class NetworkMgr : Singleton<NetworkMgr>
       return Task.CompletedTask;
     }
 
-    return ConnectSocketAsync(true);
+    return ConnectSocketAsync();
   }
 
-  private async Task<bool> ConnectSocketAsync(bool scheduleReconnectOnFailure)
+  private async Task<bool> ConnectSocketAsync()
   {
     if (IsConnected) return true;
 
@@ -107,7 +114,6 @@ public class NetworkMgr : Singleton<NetworkMgr>
 
     await socket.Connect(_url);
     bool connected = ReferenceEquals(socket, _socketMgr) && socket.IsConnected;
-    if (!connected && scheduleReconnectOnFailure) ScheduleReconnect();
     return connected;
   }
 
@@ -115,6 +121,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
   {
     if (!ReferenceEquals(socket, _socketMgr)) return;
     Debug.Log("[NetworkMgr] Connected.");
+    _hasEstablishedConnection = true;
     _connectionFailurePromptShown = false;
     Connected?.Invoke();
   }
@@ -123,6 +130,8 @@ public class NetworkMgr : Singleton<NetworkMgr>
   {
     if (!ReferenceEquals(socket, _socketMgr)) return;
     Debug.LogWarning($"[NetworkMgr] Connection closed: {code}");
+    if (!_hasEstablishedConnection) return;
+
     Disconnected?.Invoke();
     ScheduleReconnect();
   }
@@ -131,6 +140,8 @@ public class NetworkMgr : Singleton<NetworkMgr>
   {
     if (!ReferenceEquals(socket, _socketMgr)) return;
     Debug.LogWarning($"[NetworkMgr] Socket error: {error}");
+    if (!_hasEstablishedConnection) return;
+
     ScheduleReconnect();
   }
 
@@ -153,7 +164,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
       if (_manualClose || IsConnected) break;
 
       Debug.Log($"[NetworkMgr] Reconnecting ({attempt}/{MaxReconnectAttempts})...");
-      if (await ConnectSocketAsync(false)) return;
+      if (await ConnectSocketAsync()) return;
     }
 
     if (!IsConnected && !_manualClose)
@@ -180,6 +191,8 @@ public class NetworkMgr : Singleton<NetworkMgr>
   {
     if (!IsConnected)
     {
+      if (!_hasEstablishedConnection) return;
+
       ScheduleReconnect();
       return;
     }
@@ -204,6 +217,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
   {
     _manualClose = true;
     _url = null;
+    _hasEstablishedConnection = false;
     if (_socketMgr != null) await _socketMgr.Close();
   }
 
@@ -211,6 +225,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
   {
     _manualClose = true;
     _url = null;
+    _hasEstablishedConnection = false;
     _socketMgr?.Dispose();
     _socketMgr = null;
     _reconnectTask = null;
