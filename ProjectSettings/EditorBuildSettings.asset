@@ -20,4 +20,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Launcher.unity
     guid: 7626178ad3cfe5645b3b81bd9ee85944
+  - enabled: 1
+    path: Assets/Scenes/Vampire Survivors-like/SurvivorsDemo.unity
+    guid: fb209873997f0cd47ba9d0c1bb650b05
   m_configObjects: {}

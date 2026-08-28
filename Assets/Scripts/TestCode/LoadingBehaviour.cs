@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Msg;
 using TMPro;
 
@@ -7,6 +8,34 @@ public class TestCodeMonoBehavior : MonoBehaviour
 {
   public TMP_Text tMP_Text;
   private Coroutine _outlineTestCoroutine;
+  private bool _isEnteringGame;
+
+  private const string SurvivorsSceneName = "SurvivorsDemo";
+
+  public void OnLogin()
+  {
+    if (_isEnteringGame) return;
+    _isEnteringGame = true;
+    StartCoroutine(LoadSurvivorsScene());
+  }
+
+  private IEnumerator LoadSurvivorsScene()
+  {
+    AsyncOperation loadOperation = SceneManager.LoadSceneAsync(SurvivorsSceneName);
+    if (loadOperation == null)
+    {
+      _isEnteringGame = false;
+      Debug.LogError($"[Login] Failed to start loading scene: {SurvivorsSceneName}", this);
+      yield break;
+    }
+
+    yield return loadOperation;
+
+    // 等待新场景完成首帧初始化，避免隐藏登录页时短暂显示相机清屏色。
+    yield return null;
+    gameObject.SetActive(false);
+  }
+
 
   public async void OnSendLogin()
   {
