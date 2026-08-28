@@ -8,6 +8,7 @@ using UnityEngine;
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(TMP_Text))]
+[ExecuteAlways]
 public class TMPOutline : MonoBehaviour
 {
   [Header("描边颜色")]
@@ -15,19 +16,43 @@ public class TMPOutline : MonoBehaviour
   private Color outlineColor = Color.black;
 
   [Header("描边宽度")]
-  [Range(0, 0.2f)]
+  [Range(0, 0.5f)]
   [SerializeField]
-  private float outlineWidth = 0.1f;
+  private float outlineWidth = 0.2f;
 
   private TMP_Text tmpText;
   private Material originMaterial;
+#if UNITY_EDITOR
+  private Material previewMaterial;
+#endif
 
   private void Awake()
   {
     tmpText = GetComponent<TMP_Text>();
+  }
+
+  private void OnEnable()
+  {
+    if (tmpText == null)
+      tmpText = GetComponent<TMP_Text>();
+
+#if UNITY_EDITOR
+    if (!Application.isPlaying)
+    {
+      ApplyEditorPreview();
+      return;
+    }
+#endif
+
     ApplyOutline();
   }
 
+  private void OnDisable()
+  {
+#if UNITY_EDITOR
+    ClearEditorPreview();
+#endif
+  }
 
 #if UNITY_EDITOR
   private void OnValidate()
@@ -36,9 +61,52 @@ public class TMPOutline : MonoBehaviour
       tmpText = GetComponent<TMP_Text>();
 
     if (Application.isPlaying)
-    {
       ApplyOutline();
+    else if (isActiveAndEnabled)
+      ApplyEditorPreview();
+  }
+
+  /// <summary>
+  /// 使用不保存到场景的临时材质提供编辑器实时预览。
+  /// </summary>
+  private void ApplyEditorPreview()
+  {
+    if (tmpText == null)
+      return;
+
+    if (previewMaterial == null)
+    {
+      originMaterial = GetSourceMaterial();
+      if (originMaterial == null)
+        return;
+
+      previewMaterial = new Material(originMaterial)
+      {
+        name = $"{originMaterial.name}_OutlinePreview",
+        hideFlags = HideFlags.HideAndDontSave
+      };
     }
+
+    previewMaterial.SetColor(ShaderUtilities.ID_OutlineColor, outlineColor);
+    previewMaterial.SetFloat(ShaderUtilities.ID_OutlineWidth, outlineWidth);
+    tmpText.fontSharedMaterial = previewMaterial;
+    tmpText.SetMaterialDirty();
+  }
+
+  private void ClearEditorPreview()
+  {
+    if (previewMaterial == null)
+      return;
+
+    if (tmpText != null && tmpText.fontSharedMaterial == previewMaterial)
+    {
+      tmpText.fontSharedMaterial = originMaterial;
+      tmpText.SetMaterialDirty();
+    }
+
+    DestroyImmediate(previewMaterial);
+    previewMaterial = null;
+    originMaterial = null;
   }
 #endif
 
@@ -52,8 +120,12 @@ public class TMPOutline : MonoBehaviour
       return;
 
     if (originMaterial == null)
+      originMaterial = GetSourceMaterial();
+
+    if (originMaterial == null)
     {
-      originMaterial = tmpText.fontMaterial;
+      Debug.LogError("[TMPOutline] 无法应用描边：TMP_Text 没有可用的字体材质。", this);
+      return;
     }
 
     Material material = TMPOutlineMaterialCache.Get(
@@ -62,8 +134,21 @@ public class TMPOutline : MonoBehaviour
       outlineWidth
     );
 
-    tmpText.fontMaterial = material;
+    tmpText.fontSharedMaterial = material;
     tmpText.SetMaterialDirty();
+  }
+
+  /// <summary>
+  /// 获取有效材质。编辑器临时材质在进入播放模式时可能已被销毁，
+  /// 此时回退到字体资源的默认材质。
+  /// </summary>
+  private Material GetSourceMaterial()
+  {
+    Material material = tmpText.fontSharedMaterial;
+    if (material != null)
+      return material;
+
+    return tmpText.font != null ? tmpText.font.material : null;
   }
 
   public void SetOutlineColor(Color color)
@@ -118,6 +203,9 @@ public static class TMPOutlineMaterialCache
 
   public static Material Get(Material source, Color color, float width)
   {
+    if (source == null)
+      return null;
+
     Key key = new Key()
     {
       materialId = source.GetInstanceID(),
