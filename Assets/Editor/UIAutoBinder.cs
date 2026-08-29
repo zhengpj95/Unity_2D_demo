@@ -127,7 +127,7 @@ public class UIAutoBinder : Editor
     sb.AppendLine("using UnityEngine;");
     sb.AppendLine("using UnityEngine.UI;");
     sb.AppendLine();
-    sb.AppendLine($"public class {presenterName} : UIPresenter");
+    sb.AppendLine($"public class {presenterName} : BasePresenter");
     sb.AppendLine("{");
     sb.AppendLine($"  private {viewName} _view;");
     sb.AppendLine();
