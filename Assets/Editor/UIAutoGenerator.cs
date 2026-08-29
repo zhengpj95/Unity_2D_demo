@@ -8,7 +8,6 @@ using UnityEngine.UI;
 public class UIAutoGenerator : Editor
 {
   // 自动生成代码存放的路径
-  private const string GENERATED_SCRIPT_PATH = "Assets/Scripts/Define/UI_Generated/";
 
   // 命名前缀与组件类型的映射字典
   private static readonly Dictionary<string, System.Type> PrefixToType = new Dictionary<string, System.Type>()
@@ -45,12 +44,9 @@ public class UIAutoGenerator : Editor
     string codeStr = BuildCodeString(className, bindInfos);
 
     // 3. 写入文件
-    if (!Directory.Exists(GENERATED_SCRIPT_PATH))
-    {
-      Directory.CreateDirectory(GENERATED_SCRIPT_PATH);
-    }
+    CodeGenerationPaths.EnsureDirectoryExists(CodeGenerationPaths.UIGeneratedScriptsDirectory);
 
-    string filePath = Path.Combine(GENERATED_SCRIPT_PATH, className + ".cs");
+    string filePath = Path.Combine(CodeGenerationPaths.UIGeneratedScriptsDirectory, className + ".cs");
     File.WriteAllText(filePath, codeStr, Encoding.UTF8);
 
     AssetDatabase.Refresh();

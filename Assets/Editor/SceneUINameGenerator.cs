@@ -6,11 +6,10 @@ namespace EditorTools
 {
   public static class SceneUINameGenerator
   {
-    private const string FilePath = "Assets/Scripts/Define/SceneUIName.cs";
-
     [MenuItem("Tools/03 SceneUIName Generator", false, 0)]
     public static void Generate()
     {
+      CodeGenerationPaths.EnsureDirectoryExists(CodeGenerationPaths.EditorGeneratedScriptsDirectory);
       var scenes = EditorBuildSettings.scenes;
       if (scenes.Length == 0)
       {
@@ -37,10 +36,11 @@ namespace EditorTools
 
       code += "}\n";
 
-      File.WriteAllText(FilePath, code);
+      string filePath = CodeGenerationPaths.SceneUINameFilePath;
+      File.WriteAllText(filePath, code);
       AssetDatabase.Refresh();
 
-      Debug.Log($"✅ SceneNames.cs 已生成，路径：{FilePath}");
+      Debug.Log($"✅ SceneNames.cs 已生成，路径：{filePath}");
     }
   }
 }

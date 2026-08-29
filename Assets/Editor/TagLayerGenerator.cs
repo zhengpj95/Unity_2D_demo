@@ -11,13 +11,10 @@ namespace EditorTools
    */
   public class TagLayerGenerator : EditorWindow
   {
-    private const string OutputFolder = "Assets/Scripts/Define";
-
     [MenuItem("Tools/02 TagLayer Generator", false, 0)]
     public static void Generate()
     {
-      if (!Directory.Exists(OutputFolder))
-        Directory.CreateDirectory(OutputFolder);
+      CodeGenerationPaths.EnsureDirectoryExists(CodeGenerationPaths.EditorGeneratedScriptsDirectory);
 
       GenerateTagClass();
       GenerateLayerClass();
@@ -47,7 +44,7 @@ namespace EditorTools
 
       sb.AppendLine("}");
 
-      File.WriteAllText(Path.Combine(OutputFolder, "GameTag.cs"), sb.ToString(), Encoding.UTF8);
+      File.WriteAllText(CodeGenerationPaths.GameTagFilePath, sb.ToString(), Encoding.UTF8);
     }
 
     private static void GenerateLayerClass()
@@ -72,7 +69,7 @@ namespace EditorTools
 
       sb.AppendLine("}");
 
-      File.WriteAllText(Path.Combine(OutputFolder, "GameLayer.cs"), sb.ToString(), Encoding.UTF8);
+      File.WriteAllText(CodeGenerationPaths.GameLayerFilePath, sb.ToString(), Encoding.UTF8);
     }
 
     private static string SanitizeIdentifier(string name)

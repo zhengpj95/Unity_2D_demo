@@ -13,8 +13,6 @@ using UnityEngine.UI;
 /// </summary>
 public class UIAutoBinder : Editor
 {
-  private const string SCRIPT_GEN_DIR = "Assets/Scripts/Define/UI_Generated/";
-  private const string PRESENTER_GEN_DIR = "Assets/Scripts/Modules/Presenters/";
   private const string PREFS_PENDING_KEY = "UI_AUTO_BIND_PENDING_DATA";
 
   // 映射关系定义
@@ -109,14 +107,14 @@ public class UIAutoBinder : Editor
 
     sb.AppendLine("}");
 
-    EnsureDirectoryExists(SCRIPT_GEN_DIR);
-    File.WriteAllText(Path.Combine(SCRIPT_GEN_DIR, className + ".cs"), sb.ToString(), Encoding.UTF8);
+    CodeGenerationPaths.EnsureDirectoryExists(CodeGenerationPaths.UIGeneratedScriptsDirectory);
+    File.WriteAllText(Path.Combine(CodeGenerationPaths.UIGeneratedScriptsDirectory, className + ".cs"), sb.ToString(), Encoding.UTF8);
   }
 
   private static void GeneratePresenterScript(string presenterName, string viewName, List<BindElement> elements)
   {
-    EnsureDirectoryExists(PRESENTER_GEN_DIR);
-    string filePath = Path.Combine(PRESENTER_GEN_DIR, presenterName + ".cs");
+    CodeGenerationPaths.EnsureDirectoryExists(CodeGenerationPaths.UIPresenterScriptsDirectory);
+    string filePath = Path.Combine(CodeGenerationPaths.UIPresenterScriptsDirectory, presenterName + ".cs");
 
     // 核心机制：如果 Presenter 已存在，绝不覆盖写有业务逻辑的文件
     if (File.Exists(filePath))
@@ -301,11 +299,6 @@ public class UIAutoBinder : Editor
       if (type != null) return type;
     }
     return null;
-  }
-
-  private static void EnsureDirectoryExists(string path)
-  {
-    if (!Directory.Exists(path)) Directory.CreateDirectory(path);
   }
 
   private static string FirstCharToUpper(string input)
