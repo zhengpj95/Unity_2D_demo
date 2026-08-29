@@ -34,14 +34,18 @@ public class TestCodeMonoBehavior : MonoBehaviour
     // 等待新场景完成首帧初始化，避免隐藏登录页时短暂显示相机清屏色。
     yield return null;
     gameObject.SetActive(false);
+    SurvivorModule survivorModule = ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor);
+    survivorModule?.OpenSurvivorMain();
   }
 
+  public void OnOpenAlert()
+  {
+    // UIManager.Instance.OpenWindow<ConfirmPanel2Presenter>("Prefabs/ConfirmPanel2", UILayerIndex.Model, new { title = "提示", desc = "Are you sure? \nAre you close?" });
+    UIManager.Instance.OpenWindow<AlertTipsPanelPresenter>("Prefabs/AlertTipsPanel", UILayerIndex.Model, new AlertTipsPanelArgs("警告标题", "警告信息！不允许随便修改！", null));
+  }
 
   public async void OnSendLogin()
   {
-    // UIManager.Instance.OpenWindow<ConfirmPanel2Presenter>("Prefabs/ConfirmPanel2", UILayerIndex.Model, new { title = "提示", desc = "Are you sure? \nAre you close?" });
-    // UIManager.Instance.OpenWindow<AlertTipsPanelPresenter>("Prefabs/AlertTipsPanel", UILayerIndex.Model, new AlertTipsPanelArgs("警告标题", "警告信息！不允许随便修改！"));
-
     c2s_user_login message = new c2s_user_login
     {
       AccountId = 1001,

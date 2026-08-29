@@ -59,6 +59,7 @@ public sealed class GameMgr : MonoBehaviour
   {
     ModuleManager.Instance.PushModules<MiscModule>();
     ModuleManager.Instance.PushModules<LoginModule>();
+    ModuleManager.Instance.PushModules<SurvivorModule>();
     ModuleManager.Instance.InitializeAll();
   }
 }

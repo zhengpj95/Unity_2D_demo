@@ -7,4 +7,5 @@ public enum ModuleName
   Login = 1,
   Misc = 2,
   Bag = 3,
+  Survivor = 4,
 }

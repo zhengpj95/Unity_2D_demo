@@ -1,41 +1,44 @@
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Rendering;
 using UnityEngine.UI;
 
-namespace VampireSurvivorsLike {
-
+namespace VampireSurvivorsLike
+{
   public class VSUIManager : SingletonMono<VSUIManager>
   {
-    [SerializeField] private Slider uiHp;
     [SerializeField] private Image rectBg;
     [SerializeField] private Transform skillSelectPanel;
     [SerializeField] private UI_Inventory uiInventory;
     [SerializeField] private Transform uiEnemyCount;
-    [SerializeField] private UI_EXP uI_EXP;
+
+    private int _currentHealth;
+    private int _maxHealth;
+    private bool _hasHealthState;
 
     public void ShowRectBg(bool isVisible = true)
     {
       if (rectBg)
-      {
         rectBg.gameObject.SetActive(isVisible);
-      }
     }
 
     public void UpdateHp(int currentHealth, int maxHealth)
     {
-      if (uiHp == null) return;
+      _currentHealth = currentHealth;
+      _maxHealth = maxHealth;
+      _hasHealthState = true;
 
-      uiHp.maxValue = maxHealth;
-      uiHp.value = currentHealth;
+      SurvivorMainPresenter presenter = GetSurvivorMainPresenter();
+      if (presenter == null)
+        return;
 
-      var text = uiHp.transform.Find("HpValue")?.GetComponent<Text>();
-      if (text != null)
-      {
-        text.text = Mathf.Max(0, currentHealth) + " / " + maxHealth;
-      }
+      presenter.UpdateHp(currentHealth, maxHealth);
+    }
+
+    public bool TryGetHp(out int currentHealth, out int maxHealth)
+    {
+      currentHealth = _currentHealth;
+      maxHealth = _maxHealth;
+      return _hasHealthState;
     }
 
     public void ShowSkillSelectPanel(bool isVisible = true)
@@ -43,17 +46,13 @@ namespace VampireSurvivorsLike {
       Time.timeScale = isVisible ? 0 : 1;
       ShowRectBg(isVisible);
       if (skillSelectPanel)
-      {
         skillSelectPanel.gameObject.SetActive(isVisible);
-      }
     }
 
     public void UpdateInventory()
     {
       if (uiInventory)
-      {
         uiInventory.UpdateSlot();
-      }
     }
 
     public void UpdateEnemyKillCount()
@@ -62,59 +61,26 @@ namespace VampireSurvivorsLike {
       {
         TMP_Text killCount = uiEnemyCount.Find("KillCount")?.GetComponent<TMP_Text>();
         if (killCount)
-        {
           killCount.text = EnemySpawnManager.Instance.KillEnemyCount.ToString();
-        }
       }
     }
 
-
-    #region ==== exp ====
-
-    private int _curLevel = 0;
-    private int _curExp = 0;
-
-    private int GetNextLevelExp()
-    {
-      int baseVal = 20, grow = 5;
-      int nextLevel = _curLevel + 1;
-      int exp = baseVal * nextLevel + grow * nextLevel * nextLevel;
-      return exp;
-    }
-
-    // 临时使用，添加经验
     public void UpdateExp(int addExp)
     {
-      _curExp += addExp;
-      int nextLevelExp = GetNextLevelExp();
-      if (_curExp >= nextLevelExp)
+      SurvivorMainPresenter presenter = GetSurvivorMainPresenter();
+      if (presenter == null)
       {
-        uI_EXP?.UpdateExp(_curExp, nextLevelExp);
-        _curExp = 0;
-        _curLevel++;
-        ShowSkillSelectPanel(true);
-        StartCoroutine(UpdateExpBarCoroutine(_curExp, nextLevelExp, _curLevel));
+        Debug.LogWarning("[VSUIManager] SurvivorMainPresenter is not open.");
+        return;
       }
-      else
-      {
-        UpdateExp(_curExp, nextLevelExp, _curLevel);
-      }
-      // Debug.Log($"AddExp: {addExp} CurExp: {_curExp} NextLevelExp: {nextLevelExp} CurLevel: {_curLevel}");
+
+      presenter.UpdateExp(addExp, () => ShowSkillSelectPanel(true));
     }
 
-    private IEnumerator UpdateExpBarCoroutine(int curExp, int nextExp, int currentLevel)
+    private static SurvivorMainPresenter GetSurvivorMainPresenter()
     {
-      yield return new WaitForSeconds(0.5f);
-      UpdateExp(curExp, nextExp, currentLevel);
+      SurvivorModule survivorModule = ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor);
+      return survivorModule?.GetPresenter<SurvivorMainPresenter>();
     }
-
-    private void UpdateExp(int curExp, int nextExp, int currentLevel)
-    {
-      uI_EXP?.UpdateExp(curExp, nextExp);
-      uI_EXP?.UpdateLevel(currentLevel);
-    }
-
-    #endregion
   }
-
 }
