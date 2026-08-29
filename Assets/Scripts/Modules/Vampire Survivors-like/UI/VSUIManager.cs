@@ -1,23 +1,12 @@
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace VampireSurvivorsLike
 {
   public class VSUIManager : SingletonMono<VSUIManager>
   {
-    [SerializeField] private Image rectBg;
-    [SerializeField] private Transform skillSelectPanel;
-
     private int _currentHealth;
     private int _maxHealth;
     private bool _hasHealthState;
-
-    public void ShowRectBg(bool isVisible = true)
-    {
-      if (rectBg)
-        rectBg.gameObject.SetActive(isVisible);
-    }
 
     public void UpdateHp(int currentHealth, int maxHealth)
     {
@@ -39,17 +28,10 @@ namespace VampireSurvivorsLike
       return _hasHealthState;
     }
 
-    public void ShowSkillSelectPanel(bool isVisible = true)
-    {
-      Time.timeScale = isVisible ? 0 : 1;
-      ShowRectBg(isVisible);
-      if (skillSelectPanel)
-        skillSelectPanel.gameObject.SetActive(isVisible);
-    }
-
     public void UpdateInventory()
     {
-      SurvivorMainPresenter presenter = GetSurvivorMainPresenter();
+      SurvivorModule survivorModule = GetSurvivorModule();
+      SurvivorMainPresenter presenter = survivorModule?.GetPresenter<SurvivorMainPresenter>();
       if (presenter == null)
         return;
 
@@ -67,20 +49,25 @@ namespace VampireSurvivorsLike
 
     public void UpdateExp(int addExp)
     {
-      SurvivorMainPresenter presenter = GetSurvivorMainPresenter();
+      SurvivorModule survivorModule = GetSurvivorModule();
+      SurvivorMainPresenter presenter = survivorModule?.GetPresenter<SurvivorMainPresenter>();
       if (presenter == null)
       {
         Debug.LogWarning("[VSUIManager] SurvivorMainPresenter is not open.");
         return;
       }
 
-      presenter.UpdateExp(addExp, () => ShowSkillSelectPanel(true));
+      presenter.UpdateExp(addExp, () => survivorModule.OpenSkillSelectPanel());
+    }
+
+    private static SurvivorModule GetSurvivorModule()
+    {
+      return ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor);
     }
 
     private static SurvivorMainPresenter GetSurvivorMainPresenter()
     {
-      SurvivorModule survivorModule = ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor);
-      return survivorModule?.GetPresenter<SurvivorMainPresenter>();
+      return GetSurvivorModule()?.GetPresenter<SurvivorMainPresenter>();
     }
   }
 }

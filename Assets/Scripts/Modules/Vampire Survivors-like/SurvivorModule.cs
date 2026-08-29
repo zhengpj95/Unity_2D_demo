@@ -3,6 +3,7 @@ public class SurvivorModule : BaseModule
   public override ModuleName ModuleName => ModuleName.Survivor;
 
   private const string SurvivorMainPrefabPath = "Prefabs/SurvivorMain";
+  private const string SurvivorSkillSelectPanelPrefabPath = "Prefabs/SurvivorSkillSelectPanel";
 
   /// <summary>
   /// 打开幸存者主界面，并将 Presenter 注册、持有在当前模块中。
@@ -11,5 +12,24 @@ public class SurvivorModule : BaseModule
   {
     SurvivorMainPresenter presenter = GetPresenter<SurvivorMainPresenter>();
     return presenter ?? OpenWindow<SurvivorMainPresenter>(SurvivorMainPrefabPath, UILayerIndex.Window);
+  }
+
+  public SurvivorSkillSelectPanelPresenter OpenSkillSelectPanel()
+  {
+    SurvivorSkillSelectPanelPresenter presenter = GetPresenter<SurvivorSkillSelectPanelPresenter>();
+    if (presenter != null)
+    {
+      UIManager.Instance.ShowPresenter(presenter);
+      return presenter;
+    }
+
+    return OpenWindow<SurvivorSkillSelectPanelPresenter>(SurvivorSkillSelectPanelPrefabPath, UILayerIndex.Model);
+  }
+
+  protected override void OnUpdate()
+  {
+    SurvivorSkillSelectPanelPresenter presenter = GetPresenter<SurvivorSkillSelectPanelPresenter>();
+    if (presenter?.NeedUpdate == true)
+      presenter.Update();
   }
 }

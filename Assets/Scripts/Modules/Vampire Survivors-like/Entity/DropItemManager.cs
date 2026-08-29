@@ -58,7 +58,6 @@ namespace VampireSurvivorsLike {
       if (skillUpScore >= skillUpRateScore)
       {
         skillUpScore = 0;
-        // VSUIManager.Instance.ShowSkillSelectPanel(true);
         // BuffManager.Instance.hero.GetComponent<BuffHandler>().AddBuff(BuffManager.Instance.playerAttackRangeSO);
       }
 
