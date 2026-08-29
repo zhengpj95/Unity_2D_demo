@@ -21,6 +21,9 @@ public class SurvivorMainPresenter : BasePresenter
 
     if (VSUIManager.Instance.TryGetHp(out int currentHealth, out int maxHealth))
       UpdateHp(currentHealth, maxHealth);
+
+    UpdateEnemyKillCount(EnemySpawnManager.Instance.KillEnemyCount);
+    UpdateInventory(DropItemManager.Instance.GemCount, DropItemManager.Instance.CoinCount);
   }
 
   public override void OnClose()
@@ -62,6 +65,33 @@ public class SurvivorMainPresenter : BasePresenter
 
     if (_view.hpValueText != null)
       _view.hpValueText.text = $"{Mathf.Max(0, currentHealth)} / {maxHealth}";
+  }
+
+  public void UpdateEnemyKillCount(int killCount)
+  {
+    if (_view == null)
+    {
+      Debug.LogWarning("[SurvivorMainPresenter] SurvivorMainView is not initialized.");
+      return;
+    }
+
+    if (_view.killCountText != null)
+      _view.killCountText.text = killCount.ToString();
+  }
+
+  public void UpdateInventory(int gemCount, int coinCount)
+  {
+    if (_view == null)
+    {
+      Debug.LogWarning("[SurvivorMainPresenter] SurvivorMainView is not initialized.");
+      return;
+    }
+
+    if (_view.gemCountText != null)
+      _view.gemCountText.text = gemCount.ToString();
+
+    if (_view.coinCountText != null)
+      _view.coinCountText.text = coinCount.ToString();
   }
 
   private int GetNextLevelExp()

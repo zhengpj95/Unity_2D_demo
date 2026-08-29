@@ -15,5 +15,8 @@ public class SurvivorMainView : UIView
   public Text expLevelTxt;
   public Slider hpSlider;
   public Text hpValueText;
+  public TMP_Text killCountText;
+  public Text gemCountText;
+  public Text coinCountText;
 
 }

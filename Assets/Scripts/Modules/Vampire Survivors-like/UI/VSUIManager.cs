@@ -8,8 +8,6 @@ namespace VampireSurvivorsLike
   {
     [SerializeField] private Image rectBg;
     [SerializeField] private Transform skillSelectPanel;
-    [SerializeField] private UI_Inventory uiInventory;
-    [SerializeField] private Transform uiEnemyCount;
 
     private int _currentHealth;
     private int _maxHealth;
@@ -51,18 +49,20 @@ namespace VampireSurvivorsLike
 
     public void UpdateInventory()
     {
-      if (uiInventory)
-        uiInventory.UpdateSlot();
+      SurvivorMainPresenter presenter = GetSurvivorMainPresenter();
+      if (presenter == null)
+        return;
+
+      presenter.UpdateInventory(DropItemManager.Instance.GemCount, DropItemManager.Instance.CoinCount);
     }
 
     public void UpdateEnemyKillCount()
     {
-      if (uiEnemyCount)
-      {
-        TMP_Text killCount = uiEnemyCount.Find("KillCount")?.GetComponent<TMP_Text>();
-        if (killCount)
-          killCount.text = EnemySpawnManager.Instance.KillEnemyCount.ToString();
-      }
+      SurvivorMainPresenter presenter = GetSurvivorMainPresenter();
+      if (presenter == null)
+        return;
+
+      presenter.UpdateEnemyKillCount(EnemySpawnManager.Instance.KillEnemyCount);
     }
 
     public void UpdateExp(int addExp)
