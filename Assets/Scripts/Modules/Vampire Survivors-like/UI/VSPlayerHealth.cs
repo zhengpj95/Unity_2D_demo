@@ -12,14 +12,14 @@ namespace VampireSurvivorsLike {
     void Start()
     {
       currentHealth = maxHealth;
-      VSUIManager.Instance.UpdateHp(currentHealth, maxHealth);
+      ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor).UpdateHp(currentHealth, maxHealth);
     }
 
     public void TakeDamage(int damage)
     {
       currentHealth -= damage;
 
-      VSUIManager.Instance.UpdateHp(currentHealth, maxHealth);
+      ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor).UpdateHp(currentHealth, maxHealth);
       DamageController.Instance.ShowDamage(damage, transform.position);
     }
   }

@@ -1,5 +1,4 @@
 using UnityEngine;
-using VampireSurvivorsLike;
 
 public class SurvivorMainPresenter : BasePresenter
 {
@@ -18,12 +17,6 @@ public class SurvivorMainPresenter : BasePresenter
     base.OnOpen(args);
 
     UpdateExpView(GetNextLevelExp());
-
-    if (VSUIManager.Instance.TryGetHp(out int currentHealth, out int maxHealth))
-      UpdateHp(currentHealth, maxHealth);
-
-    UpdateEnemyKillCount(EnemySpawnManager.Instance.KillEnemyCount);
-    UpdateInventory(DropItemManager.Instance.GemCount, DropItemManager.Instance.CoinCount);
   }
 
   public override void OnClose()

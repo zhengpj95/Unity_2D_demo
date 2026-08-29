@@ -61,7 +61,7 @@ namespace VampireSurvivorsLike {
         // BuffManager.Instance.hero.GetComponent<BuffHandler>().AddBuff(BuffManager.Instance.playerAttackRangeSO);
       }
 
-      VSUIManager.Instance.UpdateExp(score);
+      ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor).UpdateExp(score);
     }
 
     public void AddDropItem(DropItemType dropItemType, int count)
@@ -75,7 +75,7 @@ namespace VampireSurvivorsLike {
           CoinCount += count;
           break;
       }
-      VSUIManager.Instance.UpdateInventory();
+      ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor).UpdateInventory();
     }
   }
 

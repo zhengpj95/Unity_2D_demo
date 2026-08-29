@@ -26,7 +26,7 @@ namespace VampireSurvivorsLike {
       if (currentHealth <= 0)
       {
         EnemySpawnManager.Instance.KillEnemyCount++;
-        VSUIManager.Instance.UpdateEnemyKillCount();
+        ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor).UpdateEnemyKillCount();
         Destroy(gameObject);
         DropItemManager.Instance.SpawnDropItem(transform.position, enemyChasing.DropItemType, enemyChasing.DropItemProb);
       }

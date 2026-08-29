@@ -19170,7 +19170,6 @@ GameObject:
   - component: {fileID: 166185225}
   - component: {fileID: 166185224}
   - component: {fileID: 166185223}
-  - component: {fileID: 166185227}
   m_Layer: 5
   m_Name: UICanvas
   m_TagString: Untagged
@@ -19261,18 +19260,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
---- !u!114 &166185227
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 166185222}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9674ae9bf8057944b8a23157c1328c5a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &215779526
 GameObject:
   m_ObjectHideFlags: 3
@@ -24322,7 +24309,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   damagePrefab: {fileID: 1045434040273954581, guid: 3f83c834dc690f049840713ef91a4d7f, type: 3}
-  point: {fileID: 851832673}
+  point: {fileID: 0}
 --- !u!4 &1664855009
 Transform:
   m_ObjectHideFlags: 0
