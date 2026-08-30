@@ -475,13 +475,5 @@ public class UIManager : Singleton<UIManager>
     return _presenterCache.ContainsKey(typeof(T));
   }
 
-  /// <summary>
-  /// 获取指定类型的 Presenter
-  /// </summary>
-  public T GetPresenter<T>() where T : BasePresenter
-  {
-    return _presenterCache.TryGetValue(typeof(T), out var presenter) ? (T)presenter : null;
-  }
-
   #endregion
 }

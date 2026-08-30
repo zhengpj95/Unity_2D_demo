@@ -11,15 +11,7 @@ public sealed class OpenAlertTipsCmd : BaseCommand
       return;
     }
 
-    if (!UIManager.IsCreated || !UIManager.Instance.IsInitialized)
-    {
-      Debug.LogWarning("[OpenAlertTipsCmd] UIManager is not initialized.");
-      return;
-    }
-
-    UIManager.Instance.OpenWindow<AlertTipsPanelPresenter>(
-      "Prefabs/AlertTipsPanel",
-      UILayerIndex.Model,
-      alertArgs);
+    if (Module is MiscModule miscModule)
+      miscModule.OpenAlert(alertArgs);
   }
 }

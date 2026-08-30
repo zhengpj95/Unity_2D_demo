@@ -6,7 +6,16 @@ using System.Collections.Generic;
 /// </summary>
 public abstract class BaseModule
 {
+  private sealed class PresenterDefinition
+  {
+    public Type PresenterType;
+    public string PrefabPath;
+    public UILayerIndex Layer;
+  }
+
   private readonly Dictionary<Type, BasePresenter> _presenters = new();
+  private readonly Dictionary<Enum, BasePresenter> _presentersByViewType = new();
+  private readonly Dictionary<Enum, PresenterDefinition> _presenterDefinitions = new();
   private readonly Dictionary<Type, BaseProxy> _proxies = new();
   private readonly Dictionary<Type, BaseCommand> _commands = new();
   private readonly List<Action> _eventUnregisterActions = new();
@@ -50,6 +59,8 @@ public abstract class BaseModule
     OnRelease();
     foreach (BaseCommand command in _commands.Values) command.SetModule(null);
     _presenters.Clear();
+    _presentersByViewType.Clear();
+    _presenterDefinitions.Clear();
     _commands.Clear();
     _proxies.Clear();
     Manager = null;
@@ -60,19 +71,44 @@ public abstract class BaseModule
   protected virtual void OnUpdate() { }
   protected virtual void OnRelease() { }
 
-  /// <summary>登记本模块持有的 Presenter；模块释放时自动销毁。</summary>
-  protected T RegPresenter<T>(T presenter) where T : BasePresenter
+  /// <summary>登记 ViewType 与 Presenter/Prefab 的一一对应关系，打开时才实例化 Presenter。</summary>
+  protected void RegPresenter<T>(Enum viewType, string prefabPath, UILayerIndex layer) where T : BasePresenter, new()
   {
-    if (presenter == null) throw new ArgumentNullException(nameof(presenter));
-    RegisterUnique(_presenters, presenter, "Presenter");
-    return presenter;
+    if (viewType == null) throw new ArgumentNullException(nameof(viewType));
+    if (string.IsNullOrWhiteSpace(prefabPath)) throw new ArgumentException("Prefab path cannot be empty.", nameof(prefabPath));
+    if (_presenterDefinitions.ContainsKey(viewType))
+      throw new InvalidOperationException($"[{GetType().Name}] ViewType already registered: {viewType}");
+    if (HasPresenterType(typeof(T)))
+      throw new InvalidOperationException($"[{GetType().Name}] Presenter already registered: {typeof(T).Name}");
+
+    _presenterDefinitions.Add(viewType, new PresenterDefinition
+    {
+      PresenterType = typeof(T),
+      PrefabPath = prefabPath,
+      Layer = layer
+    });
   }
 
-  /// <summary>打开界面并登记 Presenter，使其生命周期归属当前模块。</summary>
-  protected T OpenWindow<T>(string prefabPath, UILayerIndex layer, object args = null) where T : BasePresenter, new()
+  /// <summary>按模块 ViewType 打开界面；首次打开时根据 RegPresenter 映射实例化。</summary>
+  protected T OpenWindow<T>(Enum viewType, object args = null) where T : BasePresenter, new()
   {
-    T presenter = UIManager.Instance.OpenWindow<T>(prefabPath, layer, args);
-    return presenter == null ? null : RegPresenter(presenter);
+    if (viewType == null) throw new ArgumentNullException(nameof(viewType));
+    if (!_presenterDefinitions.TryGetValue(viewType, out PresenterDefinition definition))
+      throw new InvalidOperationException($"[{GetType().Name}] ViewType is not registered: {viewType}");
+    if (definition.PresenterType != typeof(T))
+      throw new InvalidOperationException($"ViewType {viewType} is bound to {definition.PresenterType.Name}, not {typeof(T).Name}.");
+
+    if (_presentersByViewType.TryGetValue(viewType, out BasePresenter cached))
+    {
+      UIManager.Instance.ShowPresenter(cached);
+      return cached as T;
+    }
+
+    T presenter = UIManager.Instance.OpenWindow<T>(definition.PrefabPath, definition.Layer, args);
+    if (presenter == null) return null;
+    _presenters.Add(typeof(T), presenter);
+    _presentersByViewType.Add(viewType, presenter);
+    return presenter;
   }
 
   /// <summary>登记 Proxy；模块已运行时会立即初始化该 Proxy。</summary>
@@ -100,9 +136,22 @@ public abstract class BaseModule
     return command;
   }
 
-  public T GetPresenter<T>() where T : BasePresenter => _presenters.TryGetValue(typeof(T), out BasePresenter value) ? value as T : null;
   public T GetProxy<T>() where T : BaseProxy => _proxies.TryGetValue(typeof(T), out BaseProxy value) ? value as T : null;
   public T GetCommand<T>() where T : BaseCommand => _commands.TryGetValue(typeof(T), out BaseCommand value) ? value as T : null;
+
+  /// <summary>按模块 ViewType 获取已实例化的 Presenter；未打开时返回 null。</summary>
+  public BasePresenter GetPresenter(Enum viewType)
+  {
+    if (viewType == null) throw new ArgumentNullException(nameof(viewType));
+    return _presentersByViewType.TryGetValue(viewType, out BasePresenter presenter) ? presenter : null;
+  }
+
+  private bool HasPresenterType(Type presenterType)
+  {
+    foreach (PresenterDefinition definition in _presenterDefinitions.Values)
+      if (definition.PresenterType == presenterType) return true;
+    return false;
+  }
 
   private void RegisterCommand(BaseCommand command)
   {
