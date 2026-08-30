@@ -302,18 +302,19 @@ public class UIManager : Singleton<UIManager>
   #endregion
 
   #region BasePresenter处理
-  // 保存所有已实例化的 Presenter
-  private readonly Dictionary<Type, BasePresenter> _presenterCache = new Dictionary<Type, BasePresenter>();
+  // Presenter 的全局身份由 ModuleName + ViewType 决定，不能仅按 Presenter 类型缓存。
+  private readonly Dictionary<ModuleViewKey, BasePresenter> _presenterCache = new Dictionary<ModuleViewKey, BasePresenter>();
+  // 供 Presenter 自身关闭或模块释放时反查其全局身份。
+  private readonly Dictionary<BasePresenter, ModuleViewKey> _presenterKeys = new Dictionary<BasePresenter, ModuleViewKey>();
   // 界面打开栈 (主要用于 PopUp 层管理)
   private readonly Stack<BasePresenter> _uiStack = new Stack<BasePresenter>();
 
   /// <summary>
   /// 打开界面
   /// </summary>
-  public T OpenWindow<T>(string prefabPath, UILayerIndex layer, object args = null) where T : BasePresenter, new()
+  public T OpenWindow<T>(ModuleViewKey viewKey, string prefabPath, UILayerIndex layer, object args = null) where T : BasePresenter, new()
   {
-    Type type = typeof(T);
-    if (!_presenterCache.TryGetValue(type, out BasePresenter presenter))
+    if (!_presenterCache.TryGetValue(viewKey, out BasePresenter presenter))
     {
       // 1. 模拟异步/同步加载 Prefab (实际项目中可替换为 Addressables / AssetBundle)
       GameObject prefab = Resources.Load<GameObject>(prefabPath);
@@ -331,7 +332,12 @@ public class UIManager : Singleton<UIManager>
       // 2. 实例化 Presenter 并初始化
       presenter = new T();
       presenter.OnInit(view);
-      _presenterCache.Add(type, presenter);
+      _presenterCache.Add(viewKey, presenter);
+      _presenterKeys.Add(presenter, viewKey);
+    }
+    else if (presenter is not T)
+    {
+      throw new InvalidOperationException($"[UIManager] View key {viewKey} is bound to {presenter.GetType().Name}, not {typeof(T).Name}.");
     }
 
     // 3. 入栈控制（如果是 PopUp 类型的弹窗，可以压栈管理）
@@ -346,23 +352,15 @@ public class UIManager : Singleton<UIManager>
   }
 
   /// <summary>
-  /// 泛型关闭界面：UIManager.Instance.CloseWindow<ConfirmPresenter>();
-  /// </summary>
-  public void CloseWindow<T>() where T : BasePresenter
-  {
-    CloseWindow(typeof(T));
-  }
-
-  /// <summary>
   /// 实例关闭界面：关闭指定界面（通过 BasePresenter 实例）
   /// 在 Presenter 中调用 CloseWindow(this) 可以关闭当前界面
   /// </summary>
   /// <param name="presenter"></param>
   public void CloseWindow(BasePresenter presenter)
   {
-    if (presenter != null && _presenterCache.ContainsKey(presenter.GetType()))
+    if (presenter != null && _presenterKeys.TryGetValue(presenter, out ModuleViewKey viewKey))
     {
-      CloseWindow(presenter.GetType());
+      CloseWindow(viewKey);
     }
   }
 
@@ -376,7 +374,8 @@ public class UIManager : Singleton<UIManager>
       return;
     }
 
-    if (_presenterCache.TryGetValue(presenter.GetType(), out BasePresenter cachedPresenter)
+    if (_presenterKeys.TryGetValue(presenter, out ModuleViewKey viewKey)
+        && _presenterCache.TryGetValue(viewKey, out BasePresenter cachedPresenter)
         && ReferenceEquals(cachedPresenter, presenter))
     {
       if (presenter.IsVisible)
@@ -385,7 +384,7 @@ public class UIManager : Singleton<UIManager>
       }
 
       presenter.OnDestroy();
-      _presenterCache.Remove(presenter.GetType());
+      RemovePresenter(viewKey, presenter);
       return;
     }
 
@@ -399,18 +398,24 @@ public class UIManager : Singleton<UIManager>
   /// <summary>
   /// 核心关闭逻辑
   /// </summary>
-  /// <param name="presenterType"></param>
-  public void CloseWindow(Type presenterType)
+  /// <param name="viewKey"></param>
+  private void CloseWindow(ModuleViewKey viewKey)
   {
-    if (_presenterCache.TryGetValue(presenterType, out BasePresenter presenter))
+    if (_presenterCache.TryGetValue(viewKey, out BasePresenter presenter))
     {
       if (presenter.IsVisible)
       {
         presenter.OnClose();
         presenter.OnDestroy(); // TODO 延迟关闭处理，或定时检测关闭
-        _presenterCache.Remove(presenterType);
+        RemovePresenter(viewKey, presenter);
       }
     }
+  }
+
+  private void RemovePresenter(ModuleViewKey viewKey, BasePresenter presenter)
+  {
+    _presenterCache.Remove(viewKey);
+    _presenterKeys.Remove(presenter);
   }
 
   /// <summary>
@@ -467,12 +472,16 @@ public class UIManager : Singleton<UIManager>
     return _presenterCache.Values;
   }
 
-  /// <summary>
-  /// 检查指定类型的 Presenter 是否存在
-  /// </summary>
-  public bool HasPresenter<T>() where T : BasePresenter
+  /// <summary>供 BaseModule 按模块 ViewType 查询已创建的 Presenter。</summary>
+  internal BasePresenter GetPresenter(ModuleViewKey viewKey)
   {
-    return _presenterCache.ContainsKey(typeof(T));
+    return _presenterCache.TryGetValue(viewKey, out BasePresenter presenter) ? presenter : null;
+  }
+
+  /// <summary>检查指定模块 ViewType 的 Presenter 是否存在。</summary>
+  public bool HasPresenter(ModuleViewKey viewKey)
+  {
+    return _presenterCache.ContainsKey(viewKey);
   }
 
   #endregion

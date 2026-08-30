@@ -13,8 +13,6 @@ public abstract class BaseModule
     public UILayerIndex Layer;
   }
 
-  private readonly Dictionary<Type, BasePresenter> _presenters = new();
-  private readonly Dictionary<Enum, BasePresenter> _presentersByViewType = new();
   private readonly Dictionary<Enum, PresenterDefinition> _presenterDefinitions = new();
   private readonly Dictionary<Type, BaseProxy> _proxies = new();
   private readonly Dictionary<Type, BaseCommand> _commands = new();
@@ -54,12 +52,14 @@ public abstract class BaseModule
     _eventUnregisterActions.Clear();
 
     foreach (BaseProxy proxy in _proxies.Values) proxy.Release();
-    foreach (BasePresenter presenter in _presenters.Values) UIManager.Instance.DestroyWindow(presenter);
+    foreach (Enum viewType in _presenterDefinitions.Keys)
+    {
+      BasePresenter presenter = UIManager.Instance.GetPresenter(new ModuleViewKey(ModuleName, viewType));
+      if (presenter != null) UIManager.Instance.DestroyWindow(presenter);
+    }
 
     OnRelease();
     foreach (BaseCommand command in _commands.Values) command.SetModule(null);
-    _presenters.Clear();
-    _presentersByViewType.Clear();
     _presenterDefinitions.Clear();
     _commands.Clear();
     _proxies.Clear();
@@ -98,16 +98,17 @@ public abstract class BaseModule
     if (definition.PresenterType != typeof(T))
       throw new InvalidOperationException($"ViewType {viewType} is bound to {definition.PresenterType.Name}, not {typeof(T).Name}.");
 
-    if (_presentersByViewType.TryGetValue(viewType, out BasePresenter cached))
+    ModuleViewKey viewKey = new(ModuleName, viewType);
+    BasePresenter cached = UIManager.Instance.GetPresenter(viewKey);
+    if (cached != null)
     {
       UIManager.Instance.ShowPresenter(cached);
-      return cached as T;
+      if (cached is T cachedPresenter) return cachedPresenter;
+      throw new InvalidOperationException($"ViewType {viewType} is bound to {cached.GetType().Name}, not {typeof(T).Name}.");
     }
 
-    T presenter = UIManager.Instance.OpenWindow<T>(definition.PrefabPath, definition.Layer, args);
+    T presenter = UIManager.Instance.OpenWindow<T>(viewKey, definition.PrefabPath, definition.Layer, args);
     if (presenter == null) return null;
-    _presenters.Add(typeof(T), presenter);
-    _presentersByViewType.Add(viewType, presenter);
     return presenter;
   }
 
@@ -143,7 +144,8 @@ public abstract class BaseModule
   public BasePresenter GetPresenter(Enum viewType)
   {
     if (viewType == null) throw new ArgumentNullException(nameof(viewType));
-    return _presentersByViewType.TryGetValue(viewType, out BasePresenter presenter) ? presenter : null;
+    ModuleViewKey viewKey = new(ModuleName, viewType);
+    return UIManager.Instance.GetPresenter(viewKey);
   }
 
   private bool HasPresenterType(Type presenterType)

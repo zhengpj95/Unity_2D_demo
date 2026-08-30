@@ -92,6 +92,6 @@ RegCmd<SelectShopItemCommand>("shop.select_item");
 ## Proxy 与 UI 约定
 
 - 在 `BaseProxy.OnInit` 内使用 `RegisterHandler` 注册协议；同一 Proxy 重复注册同一个协议号会抛出异常，模块释放时会自动注销。
-- `ModuleName` 与所有模块 ViewType 集中定义在 `Assets/Scripts/Define/`；ViewType 文件名为 `ViewType.cs`，枚举命名为 `模块名ViewType`。模块在 `OnInit` 中使用 `RegPresenter<T>(viewType, prefabPath, layer)` 登记 ViewType 与 Presenter、Prefab 的一一对应关系；调用 `OpenWindow<T>(viewType, args)` 时才实例化并缓存 Presenter，模块释放时自动销毁。
+- `ModuleName` 与所有模块 ViewType 集中定义在 `Assets/Scripts/Define/`；ViewType 文件名为 `ViewType.cs`，枚举命名为 `模块名ViewType`。模块在 `OnInit` 中使用 `RegPresenter<T>(viewType, prefabPath, layer)` 登记 ViewType 与 Presenter、Prefab 的一一对应关系；调用 `OpenWindow<T>(viewType, args)` 时才实例化并缓存 Presenter，模块释放时自动销毁。一个 Presenter 类型应只归属一个 Module，并只绑定一个 ViewType；`BaseModule` 负责模块内重复注册校验。`BaseModule` 与 `UIManager` 均以 `ModuleViewKey`（`ModuleName + ViewType`）为缓存键。
 - `GetProxy<T>()`、`GetCommand<T>()` 用于访问本模块组件；Presenter 必须通过 `GetPresenter(viewType)` 按 ViewType 获取，跨模块访问必须先经 `ModuleManager.GetModule<T>(ModuleName)`，避免隐式依赖。
 - 不要在 `OnRelease` 后缓存或继续使用 Command、Proxy、Presenter 引用。
