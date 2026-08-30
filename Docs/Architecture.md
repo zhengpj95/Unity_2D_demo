@@ -128,7 +128,7 @@ ModuleManager
 - 跨模块访问必须显式经过 `ModuleManager` 或稳定接口/事件边界；
 - 禁止形成循环依赖。
 
-Presenter 采用定义于 `Assets/Scripts/Define/UIViewType.cs` 的模块 ViewType 映射：模块在 `OnInit` 中通过
+Presenter 采用定义于 `Assets/Scripts/Define/ViewType.cs` 的模块 ViewType 映射：模块在 `OnInit` 中通过
 `RegPresenter<TPresenter>(viewType, prefabPath, layer)` 登记 ViewType 与 Presenter、Prefab 的一一对应关系，调用 `OpenWindow<TPresenter>(viewType, args)` 时才实例化并缓存界面。ViewType 命名采用 `模块名ViewType`，例如 `SurvivorViewType` 与 `MiscViewType`。
 已打开的 Presenter 仅可通过 `GetPresenter(viewType)` 按 ViewType 查询，不提供按 Presenter 类型查询的 Module API。
 
