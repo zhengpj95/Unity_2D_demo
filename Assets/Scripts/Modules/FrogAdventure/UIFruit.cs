@@ -11,12 +11,12 @@ namespace FrogAdventure {
     private void Start()
     {
       UpdateScore();
-      EventBus.AddListener("update_score", UpdateScore); // 自定义事件监听
+      EventBus.On("update_score", UpdateScore); // 自定义事件监听
     }
 
     private void OnDestroy()
     {
-      EventBus.RemoveListener("update_score", UpdateScore);
+      EventBus.Off("update_score", UpdateScore);
     }
 
     private void UpdateScore()

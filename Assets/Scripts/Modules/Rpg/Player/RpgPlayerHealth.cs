@@ -19,7 +19,7 @@ namespace Rpg
       StartCoroutine(DispatchEvent()); // 延迟更新UI
       if (StatsManager.Instance.health <= 0)
       {
-        EventBus.Dispatch("Event_GameOver", true);
+        EventBus.Emit("Event_GameOver", true);
         Destroy(gameObject);
       }
     }
@@ -27,7 +27,7 @@ namespace Rpg
     private IEnumerator DispatchEvent()
     {
       yield return new WaitForEndOfFrame();
-      EventBus.Dispatch("Event_UpdatePlayerHealth");
+      EventBus.Emit("Event_UpdatePlayerHealth");
     }
   }
 }

@@ -148,6 +148,8 @@ Presenter 采用定义于 `Assets/Scripts/Define/ViewType.cs` 的模块 ViewType
 
 Command 不自行成为长期事件中心，不应承担持久化数据容器，也不要直接处理底层网络协议细节。
 
+`BaseEmitter` 是 Module、Command、Proxy 与 Presenter 共用的 EventBus 生命周期封装：`On` 记录订阅，`Emit` 派发事件，`OffAll` 统一解绑且可重复调用。Presenter 在 `OnClose` 解绑，Proxy、Command 与 Module 在释放时解绑；它不创建第二套事件系统。
+
 ### Presenter / View
 
 Presenter 负责界面生命周期、交互协调和展示逻辑；View 负责 Unity 组件引用与显示。

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 /// <summary>
 /// 业务模块根节点，统一持有本模块的 Command、Proxy、Presenter 与事件订阅。
 /// </summary>
-public abstract class BaseModule
+public abstract class BaseModule : BaseEmitter
 {
   private sealed class PresenterDefinition
   {
@@ -14,7 +14,6 @@ public abstract class BaseModule
   private readonly Dictionary<Enum, PresenterDefinition> _presenterDefinitions = new();
   private readonly Dictionary<Type, BaseProxy> _proxies = new();
   private readonly Dictionary<Type, BaseCommand> _commands = new();
-  private readonly List<Action> _eventUnregisterActions = new();
 
   public abstract ModuleName ModuleName { get; }
   public ModuleManager Manager { get; private set; }
@@ -45,9 +44,7 @@ public abstract class BaseModule
     IsRunning = false;
 
     // 先解绑事件和协议，避免释放期间收到回调访问已释放对象。
-    for (int i = _eventUnregisterActions.Count - 1; i >= 0; i--)
-      _eventUnregisterActions[i].Invoke();
-    _eventUnregisterActions.Clear();
+    OffAll();
 
     foreach (BaseProxy proxy in _proxies.Values) proxy.Release();
     foreach (Enum viewType in _presenterDefinitions.Keys)
@@ -57,7 +54,7 @@ public abstract class BaseModule
     }
 
     OnRelease();
-    foreach (BaseCommand command in _commands.Values) command.SetModule(null);
+    foreach (BaseCommand command in _commands.Values) command.Release();
     _presenterDefinitions.Clear();
     _commands.Clear();
     _proxies.Clear();
@@ -127,8 +124,7 @@ public abstract class BaseModule
 
     // 统一使用 Action<object>，这样无参和有参 Dispatch 都能进入同一个 Command。
     Action<object> listener = args => command.Execute(args);
-    EventBus.AddListener(eventName, listener);
-    _eventUnregisterActions.Add(() => EventBus.RemoveListener(eventName, listener));
+    On(eventName, listener);
     return command;
   }
 
@@ -164,9 +160,4 @@ public abstract class BaseModule
     items.Add(type, item);
   }
 
-  private static void ValidateEventName(string eventName)
-  {
-    if (string.IsNullOrWhiteSpace(eventName))
-      throw new ArgumentException("Event name cannot be null or empty.", nameof(eventName));
-  }
 }

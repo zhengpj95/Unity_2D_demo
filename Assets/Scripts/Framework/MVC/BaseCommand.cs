@@ -2,7 +2,7 @@
 /// 模块命令基类。
 /// 事件订阅由 BaseModule 统一管理；Command 只实现收到事件后的执行逻辑。
 /// </summary>
-public abstract class BaseCommand
+public abstract class BaseCommand : BaseEmitter
 {
   /// <summary>命令所属模块，可用于获取本模块的 Proxy、Presenter 或其他 Command。</summary>
   public BaseModule Module { get; private set; }
@@ -10,6 +10,13 @@ public abstract class BaseCommand
   internal void SetModule(BaseModule module)
   {
     Module = module;
+  }
+
+  /// <summary>由所属模块释放时调用，清理事件订阅并断开模块引用。</summary>
+  internal void Release()
+  {
+    OffAll();
+    Module = null;
   }
 
   /// <summary>

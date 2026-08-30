@@ -13,7 +13,7 @@ public abstract class UIView : MonoBehaviour
 }
 
 // UI 控制器/逻辑基类 (纯 C# 类)
-public abstract class BasePresenter
+public abstract class BasePresenter : BaseEmitter
 {
   public UIView View { get; private set; }
   public bool IsVisible { get; private set; }
@@ -48,6 +48,7 @@ public abstract class BasePresenter
   // 关闭界面
   public virtual void OnClose()
   {
+    OffAll();
     OnHide();
     IsVisible = false;
     if (View != null) View.gameObject.SetActive(false);
@@ -56,6 +57,7 @@ public abstract class BasePresenter
   // 销毁界面
   public virtual void OnDestroy()
   {
+    OffAll();
     // 清理所有按钮监听器
     ClearAllListeners();
 

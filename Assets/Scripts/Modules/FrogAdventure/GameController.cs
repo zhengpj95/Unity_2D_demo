@@ -17,7 +17,7 @@ namespace FrogAdventure {
     {
       Level = sceneIndex;
       SceneManager.LoadScene(sceneIndex);
-      EventBus.Dispatch("UPDATE_LEVEL");
+      EventBus.Emit("UPDATE_LEVEL");
     }
 
     // 血量
@@ -27,13 +27,13 @@ namespace FrogAdventure {
       MaxHp += damage;
       if (MaxHp < 0) MaxHp = 0;
       Debug.Log("当前血量：" + MaxHp);
-      EventBus.Dispatch("UPDATE_HP");
+      EventBus.Emit("UPDATE_HP");
     }
 
     public void ResetHp()
     {
       MaxHp = 3;
-      EventBus.Dispatch("UPDATE_HP");
+      EventBus.Emit("UPDATE_HP");
     }
   }
 }

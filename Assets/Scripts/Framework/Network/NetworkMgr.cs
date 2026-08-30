@@ -173,7 +173,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
       if (!_connectionFailurePromptShown)
       {
         _connectionFailurePromptShown = true;
-        EventBus.Dispatch(UIEventDefine.MISC_OPEN_ALERT, new AlertTipsPanelArgs("连接失败", "网络连接失败，请刷新游戏后重试。", ReloadCurrentScene));
+        EventBus.Emit(UIEventDefine.MISC_OPEN_ALERT, new AlertTipsPanelArgs("连接失败", "网络连接失败，请刷新游戏后重试。", ReloadCurrentScene));
       }
     }
   }

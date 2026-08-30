@@ -5,7 +5,7 @@ using Google.Protobuf;
 /// <summary>
 /// 模块的数据与协议访问基类。每个 Proxy 独立管理自己注册的网络协议。
 /// </summary>
-public abstract class BaseProxy
+public abstract class BaseProxy : BaseEmitter
 {
   private readonly HashSet<uint> _registeredCommands = new();
 
@@ -28,6 +28,8 @@ public abstract class BaseProxy
     foreach (uint command in _registeredCommands)
       NetworkMgr.Instance.UnregisterHandler(command);
     _registeredCommands.Clear();
+
+    OffAll();
 
     OnRelease();
     Module = null;

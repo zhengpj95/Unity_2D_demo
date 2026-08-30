@@ -71,7 +71,9 @@ ModuleManager.Instance.InitializeAll();
 
 ## 事件命令示例
 
-Module 通过统一的 `RegCmd<TCommand>(eventName)` 将事件和 Command 绑定，Command 实例由 BaseModule 内部创建；参数类型不需要在注册时声明，框架会在模块释放时自动取消订阅。Command 不负责事件监听，只实现 `Execute`。
+Module 通过统一的 `RegCmd<TCommand>(eventName)` 将事件和 Command 绑定，Command 实例由 BaseModule 内部创建；参数类型不需要在注册时声明，框架会在模块释放时自动取消订阅。Command 通常只在 `Execute` 中编排业务并使用 `Emit` 派发结果，不自行持有长期事件逻辑。
+
+`BaseEmitter` 是 Module、Command、Proxy 与 Presenter 的 EventBus 生命周期封装。使用 `On` 订阅、`Emit` 派发、`OffAll` 解绑；同一对象的重复订阅会被忽略。Presenter 在 `OnClose` 解绑，其他对象在各自的释放阶段解绑。
 
 ```csharp
 public sealed class OpenShopCommand : BaseCommand
@@ -87,7 +89,7 @@ RegCmd<OpenShopCommand>("shop.open");
 RegCmd<SelectShopItemCommand>("shop.select_item");
 ```
 
-对应派发：`EventBus.Dispatch("shop.open");` 或 `EventBus.Dispatch("shop.select_item", itemId);`。同一事件名的有参/无参版本不可混用，因为 EventBus 会按委托类型分发。
+对应派发：`EventBus.Emit("shop.open");` 或 `EventBus.Emit("shop.select_item", itemId);`。同一事件名的有参/无参版本不可混用，因为 EventBus 会按委托类型分发。
 
 ## Proxy 与 UI 约定
 

@@ -13,7 +13,7 @@ public static class EventBus
 
   #region --- 添加监听 ---
 
-  public static void AddListener(string eventName, Action listener)
+  public static void On(string eventName, Action listener)
   {
     if (!EventTable.ContainsKey(eventName))
       EventTable[eventName] = null;
@@ -22,9 +22,9 @@ public static class EventBus
   }
 
   /// <summary>
-  /// 统一参数事件监听。无参 Dispatch 会传入 null，有参 Dispatch 会传入实际参数。
+  /// 统一参数事件监听。无参 Emit 会传入 null，有参 Emit 会传入实际参数。
   /// </summary>
-  public static void AddListener(string eventName, Action<object> listener)
+  public static void On(string eventName, Action<object> listener)
   {
     if (!EventTable.ContainsKey(eventName))
       EventTable[eventName] = null;
@@ -32,7 +32,7 @@ public static class EventBus
     EventTable[eventName] = (Action<object>)EventTable[eventName] + listener;
   }
 
-  public static void AddListener<T>(string eventName, Action<T> listener)
+  public static void On<T>(string eventName, Action<T> listener)
   {
     if (!EventTable.ContainsKey(eventName))
     {
@@ -46,19 +46,19 @@ public static class EventBus
 
   #region --- 移除监听 ---
 
-  public static void RemoveListener(string eventName, Action listener)
+  public static void Off(string eventName, Action listener)
   {
     if (EventTable.ContainsKey(eventName))
       EventTable[eventName] = (Action)EventTable[eventName] - listener;
   }
 
-  public static void RemoveListener(string eventName, Action<object> listener)
+  public static void Off(string eventName, Action<object> listener)
   {
     if (EventTable.ContainsKey(eventName))
       EventTable[eventName] = (Action<object>)EventTable[eventName] - listener;
   }
 
-  public static void RemoveListener<T>(string eventName, Action<T> listener)
+  public static void Off<T>(string eventName, Action<T> listener)
   {
     if (EventTable.ContainsKey(eventName))
     {
@@ -70,7 +70,7 @@ public static class EventBus
 
   #region --- 派发事件 ---
 
-  public static void Dispatch(string eventName)
+  public static void Emit(string eventName)
   {
     if (EventTable.ContainsKey(eventName))
     {
@@ -87,7 +87,7 @@ public static class EventBus
     }
   }
 
-  public static void Dispatch<T>(string eventName, T arg)
+  public static void Emit<T>(string eventName, T arg)
   {
     if (EventTable.ContainsKey(eventName))
     {
@@ -107,7 +107,7 @@ public static class EventBus
   #endregion
 
   // 清空所有事件（场景切换时调用）
-  public static void ClearAll()
+  public static void OffAll()
   {
     EventTable.Clear();
   }

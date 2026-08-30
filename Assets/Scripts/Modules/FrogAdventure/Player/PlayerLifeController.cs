@@ -10,12 +10,12 @@ namespace FrogAdventure {
 
     private void Start()
     {
-      EventBus.AddListener("PLAYER_REVIVE", Revive);
+      EventBus.On("PLAYER_REVIVE", Revive);
     }
 
     private void OnDestroy()
     {
-      EventBus.RemoveListener("PLAYER_REVIVE", Revive);
+      EventBus.Off("PLAYER_REVIVE", Revive);
     }
 
     private void Revive()
