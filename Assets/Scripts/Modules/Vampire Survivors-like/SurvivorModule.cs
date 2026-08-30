@@ -11,8 +11,8 @@ public class SurvivorModule : BaseModule
 
   protected override void OnInit()
   {
-    RegPresenter<SurvivorMainPresenter>(SurvivorViewType.Main, "Prefabs/SurvivorMain", UILayerIndex.Window);
-    RegPresenter<SurvivorSkillSelectPanelPresenter>(SurvivorViewType.SkillSelect, "Prefabs/SurvivorSkillSelectPanel", UILayerIndex.Model);
+    RegPresenter<SurvivorMainPresenter>(SurvivorViewType.Main);
+    RegPresenter<SurvivorSkillSelectPanelPresenter>(SurvivorViewType.SkillSelect);
   }
 
   /// <summary>

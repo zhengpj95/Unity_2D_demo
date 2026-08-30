@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class SurvivorMainPresenter : BasePresenter
 {
+  public override string PrefabPath => "Prefabs/SurvivorMain";
+
   private SurvivorMainView _view;
   private int _currentLevel;
   private int _currentExp;

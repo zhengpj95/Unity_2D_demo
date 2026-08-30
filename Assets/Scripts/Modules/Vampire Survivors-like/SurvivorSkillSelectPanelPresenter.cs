@@ -7,6 +7,9 @@ public class SurvivorSkillSelectPanelPresenter : BasePresenter
 {
   private const float CountdownDuration = 10f;
 
+  public override UILayerIndex Layer => UILayerIndex.Model;
+  public override string PrefabPath => "Prefabs/SurvivorSkillSelectPanel";
+
   private SurvivorSkillSelectPanelView _view;
   private float _remainingTime;
 

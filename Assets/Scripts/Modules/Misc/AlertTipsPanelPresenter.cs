@@ -20,6 +20,9 @@ public class AlertTipsPanelPresenter : BasePresenter<AlertTipsPanelView, AlertTi
 {
   private Action _confirmCallback;
 
+  public override UILayerIndex Layer => UILayerIndex.Model;
+  public override string PrefabPath => "Prefabs/AlertTipsPanel";
+
   public override void OnInit(UIView view)
   {
     base.OnInit(view);

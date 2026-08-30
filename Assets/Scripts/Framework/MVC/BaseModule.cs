@@ -9,8 +9,6 @@ public abstract class BaseModule
   private sealed class PresenterDefinition
   {
     public Type PresenterType;
-    public string PrefabPath;
-    public UILayerIndex Layer;
   }
 
   private readonly Dictionary<Enum, PresenterDefinition> _presenterDefinitions = new();
@@ -71,11 +69,10 @@ public abstract class BaseModule
   protected virtual void OnUpdate() { }
   protected virtual void OnRelease() { }
 
-  /// <summary>登记 ViewType 与 Presenter/Prefab 的一一对应关系，打开时才实例化 Presenter。</summary>
-  protected void RegPresenter<T>(Enum viewType, string prefabPath, UILayerIndex layer) where T : BasePresenter, new()
+  /// <summary>登记 ViewType 与 Presenter 的一一对应关系，打开时才实例化 Presenter。</summary>
+  protected void RegPresenter<T>(Enum viewType) where T : BasePresenter, new()
   {
     if (viewType == null) throw new ArgumentNullException(nameof(viewType));
-    if (string.IsNullOrWhiteSpace(prefabPath)) throw new ArgumentException("Prefab path cannot be empty.", nameof(prefabPath));
     if (_presenterDefinitions.ContainsKey(viewType))
       throw new InvalidOperationException($"[{GetType().Name}] ViewType already registered: {viewType}");
     if (HasPresenterType(typeof(T)))
@@ -83,9 +80,7 @@ public abstract class BaseModule
 
     _presenterDefinitions.Add(viewType, new PresenterDefinition
     {
-      PresenterType = typeof(T),
-      PrefabPath = prefabPath,
-      Layer = layer
+      PresenterType = typeof(T)
     });
   }
 
@@ -102,12 +97,12 @@ public abstract class BaseModule
     BasePresenter cached = UIManager.Instance.GetPresenter(viewKey);
     if (cached != null)
     {
-      UIManager.Instance.ShowPresenter(cached);
+      UIManager.Instance.ShowPresenter(cached, args);
       if (cached is T cachedPresenter) return cachedPresenter;
       throw new InvalidOperationException($"ViewType {viewType} is bound to {cached.GetType().Name}, not {typeof(T).Name}.");
     }
 
-    T presenter = UIManager.Instance.OpenWindow<T>(viewKey, definition.PrefabPath, definition.Layer, args);
+    T presenter = UIManager.Instance.OpenWindow<T>(viewKey, args);
     if (presenter == null) return null;
     return presenter;
   }

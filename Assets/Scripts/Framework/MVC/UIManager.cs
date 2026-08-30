@@ -4,17 +4,6 @@ using System.Linq;
 using UnityEngine;
 
 /// <summary>
-/// UI层级索引
-/// </summary>
-public enum UILayerIndex
-{
-  Main = 0,
-  Window = 1,
-  Model = 2,
-  Tip = 3,
-}
-
-/// <summary>
 /// UI管理器配置
 /// 用于存储UI层级Transform引用
 /// </summary>
@@ -130,6 +119,9 @@ public class UIManager : Singleton<UIManager>
   public void Release()
   {
     if (!IsInitialized) return;
+
+    foreach (BasePresenter presenter in _presenterCache.Values.ToArray())
+      DestroyWindow(presenter);
 
     DestroyAllUI();
     _config = null;
@@ -306,31 +298,35 @@ public class UIManager : Singleton<UIManager>
   private readonly Dictionary<ModuleViewKey, BasePresenter> _presenterCache = new Dictionary<ModuleViewKey, BasePresenter>();
   // 供 Presenter 自身关闭或模块释放时反查其全局身份。
   private readonly Dictionary<BasePresenter, ModuleViewKey> _presenterKeys = new Dictionary<BasePresenter, ModuleViewKey>();
-  // 界面打开栈 (主要用于 PopUp 层管理)
-  private readonly Stack<BasePresenter> _uiStack = new Stack<BasePresenter>();
 
   /// <summary>
   /// 打开界面
   /// </summary>
-  public T OpenWindow<T>(ModuleViewKey viewKey, string prefabPath, UILayerIndex layer, object args = null) where T : BasePresenter, new()
+  public T OpenWindow<T>(ModuleViewKey viewKey, object args = null) where T : BasePresenter, new()
   {
     if (!_presenterCache.TryGetValue(viewKey, out BasePresenter presenter))
     {
-      // 1. 模拟异步/同步加载 Prefab (实际项目中可替换为 Addressables / AssetBundle)
-      GameObject prefab = Resources.Load<GameObject>(prefabPath);
-      if (prefab == null)
+      presenter = new T();
+      if (string.IsNullOrWhiteSpace(presenter.PrefabPath))
       {
-        Debug.LogError($"[UIManager] Prefab not found: {prefabPath}");
+        Debug.LogError($"[UIManager] Presenter {typeof(T).Name} must define a valid PrefabPath.");
         return null;
       }
 
-      Transform parent = GetLayerParent(layer);
+      // 1. 模拟异步/同步加载 Prefab (实际项目中可替换为 Addressables / AssetBundle)
+      GameObject prefab = Resources.Load<GameObject>(presenter.PrefabPath);
+      if (prefab == null)
+      {
+        Debug.LogError($"[UIManager] Prefab not found: {presenter.PrefabPath}");
+        return null;
+      }
+
+      Transform parent = GetLayerParent(presenter.Layer);
       GameObject go = UnityEngine.Object.Instantiate(prefab, parent);
 
       UIView view = go.GetComponent<UIView>();
 
       // 2. 实例化 Presenter 并初始化
-      presenter = new T();
       presenter.OnInit(view);
       _presenterCache.Add(viewKey, presenter);
       _presenterKeys.Add(presenter, viewKey);
@@ -340,13 +336,7 @@ public class UIManager : Singleton<UIManager>
       throw new InvalidOperationException($"[UIManager] View key {viewKey} is bound to {presenter.GetType().Name}, not {typeof(T).Name}.");
     }
 
-    // 3. 入栈控制（如果是 PopUp 类型的弹窗，可以压栈管理）
-    if (layer == UILayerIndex.Model)
-    {
-      _uiStack.Push(presenter);
-    }
-
-    // 4. 调用 Open 生命周期
+    // 3. 调用 Open 生命周期。
     presenter.OnOpen(args);
     return (T)presenter;
   }
@@ -378,11 +368,7 @@ public class UIManager : Singleton<UIManager>
         && _presenterCache.TryGetValue(viewKey, out BasePresenter cachedPresenter)
         && ReferenceEquals(cachedPresenter, presenter))
     {
-      if (presenter.IsVisible)
-      {
-        presenter.OnClose();
-      }
-
+      if (presenter.IsVisible) presenter.OnClose();
       presenter.OnDestroy();
       RemovePresenter(viewKey, presenter);
       return;
@@ -403,12 +389,9 @@ public class UIManager : Singleton<UIManager>
   {
     if (_presenterCache.TryGetValue(viewKey, out BasePresenter presenter))
     {
-      if (presenter.IsVisible)
-      {
-        presenter.OnClose();
-        presenter.OnDestroy(); // TODO 延迟关闭处理，或定时检测关闭
-        RemovePresenter(viewKey, presenter);
-      }
+      if (presenter.IsVisible) presenter.OnClose();
+      presenter.OnDestroy();
+      RemovePresenter(viewKey, presenter);
     }
   }
 
@@ -418,18 +401,6 @@ public class UIManager : Singleton<UIManager>
     _presenterKeys.Remove(presenter);
   }
 
-  /// <summary>
-  /// 出栈 (关闭最顶层的弹窗)
-  /// </summary>
-  public void PopWindow()
-  {
-    if (_uiStack.Count > 0)
-    {
-      BasePresenter topPresenter = _uiStack.Pop();
-      topPresenter.OnClose();
-    }
-  }
-
   #endregion
 
   #region Presenter 生命周期管理
@@ -437,11 +408,11 @@ public class UIManager : Singleton<UIManager>
   /// <summary>
   /// 显示已缓存的 Presenter（调用 OnShow）
   /// </summary>
-  public void ShowPresenter(BasePresenter presenter)
+  public void ShowPresenter(BasePresenter presenter, object args = null)
   {
     if (presenter != null && !presenter.IsVisible)
     {
-      presenter.OnOpen(null);
+      presenter.OnOpen(args);
     }
   }
 

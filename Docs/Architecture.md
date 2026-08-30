@@ -129,7 +129,7 @@ ModuleManager
 - 禁止形成循环依赖。
 
 Presenter 采用定义于 `Assets/Scripts/Define/ViewType.cs` 的模块 ViewType 映射：模块在 `OnInit` 中通过
-`RegPresenter<TPresenter>(viewType, prefabPath, layer)` 登记 ViewType 与 Presenter、Prefab 的一一对应关系，调用 `OpenWindow<TPresenter>(viewType, args)` 时才实例化并缓存界面。一个 Presenter 类型应只归属一个 Module，并只绑定一个 ViewType；`BaseModule` 负责本模块内的重复注册校验。`BaseModule` 与 `UIManager` 统一以 `ModuleViewKey`（`ModuleName + ViewType`）作为 Presenter 缓存身份。ViewType 命名采用 `模块名ViewType`，例如 `SurvivorViewType` 与 `MiscViewType`。
+`RegPresenter<TPresenter>(viewType)` 登记 ViewType 与 Presenter 的一一对应关系，调用 `OpenWindow<TPresenter>(viewType, args)` 时才实例化并缓存界面。Presenter 的 `Layer` 与 `PrefabPath` 属性分别决定 UI 层级和 Resources 路径，默认层级是 `Window`；特殊界面由具体 Presenter 重写，注册或打开接口不再传入层级和路径。一个 Presenter 类型应只归属一个 Module，并只绑定一个 ViewType；`BaseModule` 负责本模块内的重复注册校验。`BaseModule` 与 `UIManager` 统一以 `ModuleViewKey`（`ModuleName + ViewType`）作为 Presenter 缓存身份。ViewType 命名采用 `模块名ViewType`，例如 `SurvivorViewType` 与 `MiscViewType`。
 已打开的 Presenter 仅可通过 `GetPresenter(viewType)` 按 ViewType 查询，不提供按 Presenter 类型查询的 Module API。
 
 ### Proxy
@@ -177,7 +177,6 @@ Assets/Scripts/Framework/MVC/UIManager.cs
 - GameObject 缓存；
 - Presenter 创建、缓存和生命周期调用；
 - Window 打开/关闭；
-- Model 层弹窗栈。
 
 当前层级枚举为：
 
@@ -191,7 +190,7 @@ Tip
 需要注意：
 
 1. 当前加载实现仍直接使用 `Resources.Load`，代码注释已为 Addressables / AssetBundle 等资源方案预留替换空间；不要把“未来资源系统”描述成当前已实现。
-2. `CloseWindow` 当前存在立即 `OnDestroy` 的行为以及延迟关闭 TODO，因此不要假设所有关闭窗口都会进入长期缓存。
+2. `CloseWindow` 会关闭并销毁 Presenter；`HidePresenter` 只关闭显示状态并保留缓存。`Model` 仅表示 UI 渲染层级，不参与弹窗栈管理。
 3. 修改 UI 层级、粒子、红点等渲染顺序时，优先遵循现有 Canvas/父子层级模型，而不是无限放大 `sortingOrder`。
 
 ## 7. Network / Protobuf 现状

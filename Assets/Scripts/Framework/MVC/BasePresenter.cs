@@ -18,6 +18,11 @@ public abstract class BasePresenter
   public UIView View { get; private set; }
   public bool IsVisible { get; private set; }
 
+  /// <summary>界面所属 UI 层级；默认窗口层，特殊界面由具体 Presenter 重写。</summary>
+  public virtual UILayerIndex Layer => UILayerIndex.Window;
+  /// <summary>Resources 下的界面 Prefab 路径；注册到模块的 Presenter 必须重写。</summary>
+  public virtual string PrefabPath => string.Empty;
+
   // 是否需要每帧更新
   public bool NeedUpdate { get; protected set; }
 
