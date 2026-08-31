@@ -25,7 +25,7 @@ public sealed class SurvivorProxy : BaseProxy
   public void SetHealth(int currentHealth, int maxHealth)
   {
     Model.MaxHealth = Math.Max(0, maxHealth);
-    Model.CurrentHealth = Math.Clamp(currentHealth, 0, Model.MaxHealth);
+    Model.CurrentHealth = Math.Max(0, Math.Min(currentHealth, Model.MaxHealth));
   }
 
   /// <summary>
