@@ -18,17 +18,17 @@ public abstract class BaseEmitter
 
   protected void On(string eventName, Action listener)
   {
-    Register(eventName, listener, () => EventBus.On(eventName, listener), () => EventBus.Off(eventName, listener));
+    Register(eventName, listener, () => EventBus.On(eventName, listener, this), () => EventBus.Off(eventName, listener, this));
   }
 
   protected void On(string eventName, Action<object> listener)
   {
-    Register(eventName, listener, () => EventBus.On(eventName, listener), () => EventBus.Off(eventName, listener));
+    Register(eventName, listener, () => EventBus.On(eventName, listener, this), () => EventBus.Off(eventName, listener, this));
   }
 
   protected void On<T>(string eventName, Action<T> listener)
   {
-    Register(eventName, listener, () => EventBus.On(eventName, listener), () => EventBus.Off(eventName, listener));
+    Register(eventName, listener, () => EventBus.On(eventName, listener, this), () => EventBus.Off(eventName, listener, this));
   }
 
   protected void Emit(string eventName)
@@ -49,6 +49,7 @@ public abstract class BaseEmitter
     for (int i = _subscriptions.Count - 1; i >= 0; i--)
       _subscriptions[i].Unsubscribe();
     _subscriptions.Clear();
+    EventBus.OffAll(this);
   }
 
   private void Register(string eventName, Delegate listener, Action subscribe, Action unsubscribe)

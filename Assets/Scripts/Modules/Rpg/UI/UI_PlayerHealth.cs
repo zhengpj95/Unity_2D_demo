@@ -12,12 +12,12 @@ namespace Rpg
 
     private void Start()
     {
-      EventBus.On("Event_UpdatePlayerHealth", UpdatePlayerHealth);
+      EventBus.On("Event_UpdatePlayerHealth", UpdatePlayerHealth, this);
     }
 
     void OnDestroy()
     {
-      EventBus.Off("Event_UpdatePlayerHealth", UpdatePlayerHealth);
+      EventBus.Off("Event_UpdatePlayerHealth", UpdatePlayerHealth, this);
     }
 
     public void UpdatePlayerHealth()

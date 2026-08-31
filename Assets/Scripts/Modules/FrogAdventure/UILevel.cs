@@ -1,7 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace FrogAdventure {
+namespace FrogAdventure
+{
 
   public class UILevel : MonoBehaviour
   {
@@ -11,8 +12,8 @@ namespace FrogAdventure {
     private void Start()
     {
       SetLevelText();
-      EventBus.On("UPDATE_LEVEL", SetLevelText);
-      EventBus.On("UPDATE_HP", SetHeart);
+      EventBus.On("UPDATE_LEVEL", SetLevelText, this);
+      EventBus.On("UPDATE_HP", SetHeart, this);
     }
 
     private void SetLevelText()

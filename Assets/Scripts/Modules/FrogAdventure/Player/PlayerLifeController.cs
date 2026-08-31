@@ -1,7 +1,8 @@
 using System;
 using UnityEngine;
 
-namespace FrogAdventure {
+namespace FrogAdventure
+{
 
   public class PlayerLifeController : MonoBehaviour
   {
@@ -10,12 +11,12 @@ namespace FrogAdventure {
 
     private void Start()
     {
-      EventBus.On("PLAYER_REVIVE", Revive);
+      EventBus.On("PLAYER_REVIVE", Revive, this);
     }
 
     private void OnDestroy()
     {
-      EventBus.Off("PLAYER_REVIVE", Revive);
+      EventBus.Off("PLAYER_REVIVE", Revive, this);
     }
 
     private void Revive()

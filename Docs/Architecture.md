@@ -150,6 +150,30 @@ Command 不自行成为长期事件中心，不应承担持久化数据容器，
 
 `BaseEmitter` 是 Module、Command、Proxy 与 Presenter 共用的 EventBus 生命周期封装：`On` 记录订阅，`Emit` 派发事件，`OffAll` 统一解绑且可重复调用。Presenter 在 `OnClose` 解绑，Proxy、Command 与 Module 在释放时解绑；它不创建第二套事件系统。
 
+### EventBus 使用约定（团队统一规则）
+
+- 统一使用 `EventBus.On(eventName, listener, owner)` / `EventBus.Off(eventName, listener, owner)`。
+- `owner` 表示订阅归属对象，通常是 `this`、Presenter、Module 或 UI 实例；它不是可选参数。
+- 同一事件名允许多个 `owner` 同时监听；同一 `owner + listener` 仅允许注册一次，避免重复订阅。
+- 发生销毁、关闭或场景切换时，必须按 owner 做清理，例如 `EventBus.Off(..., this)` 或 `EventBus.OffAll(this)`。
+- 不再使用无 owner 的旧写法：`EventBus.On(eventName, listener)`、`EventBus.Off(eventName, listener)`。
+- `Emit` 允许无参和有参两种形式，但同一事件名的业务监听签名必须保持一致：无参事件注册 `Action`，有参事件注册 `Action<T>`；混用会抛出异常。
+- `Action<object>` 是 Command 分发使用的通用监听器：无参事件收到 `null`，有参事件收到实际参数。它不定义事件签名，可与上述业务监听器共存。
+- `owner` 不可为 `null`；传入 `null` 会抛出 `ArgumentNullException`，避免产生无法通过 `OffAll(owner)` 清理的订阅。
+
+```csharp
+// 正确：按 owner 归属注册
+EventBus.On("UPDATE_HP", RefreshHp, this);
+EventBus.Off("UPDATE_HP", RefreshHp, this);
+
+// 正确：一个事件可被多个界面同时监听
+EventBus.On("UPDATE_HP", RefreshUIA, panelA);
+EventBus.On("UPDATE_HP", RefreshUIB, panelB);
+
+// 错误：不要再写回无 owner 版本
+// EventBus.On("UPDATE_HP", RefreshHp);
+```
+
 ### Presenter / View
 
 Presenter 负责界面生命周期、交互协调和展示逻辑；View 负责 Unity 组件引用与显示。
