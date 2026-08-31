@@ -71,6 +71,18 @@
 - 禁止循环依赖。若两个模块互相依赖，应提取稳定的接口或上移到共享服务层。
 - MVC 业务开发可参考 `.codex/skills/unity-mvc-development/SKILL.md`，但非 MVC 工作不要强行套用该 Skill。
 
+
+## Survivor 模块开发
+
+修改 `Assets/Scripts/Modules/Vampire Survivors-like/` 前，必须先阅读：
+
+1. `Docs/Architecture.md`
+2. `Docs/Modules/Survivor.md`
+3. `.codex/skills/unity-mvc-development/SKILL.md`
+4. 目标 Module、`BaseModule`、`BaseProxy` 与真实调用方
+
+Survivor 的运行时数据必须由 `SurvivorModel` 保存、由 `SurvivorProxy` 持有和修改。Presenter / View 只负责展示和交互；技能选择等 UI 通过回调交给 `SurvivorGameplayController` 编排，不直接调用武器逻辑或修改 `Time.timeScale`。
+
 ## 网络与 Protobuf
 
 - 网络层按 `Network / Packet / Proto / Dispatcher` 的职责分层：连接管理、封包解包、协议编解码、消息分发各自负责；实际文件组织以当前 `Assets/Scripts/Framework/Network` 为准。
