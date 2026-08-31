@@ -1,7 +1,19 @@
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VampireSurvivorsLike;
+
+/// <summary>技能弹窗的运行时参数；Presenter 只将选择结果回传给 GameplayController。</summary>
+public sealed class SurvivorSkillSelectArgs
+{
+  public Action<WeaponSO> OnSelected { get; }
+
+  public SurvivorSkillSelectArgs(Action<WeaponSO> onSelected)
+  {
+    OnSelected = onSelected;
+  }
+}
 
 public class SurvivorSkillSelectPanelPresenter : BasePresenter
 {
@@ -12,6 +24,7 @@ public class SurvivorSkillSelectPanelPresenter : BasePresenter
 
   private SurvivorSkillSelectPanelView _view;
   private float _remainingTime;
+  private Action<WeaponSO> _onSelected;
 
   public override void OnInit(UIView view)
   {
@@ -26,9 +39,13 @@ public class SurvivorSkillSelectPanelPresenter : BasePresenter
   public override void OnOpen(object args = null)
   {
     base.OnOpen(args);
+
+    _onSelected = (args as SurvivorSkillSelectArgs)?.OnSelected;
+    if (_onSelected == null)
+      Debug.LogWarning("[SurvivorSkillSelectPanelPresenter] Missing selection callback.");
+
     _remainingTime = CountdownDuration;
     NeedUpdate = true;
-    Time.timeScale = 0f;
     UpdateSkillItems();
     UpdateCountdownText();
   }
@@ -36,7 +53,7 @@ public class SurvivorSkillSelectPanelPresenter : BasePresenter
   public override void OnClose()
   {
     NeedUpdate = false;
-    Time.timeScale = 1f;
+    _onSelected = null;
     base.OnClose();
   }
 
@@ -60,8 +77,9 @@ public class SurvivorSkillSelectPanelPresenter : BasePresenter
       return;
     }
 
-    WeaponManager.Instance.AddOrUpgrade(_view.weapons[skillIndex]);
+    Action<WeaponSO> onSelected = _onSelected;
     UIManager.Instance.HidePresenter(this);
+    onSelected?.Invoke(_view.weapons[skillIndex]);
   }
 
   private void UpdateSkillItems()
