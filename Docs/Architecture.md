@@ -338,7 +338,25 @@ Unity / Network / Resource implementation
 - 具体玩法逐步复用 Framework，而不是把玩法特例塞回 Framework；
 - 新通用系统先在真实业务中验证，再沉淀为 Framework，避免提前设计“大而全”框架。
 
-## 12. AI 修改项目时的检查表
+## 12. Survivor 模块当前实现
+
+Survivor 玩法的模块级设计记录在：
+
+```text
+Docs/Modules/Survivor.md
+```
+
+当前已实现的职责边界：
+
+- `SurvivorModel` 保存一局 Survivor 的血量、等级、经验、待处理升级次数、击杀数、局内宝石/金币和游戏状态；
+- `SurvivorProxy` 持有 Model，负责数据修改及未来协议同步，不直接操作 UI；
+- `SurvivorGameplayController` 编排经验结算、连续升级、暂停和技能选择结果；
+- 主界面 Presenter 只读取 Model 快照并展示；
+- 技能选择 Presenter 仅将玩家选择通过回调交给 GameplayController。
+
+`DropItemManager` 和 `WeaponManager` 目前仍是 Survivor 场景中的旧组件；它们的生成与武器创建逻辑尚未迁移，但不再保存 UI 展示数据，也不再由 Presenter 直接调用。
+
+## 13. AI 修改项目时的检查表
 
 修改前：
 
