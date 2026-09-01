@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using VampireSurvivorsLike;
 
@@ -5,61 +6,63 @@ public class SurvivorModule : BaseModule
 {
   public override ModuleName ModuleName => ModuleName.Survivor;
 
-  private int _currentHealth;
-  private int _maxHealth;
-  private bool _hasHealthState;
+  private SurvivorProxy _proxy;
+  private SurvivorGameplayController _gameplayController;
 
   protected override void OnInit()
   {
+    _proxy = RegProxy<SurvivorProxy>();
+    _gameplayController = new SurvivorGameplayController(this, _proxy);
+
     RegPresenter<SurvivorMainPresenter>(SurvivorViewType.Main);
     RegPresenter<SurvivorSkillSelectPanelPresenter>(SurvivorViewType.SkillSelect);
   }
 
-  /// <summary>
-  /// 打开幸存者主界面，并将 Presenter 注册、持有在当前模块中。
-  /// </summary>
+  /// <summary>打开幸存者主界面，并按当前 Model 快照刷新显示。</summary>
   public SurvivorMainPresenter OpenSurvivorMain()
   {
     SurvivorMainPresenter presenter = OpenWindow<SurvivorMainPresenter>(SurvivorViewType.Main);
-
     RefreshMainPresenter(presenter);
     return presenter;
   }
 
   public void UpdateHp(int currentHealth, int maxHealth)
   {
-    _currentHealth = currentHealth;
-    _maxHealth = maxHealth;
-    _hasHealthState = true;
-
-    (GetPresenter(SurvivorViewType.Main) as SurvivorMainPresenter)?.UpdateHp(currentHealth, maxHealth);
+    _proxy.SetHealth(currentHealth, maxHealth);
+    RefreshMainView();
   }
 
   public void UpdateExp(int addExp)
   {
-    SurvivorMainPresenter presenter = GetPresenter(SurvivorViewType.Main) as SurvivorMainPresenter;
-    if (presenter == null)
-    {
-      Debug.LogWarning("[SurvivorModule] SurvivorMainPresenter is not open.");
-      return;
-    }
-
-    presenter.UpdateExp(addExp, () => OpenSkillSelectPanel());
+    _gameplayController.OnExpCollected(addExp);
   }
 
   public void UpdateEnemyKillCount()
   {
-    (GetPresenter(SurvivorViewType.Main) as SurvivorMainPresenter)?.UpdateEnemyKillCount(EnemySpawnManager.Instance.KillEnemyCount);
+    _proxy.SetKillCount(EnemySpawnManager.Instance.KillEnemyCount);
+    RefreshMainView();
+  }
+
+  public void AddDropItem(DropItemType dropItemType, int count)
+  {
+    _proxy.AddDropItem(dropItemType, count);
+    RefreshMainView();
   }
 
   public void UpdateInventory()
   {
-    (GetPresenter(SurvivorViewType.Main) as SurvivorMainPresenter)?.UpdateInventory(DropItemManager.Instance.GemCount, DropItemManager.Instance.CoinCount);
+    RefreshMainView();
   }
 
-  public SurvivorSkillSelectPanelPresenter OpenSkillSelectPanel()
+  public SurvivorSkillSelectPanelPresenter OpenSkillSelectPanel(SurvivorSkillSelectArgs args)
   {
-    return OpenWindow<SurvivorSkillSelectPanelPresenter>(SurvivorViewType.SkillSelect);
+    return OpenWindow<SurvivorSkillSelectPanelPresenter>(SurvivorViewType.SkillSelect, args);
+  }
+
+  /// <summary>用 SurvivorModel 的当前快照刷新已打开的主界面。</summary>
+  public void RefreshMainView()
+  {
+    RefreshMainPresenter(GetPresenter(SurvivorViewType.Main) as SurvivorMainPresenter);
   }
 
   protected override void OnUpdate()
@@ -72,15 +75,9 @@ public class SurvivorModule : BaseModule
   private void RefreshMainPresenter(SurvivorMainPresenter presenter)
   {
     if (presenter == null)
-    {
-      Debug.LogWarning("[SurvivorModule] Failed to open SurvivorMainPresenter.");
       return;
-    }
 
-    if (_hasHealthState)
-      presenter.UpdateHp(_currentHealth, _maxHealth);
-
-    presenter.UpdateEnemyKillCount(EnemySpawnManager.Instance.KillEnemyCount);
-    presenter.UpdateInventory(DropItemManager.Instance.GemCount, DropItemManager.Instance.CoinCount);
+    SurvivorModel model = _proxy.Model;
+    presenter.Refresh(model);
   }
 }

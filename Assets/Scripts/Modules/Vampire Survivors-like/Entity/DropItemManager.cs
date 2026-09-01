@@ -1,45 +1,33 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-namespace VampireSurvivorsLike {
-
+namespace VampireSurvivorsLike
+{
   public class DropItemManager : SingletonMono<DropItemManager>
   {
     [SerializeField] private Transform dropItemContainer;
     [SerializeField] private Transform gemPrefab;
     [SerializeField] private Transform coinPrefab;
 
-    [SerializeField] private int totalScore = 0; // 总积分
-
-    [SerializeField] private int speedUpRateScore = 100; // 每一次提升所需积分
-    private int speedUpScore = 0; // 速度提升积分
-    [SerializeField] private int skillUpRateScore = 20; // 每一次升级所需积分
-    private int skillUpScore = 0; // 技能升级积分
-
-    public int CoinCount { get; set; } = 0;
-    public int GemCount { get; set; } = 0;
+    [SerializeField] private int totalScore;
+    [SerializeField] private int speedUpRateScore = 100;
+    private int speedUpScore;
+    [SerializeField] private int skillUpRateScore = 20;
+    private int skillUpScore;
 
     public void SpawnDropItem(Vector3 position, DropItemType dropItemType, float dropItemProb)
     {
       if (Random.value > dropItemProb)
-      {
         return;
-      }
-      var prefab = gemPrefab;
-      switch (dropItemType)
+
+      Transform prefab = dropItemType switch
       {
-        case DropItemType.Gem:
-          prefab = gemPrefab;
-          break;
-        case DropItemType.Coin:
-          prefab = coinPrefab;
-          break;
-      }
+        DropItemType.Gem => gemPrefab,
+        DropItemType.Coin => coinPrefab,
+        _ => null,
+      };
+
       if (prefab != null)
-      {
         Instantiate(prefab, position, Quaternion.identity, dropItemContainer);
-      }
     }
 
     public void AddScore(int score)
@@ -61,22 +49,12 @@ namespace VampireSurvivorsLike {
         // BuffManager.Instance.hero.GetComponent<BuffHandler>().AddBuff(BuffManager.Instance.playerAttackRangeSO);
       }
 
-      ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor).UpdateExp(score);
+      ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor)?.UpdateExp(score);
     }
 
     public void AddDropItem(DropItemType dropItemType, int count)
     {
-      switch (dropItemType)
-      {
-        case DropItemType.Gem:
-          GemCount += count;
-          break;
-        case DropItemType.Coin:
-          CoinCount += count;
-          break;
-      }
-      ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor).UpdateInventory();
+      ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor)?.AddDropItem(dropItemType, count);
     }
   }
-
 }

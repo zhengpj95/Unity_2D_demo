@@ -5,8 +5,6 @@ public class SurvivorMainPresenter : BasePresenter
   public override string PrefabPath => "Prefabs/SurvivorMain";
 
   private SurvivorMainView _view;
-  private int _currentLevel;
-  private int _currentExp;
 
   public override void OnInit(UIView view)
   {
@@ -14,44 +12,20 @@ public class SurvivorMainPresenter : BasePresenter
     _view = view as SurvivorMainView;
   }
 
-  public override void OnOpen(object args = null)
+  /// <summary>只展示 SurvivorModel 快照，不持有游戏运行时数据。</summary>
+  public void Refresh(SurvivorModel model)
   {
-    base.OnOpen(args);
-
-    UpdateExpView(GetNextLevelExp());
-  }
-
-  public override void OnClose()
-  {
-    base.OnClose();
-  }
-
-  public void UpdateExp(int addExp, System.Action onLevelUp)
-  {
-    _currentExp += addExp;
-    int nextLevelExp = GetNextLevelExp();
-
-    if (_currentExp >= nextLevelExp)
-    {
-      UpdateExpView(nextLevelExp);
-      _currentExp = 0;
-      _currentLevel++;
-      UpdateExpView(nextLevelExp);
-      onLevelUp?.Invoke();
+    if (_view == null || model == null)
       return;
-    }
 
-    UpdateExpView(nextLevelExp);
+    UpdateHp(model.CurrentHealth, model.MaxHealth);
+    UpdateExp(model.CurrentExp, GetRequiredExp(model.Level), model.Level);
+    UpdateEnemyKillCount(model.KillCount);
+    UpdateInventory(model.GemCount, model.CoinCount);
   }
 
-  public void UpdateHp(int currentHealth, int maxHealth)
+  private void UpdateHp(int currentHealth, int maxHealth)
   {
-    if (_view == null)
-    {
-      Debug.LogWarning("[SurvivorMainPresenter] SurvivorMainView is not initialized.");
-      return;
-    }
-
     if (_view.hpSlider != null)
     {
       _view.hpSlider.maxValue = maxHealth;
@@ -62,26 +36,23 @@ public class SurvivorMainPresenter : BasePresenter
       _view.hpValueText.text = $"{Mathf.Max(0, currentHealth)} / {maxHealth}";
   }
 
-  public void UpdateEnemyKillCount(int killCount)
+  private void UpdateExp(int currentExp, int requiredExp, int level)
   {
-    if (_view == null)
-    {
-      Debug.LogWarning("[SurvivorMainPresenter] SurvivorMainView is not initialized.");
-      return;
-    }
+    if (_view.expSlider != null)
+      _view.expSlider.value = requiredExp <= 0 ? 0f : Mathf.Clamp01((float)currentExp / requiredExp);
 
+    if (_view.expLevelTxt != null)
+      _view.expLevelTxt.text = $"Lv.{level}";
+  }
+
+  private void UpdateEnemyKillCount(int killCount)
+  {
     if (_view.killCountText != null)
       _view.killCountText.text = killCount.ToString();
   }
 
-  public void UpdateInventory(int gemCount, int coinCount)
+  private void UpdateInventory(int gemCount, int coinCount)
   {
-    if (_view == null)
-    {
-      Debug.LogWarning("[SurvivorMainPresenter] SurvivorMainView is not initialized.");
-      return;
-    }
-
     if (_view.gemCountText != null)
       _view.gemCountText.text = gemCount.ToString();
 
@@ -89,26 +60,10 @@ public class SurvivorMainPresenter : BasePresenter
       _view.coinCountText.text = coinCount.ToString();
   }
 
-  private int GetNextLevelExp()
+  private static int GetRequiredExp(int level)
   {
     const int baseValue = 20;
     const int growth = 5;
-    int nextLevel = _currentLevel + 1;
-    return baseValue * nextLevel + growth * nextLevel * nextLevel;
-  }
-
-  private void UpdateExpView(int nextLevelExp)
-  {
-    if (_view == null)
-    {
-      Debug.LogWarning("[SurvivorMainPresenter] SurvivorMainView is not initialized.");
-      return;
-    }
-
-    if (_view.expSlider != null)
-      _view.expSlider.value = Mathf.Min(1f, (float)_currentExp / nextLevelExp);
-
-    if (_view.expLevelTxt != null)
-      _view.expLevelTxt.text = $"Lv.{_currentLevel}";
+    return baseValue * level + growth * level * level;
   }
 }
