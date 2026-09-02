@@ -13,31 +13,61 @@ namespace VampireSurvivorsLike {
     private float speed = 2f;
     private int damage = 1;
     private Transform target;
+    // 子弹/箭当前的飞行方向；普通子弹初始化后不再修改它。
+    private Vector3 direction;
+    // true: 每帧朝目标修正方向（追踪箭）；false: 保持初始方向（普通子弹）。
+    private bool followTarget;
 
-    public void Init(Transform targetTransform, WeaponLevelData levelData)
+    /// <summary>
+    /// 初始化投射物的伤害、速度及飞行方式。
+    /// </summary>
+    /// <param name="targetTransform">
+    /// 发射瞬间用于计算初始方向的目标。仅当 <paramref name="shouldFollowTarget"/> 为 true 时才会在飞行过程中持续追踪。
+    /// </param>
+    /// <param name="levelData">当前武器等级数据，提供飞行速度和伤害值。</param>
+    /// <param name="shouldFollowTarget">
+    /// true 表示追踪箭：每帧朝目标转向；false 表示普通子弹：只在初始化时瞄准一次，之后直线飞行。
+    /// </param>
+    public void Init(Transform targetTransform, WeaponLevelData levelData, bool shouldFollowTarget = true)
     {
-      target = targetTransform;
       speed = levelData.speed;
       damage = levelData.damage;
+      followTarget = shouldFollowTarget;
+      target = shouldFollowTarget ? targetTransform : null;
+
+      direction = targetTransform != null
+        ? targetTransform.position - transform.position
+        : transform.right;
+      if (direction.sqrMagnitude < Mathf.Epsilon)
+      {
+        direction = transform.right;
+      }
+
+      direction.Normalize();
+      UpdateRotation();
       initialized = true;
     }
 
     private void Update()
     {
       if (!initialized) return;
-      if (target != null)
+      if (followTarget && target != null)
       {
-        Vector3 dir = (target.position - transform.position).normalized;
-        transform.position += dir * speed * Time.deltaTime;
+        Vector3 targetDirection = target.position - transform.position;
+        if (targetDirection.sqrMagnitude >= Mathf.Epsilon)
+        {
+          direction = targetDirection.normalized;
+          UpdateRotation();
+        }
+      }
 
-        float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-        transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
-      }
-      else
-      {
-        // 没有目标则直线前进，箭头朝向右边，所以是right
-        transform.position += transform.right * speed * Time.deltaTime;
-      }
+      transform.position += direction * speed * Time.deltaTime;
+    }
+
+    private void UpdateRotation()
+    {
+      float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+      transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
     }
 
     void OnTriggerEnter2D(Collider2D collision)

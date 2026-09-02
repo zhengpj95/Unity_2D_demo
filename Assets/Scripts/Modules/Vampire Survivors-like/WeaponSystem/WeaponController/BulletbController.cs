@@ -14,7 +14,8 @@ namespace VampireSurvivorsLike {
         var bulletb = Instantiate(data.prefab, player.position, Quaternion.identity, transform);
         var bulletbScript = bulletb.GetComponent<ArrowWeapon>();
         var levelData = GetLevelData();
-        bulletbScript.Init(enemy.transform, levelData);
+        // false：普通子弹仅在发射时锁定方向，敌人移动或回收后都不会影响弹道。
+        bulletbScript.Init(enemy.transform, levelData, false);
         Destroy(bulletb.gameObject, levelData.duration);
       }
     }
