@@ -1,20 +1,21 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace VampireSurvivorsLike {
 
-  public class VSEnemyHealth : MonoBehaviour
+  public class VSEnemyHealth : MonoBehaviour, IPoolable
   {
     [SerializeField] private int maxHealth;
     private int currentHealth;
 
-    void Start()
+    public void OnAlloc()
     {
       currentHealth = maxHealth;
       UpdateHpBar();
+    }
+
+    public void OnFree()
+    {
+      currentHealth = 0;
     }
 
     public void TakeDamage(int damage)
@@ -27,8 +28,8 @@ namespace VampireSurvivorsLike {
       {
         EnemySpawnManager.Instance.KillEnemyCount++;
         ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor).UpdateEnemyKillCount();
-        Destroy(gameObject);
         DropItemManager.Instance.SpawnDropItem(transform.position, enemyChasing.DropItemType, enemyChasing.DropItemProb);
+        EnemySpawnManager.Instance.RecycleEnemy(gameObject);
       }
     }
 

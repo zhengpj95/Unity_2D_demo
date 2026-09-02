@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -11,6 +10,12 @@ namespace VampireSurvivorsLike {
     [SerializeField] private float spawnInterval = 1f;
     [SerializeField] private int maxEnemies = 10;
     [SerializeField] private Transform enemyContainer;
+    [Header("Infinite Map Spawn")]
+    [SerializeField] private Transform spawnCenter;
+    [SerializeField, Min(0f)] private float minSpawnDistance = 12f;
+    [SerializeField, Min(0f)] private float maxSpawnDistance = 18f;
+    [SerializeField, Min(0f)] private float recycleDistance = 30f;
+    [SerializeField, Min(0)] private int preloadCountPerPrefab = 3;
 
     private float timer = 0f;
 
@@ -19,12 +24,16 @@ namespace VampireSurvivorsLike {
 
     void Start()
     {
+      ResolveSpawnCenter();
+      PreloadEnemies();
       SpawnEnemy();
     }
 
     void Update()
     {
       timer += Time.deltaTime;
+
+      RecycleDistantEnemies();
 
       if (timer >= spawnInterval)
       {
@@ -40,25 +49,80 @@ namespace VampireSurvivorsLike {
         return;
       }
 
-      if (enemyPrefab.Length > 0 && spawnPoints.Length > 0)
+      if (enemyPrefab == null || enemyPrefab.Length == 0 || !ResolveSpawnCenter())
       {
-        Vector2 spawnPoint;
-        int randomEnemyIndex = Random.Range(0, enemyPrefab.Length);
-        var minPos = spawnPoints[0];
-        var maxPos = spawnPoints[1];
-        if (Random.Range(0f, 1f) > 0.5f)
+        return;
+      }
+
+      int randomEnemyIndex = Random.Range(0, enemyPrefab.Length);
+      GameObject prefab = enemyPrefab[randomEnemyIndex];
+      if (prefab == null) return;
+
+      float outerDistance = Mathf.Max(minSpawnDistance, maxSpawnDistance);
+      float distance = Random.Range(Mathf.Min(minSpawnDistance, outerDistance), outerDistance);
+      Vector2 direction = Random.insideUnitCircle;
+      if (direction.sqrMagnitude < Mathf.Epsilon) direction = Vector2.right;
+      Vector2 spawnPoint = (Vector2)spawnCenter.position + direction.normalized * distance;
+      GameObject enemy = PoolManager.Instance.Alloc(prefab, spawnPoint, Quaternion.identity);
+      if (enemy != null && enemyContainer != null)
+      {
+        enemy.transform.SetParent(enemyContainer, true);
+      }
+    }
+
+    private bool ResolveSpawnCenter()
+    {
+      if (spawnCenter != null) return true;
+
+      GameObject player = GameObject.FindGameObjectWithTag("Player");
+      if (player != null)
+      {
+        spawnCenter = player.transform;
+      }
+      else if (Camera.main != null)
+      {
+        spawnCenter = Camera.main.transform;
+      }
+
+      return spawnCenter != null;
+    }
+
+    private void PreloadEnemies()
+    {
+      if (enemyPrefab == null || preloadCountPerPrefab <= 0) return;
+
+      foreach (GameObject prefab in enemyPrefab)
+      {
+        if (prefab != null) PoolManager.Instance.Preload(prefab, preloadCountPerPrefab);
+      }
+    }
+
+    private void RecycleDistantEnemies()
+    {
+      if (!ResolveSpawnCenter() || recycleDistance <= 0f) return;
+
+      float recycleSqrDistance = recycleDistance * recycleDistance;
+      for (int i = enemies.Count - 1; i >= 0; i--)
+      {
+        EnemyChasing enemy = enemies[i];
+        if (enemy == null)
         {
-          // 上下
-          spawnPoint.x = Random.Range(minPos.position.x, maxPos.position.x);
-          spawnPoint.y = Random.Range(0f, 1f) > 0.5f ? maxPos.position.y : minPos.position.y;
+          enemies.RemoveAt(i);
+          continue;
         }
-        else
+
+        if ((enemy.transform.position - spawnCenter.position).sqrMagnitude > recycleSqrDistance)
         {
-          // 左右
-          spawnPoint.y = Random.Range(minPos.position.y, maxPos.position.y);
-          spawnPoint.x = Random.Range(0f, 1f) > 0.5f ? maxPos.position.x : minPos.position.x;
+          RecycleEnemy(enemy.gameObject);
         }
-        Instantiate(enemyPrefab[randomEnemyIndex], spawnPoint, Quaternion.identity, enemyContainer);
+      }
+    }
+
+    public void RecycleEnemy(GameObject enemy)
+    {
+      if (enemy != null && enemy.activeSelf)
+      {
+        PoolManager.Instance.Free(enemy);
       }
     }
 
@@ -71,7 +135,7 @@ namespace VampireSurvivorsLike {
     #region Enemy Register
     public void RegisterEnemy(EnemyChasing e)
     {
-      enemies.Add(e);
+      if (e != null && !enemies.Contains(e)) enemies.Add(e);
     }
 
     public void UnregisterEnemy(EnemyChasing e)
