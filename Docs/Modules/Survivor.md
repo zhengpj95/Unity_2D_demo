@@ -37,3 +37,10 @@ Survivor 场景使用现有的 `vs-ground-seamless-2048-v1.png` 图片切片作�
 - 地表不挂 Collider；后续树、岩石等障碍物应各自使用 `Collider2D`，保持全项目只使用 2D 物理。
 
 地图显示与相机跟随属于场景表现层，不应放入 `SurvivorModel` 或 `SurvivorProxy`。
+
+## 无限地图敌人生命周期
+
+- `EnemySpawnManager` 以玩家（未找到时回退到 Main Camera）为动态中心，在配置的最小/最大半径圆环内生成敌人，不依赖固定世界坐标出生点。
+- 敌人超过回收半径后会被距离回收；死亡或碰撞玩家时也走相同回收入口，只有死亡回收会累计击杀并生成掉落。
+- 敌人实例统一通过框架 `PoolManager` 预热、取出和归还。`EnemyChasing` 在池生命周期中重置刚体速度，`VSEnemyHealth` 在每次取出时恢复满血，避免复用上一轮状态。
+- `EnemySpawnManager` 仍保留原 `spawnPoints` 序列化字段以兼容已有场景数据，但无限地图生成不再依赖该字段。

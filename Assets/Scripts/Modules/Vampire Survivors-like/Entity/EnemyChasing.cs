@@ -1,11 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace VampireSurvivorsLike {
 
-  public class EnemyChasing : MonoBehaviour
+  public class EnemyChasing : MonoBehaviour, IPoolable
   {
     [SerializeField] private float chaseSpeed = 0.5f;
     [SerializeField] private int damage = 1;
@@ -38,24 +35,30 @@ namespace VampireSurvivorsLike {
       }
     }
 
+    private void Awake()
+    {
+      spriteTransform = transform.Find("Sprite");
+      rb = GetComponent<Rigidbody2D>();
+    }
+
     void Start()
     {
-      player = GameObject.FindGameObjectWithTag("Player").transform;
-      spriteTransform = transform.Find("Sprite").transform;
-      rb = GetComponent<Rigidbody2D>();
+      ResolvePlayer();
     }
 
     private void FixedUpdate()
     {
+      if (!ResolvePlayer() || rb == null) return;
+
       Vector3 direction = (player.position - transform.position).normalized;
       Vector2 newPosition = transform.position + direction * chaseSpeed * Time.fixedDeltaTime;
       rb.MovePosition(newPosition);
 
-      if (player.position.x > transform.position.x)
+      if (spriteTransform != null && player.position.x > transform.position.x)
       {
         spriteTransform.localScale = new Vector3(-1, 1, 1);
       }
-      else
+      else if (spriteTransform != null)
       {
         spriteTransform.localScale = new Vector3(1, 1, 1);
       }
@@ -70,8 +73,28 @@ namespace VampireSurvivorsLike {
         {
           health.TakeDamage(damage);
         }
-        Destroy(gameObject); // 碰撞造成伤害
+        EnemySpawnManager.Instance.RecycleEnemy(gameObject);
       }
+    }
+
+    public void OnAlloc()
+    {
+      ResolvePlayer();
+      if (rb != null) rb.velocity = Vector2.zero;
+    }
+
+    public void OnFree()
+    {
+      if (rb != null) rb.velocity = Vector2.zero;
+    }
+
+    private bool ResolvePlayer()
+    {
+      if (player != null) return true;
+
+      GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+      if (playerObject != null) player = playerObject.transform;
+      return player != null;
     }
   }
 
