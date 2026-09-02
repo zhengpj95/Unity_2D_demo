@@ -661,9 +661,9 @@ MonoBehaviour:
   maxEnemies: 10
   enemyContainer: {fileID: 1418470572}
   spawnCenter: {fileID: 0}
-  minSpawnDistance: 12
-  maxSpawnDistance: 18
-  recycleDistance: 30
+  minSpawnDistance: 6
+  maxSpawnDistance: 8
+  recycleDistance: 10
   preloadCountPerPrefab: 3
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

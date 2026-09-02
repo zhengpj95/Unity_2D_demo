@@ -13,9 +13,9 @@ namespace VampireSurvivorsLike {
     private float speed = 2f;
     private int damage = 1;
     private Transform target;
-    // 子弹/箭当前的飞行方向；普通子弹初始化后不再修改它。
+    // 投射物当前的飞行方向；直线投射物初始化后不再修改它。
     private Vector3 direction;
-    // true: 每帧朝目标修正方向（追踪箭）；false: 保持初始方向（普通子弹）。
+    // true: 每帧朝目标修正方向（追踪投射物）；false: 保持初始方向（直线投射物）。
     private bool followTarget;
 
     /// <summary>
@@ -26,7 +26,7 @@ namespace VampireSurvivorsLike {
     /// </param>
     /// <param name="levelData">当前武器等级数据，提供飞行速度和伤害值。</param>
     /// <param name="shouldFollowTarget">
-    /// true 表示追踪箭：每帧朝目标转向；false 表示普通子弹：只在初始化时瞄准一次，之后直线飞行。
+    /// true 表示追踪投射物：每帧朝目标转向；false 表示直线投射物：只在初始化时瞄准一次，之后直线飞行。
     /// </param>
     public void Init(Transform targetTransform, WeaponLevelData levelData, bool shouldFollowTarget = true)
     {

@@ -24,7 +24,7 @@ MonoBehaviour:
     count: 0
     range: 0
     fireInterval: 1
-    duration: 1
+    duration: 5
   - level: 2
     speed: 2
     damage: 2
@@ -32,7 +32,7 @@ MonoBehaviour:
     count: 0
     range: 0
     fireInterval: 0.8
-    duration: 1
+    duration: 5
   - level: 3
     speed: 3
     damage: 3
@@ -40,4 +40,4 @@ MonoBehaviour:
     count: 0
     range: 0
     fireInterval: 0.6
-    duration: 1
+    duration: 5

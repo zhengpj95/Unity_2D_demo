@@ -13,9 +13,9 @@ namespace VampireSurvivorsLike {
       {
         var arrow = Instantiate(data.prefab, player.position, Quaternion.identity, transform);
         var levelData = GetLevelData();
-        // 使用默认 true：弓箭在飞行过程中持续追踪目标。
+        // false：弓箭仅在发射时锁定方向，之后沿直线飞行。
         var arrowScript = arrow.GetComponent<ArrowWeapon>();
-        arrowScript.Init(enemy.transform, levelData);
+        arrowScript.Init(enemy.transform, levelData, false);
         Destroy(arrow.gameObject, levelData.duration);
       }
     }
