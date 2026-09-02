@@ -1,20 +1,29 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace VampireSurvivorsLike {
+namespace VampireSurvivorsLike
+{
 
   public class EnemySpawnManager : SingletonMono<EnemySpawnManager>
   {
+    [Tooltip("可随机生成的敌人 Prefab 列表；列表为空时不会生成敌人。")]
     [SerializeField] private GameObject[] enemyPrefab;
-    [SerializeField] private Transform[] spawnPoints;
+    [Tooltip("生成尝试的时间间隔（秒）；达到最大敌人数时本次尝试会跳过。")]
     [SerializeField] private float spawnInterval = 1f;
-    [SerializeField] private int maxEnemies = 10;
+    [Tooltip("场景中同时存活的敌人上限，不包含已回收到对象池的敌人。")]
+    [SerializeField] private int maxEnemies = 20;
+    [Tooltip("生成后的敌人父节点；只用于整理层级，不改变敌人的世界坐标。")]
     [SerializeField] private Transform enemyContainer;
     [Header("Infinite Map Spawn")]
+    [Tooltip("生成距离和回收距离的中心。留空时优先查找 Player，未找到则使用 Main Camera。")]
     [SerializeField] private Transform spawnCenter;
-    [SerializeField, Min(0f)] private float minSpawnDistance = 12f;
-    [SerializeField, Min(0f)] private float maxSpawnDistance = 18f;
-    [SerializeField, Min(0f)] private float recycleDistance = 30f;
+    [Tooltip("敌人生成环的最小半径（世界单位）。应小于或等于最大生成距离。")]
+    [SerializeField, Min(0f)] private float minSpawnDistance = 6f;
+    [Tooltip("敌人生成环的最大半径（世界单位）。建议略大于最小生成距离。")]
+    [SerializeField, Min(0f)] private float maxSpawnDistance = 8f;
+    [Tooltip("敌人与生成中心超过此距离时回收到对象池（世界单位）。设为 0 可关闭距离回收。")]
+    [SerializeField, Min(0f)] private float recycleDistance = 20f;
+    [Tooltip("启动时为每种敌人预创建的对象数量。设为 0 可关闭预热。")]
     [SerializeField, Min(0)] private int preloadCountPerPrefab = 3;
 
     private float timer = 0f;
