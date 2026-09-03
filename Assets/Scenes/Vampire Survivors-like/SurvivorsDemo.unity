@@ -267,7 +267,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 10
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -655,12 +655,12 @@ MonoBehaviour:
   - {fileID: 5408803987995198023, guid: 93efd6b0d0006e64b9cddfee1ef2a143, type: 3}
   - {fileID: 6659708394562086004, guid: 2c7a5ced109a1af4f9adc4de735c58b9, type: 3}
   spawnInterval: 1
+  spawnCount: 1
   maxEnemies: 20
   enemyContainer: {fileID: 1418470572}
-  spawnCenter: {fileID: 0}
-  minSpawnDistance: 6
-  maxSpawnDistance: 8
-  recycleDistance: 20
+  player: {fileID: 0}
+  spawnRadius: 8
+  despawnRadius: 20
   preloadCountPerPrefab: 3
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
