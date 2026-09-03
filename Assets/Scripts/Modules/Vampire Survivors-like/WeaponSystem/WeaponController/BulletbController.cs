@@ -8,7 +8,7 @@ namespace VampireSurvivorsLike {
   {
     protected override void Fire()
     {
-      var enemy = EnemySpawnManager.Instance.GetCloseest(player.position, GetAttackRange());
+      var enemy = EnemyDirector.Instance.GetCloseest(player.position, GetAttackRange());
       if (enemy)
       {
         var bulletb = Instantiate(data.prefab, player.position, Quaternion.identity, transform);

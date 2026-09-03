@@ -26,10 +26,10 @@ namespace VampireSurvivorsLike {
       DamageController.Instance.ShowDamage(damage, transform.position);
       if (currentHealth <= 0)
       {
-        EnemySpawnManager.Instance.KillEnemyCount++;
+        EnemyDirector.Instance.KillEnemyCount++;
         ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor).UpdateEnemyKillCount();
         DropItemManager.Instance.SpawnDropItem(transform.position, enemyChasing.DropItemType, enemyChasing.DropItemProb);
-        EnemySpawnManager.Instance.RecycleEnemy(gameObject);
+        EnemyDirector.Instance.RecycleEnemy(gameObject);
       }
     }
 

@@ -8,7 +8,7 @@ namespace VampireSurvivorsLike {
   {
     protected override void Fire()
     {
-      var enemy = EnemySpawnManager.Instance.GetRandom(transform.position, GetAttackRange());
+      var enemy = EnemyDirector.Instance.GetRandom(transform.position, GetAttackRange());
       if (enemy)
       {
         Transform blueOval = Instantiate(data.prefab, player.position, Quaternion.identity, transform);

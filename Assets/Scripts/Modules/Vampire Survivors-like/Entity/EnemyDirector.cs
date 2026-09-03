@@ -1,99 +1,88 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace VampireSurvivorsLike
 {
 
-  public class EnemySpawnManager : SingletonMono<EnemySpawnManager>
+  public class EnemyDirector : SingletonMono<EnemyDirector>
   {
     [Tooltip("可随机生成的敌人 Prefab 列表；列表为空时不会生成敌人。")]
     [SerializeField] private GameObject[] enemyPrefab;
-    [Tooltip("生成尝试的时间间隔（秒）；达到最大敌人数时本次尝试会跳过。")]
-    [SerializeField] private float spawnInterval = 1f;
+    [Tooltip("每次生成的时间间隔（秒）。")]
+    [SerializeField, Min(0.01f)] private float spawnInterval = 1f;
+    [Tooltip("每次生成尝试的敌人数量。")]
+    [SerializeField, Min(1)] private int spawnCount = 1;
     [Tooltip("场景中同时存活的敌人上限，不包含已回收到对象池的敌人。")]
     [SerializeField] private int maxEnemies = 20;
     [Tooltip("生成后的敌人父节点；只用于整理层级，不改变敌人的世界坐标。")]
     [SerializeField] private Transform enemyContainer;
     [Header("Infinite Map Spawn")]
-    [Tooltip("生成距离和回收距离的中心。留空时优先查找 Player，未找到则使用 Main Camera。")]
-    [SerializeField] private Transform spawnCenter;
-    [Tooltip("敌人生成环的最小半径（世界单位）。应小于或等于最大生成距离。")]
-    [SerializeField, Min(0f)] private float minSpawnDistance = 6f;
-    [Tooltip("敌人生成环的最大半径（世界单位）。建议略大于最小生成距离。")]
-    [SerializeField, Min(0f)] private float maxSpawnDistance = 8f;
-    [Tooltip("敌人与生成中心超过此距离时回收到对象池（世界单位）。设为 0 可关闭距离回收。")]
-    [SerializeField, Min(0f)] private float recycleDistance = 20f;
+    [Tooltip("敌人生成与回收的中心。应直接绑定 Hero；缺省时仅在启动阶段按 Player 标签解析一次。")]
+    [FormerlySerializedAs("spawnCenter")]
+    [SerializeField] private Transform player;
+    [Tooltip("敌人以 Player 为圆心的生成半径（世界单位）。")]
+    [FormerlySerializedAs("maxSpawnDistance")]
+    [SerializeField, Min(0f)] private float spawnRadius = 15f;
+    [Tooltip("敌人与 Player 超过此距离时回收到对象池（世界单位）。应显著大于生成半径。")]
+    [FormerlySerializedAs("recycleDistance")]
+    [SerializeField, Min(0f)] private float despawnRadius = 25f;
     [Tooltip("启动时为每种敌人预创建的对象数量。设为 0 可关闭预热。")]
     [SerializeField, Min(0)] private int preloadCountPerPrefab = 3;
 
-    private float timer = 0f;
+    private float timer;
+    private EnemySpawner _spawner;
+    private bool _playerResolutionAttempted;
 
     private readonly List<EnemyChasing> enemies = new List<EnemyChasing>();
     public int KillEnemyCount { get; set; } = 0;
+    public float DespawnSqrDistance => despawnRadius * despawnRadius;
 
-    void Start()
+    protected override void Awake()
     {
-      ResolveSpawnCenter();
-      PreloadEnemies();
-      SpawnEnemy();
+      base.Awake();
+      ResolvePlayer();
+      _spawner = new EnemySpawner(enemyPrefab, enemyContainer);
     }
 
-    void Update()
+    private void Start()
+    {
+      PreloadEnemies();
+      SpawnEnemies();
+    }
+
+    private void Update()
     {
       timer += Time.deltaTime;
 
-      RecycleDistantEnemies();
-
       if (timer >= spawnInterval)
       {
-        timer = 0f;
-        SpawnEnemy();
+        timer -= spawnInterval;
+        SpawnEnemies();
       }
     }
 
-    private void SpawnEnemy()
+    private void SpawnEnemies()
     {
-      if (enemies.Count >= maxEnemies)
-      {
+      if (_spawner == null || !ResolvePlayer() || enemies.Count >= maxEnemies)
         return;
-      }
 
-      if (enemyPrefab == null || enemyPrefab.Length == 0 || !ResolveSpawnCenter())
-      {
-        return;
-      }
-
-      int randomEnemyIndex = Random.Range(0, enemyPrefab.Length);
-      GameObject prefab = enemyPrefab[randomEnemyIndex];
-      if (prefab == null) return;
-
-      float outerDistance = Mathf.Max(minSpawnDistance, maxSpawnDistance);
-      float distance = Random.Range(Mathf.Min(minSpawnDistance, outerDistance), outerDistance);
-      Vector2 direction = Random.insideUnitCircle;
-      if (direction.sqrMagnitude < Mathf.Epsilon) direction = Vector2.right;
-      Vector2 spawnPoint = (Vector2)spawnCenter.position + direction.normalized * distance;
-      GameObject enemy = PoolManager.Instance.Alloc(prefab, spawnPoint, Quaternion.identity);
-      if (enemy != null && enemyContainer != null)
-      {
-        enemy.transform.SetParent(enemyContainer, true);
-      }
+      int count = Mathf.Min(spawnCount, maxEnemies - enemies.Count);
+      for (int i = 0; i < count; i++)
+        _spawner.Spawn(player, spawnRadius, this);
     }
 
-    private bool ResolveSpawnCenter()
+    private bool ResolvePlayer()
     {
-      if (spawnCenter != null) return true;
+      if (player != null) return true;
+      if (_playerResolutionAttempted) return false;
 
-      GameObject player = GameObject.FindGameObjectWithTag("Player");
-      if (player != null)
-      {
-        spawnCenter = player.transform;
-      }
-      else if (Camera.main != null)
-      {
-        spawnCenter = Camera.main.transform;
-      }
+      _playerResolutionAttempted = true;
+      GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+      if (playerObject != null)
+        player = playerObject.transform;
 
-      return spawnCenter != null;
+      return player != null;
     }
 
     private void PreloadEnemies()
@@ -103,27 +92,6 @@ namespace VampireSurvivorsLike
       foreach (GameObject prefab in enemyPrefab)
       {
         if (prefab != null) PoolManager.Instance.Preload(prefab, preloadCountPerPrefab);
-      }
-    }
-
-    private void RecycleDistantEnemies()
-    {
-      if (!ResolveSpawnCenter() || recycleDistance <= 0f) return;
-
-      float recycleSqrDistance = recycleDistance * recycleDistance;
-      for (int i = enemies.Count - 1; i >= 0; i--)
-      {
-        EnemyChasing enemy = enemies[i];
-        if (enemy == null)
-        {
-          enemies.RemoveAt(i);
-          continue;
-        }
-
-        if ((enemy.transform.position - spawnCenter.position).sqrMagnitude > recycleSqrDistance)
-        {
-          RecycleEnemy(enemy.gameObject);
-        }
       }
     }
 

@@ -40,6 +40,6 @@ Survivor 场景使用现有的 `vs-ground-seamless-2048-v1.png` 图片切片作�
 
 ## 无限地图敌人生命周期
 
-- `EnemySpawnManager` 以玩家（未找到时回退到 Main Camera）为动态中心，在配置的最小/最大半径圆环内生成敌人，不依赖固定世界坐标出生点。
-- 敌人超过回收半径后会被距离回收；死亡或碰撞玩家时也走相同回收入口，只有死亡回收会累计击杀并生成掉落。
-- 敌人实例统一通过框架 `PoolManager` 预热、取出和归还。`EnemyChasing` 在池生命周期中重置刚体速度，`VSEnemyHealth` 在每次取出时恢复满血，避免复用上一轮状态。
+- `EnemyDirector` 作为生成节奏控制者，持有玩家引用并按固定间隔向 `EnemySpawner` 请求批量生成；首选在 Inspector 中绑定 Hero，仅为兼容旧场景在启动阶段按 Player 标签解析一次。
+- `EnemySpawner` 根据 Player 的当前位置计算圆周出生点，从框架 `PoolManager` 取出敌人，并在每次复用时向 `EnemyChasing` 注入 Player 与回收入口。
+- `EnemyChasing` 负责追击及自身距离检测；超出回收半径、死亡或碰撞玩家时都通过同一入口归还对象池，只有死亡回收会累计击杀并生成掉落。`EnemyChasing` 在池生命周期中重置刚体速度，`VSEnemyHealth` 在每次取出时恢复满血，避免复用上一轮状态。

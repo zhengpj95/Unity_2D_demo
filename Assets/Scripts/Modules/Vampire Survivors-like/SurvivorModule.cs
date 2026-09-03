@@ -39,7 +39,7 @@ public class SurvivorModule : BaseModule
 
   public void UpdateEnemyKillCount()
   {
-    _proxy.SetKillCount(EnemySpawnManager.Instance.KillEnemyCount);
+    _proxy.SetKillCount(EnemyDirector.Instance.KillEnemyCount);
     RefreshMainView();
   }
 

@@ -40,7 +40,7 @@ namespace VampireSurvivorsLike
       {
         speedUpScore = 0;
         speedUpRateScore += 100;
-        EnemySpawnManager.Instance.SpeedUpSpawnRate();
+        EnemyDirector.Instance.SpeedUpSpawnRate();
       }
 
       if (skillUpScore >= skillUpRateScore)

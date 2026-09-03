@@ -18,21 +18,11 @@ namespace VampireSurvivorsLike {
     private Transform player;
     private Transform spriteTransform;
     private Rigidbody2D rb;
-
-    private void OnEnable()
-    {
-      if (EnemySpawnManager.Instance != null)
-      {
-        EnemySpawnManager.Instance.RegisterEnemy(this);
-      }
-    }
+    private EnemyDirector director;
 
     private void OnDisable()
     {
-      if (EnemySpawnManager.Instance != null)
-      {
-        EnemySpawnManager.Instance.UnregisterEnemy(this);
-      }
+      director?.UnregisterEnemy(this);
     }
 
     private void Awake()
@@ -41,14 +31,23 @@ namespace VampireSurvivorsLike {
       rb = GetComponent<Rigidbody2D>();
     }
 
-    void Start()
+    public void Initialize(Transform target, EnemyDirector owner)
     {
-      ResolvePlayer();
+      player = target;
+      director = owner;
+      director?.RegisterEnemy(this);
     }
 
     private void FixedUpdate()
     {
-      if (!ResolvePlayer() || rb == null) return;
+      if (player == null || director == null || rb == null) return;
+
+      // 敌人自己判断是否已落后过远，避免由 Director 每帧遍历全部敌人。
+      if ((transform.position - player.position).sqrMagnitude > director.DespawnSqrDistance)
+      {
+        director.RecycleEnemy(gameObject);
+        return;
+      }
 
       Vector3 direction = (player.position - transform.position).normalized;
       Vector2 newPosition = transform.position + direction * chaseSpeed * Time.fixedDeltaTime;
@@ -73,28 +72,19 @@ namespace VampireSurvivorsLike {
         {
           health.TakeDamage(damage);
         }
-        EnemySpawnManager.Instance.RecycleEnemy(gameObject);
+        director?.RecycleEnemy(gameObject);
       }
     }
 
     public void OnAlloc()
     {
-      ResolvePlayer();
       if (rb != null) rb.velocity = Vector2.zero;
     }
 
     public void OnFree()
     {
       if (rb != null) rb.velocity = Vector2.zero;
-    }
-
-    private bool ResolvePlayer()
-    {
-      if (player != null) return true;
-
-      GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-      if (playerObject != null) player = playerObject.transform;
-      return player != null;
+      director?.UnregisterEnemy(this);
     }
   }
 

@@ -617,7 +617,7 @@ GameObject:
   - component: {fileID: 1972822215}
   - component: {fileID: 1972822216}
   m_Layer: 0
-  m_Name: EnemySpawnManager
+  m_Name: EnemyDirector
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

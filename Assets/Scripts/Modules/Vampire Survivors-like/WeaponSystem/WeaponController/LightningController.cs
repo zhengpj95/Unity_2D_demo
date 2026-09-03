@@ -8,7 +8,7 @@ namespace VampireSurvivorsLike {
   {
     protected override void Fire()
     {
-      var enemy = EnemySpawnManager.Instance.GetRandom(player.position, GetAttackRange());
+      var enemy = EnemyDirector.Instance.GetRandom(player.position, GetAttackRange());
       if (enemy)
       {
         Transform lightning = Instantiate(data.prefab, player.position, Quaternion.identity, transform);
