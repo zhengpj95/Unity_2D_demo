@@ -45,6 +45,15 @@ Survivor 场景使用现有的 `vs-ground-seamless-2048-v1.png` 图片切片作�
 - `EnemyChasing` 负责追击及自身距离检测；超出回收半径、死亡或碰撞玩家时都通过同一入口归还对象池，只有死亡回收会累计击杀并生成掉落。`EnemyChasing` 在池生命周期中重置刚体速度，`VSEnemyHealth` 在每次取出时恢复满血，避免复用上一轮状态。
 - `DropItemManager` 在启动时预热 Gem/Coin，掉落物使用 `PoolManager` 取出与归还；`DropItem` 通过 `IPoolable` 重置拾取状态。Gem 会增加经验，Coin 只增加金币数量。
 
+## 三选一升级系统
+
+- UpgradeManager 在每次升级时重新生成候选池，先调用每个 UpgradeConfig.IsAvailable 过滤，再随机返回最多 3 个不重复选项；连续升级不会复用上一轮候选。
+- 当前内置三类配置：NewWeaponUpgradeConfig、WeaponUpgradeConfig、PlayerUpgradeConfig。未在 Inspector 配置资源时，管理器会根据 WeaponManager 当前已有的武器配置和基础玩家属性自动生成默认候选。
+- 候选 ID 使用 `UpgradeId` 枚举生成：武器候选会追加目标 `weaponId`，玩家属性候选会按 `PlayerUpgradeStat` 映射，配置资源不再暴露可重复填写的字符串 ID。
+- 默认玩家属性候选是在场景 `UpgradeManager` 上运行时创建的，图标配置位于该组件的“默认玩家属性升级图标”三个字段；自定义 `PlayerUpgradeConfig` 资源则在其继承的 `Icon` 字段中配置。
+- NewWeapon 只有在玩家未拥有该武器且仍有空余武器槽时可用；WeaponUpgrade 只有在已拥有且未达到 WeaponSO.levels 最大等级时可用；玩家属性升级当前支持移动速度、拾取范围和最大生命值。
+- 升级面板只展示 UpgradeConfig 的标题、描述和图标，选择结果回传 SurvivorGameplayController，由配置应用到运行时对象，不修改 WeaponSO 或其他 ScriptableObject 的原始数据。
+
 ## 武器运行时层级
 
 - `WeaponManager.AddWeapon` 中的 `weaponObj.transform.SetParent(transform)` 决定武器控制器挂在 `WeaponManager` 下，因此运行时会生成 `WeaponManager/WeaponArrow`、`WeaponManager/WeaponBulletb` 等节点；场景里不需要预先创建这些子节点。

@@ -193,36 +193,83 @@ Saw MaxLevel
 
 ## 5. UpgradeConfig
 
-推荐使用 `ScriptableObject` 描述 Upgrade 配置。
+当前实现使用 `ScriptableObject` 描述 Upgrade 配置，基类位于：
 
-基础结构可以类似：
+```text
+Assets/Scripts/Modules/Vampire Survivors-like/UpgradeSystem/UpgradeConfig.cs
+```
+
+`UpgradeConfig` 只保存显示配置和候选行为，运行时效果由 `Apply(context)` 写入玩家或武器实例，不修改原始配置资源。
+
+基础接口如下：
 
 ```csharp
 public abstract class UpgradeConfig : ScriptableObject
 {
-    public string id;
-    public string title;
-    public string description;
+    public string Id => GetUniqueId();
+    public string Title { get; }
+    public string Description { get; }
+    public Sprite Icon { get; }
+
+    public abstract UpgradeId TypeId { get; }
+    public virtual string GetUniqueId() => TypeId.ToString();
 
     public abstract bool IsAvailable(PlayerUpgradeContext context);
-
     public abstract void Apply(PlayerUpgradeContext context);
 }
 ```
 
-如果当前项目更适合数据驱动方案，也可以使用：
+### 5.1 UpgradeId 枚举
 
-```text
-UpgradeConfig
-+
-UpgradeType
-+
-UpgradeExecutor / Apply Dispatcher
+候选 ID 不再由 Inspector 中的字符串字段填写，而是由 `UpgradeId` 枚举和目标数据自动生成：
+
+```csharp
+public enum UpgradeId
+{
+    NewWeapon,
+    WeaponLevel,
+    PlayerMoveSpeed,
+    PlayerPickupRadius,
+    PlayerMaxHealth,
+    PlayerAttackRange,
+}
 ```
 
-项目实现应优先遵循现有工程风格。
+当前唯一键规则：
 
-不要为了升级系统大规模重构整个项目。
+| 配置类型 | `TypeId` | `Id` 示例 |
+| --- | --- | --- |
+| 新武器 | `NewWeapon` | `NewWeapon:WeaponArrow` |
+| 武器升级 | `WeaponLevel` | `WeaponLevel:WeaponArrow` |
+| 移动速度 | `PlayerMoveSpeed` | `PlayerMoveSpeed` |
+| 拾取范围 | `PlayerPickupRadius` | `PlayerPickupRadius` |
+| 最大生命 | `PlayerMaxHealth` | `PlayerMaxHealth` |
+| 攻击范围 | `PlayerAttackRange` | `PlayerAttackRange` |
+
+武器候选会追加 `WeaponSO.weaponId`，所以不同武器不会因为同属 `WeaponLevel` 而被错误去重；玩家属性候选会根据 `PlayerUpgradeStat` 自动映射到对应枚举。
+
+### 5.2 新增升级类型
+
+新增升级时按以下顺序处理：
+
+1. 在 `UpgradeId` 中增加固定枚举值。
+2. 在对应的 `UpgradeConfig` 子类中实现 `TypeId`。
+3. 如果候选需要区分目标对象，重写 `GetUniqueId()`，在枚举值后追加稳定的目标 ID。
+4. 实现 `IsAvailable(context)` 和 `Apply(context)`。
+5. 如需从 Project 面板创建资源，为子类添加 `CreateAssetMenu`，再将资源拖入场景 `UpgradeManager` 的 `Upgrade Configs` 数组。
+
+不要重新添加可编辑的字符串 `id` 字段，否则会绕过枚举规则并重新引入重复候选。
+
+已有三种资源创建菜单：
+
+```text
+Create
+└── Survivor
+    └── Upgrade
+        ├── New Weapon
+        ├── Weapon Level
+        └── Player Stat
+```
 
 ---
 
@@ -404,6 +451,14 @@ UpgradeManager 负责：
 - 随机抽取 UpgradeOption。
 - 应用玩家选择的 Upgrade。
 
+当前实现位于：
+
+```text
+Assets/Scripts/Modules/Vampire Survivors-like/UpgradeSystem/UpgradeManager.cs
+```
+
+场景上的 `UpgradeManager.Upgrade Configs` 用于接收手动创建的 `UpgradeConfig` 资源；即使该数组为空，管理器仍会根据 `WeaponManager.GetConfiguredWeapons()` 自动创建新武器、武器等级和基础玩家属性候选。默认玩家属性升级的图标在同一组件的三个图标字段中配置。
+
 建议接口：
 
 ```csharp
@@ -462,7 +517,7 @@ LevelUpPanel 只负责 UI 展示与输入。
 ```text
 LevelUpPanel
 ↓
-UpgradeManager.Apply()
+SurvivorGameplayController.SelectLevelUpOption()
 ↓
 UpgradeConfig.Apply()
 ↓

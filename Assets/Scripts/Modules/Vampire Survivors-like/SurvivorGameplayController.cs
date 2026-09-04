@@ -25,15 +25,25 @@ public sealed class SurvivorGameplayController
       OpenNextLevelUp();
   }
 
-  public void SelectLevelUpOption(WeaponSO weapon)
+  public void SelectLevelUpOption(UpgradeConfig upgrade)
   {
-    if (weapon == null)
+    if (upgrade == null)
     {
-      Debug.LogWarning("[SurvivorGameplayController] Selected weapon is null.");
+      Debug.LogWarning("[SurvivorGameplayController] Selected upgrade is null.");
       return;
     }
 
-    WeaponManager.Instance.AddOrUpgrade(weapon);
+    // 选择时再次校验，防止连续升级或外部状态变化后应用失效候选。
+    PlayerUpgradeContext context = CreateUpgradeContext();
+    if (!upgrade.IsAvailable(context))
+    {
+      Debug.LogWarning($"[SurvivorGameplayController] Upgrade is no longer available: {upgrade.Id}");
+      if (_proxy.Model.GameState == SurvivorGameState.LevelUp)
+        ResumePlaying();
+      return;
+    }
+
+    upgrade.Apply(context);
 
     if (_proxy.HasPendingLevelUp)
     {
@@ -49,11 +59,20 @@ public sealed class SurvivorGameplayController
     if (!_proxy.TryConsumePendingLevelUp())
       return;
 
+    // 每次升级都基于最新的武器等级和槽位重新抽取候选。
+    UpgradeConfig[] options = UpgradeManager.Instance.GetUpgradeOptions(3, CreateUpgradeContext());
+    if (options.Length == 0)
+    {
+      Debug.LogWarning("[SurvivorGameplayController] No available upgrades; resuming gameplay.");
+      ResumePlaying();
+      return;
+    }
+
     _proxy.SetGameState(SurvivorGameState.LevelUp);
     Time.timeScale = 0f;
 
     SurvivorSkillSelectPanelPresenter panel = _module.OpenSkillSelectPanel(
-      new SurvivorSkillSelectArgs(SelectLevelUpOption));
+      new SurvivorSkillSelectArgs(options, SelectLevelUpOption));
 
     if (panel == null)
     {
@@ -67,5 +86,14 @@ public sealed class SurvivorGameplayController
     _proxy.SetGameState(SurvivorGameState.Playing);
     Time.timeScale = 1f;
     _module.RefreshMainView();
+  }
+
+  private PlayerUpgradeContext CreateUpgradeContext()
+  {
+    // Controller 负责组装上下文，UpgradeConfig 本身不查找场景对象。
+    GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+    Hero hero = playerObject == null ? null : playerObject.GetComponent<Hero>();
+    VSPlayerHealth health = playerObject == null ? null : playerObject.GetComponent<VSPlayerHealth>();
+    return new PlayerUpgradeContext(WeaponManager.Instance, hero, health);
   }
 }

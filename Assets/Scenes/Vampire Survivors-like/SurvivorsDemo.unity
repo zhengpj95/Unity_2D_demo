@@ -632,6 +632,53 @@ MonoBehaviour:
   spawnRadius: 10
   despawnRadius: 20
   preloadCountPerPrefab: 3
+--- !u!1 &2051200000
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2051200001}
+  - component: {fileID: 2051200002}
+  m_Layer: 0
+  m_Name: UpgradeManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2051200001
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2051200000}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2051200002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2051200000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a2a0181f6f74399b4fef2c40c4c74d4, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  upgradeConfigs: []
+  moveSpeedUpgradeIcon: {fileID: -863026611, guid: 151ee7e803903a0409031b1040334782, type: 3}
+  pickupRadiusUpgradeIcon: {fileID: 2080779244, guid: 151ee7e803903a0409031b1040334782, type: 3}
+  maxHealthUpgradeIcon: {fileID: 21300000, guid: fed24bd82cefc0c4a8ef64dab6231b53, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -645,3 +692,4 @@ SceneRoots:
   - {fileID: 1418470572}
   - {fileID: 1053428956}
   - {fileID: 190000002}
+  - {fileID: 2051200001}

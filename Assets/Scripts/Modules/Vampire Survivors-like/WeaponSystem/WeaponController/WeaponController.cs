@@ -14,7 +14,14 @@ namespace VampireSurvivorsLike {
     protected int level = 1;
     protected float timer;
 
+    /// <summary>该控制器使用的只读武器配置。</summary>
     public WeaponSO WeaponData => data;
+    /// <summary>当前运行时等级，升级时只修改控制器实例。</summary>
+    public int CurrentLevel => level;
+    /// <summary>由该武器自己的 levels 数组决定的最大等级。</summary>
+    public int MaxLevel => data?.levels?.Length ?? 0;
+    /// <summary>是否还存在可应用的下一等级数据。</summary>
+    public bool CanLevelUp => level < MaxLevel;
 
     public Transform player;
 
@@ -43,14 +50,16 @@ namespace VampireSurvivorsLike {
     protected abstract void Fire();
 
     // 升级武器
-    public void LevelUp()
+    /// <summary>提升一次运行时等级并返回是否成功。</summary>
+    public bool LevelUp()
     {
-      if (level >= data.levels.Length)
+      if (!CanLevelUp)
       {
         Debug.Log($"武器等级已达上限：{level}");
-        return;
+        return false;
       }
       level++;
+      return true;
     }
 
     // 当前武器等级数据

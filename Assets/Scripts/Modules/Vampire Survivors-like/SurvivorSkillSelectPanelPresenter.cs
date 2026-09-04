@@ -7,10 +7,15 @@ using VampireSurvivorsLike;
 /// <summary>技能弹窗的运行时参数；Presenter 只将选择结果回传给 GameplayController。</summary>
 public sealed class SurvivorSkillSelectArgs
 {
-  public Action<WeaponSO> OnSelected { get; }
+  /// <summary>本次弹窗要展示的动态升级候选。</summary>
+  public UpgradeConfig[] Options { get; }
+  /// <summary>玩家选择后回传给 GameplayController 的回调。</summary>
+  public Action<UpgradeConfig> OnSelected { get; }
 
-  public SurvivorSkillSelectArgs(Action<WeaponSO> onSelected)
+  /// <summary>创建一次升级弹窗的显示数据和选择回调。</summary>
+  public SurvivorSkillSelectArgs(UpgradeConfig[] options, Action<UpgradeConfig> onSelected)
   {
+    Options = options;
     OnSelected = onSelected;
   }
 }
@@ -24,7 +29,8 @@ public class SurvivorSkillSelectPanelPresenter : BasePresenter
 
   private SurvivorSkillSelectPanelView _view;
   private float _remainingTime;
-  private Action<WeaponSO> _onSelected;
+  private UpgradeConfig[] _options;
+  private Action<UpgradeConfig> _onSelected;
 
   public override void OnInit(UIView view)
   {
@@ -40,7 +46,10 @@ public class SurvivorSkillSelectPanelPresenter : BasePresenter
   {
     base.OnOpen(args);
 
-    _onSelected = (args as SurvivorSkillSelectArgs)?.OnSelected;
+    // 每次打开都替换候选，避免连续升级沿用上一轮数据。
+    SurvivorSkillSelectArgs selectArgs = args as SurvivorSkillSelectArgs;
+    _options = selectArgs?.Options;
+    _onSelected = selectArgs?.OnSelected;
     if (_onSelected == null)
       Debug.LogWarning("[SurvivorSkillSelectPanelPresenter] Missing selection callback.");
 
@@ -53,6 +62,7 @@ public class SurvivorSkillSelectPanelPresenter : BasePresenter
   public override void OnClose()
   {
     NeedUpdate = false;
+    _options = null;
     _onSelected = null;
     base.OnClose();
   }
@@ -71,32 +81,48 @@ public class SurvivorSkillSelectPanelPresenter : BasePresenter
 
   private void SelectSkill(int skillIndex)
   {
-    if (_view?.weapons == null || skillIndex < 0 || skillIndex >= _view.weapons.Length || _view.weapons[skillIndex] == null)
+    if (_options == null || skillIndex < 0 || skillIndex >= _options.Length || _options[skillIndex] == null)
     {
       Debug.LogWarning($"[SurvivorSkillSelectPanelPresenter] Invalid skill index: {skillIndex}");
       return;
     }
 
-    Action<WeaponSO> onSelected = _onSelected;
+    // HidePresenter 会同步调用 OnClose 并清空 _options，必须先缓存本次选择的对象。
+    UpgradeConfig selectedUpgrade = _options[skillIndex];
+    Action<UpgradeConfig> onSelected = _onSelected;
     UIManager.Instance.HidePresenter(this);
-    onSelected?.Invoke(_view.weapons[skillIndex]);
+    onSelected?.Invoke(selectedUpgrade);
   }
 
   private void UpdateSkillItems()
   {
-    if (_view?.weapons == null) return;
+    if (_view == null || _options == null) return;
 
-    for (int i = 0; i < _view.weapons.Length && i < 3; i++)
+    for (int i = 0; i < 3; i++)
     {
-      WeaponSO weapon = _view.weapons[i];
       Transform skillItem = _view.transform.Find($"SkillItem{i}");
-      if (skillItem == null || weapon == null) continue;
+      if (skillItem == null) continue;
+
+      // 候选不足 3 个时隐藏多余卡片，不能用无效配置填充。
+      UpgradeConfig upgrade = i < _options.Length ? _options[i] : null;
+      skillItem.gameObject.SetActive(upgrade != null);
+      if (upgrade == null) continue;
 
       Image icon = skillItem.Find("Image")?.GetComponent<Image>();
-      if (icon != null) icon.sprite = weapon.icon;
+      if (icon != null)
+      {
+        icon.sprite = upgrade.Icon;
+        icon.enabled = upgrade.Icon != null;
+      }
 
       TMP_Text nameText = skillItem.Find("Text")?.GetComponent<TMP_Text>();
-      if (nameText != null) nameText.text = weapon.weaponName;
+      if (nameText != null)
+      {
+        string description = upgrade.Description;
+        nameText.text = string.IsNullOrWhiteSpace(description)
+          ? upgrade.GetDisplayTitle()
+          : $"{upgrade.GetDisplayTitle()}\n{description}";
+      }
     }
   }
 
