@@ -43,3 +43,9 @@ Survivor 场景使用现有的 `vs-ground-seamless-2048-v1.png` 图片切片作�
 - `EnemyDirector` 作为生成节奏控制者，持有玩家引用并按固定间隔向 `EnemySpawner` 请求批量生成；首选在 Inspector 中绑定 Hero，仅为兼容旧场景在启动阶段按 Player 标签解析一次。
 - `EnemySpawner` 根据 Player 的当前位置计算圆周出生点，从框架 `PoolManager` 取出敌人，并在每次复用时向 `EnemyChasing` 注入 Player 与回收入口。
 - `EnemyChasing` 负责追击及自身距离检测；超出回收半径、死亡或碰撞玩家时都通过同一入口归还对象池，只有死亡回收会累计击杀并生成掉落。`EnemyChasing` 在池生命周期中重置刚体速度，`VSEnemyHealth` 在每次取出时恢复满血，避免复用上一轮状态。
+- `DropItemManager` 在启动时预热 Gem/Coin，掉落物使用 `PoolManager` 取出与归还；`DropItem` 通过 `IPoolable` 重置拾取状态。Gem 会增加经验，Coin 只增加金币数量。
+
+## 武器运行时层级
+
+- `WeaponManager.AddWeapon` 中的 `weaponObj.transform.SetParent(transform)` 决定武器控制器挂在 `WeaponManager` 下，因此运行时会生成 `WeaponManager/WeaponArrow`、`WeaponManager/WeaponBulletb` 等节点；场景里不需要预先创建这些子节点。
+- `ArrowController`、`BulletbController` 等控制器在 `Instantiate(..., transform)` 中把投射物挂到对应的武器控制器节点下，便于按武器分类查看和统一清理。环绕型 `SawController` 的投射物例外地挂在玩家节点下，以保持其跟随玩家的行为。

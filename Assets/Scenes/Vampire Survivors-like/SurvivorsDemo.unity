@@ -514,37 +514,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f8387f00b35defe4ead998bc16d3611c, type: 3}
---- !u!1 &1649546556
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1649546557}
-  m_Layer: 0
-  m_Name: Weapons
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1649546557
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1649546556}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1858539118
 GameObject:
   m_ObjectHideFlags: 0
@@ -592,6 +561,7 @@ MonoBehaviour:
   dropItemContainer: {fileID: 1053428956}
   gemPrefab: {fileID: 918514508827560968, guid: 5dcf5499ce5d9d7489a079d44983b1ae, type: 3}
   coinPrefab: {fileID: 5316678045360679653, guid: 5db0b62064492884096bc33a836641ac, type: 3}
+  preloadCountPerDropItem: 8
   totalScore: 0
   speedUpRateScore: 100
   skillUpRateScore: 20
@@ -659,7 +629,7 @@ MonoBehaviour:
   maxEnemies: 20
   enemyContainer: {fileID: 1418470572}
   player: {fileID: 0}
-  spawnRadius: 8
+  spawnRadius: 10
   despawnRadius: 20
   preloadCountPerPrefab: 3
 --- !u!1660057539 &9223372036854775807
@@ -673,6 +643,5 @@ SceneRoots:
   - {fileID: 1101548403}
   - {fileID: 1618317612}
   - {fileID: 1418470572}
-  - {fileID: 1649546557}
   - {fileID: 1053428956}
   - {fileID: 190000002}

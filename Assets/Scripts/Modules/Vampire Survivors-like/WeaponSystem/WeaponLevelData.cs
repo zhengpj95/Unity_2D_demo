@@ -21,6 +21,7 @@ namespace VampireSurvivorsLike {
     [Tooltip("武器触发间隔")]
     public float fireInterval;
     [Tooltip("武器持续时间")]
+    // 投射物应在飞出当前相机视野后再超时销毁；当前 Size=10 使用 20 秒作为余量。
     public float duration;
   }
 }

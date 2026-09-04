@@ -1,23 +1,39 @@
-using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace VampireSurvivorsLike {
 
-  public class DropItem : MonoBehaviour
+  public class DropItem : MonoBehaviour, IPoolable
   {
     [SerializeField] private int score = 1;
     [SerializeField] private DropItemType dropItemType;
 
-    void OnTriggerEnter2D(Collider2D other)
+    private bool collected;
+
+    private void OnTriggerEnter2D(Collider2D other)
     {
-      if (other.CompareTag("Player"))
-      {
-        DropItemManager.Instance.AddScore(score);
-        DropItemManager.Instance.AddDropItem(dropItemType, 1);
-        Destroy(gameObject);
-      }
+      if (collected || !other.CompareTag("Player"))
+        return;
+
+      collected = true;
+      DropItemManager manager = DropItemManager.Instance;
+      manager.AddScore(score);
+      manager.AddDropItem(dropItemType, 1);
+
+      // 只有 Gem 提供经验；Coin 仅计入背包数量。
+      if (dropItemType == DropItemType.Gem)
+        manager.AddExperience(score);
+
+      manager.RecycleDropItem(gameObject);
+    }
+
+    public void OnAlloc()
+    {
+      collected = false;
+    }
+
+    public void OnFree()
+    {
+      collected = false;
     }
   }
 

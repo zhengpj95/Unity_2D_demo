@@ -50,6 +50,8 @@ namespace VampireSurvivorsLike {
     private void AddWeapon(WeaponSO data)
     {
       var weaponObj = new GameObject(data.weaponId);
+      // 这里决定运行时武器控制器的父节点：WeaponManager/WeaponArrow、WeaponManager/WeaponBulletb 等。
+      // 场景中只需要保留 WeaponManager，具体武器节点会在首次获得武器时动态创建到这里。
       weaponObj.transform.SetParent(transform);
 
       var weapon = weaponObj.AddComponent(GetWeaponType(data)) as WeaponController;

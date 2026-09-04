@@ -11,6 +11,7 @@ namespace VampireSurvivorsLike {
       var enemy = EnemyDirector.Instance.GetCloseest(player.position, GetAttackRange());
       if (enemy)
       {
+        // transform 是 WeaponManager 创建的 WeaponBulletb 节点，因此子弹实例位于 WeaponManager/WeaponBulletb 下。
         var bulletb = Instantiate(data.prefab, player.position, Quaternion.identity, transform);
         var bulletbScript = bulletb.GetComponent<ArrowWeapon>();
         var levelData = GetLevelData();

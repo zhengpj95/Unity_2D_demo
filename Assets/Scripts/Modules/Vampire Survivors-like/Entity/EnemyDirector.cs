@@ -23,10 +23,12 @@ namespace VampireSurvivorsLike
     [SerializeField] private Transform player;
     [Tooltip("敌人以 Player 为圆心的生成半径（世界单位）。")]
     [FormerlySerializedAs("maxSpawnDistance")]
-    [SerializeField, Min(0f)] private float spawnRadius = 15f;
+    // 相机正交 Size=10 时，10 的半径可让敌人从镜头外开始追击。
+    [SerializeField, Min(0f)] private float spawnRadius = 10f;
     [Tooltip("敌人与 Player 超过此距离时回收到对象池（世界单位）。应显著大于生成半径。")]
     [FormerlySerializedAs("recycleDistance")]
-    [SerializeField, Min(0f)] private float despawnRadius = 25f;
+    // 回收半径比生成半径多 10，避免敌人在镜头边缘反复生成/回收。
+    [SerializeField, Min(0f)] private float despawnRadius = 20f;
     [Tooltip("启动时为每种敌人预创建的对象数量。设为 0 可关闭预热。")]
     [SerializeField, Min(0)] private int preloadCountPerPrefab = 3;
 
