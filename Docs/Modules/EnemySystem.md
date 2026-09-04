@@ -1,517 +1,265 @@
 # Enemy System
 
-## 1. 文档目的
+## 1. 当前实现
 
-本文档定义 Survivor 项目第一阶段敌人系统的职责划分、运行流程、生命周期与扩展方向。
-
-当前敌人系统的目标不是实现复杂 AI，而是建立一个稳定、可扩展、适合大量敌人场景的基础框架。
-
-当前阶段核心闭环：
+第一阶段敌人系统由 `EnemyDirector`、`EnemySpawner`、`EnemyChasing` 和框架 `PoolManager` 组成：
 
 ```text
 EnemyDirector
-    ↓
-按固定节奏或当前 Wave 请求生成敌人
-
+    ↓ 固定刷怪或 Wave 调度
 EnemySpawner
-    ↓
-在 Player 周围计算随机出生位置
-
-EnemyPool
-    ↓
-获取并复用 Enemy 实例
-
-Enemy
-    ↓
-持续朝 Player 移动
-
-距离 Player 过远
-    ↓
-回收到 EnemyPool
+    ↓ 计算出生点并从 PoolManager 取出实例
+EnemyChasing
+    ↓ 追击、超距回收、碰撞玩家回收
+VSEnemyHealth
+    ↓ 受伤、死亡、击杀统计和掉落
+DropItemManager
 ```
 
----
-
-## 2. 当前目标
-
-第一阶段敌人系统需要满足以下能力：
-
-- Enemy 可以持续生成。
-- Enemy 出生位置始终围绕 Player 当前坐标计算。
-- Player 在无限地图中移动时，敌人生成逻辑仍然有效。
-- Enemy 会持续向 Player 移动。
-- Enemy 距离 Player 过远时自动回收。
-- Enemy 通过对象池复用，避免频繁 `Instantiate` / `Destroy`。
-- 系统职责清晰，Wave 已作为独立配置接入，后续可以继续扩展 Elite、Boss、特殊 AI 等功能。
-
----
-
-## 3. 系统结构
+当前实现文件：
 
 ```text
-EnemyDirector
-      ↓
-EnemySpawner
-      ↓
-EnemyPool
-      ↓
-Enemy
+Assets/Scripts/Modules/Vampire Survivors-like/Entity/EnemyDirector.cs
+Assets/Scripts/Modules/Vampire Survivors-like/Entity/EnemySpawner.cs
+Assets/Scripts/Modules/Vampire Survivors-like/Entity/EnemyChasing.cs
+Assets/Scripts/Modules/Vampire Survivors-like/UI/VSEnemyHealth.cs
+Assets/Scripts/Framework/Pool/PoolManager.cs
 ```
 
-依赖方向必须保持单向。
+敌人 Wave 配置的详细说明见 [WaveSystem.md](WaveSystem.md)。
+
+---
+
+## 2. 系统职责
 
 ### EnemyDirector
 
 负责：
 
-- 控制敌人的整体生成节奏。
-- 配置 Wave 时维护游戏时间、切换当前 Wave，并驱动各 SpawnEntry 的独立计时器。
-- 维护生成间隔。
-- 控制每次生成数量。
-- 调用 `EnemySpawner` 请求生成敌人。
+- 保存场景中的敌人列表和击杀计数。
+- 解析 Player 引用并创建 `EnemySpawner`。
+- 在兼容模式下按 `spawnInterval/spawnCount` 刷怪。
+- 在 Wave 模式下累计 `gameTime`、切换当前 Wave，并驱动每个 `SpawnEntry` 的独立计时器。
+- 限制场景中同时存活的敌人数量 `maxEnemies`。
+- 预热当前模式会使用的敌人 Prefab。
+- 提供 `RecycleEnemy(GameObject)` 作为统一回收入口。
 
-不负责：
-
-- 计算具体出生位置。
-- 创建 Enemy GameObject。
-- 管理 Enemy 生命周期。
-- 处理 Enemy 移动。
-- 处理 Enemy AI。
-
----
+不负责计算具体出生位置，也不负责敌人的移动、受伤或死亡。
 
 ### EnemySpawner
 
 负责：
 
-- 根据 Player 当前坐标计算出生位置。
-- 从 `EnemyPool` 获取 Enemy。
-- 将 Enemy 放置到正确位置。
-- 初始化 Enemy 运行时依赖。
+- 以 Player 当前坐标为圆心计算随机出生点。
+- 调用 `PoolManager.Alloc(prefab, position, rotation)` 获取敌人实例。
+- 设置运行时父节点 `enemyContainer`。
+- 调用 `EnemyChasing.Initialize(player, director)` 注入运行时依赖。
 
-不负责：
+它同时保留旧接口：随机选择 `EnemyDirector.enemyPrefab` 列表中的 Prefab；Wave 模式使用带 `GameObject prefab` 参数的重载。
 
-- `Instantiate` Enemy。
-- `Destroy` Enemy。
-- 管理 Enemy 对象池容量。
-- 控制敌人生成节奏。
-
----
-
-### EnemyPool
+### EnemyChasing
 
 负责：
 
-- 创建 Enemy 实例。
-- 复用 Enemy 实例。
-- 回收 Enemy。
-- 在对象池不足时按需扩容。
+- 保存 Player 和 EnemyDirector 引用。
+- 在 `FixedUpdate` 中通过 `Rigidbody2D.MovePosition` 追击 Player。
+- 自己检查与 Player 的平方距离，超过 `DespawnSqrDistance` 时请求回收。
+- 与带 `Player` 标签的物体碰撞后造成伤害并回收自身。
+- 在池生命周期中重置刚体速度并注销自身。
 
-建议基础接口：
+### VSEnemyHealth
 
-```csharp
-Enemy Get();
-void Release(Enemy enemy);
-```
+负责：
 
-或者：
-
-```csharp
-Enemy Spawn();
-void Despawn(Enemy enemy);
-```
+- 在 `OnAlloc` 时恢复满血。
+- 受伤后刷新 `UI_HpBar` 和伤害飘字。
+- 生命值归零时累计击杀、生成掉落并通过 `EnemyDirector.RecycleEnemy` 回收。
 
 ---
 
-### Enemy
+## 3. 生成逻辑
 
-第一阶段只负责：
-
-- 初始化。
-- 朝 Player 移动。
-- 检查与 Player 的距离。
-- 在超过回收距离时请求回收。
-
-不负责：
-
-- 查找 Player。
-- 查找 EnemyDirector。
-- 生成其他 Enemy。
-- 控制 Wave。
-- 管理对象池。
-
----
-
-## 4. Enemy 生成逻辑
-
-Enemy 的出生位置必须基于 Player 当前坐标计算。
-
-基础算法：
+出生位置基于 Player 当前坐标，而不是固定世界坐标：
 
 ```csharp
-Vector2 direction = Random.insideUnitCircle.normalized;
+Vector2 direction = Random.insideUnitCircle;
+if (direction.sqrMagnitude < Mathf.Epsilon)
+    direction = Vector2.right;
 
 Vector2 spawnPosition =
-    (Vector2)player.position +
-    direction * spawnRadius;
+    (Vector2)player.position + direction.normalized * spawnRadius;
 ```
 
-其中：
+这样可以适配无限地表和玩家持续移动。当前 `SurvivorsDemo` 场景配置为：
 
 ```text
-spawnRadius
+spawnRadius = 10
 ```
 
-用于控制 Enemy 与 Player 的出生距离。
-
-建议初始值：
-
-```text
-Spawn Radius = 15
-```
-
-Enemy 不应该依赖固定地图出生点。
-
-原因：
-
-- 当前地图为无限地图。
-- Player 可以持续移动。
-- 固定世界坐标会导致敌人生成区域脱离玩家。
+`EnemySpawner` 不决定何时刷怪；时间节奏由 `EnemyDirector` 决定。
 
 ---
 
-## 5. Enemy 移动逻辑
+## 4. 两种刷怪模式
 
-第一阶段 Enemy 使用最简单的 Seek Player 行为。
+### 兼容模式
 
-```csharp
-Vector2 currentPosition = transform.position;
-
-Vector2 direction =
-    ((Vector2)player.position - currentPosition).normalized;
-
-transform.position +=
-    (Vector3)(direction * moveSpeed * Time.deltaTime);
-```
-
-当前阶段不使用：
-
-- NavMesh
-- A*
-- 行为树
-- Patrol
-- Search
-- Alert
-- 复杂 Chase 状态
-- Enemy 与 Enemy 的复杂避障
-
----
-
-## 6. Enemy 自动回收
-
-无限地图情况下，旧 Enemy 不能永久存在。
-
-因此 Enemy 需要维护：
+当 `EnemyDirector.waves` 为空时，沿用旧逻辑：
 
 ```text
-despawnDistance
-```
-
-当 Enemy 与 Player 的距离超过该值时：
-
-```text
-Enemy
-↓
-EnemyPool.Release()
-```
-
-建议：
-
-```text
-Spawn Radius = 15
-Despawn Distance = 25 ~ 30
-```
-
-必须保证：
-
-```text
-despawnDistance > spawnRadius
-```
-
-否则可能出现 Enemy 刚出生就被回收的问题。
-
-推荐使用平方距离比较：
-
-```csharp
-Vector2 delta =
-    (Vector2)player.position -
-    (Vector2)transform.position;
-
-if (delta.sqrMagnitude >
-    despawnDistance * despawnDistance)
-{
-    Despawn();
-}
-```
-
-这样可以避免不必要的平方根计算。
-
----
-
-## 7. Enemy 生命周期
-
-完整生命周期：
-
-```text
-EnemyDirector
+timer += Time.deltaTime
+timer >= spawnInterval
     ↓
-Spawn Request
+按 spawnCount 尝试生成
+```
 
+场景中的旧字段仍然保留：
+
+- `enemyPrefab`：随机候选 Prefab 数组。
+- `spawnInterval`：刷怪间隔。
+- `spawnCount`：每次尝试数量。
+
+### Wave 模式
+
+当 `waves` 至少包含一个资源时：
+
+- 按 `WaveConfig.StartTime` 排序运行时列表。
+- 使用 `StartTime <= gameTime < EndTime` 查找当前 Wave。
+- 当前 Wave 变化时重建运行时 SpawnEntry 列表，旧计时器不会带入新 Wave。
+- 每个 SpawnEntry 独立计时，并使用其自己的 Prefab、间隔和批量数量。
+- 场上敌人数量达到 `maxEnemies` 时不再继续增加；计时器仍保留一个触发周期，不会低帧率补刷大量敌人。
+
+详细配置和示例资源见 [WaveSystem.md](WaveSystem.md)。
+
+---
+
+## 5. 移动与回收
+
+敌人在 `FixedUpdate` 中使用 Rigidbody2D 追击：
+
+```text
+player.position - enemy.position
+    ↓ normalized
+Rigidbody2D.MovePosition
+```
+
+当前场景配置：
+
+```text
+despawnRadius = 20
+```
+
+必须满足：
+
+```text
+despawnRadius > spawnRadius
+```
+
+敌人自己使用平方距离比较，避免每帧调用平方根。超距、碰撞玩家和死亡最终都进入同一个 `EnemyDirector.RecycleEnemy` → `PoolManager.Free` 流程；碰撞玩家和超距回收不会计入击杀或生成掉落。
+
+---
+
+## 6. 受伤、死亡和掉落
+
+```text
+投射物/武器命中
+    ↓
+VSEnemyHealth.TakeDamage
+    ↓
+HP > 0：刷新血条
+HP <= 0：
+    ├── EnemyDirector.KillEnemyCount++
+    ├── SurvivorModule.UpdateEnemyKillCount()
+    ├── DropItemManager.SpawnDropItem()
+    └── EnemyDirector.RecycleEnemy()
+```
+
+死亡掉落的具体类型和概率由 `EnemyChasing.dropItemType/dropItemProb` 决定。掉落物之后由 [Survivor.md](Survivor.md) 中的拾取流程处理。
+
+---
+
+## 7. 对象池规则
+
+项目没有独立的 `EnemyPool` 或 `EnemyPoolManager`；敌人直接使用框架 `PoolManager`：
+
+```text
+EnemyDirector.Start
+    ↓ Preload(prefab, preloadCountPerPrefab)
 EnemySpawner
+    ↓ Alloc(prefab, position, rotation)
+EnemyChasing.Initialize
     ↓
-Calculate Spawn Position
-
-EnemyPool.Get()
-    ↓
-Enemy.Initialize()
-
-Enemy Active
-    ↓
-Move Towards Player
-
-Enemy 受到攻击
-    ↓
-TakeDamage()
-
-HP <= 0
-    ↓
-Die()
-
-或者：
-
-Distance > Despawn Distance
-    ↓
-Despawn()
-
-最终：
-EnemyPool.Release()
+RecycleEnemy
+    ↓ Free(enemy)
 ```
 
-Enemy 死亡与超距回收最终都应该进入对象池。
+`PoolManager` 以 Prefab 的 `InstanceID` 区分池，池中没有实例时会按需 `Instantiate`。当前场景 `preloadCountPerPrefab = 3`，Wave 模式会对所有 Wave 中有效条目的不同 Prefab 各预热一次。
 
-普通 Enemy 生命周期不要使用：
+常规敌人生命周期不直接调用 `Destroy(gameObject)`。只有不属于池的对象交给 `PoolManager.Free` 时，PoolManager 才会记录警告并销毁它。
 
-```csharp
-Destroy(gameObject);
-```
+池复用时必须重置状态：
+
+- `VSEnemyHealth.OnAlloc` 恢复满血。
+- `EnemyChasing.OnAlloc` 清零 Rigidbody2D 速度。
+- `EnemyChasing.OnFree` 注销敌人。
 
 ---
 
-## 8. 对象池规则
+## 8. 场景配置
 
-对象池建议支持：
-
-```text
-enemyPrefab
-initialCapacity
-```
-
-初始化阶段可以提前创建一定数量 Enemy。
-
-例如：
+场景位置：
 
 ```text
-Initial Capacity = 50
+Assets/Scenes/Vampire Survivors-like/SurvivorsDemo.unity
+└── EnemyDirector
 ```
 
-当对象池为空时允许扩容。
+当前主要字段：
 
-Enemy 回收：
+| 字段 | 当前用途 |
+| --- | --- |
+| `enemyPrefab` | 兼容模式的随机敌人 Prefab 列表 |
+| `spawnInterval` | 兼容模式刷怪间隔 |
+| `spawnCount` | 兼容模式单次数量 |
+| `maxEnemies` | 场景中同时存活敌人上限，当前为 20 |
+| `enemyContainer` | 运行时敌人父节点 |
+| `player` | 生成中心和追击目标；为空时按 Player 标签解析一次 |
+| `spawnRadius` | 出生半径，当前为 10 |
+| `despawnRadius` | 超距回收半径，当前为 20 |
+| `preloadCountPerPrefab` | 每种 Prefab 预热数量，当前为 3 |
+| `waves` | 可选的 WaveConfig 数组 |
 
-```csharp
-enemy.gameObject.SetActive(false);
-```
-
-Enemy 重新使用：
-
-```csharp
-enemy.gameObject.SetActive(true);
-```
-
-需要确保 Enemy 被重新获取时，之前的运行时状态得到正确重置，例如：
-
-- HP
-- 移动速度
-- 临时 Buff
-- Knockback
-- 状态标记
-- 事件订阅
+不需要在场景中创建独立 EnemyPool 节点。`enemyContainer` 只负责运行时层级整理，不改变敌人的世界坐标。
 
 ---
 
-## 9. 依赖规则
+## 9. 当前边界
 
-推荐依赖：
+已实现：
 
-```text
-EnemyDirector
-      ↓
-EnemySpawner
-      ↓
-EnemyPool
-      ↓
-Enemy
-```
+- 无限地图下的玩家中心刷怪。
+- 固定刷怪兼容模式和第一阶段 Wave 模式。
+- EnemyChasing 追击、超距回收和碰撞玩家回收。
+- 受伤、死亡、击杀统计、掉落和对象池复用。
 
-EnemySpawner 额外依赖：
+当前未实现：
 
-```text
-Player Transform
-```
-
-Enemy 运行时依赖：
-
-```text
-Player Transform
-EnemyPool / Despawn Callback
-```
-
-禁止形成类似：
-
-```text
-Enemy
-↓
-EnemyDirector
-↓
-Enemy
-```
-
-这样的循环依赖。
-
-同时应尽量避免：
-
-```csharp
-GameObject.Find(...)
-FindObjectOfType(...)
-```
-
-Player 与 Pool 等依赖应从上层初始化时传入。
+- Boss、Elite、稀有度和特殊出生编队。
+- NavMesh、A*、行为树、复杂避障或敌人分离。
+- EnemyConfig 独立数值资源和动态难度预算。
+- DOTS/ECS、Spatial Hash、分帧大规模模拟。
 
 ---
 
-## 10. Inspector 参数建议
+## 10. 文档同步规则
 
-### EnemyDirector
+修改以下代码时要同步检查对应文档：
 
-```text
-spawnInterval
-spawnCount
-EnemySpawner
-```
+| 代码变更 | 文档 |
+| --- | --- |
+| `EnemyDirector`、`EnemySpawner`、`EnemyChasing`、`VSEnemyHealth` | 本文件、`WaveSystem.md` |
+| `WaveConfig` 或 Wave 调度规则 | `WaveSystem.md`、本文件 |
+| `PoolManager` 的敌人池生命周期 | 本文件、`Survivor.md` |
+| 掉落类型、死亡结算或拾取规则 | `Survivor.md`，必要时本文件 |
 
-### EnemySpawner
-
-```text
-Player Transform
-spawnRadius
-EnemyPool
-```
-
-### EnemyPool
-
-```text
-enemyPrefab
-initialCapacity
-poolRoot（可选）
-```
-
-### Enemy
-
-```text
-moveSpeed
-despawnDistance
-```
-
----
-
-## 11. 当前阶段暂不实现
-
-敌人基础系统本身不负责以下功能（Wave 已由 EnemyDirector 的可选配置模式接入）：
-
-- Boss
-- Elite
-- Enemy Rarity
-- Enemy Separation
-- 行为树
-- 复杂 AI
-- 路径寻找
-- DOTS / ECS
-- Job System
-- 大规模分帧更新
-- 敌人进化
-- 特殊出生规则
-
-这些功能在基础 Enemy Loop 稳定之后再继续扩展。
-
----
-
-## 12. 后续扩展方向
-
-后续系统可以按照以下顺序演进：
-
-```text
-基础 Enemy Loop
-    ↓
-Wave / SpawnSchedule（已实现第一阶段）
-    ↓
-Enemy Type / EnemyConfig
-    ↓
-Elite / Boss
-    ↓
-特殊移动模式
-    ↓
-Enemy Separation
-    ↓
-Spatial Hash
-    ↓
-大规模 Enemy Simulation 优化
-```
-
-EnemyDirector 后续会逐渐承担“战斗导演”的职责：
-
-- 当前战斗时间。
-- 当前 Wave。
-- 当前敌人组合。
-- 刷怪频率。
-- 刷怪密度。
-- Boss 事件。
-- Elite 事件。
-- 特殊刷怪事件。
-
----
-
-## 13. 验收标准
-
-当前 Enemy System 完成后必须满足：
-
-1. 游戏开始后能够持续生成 Enemy。
-2. Enemy 从 Player 周围一定距离生成。
-3. Player 移动后，新 Enemy 仍基于 Player 当前坐标生成。
-4. Enemy 会持续朝 Player 移动。
-5. Enemy 离 Player 过远后自动回收。
-6. Enemy 死亡后回收到对象池。
-7. Enemy 不通过 `Destroy` 完成普通生命周期。
-8. 已回收 Enemy 可以被再次复用。
-9. 长时间移动后 Hierarchy 中 Enemy 数量不会无限增长。
-10. EnemyDirector、EnemySpawner、EnemyPool、Enemy 职责保持清晰。
-11. 当前代码不包含超出第一阶段需求的复杂系统。
-
----
-
-## 14. 设计原则
-
-本系统遵循以下原则：
-
-> 单个 Enemy 尽可能简单，全局节奏交给 EnemyDirector。
-
-Survivor 类型游戏需要支持大量 Enemy，因此系统设计重点不是让每个 Enemy 拥有复杂 AI，而是让整个 Enemy Simulation 足够轻量、稳定并且易于批量优化。
+文档中的类型名、字段名和场景参数必须与当前代码一致；未来规划只能放在“当前边界/后续方向”中。

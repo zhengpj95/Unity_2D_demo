@@ -1,60 +1,209 @@
 # Survivor 模块
 
-Survivor 模块是当前项目的 Vampire Survivors-like 玩法实现。运行时状态由 `SurvivorModel` 保存，并通过 `SurvivorProxy` 对外提供受控访问。
+## 1. 当前职责
 
-## 运行时数据
+Survivor 模块负责一局 Vampire Survivors-like 战斗中的运行时状态、升级流程和主界面刷新。当前实现以代码为准：
 
-`SurvivorModel` 负责保存一局战斗内的状态：
+```text
+SurvivorProxy
+    ↓ 保存 SurvivorModel
+SurvivorGameplayController
+    ↓ 编排经验、升级和暂停
+SurvivorModule
+    ↓ 打开/刷新 Presenter
+Presenter / View
+    ↓ 只展示状态并回传输入
+```
 
-- 当前生命、最大生命
-- 当前经验、等级、下一级所需经验
-- 击杀数
-- 当前游戏状态
-- 升级时待展示的技能选项
+主要实现文件：
 
-`SurvivorProxy` 是模块内访问运行时数据的入口。Presenter 只订阅 Proxy 的事件并刷新 UI；它不再直接保存战斗数据或修改 `Time.timeScale`。
+```text
+Assets/Scripts/Modules/Vampire Survivors-like/SurvivorModel.cs
+Assets/Scripts/Modules/Vampire Survivors-like/SurvivorProxy.cs
+Assets/Scripts/Modules/Vampire Survivors-like/SurvivorGameplayController.cs
+Assets/Scripts/Modules/Vampire Survivors-like/SurvivorModule.cs
+Assets/Scripts/Modules/Vampire Survivors-like/SurvivorMainPresenter.cs
+Assets/Scripts/Modules/Vampire Survivors-like/SurvivorSkillSelectPanelPresenter.cs
+```
 
-## 战斗控制
+---
 
-`SurvivorGameplayController` 负责战斗状态切换：
+## 2. 运行时数据
 
-- 开始战斗
-- 进入升级选择
-- 选择技能后恢复战斗
-- 进入游戏结束
+`SurvivorModel` 保存一局战斗的数据，字段包括：
 
-UI 的暂停、恢复和技能选择通过 Controller 协调，避免多个 Manager 同时修改游戏状态。
+- `CurrentHealth`、`MaxHealth`
+- `Level`、`CurrentExp`、`PendingLevelUpCount`
+- `KillCount`
+- `GemCount`、`CoinCount`
+- `GameState`：`Playing`、`LevelUp`、`GameOver`
 
-## 地图第一阶段：无限图片地表
+`SurvivorProxy` 持有并修改 Model。当前经验需求公式为：
 
-Survivor 场景使用现有的 `vs-ground-seamless-2048-v1.png` 图片切片作为地表，而不是继续使用 Unity Tilemap。
+```text
+RequiredExp(level) = 20 × level + 5 × level²
+```
 
-- 场景根节点 `InfiniteGroundImage` 挂载 `InfiniteGroundTilemap`。
-- 该组件会根据 Main Camera 周围的可见区域循环复用 4×4 地表 Sprite，不创建地图边界。
-- 原有 `Grid` 对象已在场景中禁用，保留它只是为了方便回退；本阶段不删除。
-- Main Camera 挂载 `SurvivorCameraFollow`，自动查找带 `Player` 标签的 Hero，并在 X/Y 两个方向平滑跟随。
-- Hero 本身没有移动范围裁剪，因此玩家可以无限向任意方向移动。
-- 地表不挂 Collider；后续树、岩石等障碍物应各自使用 `Collider2D`，保持全项目只使用 2D 物理。
+`AddExp` 会保留溢出经验；一次拾取如果跨过多个等级，会累加 `PendingLevelUpCount`，由 Controller 逐次处理。
 
-地图显示与相机跟随属于场景表现层，不应放入 `SurvivorModel` 或 `SurvivorProxy`。
+Presenter 不直接保存战斗数据，也不直接修改 `SurvivorModel`。主界面由 `SurvivorMainPresenter.Refresh(model)` 使用快照刷新。
 
-## 无限地图敌人生命周期
+---
 
-- `EnemyDirector` 作为生成节奏控制者，持有玩家引用并按固定间隔向 `EnemySpawner` 请求批量生成；首选在 Inspector 中绑定 Hero，仅为兼容旧场景在启动阶段按 Player 标签解析一次。
-- `EnemySpawner` 根据 Player 的当前位置计算圆周出生点，从框架 `PoolManager` 取出敌人，并在每次复用时向 `EnemyChasing` 注入 Player 与回收入口。
-- `EnemyChasing` 负责追击及自身距离检测；超出回收半径、死亡或碰撞玩家时都通过同一入口归还对象池，只有死亡回收会累计击杀并生成掉落。`EnemyChasing` 在池生命周期中重置刚体速度，`VSEnemyHealth` 在每次取出时恢复满血，避免复用上一轮状态。
-- `DropItemManager` 在启动时预热 Gem/Coin，掉落物使用 `PoolManager` 取出与归还；`DropItem` 通过 `IPoolable` 重置拾取状态。Gem 会增加经验，Coin 只增加金币数量。
+## 3. 经验、掉落与升级闭环
 
-## 三选一升级系统
+```text
+Enemy 死亡
+    ↓
+DropItemManager 从 PoolManager 取出 Gem/Coin
+    ↓
+Player 的 PickupRadius 触发器拾取
+    ↓
+Gem：AddExperience(score)
+Coin：只增加 CoinCount
+    ↓
+SurvivorGameplayController.OnExpCollected
+    ↓
+SurvivorProxy.AddExp
+    ↓
+OpenNextLevelUp
+    ↓
+三选一面板
+```
 
-- UpgradeManager 在每次升级时重新生成候选池，先调用每个 UpgradeConfig.IsAvailable 过滤，再随机返回最多 3 个不重复选项；连续升级不会复用上一轮候选。
-- 当前内置三类配置：NewWeaponUpgradeConfig、WeaponUpgradeConfig、PlayerUpgradeConfig。未在 Inspector 配置资源时，管理器会根据 WeaponManager 当前已有的武器配置和基础玩家属性自动生成默认候选。
-- 候选 ID 使用 `UpgradeId` 枚举生成：武器候选会追加目标 `weaponId`，玩家属性候选会按 `PlayerUpgradeStat` 映射，配置资源不再暴露可重复填写的字符串 ID。
-- 默认玩家属性候选是在场景 `UpgradeManager` 上运行时创建的，图标配置位于该组件的“默认玩家属性升级图标”三个字段；自定义 `PlayerUpgradeConfig` 资源则在其继承的 `Icon` 字段中配置。
-- NewWeapon 只有在玩家未拥有该武器且仍有空余武器槽时可用；WeaponUpgrade 只有在已拥有且未达到 WeaponSO.levels 最大等级时可用；玩家属性升级当前支持移动速度、拾取范围和最大生命值。
-- 升级面板只展示 UpgradeConfig 的标题、描述和图标，选择结果回传 SurvivorGameplayController，由配置应用到运行时对象，不修改 WeaponSO 或其他 ScriptableObject 的原始数据。
+当前实现中：
 
-## 武器运行时层级
+- `DropItem` 只响应带 `Player` 标签的触发器。
+- Gem 才会调用 `AddExperience`；Coin 不会触发升级。
+- 掉落物通过 `PoolManager.Alloc/Free` 复用，不以 `Destroy` 作为普通拾取流程。
+- `DropItem.OnAlloc/OnFree` 会重置已拾取状态。
+- `DropItemManager.AddScore` 仍维护分数和刷怪速度进度；技能进度代码目前没有真正应用 Buff。
 
-- `WeaponManager.AddWeapon` 中的 `weaponObj.transform.SetParent(transform)` 决定武器控制器挂在 `WeaponManager` 下，因此运行时会生成 `WeaponManager/WeaponArrow`、`WeaponManager/WeaponBulletb` 等节点；场景里不需要预先创建这些子节点。
-- `ArrowController`、`BulletbController` 等控制器在 `Instantiate(..., transform)` 中把投射物挂到对应的武器控制器节点下，便于按武器分类查看和统一清理。环绕型 `SawController` 的投射物例外地挂在玩家节点下，以保持其跟随玩家的行为。
+---
+
+## 4. 升级选择流程
+
+`SurvivorGameplayController` 是升级流程的唯一编排入口：
+
+```text
+OnExpCollected
+    ↓
+有待处理升级？
+    ↓
+TryConsumePendingLevelUp
+    ↓
+UpgradeManager.GetUpgradeOptions(3, context)
+    ↓
+设置 GameState = LevelUp、Time.timeScale = 0
+    ↓
+打开 SurvivorSkillSelectPanel
+    ↓
+玩家点击或 10 秒倒计时结束自动选择第一个选项
+    ↓
+再次校验 IsAvailable
+    ↓
+UpgradeConfig.Apply(context)
+    ↓
+仍有待处理升级则重新抽取，否则恢复 Playing
+```
+
+每一轮升级都会重新创建候选结果，不会提前缓存多轮选项。选择时会再次调用 `IsAvailable`，防止连续升级或外部状态变化导致应用失效候选。
+
+升级弹窗使用 `Time.unscaledDeltaTime` 倒计时，因此暂停游戏后仍能在 10 秒结束时自动选择；Wave 和敌人使用的 `Time.deltaTime` 则会暂停。
+
+Presenter 只负责显示图标、标题、描述和点击输入。隐藏弹窗时会清理候选数组与回调，避免下一轮沿用旧状态。
+
+---
+
+## 5. 玩家实体与拾取范围
+
+`Hero` 负责移动和本局玩家属性：
+
+- `MoveSpeed`：基础值 + 升级平坦值，再乘百分比和 Buff 倍率。
+- `AttackRange`：基础值 + 升级平坦值，再乘百分比和 Buff 范围增量。
+- `PickupRadius`：基础值 + 升级平坦值，再乘百分比，最小为 `0.1`。
+
+启动时 `Hero.Start` 会确保自身有一个 `CircleCollider2D`，设置为 `isTrigger = true`，半径同步为 `PickupRadius`。因此拾取范围以玩家根节点中心为圆心，不以脚步 Sprite 为中心；升级后在 `Update` 中同步半径。
+
+`Hero.OnDrawGizmosSelected`：
+
+- 红色线框圆：`AttackRange`
+- 青色线框圆：`PickupRadius`
+
+当前场景对 Hero Prefab 的 `basePickupRadius` 覆盖值为 `0.3`，实际效果仍应以运行时 Inspector 和 Gizmos 为准。
+
+---
+
+## 6. 无限地图与相机
+
+### 地表
+
+场景使用 `InfiniteGroundImage` 挂载的 `InfiniteGroundTilemap`，根据正交相机可见范围动态创建并复用 SpriteRenderer。默认源布局是 4×4，使用 `viewPadding` 扩展可见区域，不创建地图边界。
+
+场景中的旧 `Grid` 当前禁用并保留作回退，不应把它当作运行时地表主实现。
+
+### 相机
+
+Main Camera 挂载 `SurvivorCameraFollow`：
+
+- 优先使用 Inspector 目标。
+- 目标为空时按 `Player` 标签解析。
+- 在 `LateUpdate` 中跟随目标，可通过 `_smoothTime` 控制平滑。
+- 不做地图范围裁剪，玩家可以在无限地表上移动。
+
+地图显示和相机跟随属于场景表现层，不放入 `SurvivorModel` 或 `SurvivorProxy`。
+
+---
+
+## 7. 敌人与武器的关系
+
+敌人生成和 Wave 调度由 `EnemyDirector` 负责，详细规则见 [EnemySystem.md](EnemySystem.md) 和 [WaveSystem.md](WaveSystem.md)。敌人实例和掉落物都通过框架 `PoolManager` 复用。
+
+玩家武器由场景中的 `WeaponManager` 管理，详细升级规则见 [UpgradeSystem.md](UpgradeSystem.md)。
+
+`WeaponManager.AddWeapon` 会在首次获得武器时动态创建控制器节点：
+
+```text
+WeaponManager
+├── WeaponArrow
+├── WeaponBulletb
+├── WeaponSaw
+└── ...
+```
+
+场景中不需要预先创建这些子节点。弓箭、子弹等投射物由对应控制器作为子物体创建；环绕型 Saw 直接挂在 Player 下以保持跟随。
+
+---
+
+## 8. 当前限制
+
+当前已落地：
+
+- 一局状态、经验溢出和连续升级队列。
+- Gem/Coin 分离结算。
+- 对象池敌人和掉落物。
+- Wave 第一阶段和旧固定刷怪兼容模式。
+- NewWeapon、WeaponUpgrade、PlayerUpgrade 三类候选。
+
+当前没有：
+
+- GameOver 的完整 UI 和重新开始流程。
+- 被动道具、武器进化、稀有度、刷新/跳过/禁用升级。
+- 完整的 Buff 结算；部分技能进度代码仍是占位。
+- 复杂敌人 AI、Boss、Elite 和特殊 Wave 事件。
+
+---
+
+## 9. 文档同步规则
+
+后续修改代码时，按职责同步对应文档：
+
+| 代码变更 | 需要同步的文档 |
+| --- | --- |
+| Model、经验、暂停、升级弹窗流程 | `Survivor.md`、`UpgradeSystem.md` |
+| EnemyDirector、EnemySpawner、EnemyChasing、掉落回收 | `EnemySystem.md`、`WaveSystem.md`，必要时同步本文件 |
+| WaveConfig、Wave 时间和 SpawnEntry | `WaveSystem.md`、`EnemySystem.md` |
+| UpgradeConfig、WeaponManager、WeaponSO 等级 | `UpgradeSystem.md`，必要时同步本文件 |
+| 场景层级、相机、无限地表或拾取范围 | `Survivor.md` |
+
+文档中的“当前实现”必须以仓库代码和场景为准；计划中的功能统一放在“当前限制/后续方向”，不能写成已完成。

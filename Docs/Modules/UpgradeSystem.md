@@ -1,227 +1,90 @@
 # Upgrade System
 
-## 1. 文档目的
+## 1. 当前实现
 
-本文档定义 Survivor 项目的升级三选一系统、武器成长规则以及 Upgrade 候选生成逻辑。
-
-当前系统已经支持：
-
-- Enemy 击杀。
-- 经验掉落。
-- 经验拾取。
-- Player Level Up。
-- Level Up 后出现三选一。
-- 玩家可以获得武器。
-- 再次选择已有武器时可以提升武器能力。
-
-当前阶段需要将原有“固定三把武器”的升级逻辑改造成可扩展的 Upgrade System。
-
----
-
-## 2. 当前目标
-
-将：
+升级系统负责玩家升级后的三选一候选生成、展示和应用。当前实现已经闭合以下流程：
 
 ```text
-LevelUp
-→ 固定显示 3 把武器
-→ 玩家选择
-→ 新武器 / 已有武器强化
+Gem 被拾取
+    ↓
+SurvivorProxy.AddExp
+    ↓
+累计并排队 PendingLevelUpCount
+    ↓
+SurvivorGameplayController 打开升级选择
+    ↓
+UpgradeManager 生成最多 3 个合法候选
+    ↓
+SurvivorSkillSelectPanelPresenter 展示
+    ↓
+Controller 再次校验并 Apply
+    ↓
+WeaponManager / Hero / VSPlayerHealth
 ```
 
-升级为：
-
-```text
-LevelUp
-↓
-UpgradeManager
-↓
-根据 Player 当前状态生成合法候选池
-↓
-随机抽取最多 3 个 Upgrade
-↓
-LevelUpPanel 展示
-↓
-Player Select
-↓
-Upgrade Apply
-```
-
-Upgrade 不再等同于“武器”。
-
-当前第一阶段支持：
-
-```text
-NewWeapon
-WeaponUpgrade
-PlayerUpgrade
-```
-
----
-
-## 3. Upgrade 类型
-
-### 3.1 NewWeapon
-
-用于获得 Player 当前尚未拥有的武器。
-
-例如：
-
-```text
-获得 Saw
-获得 BlueOrb
-获得 FireBall
-```
-
-出现条件：
-
-```text
-Player 没有该 Weapon
-AND
-Player 还有空余 Weapon Slot
-```
-
-如果 Player 已经拥有该 Weapon：
-
-```text
-NewWeapon 不再进入候选池
-```
-
----
-
-### 3.2 WeaponUpgrade
-
-用于升级 Player 已经拥有的 Weapon。
-
-例如：
-
-```text
-Saw Lv2
-Damage +20%
-
-Saw Lv3
-Cooldown -15%
-
-Saw Lv4
-Projectile Count +1
-
-Saw Lv5
-Size +20%
-```
-
-出现条件：
-
-```text
-Player 已拥有该 Weapon
-AND
-Weapon 尚未达到 MaxLevel
-```
-
-如果 Weapon 已满级：
-
-```text
-该 Weapon 的 WeaponUpgrade 不再进入候选池
-```
-
----
-
-### 3.3 PlayerUpgrade
-
-用于提升 Player 基础属性。
-
-第一阶段可以支持：
-
-```text
-MoveSpeed
-PickupRadius
-MaxHP
-```
-
-后续可以继续扩展：
-
-```text
-Armor
-Luck
-Cooldown
-Area
-Amount
-Recovery
-Damage
-Duration
-```
-
----
-
-## 4. Upgrade 候选生成流程
-
-每次 Level Up 都必须重新计算候选池。
-
-流程：
-
-```text
-All UpgradeConfig
-↓
-IsAvailable(context)
-↓
-过滤非法 Upgrade
-↓
-Candidate Pool
-↓
-Random
-↓
-最多选择 3 个不同 Upgrade
-↓
-LevelUpPanel
-```
-
-例如：
-
-```text
-Player 没有 Saw
-→ NewWeapon(Saw) 可用
-→ WeaponUpgrade(Saw) 不可用
-
-Player 已有 Saw Lv2
-→ NewWeapon(Saw) 不可用
-→ WeaponUpgrade(Saw Lv3) 可用
-
-Saw MaxLevel
-→ Saw 相关 Upgrade 全部不可用
-```
-
----
-
-## 5. UpgradeConfig
-
-当前实现使用 `ScriptableObject` 描述 Upgrade 配置，基类位于：
+主要实现文件：
 
 ```text
 Assets/Scripts/Modules/Vampire Survivors-like/UpgradeSystem/UpgradeConfig.cs
+Assets/Scripts/Modules/Vampire Survivors-like/UpgradeSystem/UpgradeManager.cs
+Assets/Scripts/Modules/Vampire Survivors-like/WeaponSystem/WeaponManager.cs
+Assets/Scripts/Modules/Vampire Survivors-like/WeaponSystem/WeaponSO.cs
+Assets/Scripts/Modules/Vampire Survivors-like/WeaponSystem/WeaponLevelData.cs
+Assets/Scripts/Modules/Vampire Survivors-like/SurvivorGameplayController.cs
+Assets/Scripts/Modules/Vampire Survivors-like/SurvivorSkillSelectPanelPresenter.cs
 ```
 
-`UpgradeConfig` 只保存显示配置和候选行为，运行时效果由 `Apply(context)` 写入玩家或武器实例，不修改原始配置资源。
+---
 
-基础接口如下：
+## 2. 升级配置类型
+
+当前 `UpgradeConfig.cs` 中有三类 `ScriptableObject`：
+
+### NewWeaponUpgradeConfig
+
+目标是一个尚未拥有的 `WeaponSO`。可用条件：
+
+```text
+WeaponManager 存在
+AND WeaponSO 不为空
+AND 当前没有该 WeaponSO
+AND WeaponManager.WeaponCount < maxWeaponSlots
+```
+
+应用时调用 `WeaponManager.TryAddOrUpgrade(weapon)`，首次获得会创建武器运行时控制器。
+
+### WeaponUpgradeConfig
+
+目标是一个已经拥有的 `WeaponSO`。可用条件：
+
+```text
+WeaponManager 存在
+AND 当前已经拥有该 WeaponSO
+AND WeaponManager.CanUpgrade(weapon)
+```
+
+它本身不保存“升级到几级”的字段，也不单独保存伤害数值；应用时调用 `TryAddOrUpgrade`，由对应 `WeaponController.LevelUp()` 将运行时等级加 1。
+
+### PlayerUpgradeConfig
+
+当前支持的属性枚举：
 
 ```csharp
-public abstract class UpgradeConfig : ScriptableObject
-{
-    public string Id => GetUniqueId();
-    public string Title { get; }
-    public string Description { get; }
-    public Sprite Icon { get; }
-
-    public abstract UpgradeId TypeId { get; }
-    public virtual string GetUniqueId() => TypeId.ToString();
-
-    public abstract bool IsAvailable(PlayerUpgradeContext context);
-    public abstract void Apply(PlayerUpgradeContext context);
-}
+MoveSpeed
+PickupRadius
+MaxHealth
+AttackRange
 ```
 
-### 5.1 UpgradeId 枚举
+`MoveSpeed`、`PickupRadius`、`AttackRange` 应用到 `Hero.ApplyUpgrade`；`MaxHealth` 应用到 `VSPlayerHealth.ApplyMaxHealthUpgrade`。配置的 `value` 由 `isPercent` 决定是百分比还是固定值。
 
-候选 ID 不再由 Inspector 中的字符串字段填写，而是由 `UpgradeId` 枚举和目标数据自动生成：
+默认运行时候选目前只自动创建：移动速度、拾取范围、最大生命；攻击范围可以通过自定义 `PlayerUpgradeConfig` 资源加入。
+
+---
+
+## 3. UpgradeId 与候选去重
+
+配置不再提供可由 Inspector 随意填写的字符串 ID。固定类型由枚举决定：
 
 ```csharp
 public enum UpgradeId
@@ -235,32 +98,215 @@ public enum UpgradeId
 }
 ```
 
-当前唯一键规则：
+唯一键规则：
 
-| 配置类型 | `TypeId` | `Id` 示例 |
-| --- | --- | --- |
-| 新武器 | `NewWeapon` | `NewWeapon:WeaponArrow` |
-| 武器升级 | `WeaponLevel` | `WeaponLevel:WeaponArrow` |
-| 移动速度 | `PlayerMoveSpeed` | `PlayerMoveSpeed` |
-| 拾取范围 | `PlayerPickupRadius` | `PlayerPickupRadius` |
-| 最大生命 | `PlayerMaxHealth` | `PlayerMaxHealth` |
-| 攻击范围 | `PlayerAttackRange` | `PlayerAttackRange` |
+| 配置 | 唯一键示例 |
+| --- | --- |
+| 新武器 | `NewWeapon:WeaponArrow` |
+| 武器升级 | `WeaponLevel:WeaponArrow` |
+| 移动速度 | `PlayerMoveSpeed` |
+| 拾取范围 | `PlayerPickupRadius` |
+| 最大生命 | `PlayerMaxHealth` |
+| 攻击范围 | `PlayerAttackRange` |
 
-武器候选会追加 `WeaponSO.weaponId`，所以不同武器不会因为同属 `WeaponLevel` 而被错误去重；玩家属性候选会根据 `PlayerUpgradeStat` 自动映射到对应枚举。
+武器类配置会在枚举值后追加 `WeaponSO.weaponId`，避免不同武器互相去重；玩家属性按属性枚举映射。`UpgradeManager` 每轮使用 `HashSet<string>` 去重，自定义资源和运行时默认候选重复时只保留一个。
 
-### 5.2 新增升级类型
+新增升级类型时：
 
-新增升级时按以下顺序处理：
-
-1. 在 `UpgradeId` 中增加固定枚举值。
-2. 在对应的 `UpgradeConfig` 子类中实现 `TypeId`。
-3. 如果候选需要区分目标对象，重写 `GetUniqueId()`，在枚举值后追加稳定的目标 ID。
+1. 在 `UpgradeId` 中增加固定值。
+2. 在对应 `UpgradeConfig` 子类中返回该值。
+3. 如需区分目标对象，重写 `GetUniqueId()`。
 4. 实现 `IsAvailable(context)` 和 `Apply(context)`。
-5. 如需从 Project 面板创建资源，为子类添加 `CreateAssetMenu`，再将资源拖入场景 `UpgradeManager` 的 `Upgrade Configs` 数组。
+5. 如需手动创建资源，再添加 `CreateAssetMenu`。
 
-不要重新添加可编辑的字符串 `id` 字段，否则会绕过枚举规则并重新引入重复候选。
+不要重新添加可编辑字符串 `id` 字段。
 
-已有三种资源创建菜单：
+---
+
+## 4. 候选池生成
+
+`UpgradeManager.GetUpgradeOptions` 有两个入口：
+
+```csharp
+GetUpgradeOptions(int count)
+GetUpgradeOptions(int count, PlayerUpgradeContext context)
+```
+
+无 Context 时，Manager 会按 `Player` 标签解析 `Hero` 和 `VSPlayerHealth`；Controller 会主动组装 Context，避免 `UpgradeConfig` 自己查找场景对象。
+
+每次调用都会重新过滤：
+
+```text
+Inspector 的 upgradeConfigs
+    +
+运行时默认候选 runtimeConfigs
+    ↓
+IsAvailable(context)
+    ↓
+按 Id 去重
+    ↓
+Fisher-Yates 普通随机打乱
+    ↓
+返回 Mathf.Min(count, 合法候选数)
+```
+
+候选不足 3 个时返回实际数量，面板会隐藏多余卡片，不使用空配置凑数。运行时默认候选只创建一次，并在 `UpgradeManager.OnDestroy` 中销毁。
+
+当前场景的 `UpgradeManager.upgradeConfigs` 为空，因此主要使用运行时默认候选；自定义资源仍可拖入该数组扩展内容。
+
+---
+
+## 5. 运行时 Context 与应用
+
+`PlayerUpgradeContext` 当前包含：
+
+```csharp
+WeaponManager WeaponManager
+Hero Hero
+VSPlayerHealth PlayerHealth
+```
+
+`UpgradeConfig` 只读取配置并通过 Context 修改运行时实例，不修改 `WeaponSO` 或其他 ScriptableObject 原始数据。
+
+玩家属性升级的实际写入位置：
+
+| 属性 | 运行时写入 |
+| --- | --- |
+| 移动速度 | `Hero` 的升级平坦值/百分比字段 |
+| 拾取范围 | `Hero` 的升级平坦值/百分比字段，随后同步 CircleCollider2D 半径 |
+| 攻击范围 | `Hero` 的升级平坦值/百分比字段 |
+| 最大生命 | `VSPlayerHealth` 的 `maxHealth/currentHealth` |
+
+最大生命升级会同时增加当前生命；百分比值按当前最大生命计算，固定值按整数处理，最小增加 1。
+
+---
+
+## 6. 武器等级来源
+
+当前武器资源类型是 `WeaponSO`，不是独立的 `WeaponConfig`：
+
+```csharp
+public class WeaponSO : ScriptableObject
+{
+    public string weaponId;
+    public Transform prefab;
+    public Sprite icon;
+    public string weaponName;
+    public WeaponLevelData[] levels;
+}
+```
+
+每个武器的等级在 Inspector 中配置 `WeaponSO.levels` 数组。数组下标对应运行时等级：
+
+```text
+levels[0] → Lv1
+levels[1] → Lv2
+levels[2] → Lv3
+...
+```
+
+`WeaponLevelData` 当前字段为：
+
+```text
+level
+speed
+damage
+damageInterval
+count
+range
+fireInterval
+duration
+```
+
+`WeaponController` 保存本局 `level`，初始为 1；`MaxLevel` 等于 `WeaponSO.levels.Length`。`LevelUp()` 只增加控制器实例的等级，`GetLevelData()` 再读取对应数组项。达到数组长度后，`WeaponManager.CanUpgrade` 返回 false，相关 `WeaponUpgrade` 不再进入候选。
+
+因此，新增或修改武器等级的正确位置是：
+
+```text
+Project 面板
+→ 找到对应 WeaponSO
+→ Inspector 的 Levels 数组
+→ 增加元素并填写该等级的字段
+```
+
+不要在 `WeaponUpgradeConfig` 中另建一套等级数组，也不要在运行时修改 `WeaponSO.levels`。
+
+---
+
+## 7. WeaponManager 与武器槽位
+
+场景中的 `WeaponManager` 当前配置六个可用 `WeaponSO` 引用：
+
+```text
+sawSO
+arrowSO
+bulletbSO
+blueOvalSO
+lightningSO
+fireSO
+```
+
+`GetConfiguredWeapons()` 将这些引用提供给 `UpgradeManager`，用于创建默认 NewWeapon 和 WeaponUpgrade 候选。当前场景 `maxWeaponSlots = 3`。
+
+`WeaponManager.AddWeapon` 在首次获得武器时动态创建：
+
+```text
+WeaponManager
+└── WeaponArrow / WeaponBulletb / WeaponSaw / ...
+```
+
+父节点由 `weaponObj.transform.SetParent(transform)` 决定，场景不需要预先创建这些子节点。控制器类型由 `weaponId` 映射；新增武器时必须同时保证 `weaponId` 在 `GetWeaponType` 中有对应控制器，否则无法创建。
+
+---
+
+## 8. 三选一面板与连续升级
+
+`SurvivorSkillSelectPanelPresenter` 只负责：
+
+- 显示 `UpgradeConfig.Icon`、标题和描述。
+- 隐藏不足 3 个的卡片。
+- 响应按钮点击。
+- 使用 `Time.unscaledDeltaTime` 运行 10 秒倒计时，超时自动选择第一个有效选项。
+
+实际业务由 `SurvivorGameplayController` 编排：
+
+```text
+TryConsumePendingLevelUp
+    ↓
+GetUpgradeOptions(3, context)
+    ↓
+GameState = LevelUp，Time.timeScale = 0
+    ↓
+选择候选
+    ↓
+再次 IsAvailable 校验
+    ↓
+Apply(context)
+    ↓
+有 PendingLevelUpCount：下一轮重新抽取
+没有：GameState = Playing，Time.timeScale = 1
+```
+
+选择回调在面板关闭前缓存候选对象，关闭时清理候选和回调，避免 `OnClose` 清空数据后出现空引用。
+
+如果候选已失效，Controller 会记录 Warning 并恢复游戏；如果合法候选数量为 0，也会跳过弹窗并恢复游戏。
+
+---
+
+## 9. 默认图标与自定义资源
+
+默认玩家属性候选不是 Project 资源，而是 `UpgradeManager` 运行时创建的 ScriptableObject。图标配置在场景 `UpgradeManager` 组件上：
+
+```text
+默认玩家属性升级图标
+├── Move Speed Upgrade Icon
+├── Pickup Radius Upgrade Icon
+└── Max Health Upgrade Icon
+```
+
+当前场景已经配置这三个字段。自定义 `PlayerUpgradeConfig` 资源则在资源自身的 `Icon` 字段配置。
+
+Project 面板创建自定义配置的菜单：
 
 ```text
 Create
@@ -273,506 +319,49 @@ Create
 
 ---
 
-## 6. PlayerUpgradeContext
+## 10. 当前未实现
 
-为了避免 UpgradeConfig 在运行时主动查找各种 Manager，可以提供统一 Context。
+当前没有：
 
-例如：
+- Weapon Evolution、Weapon Combination。
+- 被动道具系统。
+- Rarity、Luck、Weight、Refresh、Skip、Ban。
+- 复杂前置条件、升级树、Build Synergy。
+- 完整 GameOver 和局外成长流程。
 
-```csharp
-public class PlayerUpgradeContext
-{
-    public WeaponManager WeaponManager { get; }
-    public PlayerStats PlayerStats { get; }
-}
-```
-
-Upgrade 通过 Context 获取需要的运行时能力。
-
-禁止在 Upgrade 中频繁使用：
-
-```csharp
-GameObject.Find(...)
-FindObjectOfType(...)
-```
+`UpgradeId` 目前只用于固定类型和候选去重，不代表已经实现稀有度或权重系统。
 
 ---
 
-## 7. Weapon Level System
+## 11. 验收清单
 
-当前武器升级逻辑不应该继续使用统一规则：
+在 `SurvivorsDemo` 中运行并获得经验后检查：
 
-```text
-再次选中 Weapon
-→ Damage +
-→ AttackSpeed +
-```
-
-每把武器应该拥有独立成长路线。
-
-例如：
-
-```text
-Saw
-
-Lv1
-基础能力
-
-Lv2
-Damage +20%
-
-Lv3
-Cooldown -15%
-
-Lv4
-Projectile Count +1
-
-Lv5
-Damage +30%
-
-Lv6
-Size +20%
-
-Lv7
-Projectile Count +1
-
-Lv8
-Max Level
-```
-
-不同 Weapon 可以拥有不同的成长方向。
-
-例如：
-
-```text
-Saw
-→ Damage / Count
-
-BlueOrb
-→ Size / Duration
-
-FireBall
-→ Damage / Explosion Radius
-```
+1. 候选来自当前合法配置，不固定显示三把武器。
+2. 未拥有武器且仍有槽位时可出现 NewWeapon。
+3. 获得武器后，该武器的 NewWeapon 不再出现。
+4. 已拥有且未满级的武器可出现 WeaponUpgrade。
+5. `WeaponSO.levels` 达到最大等级后，相关 WeaponUpgrade 消失。
+6. `maxWeaponSlots` 满时，所有 NewWeapon 都不可用。
+7. 同一轮不会出现相同 `Id` 的候选。
+8. 选择玩家属性后，Hero 或 VSPlayerHealth 的运行时属性立即更新。
+9. 选择升级时游戏暂停，倒计时仍能工作。
+10. 连续升级每一轮都会重新生成候选。
+11. 面板候选不足 3 个时多余卡片隐藏。
+12. 运行时升级不会修改 WeaponSO 或其他配置资源。
 
 ---
 
-## 8. WeaponLevelData
-
-每把 Weapon 应该有独立等级配置。
-
-示例：
-
-```csharp
-[Serializable]
-public class WeaponLevelData
-{
-    public float damageMultiplier = 1f;
-    public float cooldownMultiplier = 1f;
-
-    public int additionalProjectileCount;
-
-    public float sizeMultiplier = 1f;
-
-    public string description;
-}
-```
-
-具体字段应该根据当前 Weapon 参数结构调整。
-
-WeaponConfig 示例：
-
-```csharp
-public class WeaponConfig : ScriptableObject
-{
-    public List<WeaponLevelData> levels;
-}
-```
-
-Weapon Runtime 状态至少需要：
-
-```text
-WeaponId
-CurrentLevel
-MaxLevel
-```
-
----
-
-## 9. Weapon Config 与 Runtime Data 分离
-
-`ScriptableObject` 只保存基础配置。
-
-运行时不要修改 WeaponConfig。
-
-错误示例：
-
-```csharp
-weaponConfig.damage += 10;
-```
-
-推荐：
-
-```text
-WeaponConfig
-基础只读数据
-↓
-WeaponRuntimeData
-运行时属性
-↓
-Weapon
-战斗逻辑
-```
-
-例如：
-
-```text
-Base Damage = 10
-Lv2 Damage Multiplier = 1.2
-Runtime Damage = 12
-```
-
-这样可以避免：
-
-- Play Mode 中配置被污染。
-- 多个 Weapon 实例共享错误状态。
-- 下一局游戏继承上一局数据。
-- Upgrade 重复叠加产生不可控状态。
-
----
-
-## 10. UpgradeManager
-
-UpgradeManager 负责：
-
-- 管理所有 UpgradeConfig。
-- 根据当前 Player 状态过滤 Upgrade。
-- 生成 Candidate Pool。
-- 随机抽取 UpgradeOption。
-- 应用玩家选择的 Upgrade。
-
-当前实现位于：
-
-```text
-Assets/Scripts/Modules/Vampire Survivors-like/UpgradeSystem/UpgradeManager.cs
-```
-
-场景上的 `UpgradeManager.Upgrade Configs` 用于接收手动创建的 `UpgradeConfig` 资源；即使该数组为空，管理器仍会根据 `WeaponManager.GetConfiguredWeapons()` 自动创建新武器、武器等级和基础玩家属性候选。默认玩家属性升级的图标在同一组件的三个图标字段中配置。
-
-建议接口：
-
-```csharp
-List<UpgradeConfig> GetUpgradeOptions(int count);
-```
-
-流程：
-
-```text
-GetUpgradeOptions(3)
-↓
-遍历 All UpgradeConfig
-↓
-IsAvailable(context)
-↓
-Candidate Pool
-↓
-Random
-↓
-最多返回 3 个
-```
-
-规则：
-
-- 同一次三选一不能出现完全相同的 Upgrade。
-- 如果合法候选不足 3 个，则返回实际数量。
-- 不应该通过展示非法选项来强行凑满 3 个。
-
----
-
-## 11. LevelUpPanel
-
-LevelUpPanel 只负责 UI 展示与输入。
-
-负责：
-
-```text
-显示 Icon
-显示 Title
-显示 Description
-处理按钮点击
-```
-
-不负责：
-
-```text
-判断是不是新武器
-判断 Weapon 是否满级
-判断 Weapon Slot
-直接修改 Weapon 属性
-直接修改 PlayerStats
-```
-
-点击流程：
-
-```text
-LevelUpPanel
-↓
-SurvivorGameplayController.SelectLevelUpOption()
-↓
-UpgradeConfig.Apply()
-↓
-WeaponManager / PlayerStats
-```
-
----
-
-## 12. 核心规则
-
-Upgrade System 必须满足以下规则。
-
-### NewWeapon
-
-```text
-没有 Weapon
-+
-还有 Weapon Slot
-→ 可以出现
-```
-
-### WeaponUpgrade
-
-```text
-已有 Weapon
-+
-未 MaxLevel
-→ 可以出现
-```
-
-### MaxLevel
-
-```text
-Weapon MaxLevel
-→ 不再出现对应 Upgrade
-```
-
-### Weapon Slot
-
-```text
-Weapon Slot 已满
-→ 所有 NewWeapon 都不可用
-```
-
-### PlayerUpgrade
-
-```text
-根据自身 IsAvailable 规则判断
-```
-
----
-
-## 13. 示例
-
-假设：
-
-```text
-Weapon Slots = 3
-
-已有：
-Saw Lv2
-FireBall Lv1
-
-未拥有：
-BlueOrb
-```
-
-当前 Candidate Pool 可能为：
-
-```text
-Saw Lv3
-FireBall Lv2
-获得 BlueOrb
-MoveSpeed +10%
-PickupRadius +20%
-MaxHP +20
-```
-
-随机抽取：
-
-```text
-Saw Lv3
-获得 BlueOrb
-MoveSpeed +10%
-```
-
-如果 Player 选择：
-
-```text
-Saw Lv3
-```
-
-则：
-
-```text
-Saw Lv2
-↓
-Saw Lv3
-↓
-应用该等级配置
-```
-
-下一次 Level Up 时重新计算 Candidate Pool。
-
----
-
-## 14. 连续升级
-
-系统必须兼容一次获得大量经验导致连续升级。
-
-例如：
-
-```text
-pendingLevelUpCount = 3
-```
-
-处理流程：
-
-```text
-第 1 次三选一
-↓
-Player Select
-↓
-Apply Upgrade
-↓
-重新计算 Candidate Pool
-
-第 2 次三选一
-↓
-Player Select
-↓
-Apply Upgrade
-↓
-重新计算 Candidate Pool
-
-第 3 次三选一
-↓
-Player Select
-↓
-Apply Upgrade
-↓
-结束
-```
-
-不能提前一次性生成 3 轮候选。
-
-因为前一次选择会改变：
-
-- Weapon 数量。
-- Weapon Level。
-- Weapon Slot。
-- Player Stats。
-- Upgrade 可用条件。
-
----
-
-## 15. 当前随机规则
-
-第一阶段只使用：
-
-```text
-合法候选池
-+
-普通随机
-```
-
-暂时不实现 Weight。
-
-但是 UpgradeConfig 结构需要保留未来加入权重的可能。
-
-未来可能扩展：
-
-```text
-NewWeapon Weight = 100
-WeaponUpgrade Weight = 120
-PlayerUpgrade Weight = 80
-RareUpgrade Weight = 20
-```
-
----
-
-## 16. 当前阶段暂不实现
-
-暂时不要加入：
-
-- Weapon Evolution
-- Weapon Combination
-- Passive Item Combination
-- Rarity
-- Luck
-- Upgrade Weight
-- Refresh
-- Skip
-- Ban
-- Upgrade Tree
-- Complex Prerequisite
-- Legendary Upgrade
-- Build Synergy
-
-这些功能应在基础 Upgrade System 稳定后再继续扩展。
-
----
-
-## 17. 后续扩展方向
-
-推荐演进路线：
-
-```text
-NewWeapon / WeaponUpgrade / PlayerUpgrade
-↓
-Weapon 独立 Level Growth
-↓
-Upgrade Weight
-↓
-Rarity
-↓
-Luck
-↓
-Refresh / Skip / Ban
-↓
-Passive Item
-↓
-Weapon Evolution
-↓
-Build Synergy
-```
-
----
-
-## 18. 验收标准
-
-升级系统完成后必须满足：
-
-1. 三选一不再固定显示 3 把 Weapon。
-2. 可以出现 NewWeapon。
-3. 可以出现 WeaponUpgrade。
-4. 可以出现 PlayerUpgrade。
-5. 未拥有 Weapon 时可以出现对应 NewWeapon。
-6. 获得 Weapon 后，不再出现该 Weapon 的 NewWeapon。
-7. 已拥有且未满级的 Weapon 可以继续出现 WeaponUpgrade。
-8. Weapon MaxLevel 后不再出现对应 WeaponUpgrade。
-9. Weapon Slot 满后不再出现任何 NewWeapon。
-10. 同一次三选一不会出现完全相同的 Upgrade。
-11. 不同 Weapon 可以拥有不同 Level Growth。
-12. WeaponConfig 不会被运行时修改。
-13. 连续 Level Up 时每次都会重新计算 Candidate Pool。
-14. LevelUpPanel 不包含具体 Upgrade 业务逻辑。
-15. 新增 Weapon 或 PlayerUpgrade 时不需要修改大量现有逻辑。
-
----
-
-## 19. 设计原则
-
-Upgrade System 应遵循：
-
-> UI 只展示，Config 描述规则，Manager 负责调度，Runtime Data 保存实际状态。
-
-升级系统的核心目标不是简单增加数值，而是让玩家每次 Level Up 都基于当前 Build 获得有意义的成长选择。
+## 12. 文档同步规则
+
+后续代码修改按以下关系同步：
+
+| 代码变更 | 需要同步的文档 |
+| --- | --- |
+| `UpgradeConfig`、`UpgradeManager`、`UpgradeId` | 本文件、`Survivor.md` |
+| `WeaponManager`、`WeaponSO`、`WeaponLevelData`、WeaponController | 本文件、`Survivor.md` |
+| `SurvivorGameplayController`、升级面板、经验队列 | 本文件、`Survivor.md` |
+| `DropItem`、Gem/Coin 结算 | `Survivor.md`、必要时 `EnemySystem.md` |
+| 敌人生成和 Wave | `EnemySystem.md`、`WaveSystem.md` |
+
+字段、菜单路径、场景引用和示例参数变化后，应同时更新本文档中的代码片段、配置说明和验收清单。规划功能只能放在“当前未实现”中。

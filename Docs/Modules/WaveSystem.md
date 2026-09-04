@@ -339,3 +339,18 @@ UpgradeSystem
 9. 配置重叠或非法时间区间时 Console 出现 Warning。
 
 本地已完成 `dotnet build Assembly-CSharp.csproj --no-restore`，0 警告、0 错误；Unity Editor 内的实际运行验证仍需在编辑器中进行。
+
+---
+
+## 12. 文档同步规则
+
+后续代码修改按职责同步相关文档：
+
+| 代码变更 | 需要同步的文档 |
+| --- | --- |
+| `WaveConfig`、`SpawnEntry`、Wave 时间区间或计时器 | 本文件、`EnemySystem.md` |
+| `EnemyDirector`、`EnemySpawner`、`EnemyChasing` | 本文件、`EnemySystem.md`，必要时 `Survivor.md` |
+| `PoolManager` 的敌人预热、取出或回收流程 | 本文件、`EnemySystem.md`、`Survivor.md` |
+| 场景中的 Wave 资源、敌人参数或示例配置 | 本文件及对应场景/系统文档 |
+
+字段名、菜单路径、资源路径和示例数值必须以当前代码、Prefab 和场景为准；尚未实现的调度能力只能放在“当前未实现与后续方向”中。
