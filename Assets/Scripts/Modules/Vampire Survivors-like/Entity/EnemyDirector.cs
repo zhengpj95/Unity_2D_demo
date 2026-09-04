@@ -32,29 +32,72 @@ namespace VampireSurvivorsLike
     [Tooltip("启动时为每种敌人预创建的对象数量。设为 0 可关闭预热。")]
     [SerializeField, Min(0)] private int preloadCountPerPrefab = 3;
 
+    [Header("Wave System")]
+    [Tooltip("按游戏时间切换的 Wave 配置；为空时继续使用上面的固定频率刷怪参数。")]
+    [SerializeField] private WaveConfig[] waves;
+
     private float timer;
+    private float gameTime;
     private EnemySpawner _spawner;
     private bool _playerResolutionAttempted;
+    private bool _waveSystemEnabled;
+    private int _currentWaveIndex = -1;
+    private readonly List<WaveConfig> _orderedWaves = new List<WaveConfig>();
+    private readonly List<SpawnEntryRuntime> _activeSpawnEntries = new List<SpawnEntryRuntime>();
 
     private readonly List<EnemyChasing> enemies = new List<EnemyChasing>();
     public int KillEnemyCount { get; set; } = 0;
     public float DespawnSqrDistance => despawnRadius * despawnRadius;
+    /// <summary>当前战斗已累计的游戏时间；受 Time.timeScale 影响。</summary>
+    public float GameTime => gameTime;
+    /// <summary>当前 Wave 的从零开始索引；没有生效 Wave 时返回 -1。</summary>
+    public int CurrentWaveIndex => _currentWaveIndex;
+    /// <summary>当前 Wave 的显示编号；没有生效 Wave 时返回 0。</summary>
+    public int CurrentWaveNumber => _currentWaveIndex < 0 ? 0 : _currentWaveIndex + 1;
+
+    /// <summary>记录一个 SpawnEntry 在当前 Wave 中的运行时计时器，不修改配置资源。</summary>
+    private sealed class SpawnEntryRuntime
+    {
+      public readonly SpawnEntry Config;
+      public float Timer;
+
+      public SpawnEntryRuntime(SpawnEntry config)
+      {
+        Config = config;
+        // 首次进入 Wave 时允许下一帧立即生成，保持旧版启动即刷怪的体验。
+        Timer = config.SpawnInterval;
+      }
+    }
 
     protected override void Awake()
     {
       base.Awake();
       ResolvePlayer();
       _spawner = new EnemySpawner(enemyPrefab, enemyContainer);
+      BuildWaveSchedule();
+      _waveSystemEnabled = waves != null && waves.Length > 0;
     }
 
     private void Start()
     {
+      if (_waveSystemEnabled)
+      {
+        PreloadWaveEnemies();
+        return;
+      }
+
       PreloadEnemies();
       SpawnEnemies();
     }
 
     private void Update()
     {
+      if (_waveSystemEnabled)
+      {
+        UpdateWave();
+        return;
+      }
+
       timer += Time.deltaTime;
 
       if (timer >= spawnInterval)
@@ -72,6 +115,113 @@ namespace VampireSurvivorsLike
       int count = Mathf.Min(spawnCount, maxEnemies - enemies.Count);
       for (int i = 0; i < count; i++)
         _spawner.Spawn(player, spawnRadius, this);
+    }
+
+    /// <summary>累计游戏时间、切换生效 Wave，并驱动每个 SpawnEntry 的独立计时器。</summary>
+    private void UpdateWave()
+    {
+      gameTime += Time.deltaTime;
+      int nextWaveIndex = FindActiveWaveIndex(gameTime);
+      if (nextWaveIndex != _currentWaveIndex)
+        ActivateWave(nextWaveIndex);
+
+      if (_currentWaveIndex < 0)
+        return;
+
+      for (int i = 0; i < _activeSpawnEntries.Count; i++)
+        TickSpawnEntry(_activeSpawnEntries[i]);
+    }
+
+    /// <summary>查找满足 StartTime <= GameTime < EndTime 的 Wave。</summary>
+    private int FindActiveWaveIndex(float currentTime)
+    {
+      for (int i = 0; i < _orderedWaves.Count; i++)
+      {
+        if (_orderedWaves[i] != null && _orderedWaves[i].Contains(currentTime))
+          return i;
+      }
+
+      return -1;
+    }
+
+    /// <summary>切换 Wave 时重建运行时条目，旧 Wave 的计时器不会带入下一 Wave。</summary>
+    private void ActivateWave(int waveIndex)
+    {
+      _currentWaveIndex = waveIndex;
+      _activeSpawnEntries.Clear();
+
+      if (waveIndex < 0 || waveIndex >= _orderedWaves.Count)
+        return;
+
+      WaveConfig wave = _orderedWaves[waveIndex];
+      if (wave == null || wave.SpawnEntries == null)
+        return;
+
+      for (int i = 0; i < wave.SpawnEntries.Count; i++)
+      {
+        SpawnEntry entry = wave.SpawnEntries[i];
+        if (entry == null || !entry.IsValid)
+        {
+          Debug.LogWarning($"[EnemyDirector] Wave '{wave.name}' 包含无效 SpawnEntry，已跳过。", wave);
+          continue;
+        }
+
+        _activeSpawnEntries.Add(new SpawnEntryRuntime(entry));
+      }
+    }
+
+    /// <summary>推进单个条目的计时器并按其配置向 EnemySpawner 请求生成。</summary>
+    private void TickSpawnEntry(SpawnEntryRuntime runtime)
+    {
+      if (runtime == null || runtime.Config == null || !runtime.Config.IsValid)
+        return;
+
+      float interval = runtime.Config.SpawnInterval;
+      runtime.Timer += Time.deltaTime;
+      if (runtime.Timer < interval)
+        return;
+
+      // 满载时保留一个触发周期，等场上敌人回收后再继续，不因暂停期间积累大量补刷。
+      if (enemies.Count < maxEnemies)
+      {
+        int count = Mathf.Min(runtime.Config.SpawnCount, maxEnemies - enemies.Count);
+        for (int i = 0; i < count; i++)
+          _spawner.Spawn(player, spawnRadius, this, runtime.Config.EnemyPrefab);
+      }
+
+      // 只处理一次触发，避免低帧率时一帧补刷过多；减去间隔可避免长期节奏漂移。
+      runtime.Timer -= interval;
+      if (runtime.Timer > interval)
+        runtime.Timer = interval;
+    }
+
+    /// <summary>复制并排序 Wave 引用，同时对空配置、时间倒置和重叠区间输出警告。</summary>
+    private void BuildWaveSchedule()
+    {
+      _orderedWaves.Clear();
+      if (waves == null)
+        return;
+
+      for (int i = 0; i < waves.Length; i++)
+      {
+        if (waves[i] != null)
+          _orderedWaves.Add(waves[i]);
+      }
+
+      _orderedWaves.Sort((left, right) => left.StartTime.CompareTo(right.StartTime));
+      for (int i = 0; i < _orderedWaves.Count; i++)
+      {
+        WaveConfig wave = _orderedWaves[i];
+        if (wave.EndTime <= wave.StartTime)
+          Debug.LogWarning($"[EnemyDirector] Wave '{wave.name}' 的 EndTime 必须大于 StartTime。", wave);
+
+        if (i > 0 && _orderedWaves[i - 1].EndTime > wave.StartTime)
+        {
+          Debug.LogWarning(
+            $"[EnemyDirector] Wave '{_orderedWaves[i - 1].name}' 与 '{wave.name}' 的时间区间重叠。",
+            wave);
+        }
+      }
     }
 
     private bool ResolvePlayer()
@@ -97,6 +247,31 @@ namespace VampireSurvivorsLike
       }
     }
 
+    /// <summary>预热所有 Wave 引用的敌人预制体；相同预制体只预热一次。</summary>
+    private void PreloadWaveEnemies()
+    {
+      if (preloadCountPerPrefab <= 0)
+        return;
+
+      var prefabs = new HashSet<GameObject>();
+      for (int i = 0; i < _orderedWaves.Count; i++)
+      {
+        WaveConfig wave = _orderedWaves[i];
+        if (wave == null || wave.SpawnEntries == null)
+          continue;
+
+        for (int j = 0; j < wave.SpawnEntries.Count; j++)
+        {
+          SpawnEntry entry = wave.SpawnEntries[j];
+          if (entry != null && entry.IsValid)
+            prefabs.Add(entry.EnemyPrefab);
+        }
+      }
+
+      foreach (GameObject prefab in prefabs)
+        PoolManager.Instance.Preload(prefab, preloadCountPerPrefab);
+    }
+
     public void RecycleEnemy(GameObject enemy)
     {
       if (enemy != null && enemy.activeSelf)
@@ -107,7 +282,9 @@ namespace VampireSurvivorsLike
 
     public void SpeedUpSpawnRate()
     {
-      spawnInterval = Mathf.Max(0.1f, spawnInterval - 0.2f);
+      // Wave 模式由 SpawnEntry 控制节奏，旧版 spawnInterval 只在兼容模式下调整。
+      if (!_waveSystemEnabled)
+        spawnInterval = Mathf.Max(0.1f, spawnInterval - 0.2f);
       maxEnemies *= 2;
     }
 

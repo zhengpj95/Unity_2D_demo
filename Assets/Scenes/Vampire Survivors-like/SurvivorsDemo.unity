@@ -637,6 +637,10 @@ MonoBehaviour:
   spawnRadius: 10
   despawnRadius: 20
   preloadCountPerPrefab: 3
+  waves:
+  - {fileID: 11400000, guid: 4e5468fffafc4553aee29b17895b31e9, type: 2}
+  - {fileID: 11400000, guid: 0a6fa8fbbb2b4d38952eda0bb011e89e, type: 2}
+  - {fileID: 11400000, guid: a3ea4e93ef4047d687b8237a5ec71ad6, type: 2}
 --- !u!1 &2051200000
 GameObject:
   m_ObjectHideFlags: 0

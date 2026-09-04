@@ -11,7 +11,7 @@
 ```text
 EnemyDirector
     ↓
-按固定节奏请求生成敌人
+按固定节奏或当前 Wave 请求生成敌人
 
 EnemySpawner
     ↓
@@ -42,7 +42,7 @@ Enemy
 - Enemy 会持续向 Player 移动。
 - Enemy 距离 Player 过远时自动回收。
 - Enemy 通过对象池复用，避免频繁 `Instantiate` / `Destroy`。
-- 系统职责清晰，后续可以继续扩展 Wave、Elite、Boss、特殊 AI 等功能。
+- 系统职责清晰，Wave 已作为独立配置接入，后续可以继续扩展 Elite、Boss、特殊 AI 等功能。
 
 ---
 
@@ -65,6 +65,7 @@ Enemy
 负责：
 
 - 控制敌人的整体生成节奏。
+- 配置 Wave 时维护游戏时间、切换当前 Wave，并驱动各 SpawnEntry 的独立计时器。
 - 维护生成间隔。
 - 控制每次生成数量。
 - 调用 `EnemySpawner` 请求生成敌人。
@@ -435,9 +436,8 @@ despawnDistance
 
 ## 11. 当前阶段暂不实现
 
-第一阶段不要加入：
+敌人基础系统本身不负责以下功能（Wave 已由 EnemyDirector 的可选配置模式接入）：
 
-- Wave 时间表
 - Boss
 - Elite
 - Enemy Rarity
@@ -462,11 +462,9 @@ despawnDistance
 ```text
 基础 Enemy Loop
     ↓
-EnemyConfig
+Wave / SpawnSchedule（已实现第一阶段）
     ↓
-Wave / SpawnSchedule
-    ↓
-Enemy Type
+Enemy Type / EnemyConfig
     ↓
 Elite / Boss
     ↓
