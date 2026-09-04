@@ -17,7 +17,7 @@ namespace VampireSurvivorsLike
     public float baseMoveSpeed = 2f;
     public float baseAttackRange = 4f;
     // 基础拾取半径；运行时会由触发器同步到 PickupRadius。
-    [SerializeField, Min(0.1f)] private float basePickupRadius = 0.05f;
+    [SerializeField, Min(0.1f)] private float basePickupRadius = 0.1f;
 
     public float debugSpeed;// todo test
     public float debugRange;// todo test
@@ -124,8 +124,13 @@ namespace VampireSurvivorsLike
 
     void OnDrawGizmosSelected()
     {
+      // 红色圆表示攻击范围，便于在 Scene 视图中检查武器选敌距离。
       Gizmos.color = Color.red;
       Gizmos.DrawWireSphere(transform.position, AttackRange);
+
+      // 青色圆表示运行时 PickupRadius 触发器范围，中心与玩家根节点保持一致。
+      Gizmos.color = Color.cyan;
+      Gizmos.DrawWireSphere(transform.position, PickupRadius);
     }
   }
 
