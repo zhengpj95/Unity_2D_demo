@@ -283,14 +283,6 @@ namespace VampireSurvivorsLike
       }
     }
 
-    public void SpeedUpSpawnRate()
-    {
-      // Wave 模式由 SpawnEntry 控制节奏，旧版 spawnInterval 只在兼容模式下调整。
-      if (!_waveSystemEnabled)
-        spawnInterval = Mathf.Max(0.1f, spawnInterval - 0.2f);
-      maxEnemies *= 2;
-    }
-
     #region Enemy Register
     public void RegisterEnemy(EnemyChasing e)
     {
@@ -302,83 +294,56 @@ namespace VampireSurvivorsLike
       enemies.Remove(e);
     }
 
-    /**
-     * Get the closest enemy from center.
-     * @param center The center point to compare distance.
-     * @param maxRange The maximum range to compare distance.
-     * @return The closest enemy from center.
-     */
+    /// <summary>在攻击范围内查找距离中心点最近的有效敌人，不创建临时集合。</summary>
     public EnemyChasing GetCloseest(Vector3 center, float maxRange = Mathf.Infinity)
     {
       if (enemies.Count == 0)
-      {
         return null;
-      }
+
       EnemyChasing enemy = null;
       float bestSqrDist = float.MaxValue;
       float maxSqr = float.IsInfinity(maxRange) ? float.MaxValue : maxRange * maxRange;
-      foreach (var e in enemies)
+      for (int i = 0; i < enemies.Count; i++)
       {
-        if (e == null) continue;
+        EnemyChasing candidate = enemies[i];
+        if (candidate == null || !candidate.gameObject.activeInHierarchy)
+          continue;
 
-        float sqrDist = (e.transform.position - center).sqrMagnitude;
+        float sqrDist = (candidate.transform.position - center).sqrMagnitude;
         if (sqrDist < bestSqrDist && sqrDist <= maxSqr)
         {
           bestSqrDist = sqrDist;
-          enemy = e;
+          enemy = candidate;
         }
       }
       return enemy;
     }
 
-    /**
-     * Get random enemy from enemies list sorted by distance from center.
-     * @param center The center point to compare distance.
-     * @param maxRange The maximum range to compare distance.
-     * @return The random enemy from enemies list sorted by distance from center.
-     */
+    /// <summary>在攻击范围内等概率选择一名有效敌人，不创建候选列表或执行排序。</summary>
     public EnemyChasing GetRandom(Vector3 center, float maxRange = Mathf.Infinity)
     {
       if (enemies.Count == 0)
-      {
         return null;
-      }
-      var list = GetSortedByDistance(center, maxRange);
-      if (list.Count == 0)
-      {
-        return null;
-      }
-      int randomIndex = Random.Range(0, list.Count);
-      return list[randomIndex];
-    }
 
-    /**
-     * Get enemies sorted by distance from center.
-     * @param center The center point to compare distance.
-     * @param maxRange The maximum range to compare distance.
-     * @return A list of enemies sorted by distance from center.
-     */
-    public List<EnemyChasing> GetSortedByDistance(Vector3 center, float maxRange = Mathf.Infinity)
-    {
-      var candidates = new List<EnemyChasing>(enemies.Count);
       float maxSqr = float.IsInfinity(maxRange) ? float.MaxValue : maxRange * maxRange;
-      foreach (var e in enemies)
+      EnemyChasing selected = null;
+      int eligibleCount = 0;
+      for (int i = 0; i < enemies.Count; i++)
       {
-        if (e == null) continue;
-        if (!e.gameObject.activeInHierarchy) continue;
+        EnemyChasing candidate = enemies[i];
+        if (candidate == null || !candidate.gameObject.activeInHierarchy)
+          continue;
 
-        float sqr = (e.transform.position - center).sqrMagnitude;
-        if (sqr > maxSqr) continue; // out of range
-        candidates.Add(e);
+        float sqrDist = (candidate.transform.position - center).sqrMagnitude;
+        if (sqrDist > maxSqr)
+          continue;
+
+        eligibleCount++;
+        // 蓄水池抽样：第 n 个候选以 1/n 概率替换，最终所有候选等概率。
+        if (Random.Range(0, eligibleCount) == 0)
+          selected = candidate;
       }
-
-      candidates.Sort((a, b) =>
-      {
-        if (a == null) return 1;
-        if (b == null) return -1;
-        return (a.transform.position - center).sqrMagnitude.CompareTo((b.transform.position - center).sqrMagnitude);
-      });
-      return candidates;
+      return selected;
     }
     #endregion
   }

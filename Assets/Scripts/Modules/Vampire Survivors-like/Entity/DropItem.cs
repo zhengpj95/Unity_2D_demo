@@ -16,7 +16,6 @@ namespace VampireSurvivorsLike {
 
       collected = true;
       DropItemManager manager = DropItemManager.Instance;
-      manager.AddScore(score);
       manager.AddDropItem(dropItemType, 1);
 
       // 只有 Gem 提供经验；Coin 仅计入背包数量。

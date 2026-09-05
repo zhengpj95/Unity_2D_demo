@@ -14,12 +14,6 @@ namespace VampireSurvivorsLike
     [Tooltip("每种掉落物启动时预热的对象数量，避免玩家拾取时频繁 Instantiate。")]
     [SerializeField, Min(0)] private int preloadCountPerDropItem = 8;
 
-    [SerializeField] private int totalScore;
-    [SerializeField] private int speedUpRateScore = 100;
-    private int speedUpScore;
-    [SerializeField] private int skillUpRateScore = 20;
-    private int skillUpScore;
-
     private void Start()
     {
       PreloadDropItems();
@@ -74,30 +68,6 @@ namespace VampireSurvivorsLike
     {
       if (dropItem != null && dropItem.activeSelf)
         PoolManager.Instance.Free(dropItem);
-    }
-
-    /// <summary>
-    /// 记录掉落物分数及相关进度；经验通过 AddExperience 显式结算，避免 Coin 意外触发升级。
-    /// </summary>
-    public void AddScore(int score)
-    {
-      totalScore += score;
-      speedUpScore += score;
-      skillUpScore += score;
-
-      if (speedUpScore > speedUpRateScore)
-      {
-        speedUpScore = 0;
-        speedUpRateScore += 100;
-        EnemyDirector.Instance.SpeedUpSpawnRate();
-      }
-
-      if (skillUpScore >= skillUpRateScore)
-      {
-        skillUpScore = 0;
-        // BuffManager.Instance.hero.GetComponent<BuffHandler>().AddBuff(BuffManager.Instance.playerAttackRangeSO);
-      }
-
     }
 
     /// <summary>

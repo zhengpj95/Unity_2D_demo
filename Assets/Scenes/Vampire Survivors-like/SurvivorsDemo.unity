@@ -573,9 +573,6 @@ MonoBehaviour:
   gemDropWeight: 80
   coinDropWeight: 10
   preloadCountPerDropItem: 8
-  totalScore: 0
-  speedUpRateScore: 100
-  skillUpRateScore: 20
 --- !u!114 &1870446304 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5870706770646319658, guid: f8387f00b35defe4ead998bc16d3611c, type: 3}

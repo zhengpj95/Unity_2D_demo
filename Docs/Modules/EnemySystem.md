@@ -77,6 +77,7 @@ Assets/Scripts/Framework/Pool/PoolManager.cs
 - 在 `OnAlloc` 时恢复满血。
 - 受伤后刷新 `UI_HpBar` 和伤害飘字。
 - 生命值归零时累计击杀、生成掉落并通过 `EnemyDirector.RecycleEnemy` 回收。
+- 武器高频调用的最近/随机选敌直接遍历已注册敌人；随机选择使用蓄水池抽样，不创建候选列表或按距离排序。
 
 ---
 

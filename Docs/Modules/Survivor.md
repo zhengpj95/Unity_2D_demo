@@ -75,10 +75,10 @@ OpenNextLevelUp
 
 - `DropItem` 只响应带 `Player` 标签的触发器。
 - Gem 才会调用 `AddExperience`；Coin 不会触发升级。
-- 敌人死亡时由 `DropItemManager` 按场景权重抽取 Gem/Coin；`SurvivorsDemo` 当前为 Gem `90`、Coin `10`，每次击杀掉落一件，金币用于后续局外武器升级而保持稀缺。
+- 敌人死亡时由 `DropItemManager` 按场景权重抽取 Gem/Coin；`SurvivorsDemo` 当前为 Gem `80`、Coin `10`，每次击杀掉落一件，金币用于后续局外武器升级而保持稀缺。
 - 掉落物通过 `PoolManager.Alloc/Free` 复用，不以 `Destroy` 作为普通拾取流程。
 - `DropItem.OnAlloc/OnFree` 会重置已拾取状态。
-- `DropItemManager.AddScore` 仍维护分数和刷怪速度进度；技能进度代码目前没有真正应用 Buff。
+- 掉落物没有额外的分数、刷怪加速或未落地技能进度；Gem 的 `score` 仅作为经验值使用。
 
 ---
 

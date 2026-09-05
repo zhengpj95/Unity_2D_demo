@@ -10,7 +10,7 @@ namespace EditorTools
     {
       if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
       {
-        EditorSceneManager.OpenScene("Assets/Scenes/FrogAdventure/StartGame.unity", OpenSceneMode.Single);
+        EditorSceneManager.OpenScene("Assets/Scenes/Launcher.unity", OpenSceneMode.Single);
         EditorApplication.isPlaying = true;
       }
     }
