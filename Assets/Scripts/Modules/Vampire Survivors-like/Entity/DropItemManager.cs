@@ -4,6 +4,9 @@ namespace VampireSurvivorsLike
 {
   public class DropItemManager : SingletonMono<DropItemManager>
   {
+    // 掉落物和容器均属于当前 Survivor 场景，重开时必须使用新场景引用。
+    protected override bool PersistAcrossScenes => false;
+
     [SerializeField] private Transform dropItemContainer;
     [SerializeField] private Transform gemPrefab;
     [SerializeField] private Transform coinPrefab;
@@ -68,6 +71,22 @@ namespace VampireSurvivorsLike
     {
       if (dropItem != null && dropItem.activeSelf)
         PoolManager.Instance.Free(dropItem);
+    }
+
+    /// <summary>
+    /// 回收当前掉落容器下的全部活跃掉落物。
+    /// 不清除对象池缓存，下一局仍可复用已预热的 Gem/Coin 实例。
+    /// </summary>
+    public void ClearActiveDropItems()
+    {
+      if (dropItemContainer == null)
+        return;
+
+      for (int i = dropItemContainer.childCount - 1; i >= 0; i--)
+      {
+        GameObject dropItem = dropItemContainer.GetChild(i).gameObject;
+        RecycleDropItem(dropItem);
+      }
     }
 
     /// <summary>

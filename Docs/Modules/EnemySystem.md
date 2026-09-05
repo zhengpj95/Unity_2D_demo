@@ -78,6 +78,7 @@ Assets/Scripts/Framework/Pool/PoolManager.cs
 - 受伤后刷新 `UI_HpBar` 和伤害飘字。
 - 生命值归零时累计击杀、生成掉落并通过 `EnemyDirector.RecycleEnemy` 回收。
 - 武器高频调用的最近/随机选敌直接遍历已注册敌人；随机选择使用蓄水池抽样，不创建候选列表或按距离排序。
+- `ClearActiveEnemies` 在重开前回收当前活跃敌人，避免旧回合实体进入下一局。
 
 ---
 
@@ -178,7 +179,7 @@ HP <= 0：
     └── EnemyDirector.RecycleEnemy()
 ```
 
-死亡掉落由场景 `DropItemManager` 的 `gemDropWeight/coinDropWeight` 统一抽取；当前 `SurvivorsDemo` 配置为 `90:10`，每次击杀必定掉落一件，金币作为局外武器升级资源保持稀缺。掉落物之后由 [Survivor.md](Survivor.md) 中的拾取流程处理。
+死亡掉落由场景 `DropItemManager` 的 `gemDropWeight/coinDropWeight` 统一抽取；当前 `SurvivorsDemo` 配置为 `80:10`，每次击杀必定掉落一件，金币作为局外武器升级资源保持稀缺。掉落物之后由 [Survivor.md](Survivor.md) 中的拾取流程处理。
 
 ---
 

@@ -1,41 +1,45 @@
 using System;
 using UnityEngine;
-using UnityEngine.UI;
 
 /// <summary>GameOver 面板的显示参数；Presenter 只展示数据并将重开动作回传给 GameplayController。</summary>
 public readonly struct SurvivorGameOverArgs
 {
   public int Level { get; }
   public int KillCount { get; }
-  public int GemCount { get; }
+  public int CoinCount { get; }
   public Action OnRestart { get; }
 
   /// <summary>创建本局结算数据与玩家点击重开的回调。</summary>
-  public SurvivorGameOverArgs(int level, int killCount, int gemCount, Action onRestart)
+  public SurvivorGameOverArgs(int level, int killCount, int coinCount, Action onRestart)
   {
     Level = level;
     KillCount = killCount;
-    GemCount = gemCount;
+    CoinCount = coinCount;
     OnRestart = onRestart;
   }
 }
 
 /// <summary>
 /// Survivor 的最小 GameOver 结算窗口。
-/// 当前复用通用单按钮提示 Prefab，避免在本次流程改动中额外修改场景或 Prefab 资源。
+/// 通过 SurvivorGameOverView 展示结算数据，并将“下一轮”操作回传给 GameplayController。
 /// </summary>
-public sealed class SurvivorGameOverPresenter : BasePresenter<AlertTipsPanelView, SurvivorGameOverArgs>
+public sealed class SurvivorGameOverPresenter : BasePresenter<SurvivorGameOverView, SurvivorGameOverArgs>
 {
   private Action _onRestart;
 
   public override UILayerIndex Layer => UILayerIndex.Model;
-  public override string PrefabPath => "Prefabs/AlertTipsPanel";
+  public override string PrefabPath => "Prefabs/SurvivorGameOver";
 
   public override void OnInit(UIView view)
   {
     base.OnInit(view);
     if (ViewT != null)
-      AddClickListener(ViewT.btn_confirm, RestartGame);
+    {
+      // UIManager 当前不自动执行 UIView.InitView，专用 View 必须在绑定按钮前完成引用查找。
+      ViewT.InitView();
+      AddClickListener(ViewT.btnRestart, RestartGame);
+      AddClickListener(ViewT.btnQuit, QuitGame);
+    }
   }
 
   public override void OnOpen(SurvivorGameOverArgs args)
@@ -45,12 +49,10 @@ public sealed class SurvivorGameOverPresenter : BasePresenter<AlertTipsPanelView
       return;
 
     _onRestart = args.OnRestart;
-    ViewT.txt_title.text = "游戏结束";
-    ViewT.txt_desc.text = $"等级：{args.Level}\n击杀：{args.KillCount}\n宝石：{args.GemCount}";
-
-    Text buttonText = ViewT.btn_confirm == null ? null : ViewT.btn_confirm.GetComponentInChildren<Text>();
-    if (buttonText != null)
-      buttonText.text = "重新开始";
+    if (ViewT.txtTitle != null)
+      ViewT.txtTitle.text = "游戏结束";
+    if (ViewT.txtInfo != null)
+      ViewT.txtInfo.text = $"等级：{args.Level}\n击杀：{args.KillCount}\n金币：{args.CoinCount}";
   }
 
   public override void OnClose()
@@ -65,5 +67,15 @@ public sealed class SurvivorGameOverPresenter : BasePresenter<AlertTipsPanelView
     Action onRestart = _onRestart;
     UIManager.Instance.CloseWindow(this);
     onRestart?.Invoke();
+  }
+
+  /// <summary>退出已构建的应用；Unity Editor 中仅记录提示，避免意外中断测试会话。</summary>
+  private void QuitGame()
+  {
+#if UNITY_EDITOR
+    Debug.Log("[SurvivorGameOverPresenter] 已请求退出游戏；Editor 中不会关闭 Play Mode。");
+#else
+    Application.Quit();
+#endif
   }
 }

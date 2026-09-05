@@ -283,6 +283,25 @@ namespace VampireSurvivorsLike
       }
     }
 
+    /// <summary>
+    /// 回收本局所有仍在场的敌人。
+    /// 重开前使用对象池回收而非销毁，避免旧回合实体在场景卸载前继续参与碰撞或被武器选中。
+    /// </summary>
+    public void ClearActiveEnemies()
+    {
+      for (int i = enemies.Count - 1; i >= 0; i--)
+      {
+        EnemyChasing enemy = enemies[i];
+        if (enemy == null)
+        {
+          enemies.RemoveAt(i);
+          continue;
+        }
+
+        RecycleEnemy(enemy.gameObject);
+      }
+    }
+
     #region Enemy Register
     public void RegisterEnemy(EnemyChasing e)
     {

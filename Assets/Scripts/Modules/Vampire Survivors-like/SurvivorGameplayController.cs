@@ -75,7 +75,7 @@ public sealed class SurvivorGameplayController
     _module.RefreshMainView();
 
     SurvivorGameOverPresenter panel = _module.OpenGameOverPanel(
-      new SurvivorGameOverArgs(_proxy.Model.Level, _proxy.Model.KillCount, _proxy.Model.GemCount, RestartRound));
+      new SurvivorGameOverArgs(_proxy.Model.Level, _proxy.Model.KillCount, _proxy.Model.CoinCount, RestartRound));
     if (panel == null)
       Debug.LogError("[SurvivorGameplayController] Failed to open game over panel.");
   }
@@ -129,11 +129,25 @@ public sealed class SurvivorGameplayController
       return;
     }
 
+    ClearCurrentRoundEntities();
     _proxy.ResetRound();
     // UI 根节点跨场景保留，必须在场景重载前立即推送新的 Model，避免继续显示上一局血量。
     _module.RefreshMainView();
     Time.timeScale = 1f;
     SceneManager.LoadScene(activeScene.buildIndex);
+  }
+
+  /// <summary>
+  /// 在场景重载前回收本局活跃实体，确保 GameOver 点击重开后不会遗留敌人或掉落物。
+  /// 使用场景查找避免在异常场景配置下通过单例 getter 意外创建新 Manager。
+  /// </summary>
+  private static void ClearCurrentRoundEntities()
+  {
+    EnemyDirector enemyDirector = UnityEngine.Object.FindObjectOfType<EnemyDirector>();
+    enemyDirector?.ClearActiveEnemies();
+
+    DropItemManager dropItemManager = UnityEngine.Object.FindObjectOfType<DropItemManager>();
+    dropItemManager?.ClearActiveDropItems();
   }
 
   private PlayerUpgradeContext CreateUpgradeContext()

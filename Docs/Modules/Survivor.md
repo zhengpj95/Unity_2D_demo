@@ -127,16 +127,18 @@ Presenter 只负责显示图标、标题、描述和点击输入。隐藏弹窗�
     ↓
 GameState = GameOver，Time.timeScale = 0
     ↓
-打开 GameOver 结算窗口（等级、击杀、宝石）
+打开 GameOver 结算窗口（等级、击杀、金币）
     ↓
 玩家点击“重新开始”
+    ↓
+回收当前活跃敌人与掉落物
     ↓
 SurvivorProxy.ResetRound + Time.timeScale = 1
     ↓
 重载当前场景，重置玩家、武器、敌人、掉落和 Wave 运行时状态
 ```
 
-当前最小结算窗口复用通用 `AlertTipsPanel` Prefab，由 `SurvivorGameOverPresenter` 专门控制；它只显示结算数据并通过回调请求 Controller 重开，不直接修改战斗状态或场景。
+当前结算窗口使用 `Resources/Prefabs/SurvivorGameOver`，由 `SurvivorGameOverPresenter` 通过 `SurvivorGameOverView` 绑定标题、结算信息与按钮；“下一轮”只通过回调请求 Controller 重开，不直接修改战斗状态或场景，“退出”仅在构建版本中退出应用。
 
 ### GameOver 测试开关
 
