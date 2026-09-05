@@ -10,7 +10,8 @@ public enum MiscViewType
 public enum SurvivorViewType
 {
   Main,
-  SkillSelect
+  SkillSelect,
+  GameOver,
 }
 
 /// <summary>

@@ -7,6 +7,9 @@ namespace VampireSurvivorsLike
 
   public class EnemyDirector : SingletonMono<EnemyDirector>
   {
+    // EnemyDirector 持有当前场景的 Player、敌人容器和 Wave 运行时计时，重开时必须随场景重建。
+    protected override bool PersistAcrossScenes => false;
+
     [Tooltip("可随机生成的敌人 Prefab 列表；列表为空时不会生成敌人。")]
     [SerializeField] private GameObject[] enemyPrefab;
     [Tooltip("每次生成的时间间隔（秒）。")]

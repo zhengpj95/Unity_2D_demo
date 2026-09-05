@@ -6,6 +6,9 @@ namespace VampireSurvivorsLike {
 
   public class WeaponManager : SingletonMono<WeaponManager>
   {
+    // WeaponManager 持有当前场景 Player 创建的武器控制器，重开时必须丢弃旧 Player 引用并随场景重建。
+    protected override bool PersistAcrossScenes => false;
+
     [Header("近战环绕型武器")]
     public WeaponSO sawSO;
 

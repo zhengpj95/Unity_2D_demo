@@ -6,34 +6,34 @@ namespace VampireSurvivorsLike {
 
   public class VSPlayerHealth : MonoBehaviour
   {
-    [SerializeField] private int maxHealth = 5;
-    private int currentHealth;
+    private bool _isDead;
 
     void Start()
     {
-      currentHealth = maxHealth;
-      ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor).UpdateHp(currentHealth, maxHealth);
+      _isDead = false;
     }
 
     public void TakeDamage(int damage)
     {
-      currentHealth -= damage;
+      if (_isDead || damage <= 0)
+        return;
 
-      ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor).UpdateHp(currentHealth, maxHealth);
+      SurvivorModule survivorModule = ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor);
+      SurvivorModel model = survivorModule?.ApplyPlayerDamage(damage);
       DamageController.Instance.ShowDamage(damage, transform.position);
+
+      // 死亡只上报一次，具体暂停、结算与重开流程由 GameplayController 编排。
+      if (model == null || model.CurrentHealth > 0)
+        return;
+
+      _isDead = true;
+      survivorModule?.OnPlayerDied();
     }
 
-    /// <summary>增加最大生命值并同步当前生命值；升级配置不会修改原始资源。</summary>
+    /// <summary>转发最大生命升级到 SurvivorModule；运行时生命数据不保存在本组件。</summary>
     public void ApplyMaxHealthUpgrade(float value, bool isPercent)
     {
-      if (value <= 0f) return;
-
-      int increase = isPercent
-        ? Mathf.Max(1, Mathf.CeilToInt(maxHealth * value))
-        : Mathf.Max(1, Mathf.RoundToInt(value));
-      maxHealth += increase;
-      currentHealth += increase;
-      ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor)?.UpdateHp(currentHealth, maxHealth);
+      ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor)?.ApplyPlayerMaxHealthUpgrade(value, isPercent);
     }
   }
 

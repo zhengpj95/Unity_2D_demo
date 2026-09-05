@@ -4,8 +4,11 @@
 /// </summary>
 public sealed class SurvivorModel
 {
-  public int CurrentHealth { get; internal set; }
-  public int MaxHealth { get; internal set; }
+  /// <summary>一局战斗的默认初始生命；后续平衡调整统一修改这里。</summary>
+  public const int DefaultMaxHealth = 5;
+
+  public int CurrentHealth { get; internal set; } = DefaultMaxHealth;
+  public int MaxHealth { get; internal set; } = DefaultMaxHealth;
 
   public int Level { get; internal set; } = 1;
   public int CurrentExp { get; internal set; }

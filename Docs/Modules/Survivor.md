@@ -38,7 +38,7 @@ Assets/Scripts/Modules/Vampire Survivors-like/SurvivorSkillSelectPanelPresenter.
 - `GemCount`、`CoinCount`
 - `GameState`：`Playing`、`LevelUp`、`GameOver`
 
-`SurvivorProxy` 持有并修改 Model。当前经验需求公式为：
+`SurvivorModel.DefaultMaxHealth` 定义一局默认初始生命；`SurvivorProxy` 持有并修改 Model，负责伤害结算和最大生命升级；`VSPlayerHealth` 只负责接收伤害并上报死亡，不保存或初始化运行时生命。当前经验需求公式为：
 
 ```text
 RequiredExp(level) = 20 × level + 5 × level²
@@ -83,7 +83,7 @@ OpenNextLevelUp
 
 ## 4. 升级选择流程
 
-`SurvivorGameplayController` 是升级流程的唯一编排入口：
+`SurvivorGameplayController` 是升级、死亡和重开流程的唯一编排入口：
 
 ```text
 OnExpCollected
@@ -115,7 +115,35 @@ Presenter 只负责显示图标、标题、描述和点击输入。隐藏弹窗�
 
 ---
 
-## 5. 玩家实体与拾取范围
+## 5. GameOver 与重开
+
+`VSPlayerHealth` 只负责扣减生命与上报死亡；当生命降至 `0` 时，它只向 `SurvivorModule` 上报一次，由 `SurvivorGameplayController.OnPlayerDied` 编排后续流程：
+
+```text
+玩家生命归零
+    ↓
+关闭仍打开的升级选择面板
+    ↓
+GameState = GameOver，Time.timeScale = 0
+    ↓
+打开 GameOver 结算窗口（等级、击杀、宝石）
+    ↓
+玩家点击“重新开始”
+    ↓
+SurvivorProxy.ResetRound + Time.timeScale = 1
+    ↓
+重载当前场景，重置玩家、武器、敌人、掉落和 Wave 运行时状态
+```
+
+当前最小结算窗口复用通用 `AlertTipsPanel` Prefab，由 `SurvivorGameOverPresenter` 专门控制；它只显示结算数据并通过回调请求 Controller 重开，不直接修改战斗状态或场景。
+
+### GameOver 测试开关
+
+`SurvivorsDemo/EnemyDirector` 当前挂载 `SurvivorGameOverTestSetup`，用于人工快速验证该闭环：初始生命为 `1`，所有已配置武器伤害按 `0.25` 倍计算（当前初始 1 点伤害武器会变为 0），并禁用本局已创建的武器控制器以阻止发射。该组件会在运行时缓存并在禁用、删除或场景重载时恢复原始伤害和武器启用状态；它不会写入 `WeaponSO` 资源文件。测试完成后，在 Inspector 禁用或移除该组件并重载场景即可恢复正式数值。
+
+---
+
+## 6. 玩家实体与拾取范围
 
 `Hero` 负责移动和本局玩家属性：
 
@@ -134,7 +162,7 @@ Presenter 只负责显示图标、标题、描述和点击输入。隐藏弹窗�
 
 ---
 
-## 6. 无限地图与相机
+## 7. 无限地图与相机
 
 ### 地表
 
@@ -155,7 +183,7 @@ Main Camera 挂载 `SurvivorCameraFollow`：
 
 ---
 
-## 7. 敌人与武器的关系
+## 8. 敌人与武器的关系
 
 敌人生成和 Wave 调度由 `EnemyDirector` 负责，详细规则见 [EnemySystem.md](EnemySystem.md) 和 [WaveSystem.md](WaveSystem.md)。敌人实例和掉落物都通过框架 `PoolManager` 复用。
 
@@ -175,7 +203,7 @@ WeaponManager
 
 ---
 
-## 8. 当前限制
+## 9. 当前限制
 
 当前已落地：
 
@@ -187,20 +215,20 @@ WeaponManager
 
 当前没有：
 
-- GameOver 的完整 UI 和重新开始流程。
+- 独立美术样式的 GameOver Prefab、局外结算与局外成长流程。
 - 被动道具、武器进化、稀有度、刷新/跳过/禁用升级。
 - 完整的 Buff 结算；部分技能进度代码仍是占位。
 - 复杂敌人 AI、Boss、Elite 和特殊 Wave 事件。
 
 ---
 
-## 9. 文档同步规则
+## 10. 文档同步规则
 
 后续修改代码时，按职责同步对应文档：
 
 | 代码变更 | 需要同步的文档 |
 | --- | --- |
-| Model、经验、暂停、升级弹窗流程 | `Survivor.md`、`UpgradeSystem.md` |
+| Model、经验、暂停、升级弹窗、GameOver 或重开流程 | `Survivor.md`、`UpgradeSystem.md` |
 | EnemyDirector、EnemySpawner、EnemyChasing、掉落回收 | `EnemySystem.md`、`WaveSystem.md`，必要时同步本文件 |
 | WaveConfig、Wave 时间和 SpawnEntry | `WaveSystem.md`、`EnemySystem.md` |
 | UpgradeConfig、WeaponManager、WeaponSO 等级 | `UpgradeSystem.md`，必要时同步本文件 |

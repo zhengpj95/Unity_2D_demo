@@ -44,6 +44,8 @@ Assets/Scripts/Framework/Pool/PoolManager.cs
 - 预热当前模式会使用的敌人 Prefab。
 - 提供 `RecycleEnemy(GameObject)` 作为统一回收入口。
 
+`EnemyDirector` 是场景级单例，不跨场景保留。它持有当前场景的 Player、敌人容器和 Wave 运行时计时；重开时通过重载场景重新创建，避免继续引用上一局已销毁的 Player。
+
 不负责计算具体出生位置，也不负责敌人的移动、受伤或死亡。
 
 ### EnemySpawner

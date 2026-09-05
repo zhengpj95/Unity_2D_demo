@@ -175,9 +175,9 @@ VSPlayerHealth PlayerHealth
 | 移动速度 | `Hero` 的升级平坦值/百分比字段 |
 | 拾取范围 | `Hero` 的升级平坦值/百分比字段，随后同步 CircleCollider2D 半径 |
 | 攻击范围 | `Hero` 的升级平坦值/百分比字段 |
-| 最大生命 | `VSPlayerHealth` 的 `maxHealth/currentHealth` |
+| 最大生命 | `SurvivorProxy` 持有的 `SurvivorModel.MaxHealth/CurrentHealth`；`VSPlayerHealth` 只转发升级调用 |
 
-最大生命升级会同时增加当前生命；百分比值按当前最大生命计算，固定值按整数处理，最小增加 1。
+最大生命升级会同时增加当前生命；百分比值按当前 Model 最大生命计算，固定值按整数处理，最小增加 1。
 
 ---
 
@@ -257,6 +257,8 @@ WeaponManager
 
 父节点由 `weaponObj.transform.SetParent(transform)` 决定，场景不需要预先创建这些子节点。控制器类型由 `weaponId` 映射；新增武器时必须同时保证 `weaponId` 在 `GetWeaponType` 中有对应控制器，否则无法创建。
 
+`WeaponManager` 是场景级单例，不跨场景保留。它持有当前 Player 创建的武器控制器；重开场景时必须随 Player 一起重建，避免旧控制器访问已销毁的 Player Transform。
+
 ---
 
 ## 8. 三选一面板与连续升级
@@ -290,6 +292,8 @@ Apply(context)
 选择回调在面板关闭前缓存候选对象，关闭时清理候选和回调，避免 `OnClose` 清空数据后出现空引用。
 
 如果候选已失效，Controller 会记录 Warning 并恢复游戏；如果合法候选数量为 0，也会跳过弹窗并恢复游戏。
+
+玩家死亡时，`SurvivorGameplayController` 会优先关闭仍显示的升级面板并进入 `GameOver`，因此升级面板不会在结算期间继续使用未缩放时间倒计时或回调应用候选。
 
 ---
 

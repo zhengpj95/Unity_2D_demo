@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using VampireSurvivorsLike;
 
 /// <summary>
@@ -18,6 +19,9 @@ public sealed class SurvivorGameplayController
 
   public void OnExpCollected(int value)
   {
+    if (_proxy.Model.GameState == SurvivorGameState.GameOver)
+      return;
+
     _proxy.AddExp(value);
     _module.RefreshMainView();
 
@@ -27,6 +31,9 @@ public sealed class SurvivorGameplayController
 
   public void SelectLevelUpOption(UpgradeConfig upgrade)
   {
+    if (_proxy.Model.GameState == SurvivorGameState.GameOver)
+      return;
+
     if (upgrade == null)
     {
       Debug.LogWarning("[SurvivorGameplayController] Selected upgrade is null.");
@@ -52,6 +59,25 @@ public sealed class SurvivorGameplayController
     }
 
     ResumePlaying();
+  }
+
+  /// <summary>
+  /// 处理玩家死亡：收起可能仍打开的升级面板，冻结局内时间并展示本局结算。
+  /// </summary>
+  public void OnPlayerDied()
+  {
+    if (_proxy.Model.GameState == SurvivorGameState.GameOver)
+      return;
+
+    _module.HideSkillSelectPanel();
+    _proxy.SetGameState(SurvivorGameState.GameOver);
+    Time.timeScale = 0f;
+    _module.RefreshMainView();
+
+    SurvivorGameOverPresenter panel = _module.OpenGameOverPanel(
+      new SurvivorGameOverArgs(_proxy.Model.Level, _proxy.Model.KillCount, _proxy.Model.GemCount, RestartRound));
+    if (panel == null)
+      Debug.LogError("[SurvivorGameplayController] Failed to open game over panel.");
   }
 
   private void OpenNextLevelUp()
@@ -86,6 +112,28 @@ public sealed class SurvivorGameplayController
     _proxy.SetGameState(SurvivorGameState.Playing);
     Time.timeScale = 1f;
     _module.RefreshMainView();
+  }
+
+  /// <summary>
+  /// 重置模块内的局内快照并重载当前场景，让场景组件、对象池对象与 Wave 计时重新初始化。
+  /// </summary>
+  private void RestartRound()
+  {
+    if (_proxy.Model.GameState != SurvivorGameState.GameOver)
+      return;
+
+    Scene activeScene = SceneManager.GetActiveScene();
+    if (activeScene.buildIndex < 0)
+    {
+      Debug.LogError("[SurvivorGameplayController] Cannot restart an unloaded scene.");
+      return;
+    }
+
+    _proxy.ResetRound();
+    // UI 根节点跨场景保留，必须在场景重载前立即推送新的 Model，避免继续显示上一局血量。
+    _module.RefreshMainView();
+    Time.timeScale = 1f;
+    SceneManager.LoadScene(activeScene.buildIndex);
   }
 
   private PlayerUpgradeContext CreateUpgradeContext()

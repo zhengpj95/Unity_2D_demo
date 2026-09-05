@@ -22,10 +22,33 @@ public sealed class SurvivorProxy : BaseProxy
     Model = new SurvivorModel();
   }
 
-  public void SetHealth(int currentHealth, int maxHealth)
+  /// <summary>仅供 GameOver 测试覆盖本局生命；正式初始值直接由 SurvivorModel 定义。</summary>
+  public void OverrideHealthForTesting(int maxHealth)
   {
-    Model.MaxHealth = Math.Max(0, maxHealth);
-    Model.CurrentHealth = Math.Max(0, Math.Min(currentHealth, Model.MaxHealth));
+    Model.MaxHealth = Math.Max(1, maxHealth);
+    Model.CurrentHealth = Model.MaxHealth;
+  }
+
+  /// <summary>扣减本局当前生命，最小保留为 0。</summary>
+  public void ApplyDamage(int damage)
+  {
+    if (damage <= 0)
+      return;
+
+    Model.CurrentHealth = Math.Max(0, Model.CurrentHealth - damage);
+  }
+
+  /// <summary>增加最大生命并同步增加当前生命，不修改场景组件或配置资源。</summary>
+  public void AddMaxHealth(float value, bool isPercent)
+  {
+    if (value <= 0f)
+      return;
+
+    int increase = isPercent
+      ? Math.Max(1, (int)Math.Ceiling(Model.MaxHealth * value))
+      : Math.Max(1, (int)Math.Round(value));
+    Model.MaxHealth += increase;
+    Model.CurrentHealth += increase;
   }
 
   /// <summary>

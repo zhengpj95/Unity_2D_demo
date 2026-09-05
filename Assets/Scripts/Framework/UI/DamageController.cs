@@ -17,7 +17,14 @@ public class DamageController : MonoBehaviour
     }
 
     Instance = this;
-    DontDestroyOnLoad(gameObject);
+    // DamageController 位于由 UILauncher 保留的 UIRoot 下；子节点不能单独调用 DontDestroyOnLoad。
+    // 它会随根节点跨场景保留，无需在这里重复处理。
+  }
+
+  private void OnDestroy()
+  {
+    if (Instance == this)
+      Instance = null;
   }
 
   public void ShowDamage(int damageAmount, Vector3 worldPosition)

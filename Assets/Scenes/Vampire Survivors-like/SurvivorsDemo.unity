@@ -466,6 +466,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 4205470692218615625, guid: f8387f00b35defe4ead998bc16d3611c, type: 3}
+      propertyPath: maxHealth
+      value: 5
+      objectReference: {fileID: 0}
     - target: {fileID: 5870706770646319658, guid: f8387f00b35defe4ead998bc16d3611c, type: 3}
       propertyPath: basePickupRadius
       value: 0.3
@@ -591,6 +595,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1972822215}
   - component: {fileID: 1972822216}
+  - component: {fileID: 1972822217}
   m_Layer: 0
   m_Name: EnemyDirector
   m_TagString: Untagged
@@ -641,6 +646,22 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 4e5468fffafc4553aee29b17895b31e9, type: 2}
   - {fileID: 11400000, guid: 0a6fa8fbbb2b4d38952eda0bb011e89e, type: 2}
   - {fileID: 11400000, guid: a3ea4e93ef4047d687b8237a5ec71ad6, type: 2}
+--- !u!114 &1972822217
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1972822214}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ed873aa39aa40ab9fe73595faae9bfd, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  enableTestMode: 1
+  initialHealth: 1
+  weaponDamageMultiplier: 0.25
+  disableWeaponFiring: 1
 --- !u!1 &2051200000
 GameObject:
   m_ObjectHideFlags: 0
