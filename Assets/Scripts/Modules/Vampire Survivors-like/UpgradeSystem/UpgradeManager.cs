@@ -96,7 +96,7 @@ namespace VampireSurvivorsLike
       // 这些候选不是 ScriptableObject 资源，而是根据当前局状态动态创建；图标从场景上的 UpgradeManager 读取。
       AddRuntimePlayerUpgrade(PlayerUpgradeStat.MoveSpeed, 0.1f, true, moveSpeedUpgradeIcon);
       AddRuntimePlayerUpgrade(PlayerUpgradeStat.PickupRadius, 0.2f, true, pickupRadiusUpgradeIcon);
-      AddRuntimePlayerUpgrade(PlayerUpgradeStat.MaxHealth, 20f, false, maxHealthUpgradeIcon);
+      AddRuntimePlayerUpgrade(PlayerUpgradeStat.MaxHealth, 1f, false, maxHealthUpgradeIcon);
     }
 
     /// <summary>创建一个默认玩家属性候选并加入运行时池。</summary>

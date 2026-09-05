@@ -570,6 +570,8 @@ MonoBehaviour:
   dropItemContainer: {fileID: 1053428956}
   gemPrefab: {fileID: 918514508827560968, guid: 5dcf5499ce5d9d7489a079d44983b1ae, type: 3}
   coinPrefab: {fileID: 5316678045360679653, guid: 5db0b62064492884096bc33a836641ac, type: 3}
+  gemDropWeight: 80
+  coinDropWeight: 10
   preloadCountPerDropItem: 8
   totalScore: 0
   speedUpRateScore: 100
@@ -595,7 +597,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1972822215}
   - component: {fileID: 1972822216}
-  - component: {fileID: 1972822217}
   m_Layer: 0
   m_Name: EnemyDirector
   m_TagString: Untagged
@@ -646,22 +647,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 4e5468fffafc4553aee29b17895b31e9, type: 2}
   - {fileID: 11400000, guid: 0a6fa8fbbb2b4d38952eda0bb011e89e, type: 2}
   - {fileID: 11400000, guid: a3ea4e93ef4047d687b8237a5ec71ad6, type: 2}
---- !u!114 &1972822217
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1972822214}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6ed873aa39aa40ab9fe73595faae9bfd, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
-  enableTestMode: 1
-  initialHealth: 1
-  weaponDamageMultiplier: 0.25
-  disableWeaponFiring: 1
 --- !u!1 &2051200000
 GameObject:
   m_ObjectHideFlags: 0

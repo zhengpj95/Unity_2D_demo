@@ -220,8 +220,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   chaseSpeed: 1
   damage: 3
-  dropItemType: 0
-  dropItemProb: 0.8
 --- !u!114 &780516201978907285
 MonoBehaviour:
   m_ObjectHideFlags: 0

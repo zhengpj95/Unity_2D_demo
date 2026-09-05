@@ -67,6 +67,7 @@ Assets/Scripts/Framework/Pool/PoolManager.cs
 - 在 `FixedUpdate` 中通过 `Rigidbody2D.MovePosition` 追击 Player。
 - 自己检查与 Player 的平方距离，超过 `DespawnSqrDistance` 时请求回收。
 - 与带 `Player` 标签的物体碰撞后造成伤害并回收自身。
+- 不再保存单个敌人的掉落类型或概率；死亡掉落统一由 `DropItemManager` 的场景权重决定。
 - 在池生命周期中重置刚体速度并注销自身。
 
 ### VSEnemyHealth
@@ -176,7 +177,7 @@ HP <= 0：
     └── EnemyDirector.RecycleEnemy()
 ```
 
-死亡掉落的具体类型和概率由 `EnemyChasing.dropItemType/dropItemProb` 决定。掉落物之后由 [Survivor.md](Survivor.md) 中的拾取流程处理。
+死亡掉落由场景 `DropItemManager` 的 `gemDropWeight/coinDropWeight` 统一抽取；当前 `SurvivorsDemo` 配置为 `90:10`，每次击杀必定掉落一件，金币作为局外武器升级资源保持稀缺。掉落物之后由 [Survivor.md](Survivor.md) 中的拾取流程处理。
 
 ---
 
