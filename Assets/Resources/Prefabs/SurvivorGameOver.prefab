@@ -452,7 +452,7 @@ MonoBehaviour:
   txtTitle: {fileID: 4682275675468807241}
   txtInfo: {fileID: 2713960288945225670}
   btnQuit: {fileID: 7248144637651937446}
-  btnNext: {fileID: 7340809337618630613}
+  btnRestart: {fileID: 7340809337618630613}
 --- !u!1 &4810384931345769711
 GameObject:
   m_ObjectHideFlags: 0

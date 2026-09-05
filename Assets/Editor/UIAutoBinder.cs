@@ -15,24 +15,35 @@ public class UIAutoBinder : Editor
 {
   private const string PREFS_PENDING_KEY = "UI_AUTO_BIND_PENDING_DATA";
 
-  // 映射关系定义
-  private static readonly Dictionary<string, Type> PrefixToType = new Dictionary<string, Type>()
-    {
-        { "btn_", typeof(Button) },
-        { "txt_", typeof(Text) },
-        { "img_", typeof(Image) },
-        { "obj_", typeof(GameObject) },
-        { "tmp_", typeof(TMPro.TextMeshProUGUI) },
-        { "slider_", typeof(Slider) },
-        { "toggle_", typeof(Toggle) },
-        { "input_", typeof(InputField) },
-        { "scroll_", typeof(ScrollRect) },
-        { "dropdown_", typeof(Dropdown) },
-    };
+  /// <summary>控件命名前缀映射；同时支持 btnRestart 与 btn_Restart 两种命名。</summary>
+  private static readonly PrefixBinding[] PrefixBindings =
+  {
+    new PrefixBinding("dropdown_", typeof(Dropdown)),
+    new PrefixBinding("dropdown", typeof(Dropdown)),
+    new PrefixBinding("slider_", typeof(Slider)),
+    new PrefixBinding("slider", typeof(Slider)),
+    new PrefixBinding("toggle_", typeof(Toggle)),
+    new PrefixBinding("toggle", typeof(Toggle)),
+    new PrefixBinding("scroll_", typeof(ScrollRect)),
+    new PrefixBinding("scroll", typeof(ScrollRect)),
+    new PrefixBinding("input_", typeof(InputField)),
+    new PrefixBinding("input", typeof(InputField)),
+    new PrefixBinding("btn_", typeof(Button)),
+    new PrefixBinding("btn", typeof(Button)),
+    // 项目 UI 文本统一使用 TMP_Text，避免生成代码依赖具体 TMP 实现。
+    new PrefixBinding("txt_", typeof(TMPro.TMP_Text)),
+    new PrefixBinding("txt", typeof(TMPro.TMP_Text)),
+    new PrefixBinding("img_", typeof(Image)),
+    new PrefixBinding("img", typeof(Image)),
+    new PrefixBinding("obj_", typeof(GameObject)),
+    new PrefixBinding("obj", typeof(GameObject)),
+    new PrefixBinding("tmp_", typeof(TMPro.TMP_Text)),
+    new PrefixBinding("tmp", typeof(TMPro.TMP_Text)),
+  };
 
   #region 1. 菜单触发入口
 
-  [MenuItem("GameObject/UI 工具/生成 UI View 与 Presenter 并自动绑定", false, 0)]
+  [MenuItem("GameObject/UI 工具/生成 UI View 与 Presenter 并自动绑定", false, 1)]
   public static void GenerateAndBindUI()
   {
     GameObject selectedObj = Selection.activeGameObject;
@@ -78,6 +89,25 @@ public class UIAutoBinder : Editor
     Debug.Log($"<color=yellow>[UI AutoBinder] 代码生成完毕，等待 Unity 编译后自动挂载组件...</color>");
   }
 
+  /// <summary>仅生成带运行时查找逻辑的 View，不创建 Presenter，也不修改 Prefab。</summary>
+  [MenuItem("GameObject/UI 工具/仅生成 UI View", false, 0)]
+  public static void GenerateViewOnly()
+  {
+    GameObject selectedObj = Selection.activeGameObject;
+    if (selectedObj == null)
+    {
+      Debug.LogError("请选择需要生成 View 的 UI Prefab 或 Hierarchy 节点。");
+      return;
+    }
+
+    List<BindElement> bindElements = new List<BindElement>();
+    FindBindElements(selectedObj.transform, selectedObj.transform, bindElements);
+    string viewClassName = selectedObj.name + "View";
+    GenerateViewScript(viewClassName, bindElements);
+    AssetDatabase.Refresh();
+    Debug.Log($"<color=green>[UI AutoBinder] 已生成 View：{viewClassName}</color>");
+  }
+
   #endregion
 
   #region 2. 代码生成逻辑
@@ -92,6 +122,8 @@ public class UIAutoBinder : Editor
     sb.AppendLine("//------------------------------------------------------------------------------");
     sb.AppendLine("using UnityEngine;");
     sb.AppendLine("using UnityEngine.UI;");
+    if (elements.Exists(item => item.TypeName == nameof(TMPro.TMP_Text)))
+      sb.AppendLine("using TMPro;");
     sb.AppendLine();
     sb.AppendLine("[RequireComponent(typeof(RectTransform))]");
     sb.AppendLine("[DisallowMultipleComponent]");
@@ -105,6 +137,18 @@ public class UIAutoBinder : Editor
       sb.AppendLine($"  public {typeName} {item.FieldName};");
     }
 
+    sb.AppendLine();
+    sb.AppendLine("  public override void InitView()");
+    sb.AppendLine("  {");
+    sb.AppendLine("    base.InitView();");
+    foreach (var item in elements)
+    {
+      if (item.TypeName == "GameObject")
+        sb.AppendLine($"    {item.FieldName} = transform.Find(\"{item.RelativePath}\")?.gameObject;");
+      else
+        sb.AppendLine($"    {item.FieldName} = transform.Find(\"{item.RelativePath}\")?.GetComponent<{item.TypeName}>();");
+    }
+    sb.AppendLine("  }");
     sb.AppendLine("}");
 
     CodeGenerationPaths.EnsureDirectoryExists(CodeGenerationPaths.UIGeneratedScriptsDirectory);
@@ -142,7 +186,7 @@ public class UIAutoBinder : Editor
     {
       if (item.TypeName == "Button")
       {
-        string callbackName = "On" + FirstCharToUpper(item.FieldName.Replace("btn_", "")) + "Clicked";
+        string callbackName = GetButtonCallbackName(item.FieldName);
         sb.AppendLine($"    _view.{item.FieldName}?.onClick.AddListener({callbackName});");
       }
     }
@@ -165,7 +209,7 @@ public class UIAutoBinder : Editor
     {
       if (item.TypeName == "Button")
       {
-        string callbackName = "On" + FirstCharToUpper(item.FieldName.Replace("btn_", "")) + "Clicked";
+        string callbackName = GetButtonCallbackName(item.FieldName);
         sb.AppendLine($"  private void {callbackName}()");
         sb.AppendLine("  {");
         sb.AppendLine($"    Debug.Log(\"{callbackName} Triggered!\");");
@@ -256,19 +300,15 @@ public class UIAutoBinder : Editor
   {
     foreach (Transform child in current)
     {
-      foreach (var kvp in PrefixToType)
+      if (TryGetBindType(child, out Type componentType))
       {
-        if (child.name.StartsWith(kvp.Key))
+        string path = GetRelativePath(root, child);
+        list.Add(new BindElement
         {
-          string path = GetRelativePath(root, child);
-          list.Add(new BindElement
-          {
-            FieldName = child.name,
-            TypeName = kvp.Value == typeof(GameObject) ? "GameObject" : kvp.Value.Name,
-            RelativePath = path
-          });
-          break;
-        }
+          FieldName = child.name,
+          TypeName = componentType == typeof(GameObject) ? "GameObject" : componentType.Name,
+          RelativePath = path
+        });
       }
 
       if (child.childCount > 0)
@@ -291,6 +331,25 @@ public class UIAutoBinder : Editor
     return path;
   }
 
+  /// <summary>
+  /// 根据节点前缀确定控件类别。
+  /// 项目 UI 文本统一使用 TMP_Text，因此 txt 与 tmp 前缀都会生成 TMP 字段。
+  /// </summary>
+  private static bool TryGetBindType(Transform target, out Type componentType)
+  {
+    foreach (PrefixBinding binding in PrefixBindings)
+    {
+      if (target.name.StartsWith(binding.Prefix, StringComparison.Ordinal))
+      {
+        componentType = binding.ComponentType;
+        return true;
+      }
+    }
+
+    componentType = null;
+    return false;
+  }
+
   private static Type GetAssemblyType(string typeName)
   {
     foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
@@ -307,12 +366,36 @@ public class UIAutoBinder : Editor
     return input[0].ToString().ToUpper() + input.Substring(1);
   }
 
+  /// <summary>将 btnRestart 或 btn_Restart 转换为统一的 OnRestartClicked 回调名。</summary>
+  private static string GetButtonCallbackName(string fieldName)
+  {
+    string actionName = fieldName;
+    if (fieldName.StartsWith("btn_", StringComparison.Ordinal))
+      actionName = fieldName.Substring("btn_".Length);
+    else if (fieldName.StartsWith("btn", StringComparison.Ordinal))
+      actionName = fieldName.Substring("btn".Length);
+
+    return "On" + FirstCharToUpper(actionName) + "Clicked";
+  }
+
   [Serializable]
   private class BindElement
   {
     public string FieldName;
     public string TypeName;
     public string RelativePath;
+  }
+
+  private readonly struct PrefixBinding
+  {
+    public readonly string Prefix;
+    public readonly Type ComponentType;
+
+    public PrefixBinding(string prefix, Type componentType)
+    {
+      Prefix = prefix;
+      ComponentType = componentType;
+    }
   }
 
   [Serializable]

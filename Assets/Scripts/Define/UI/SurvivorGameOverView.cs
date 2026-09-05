@@ -19,7 +19,6 @@ public class SurvivorGameOverView : UIView
   public override void InitView()
   {
     base.InitView();
-    // View 挂在 SurvivorGameOver 根节点，控件均为直接子节点。
     txtTitle = transform.Find("txtTitle")?.GetComponent<TMP_Text>();
     txtInfo = transform.Find("txtInfo")?.GetComponent<TMP_Text>();
     btnQuit = transform.Find("btnQuit")?.GetComponent<Button>();
