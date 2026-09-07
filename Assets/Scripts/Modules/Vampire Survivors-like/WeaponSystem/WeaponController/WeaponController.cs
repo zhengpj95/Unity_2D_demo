@@ -13,10 +13,12 @@ namespace VampireSurvivorsLike {
     protected WeaponSO data;
     protected int level = 1;
     protected float timer;
-    // 当前控制器创建且尚未回收的攻击对象；用于场景重开和控制器销毁时统一归还对象池。
+    // 当前控制器创建且尚未回收的攻击对象；用于场景重开前统一归还对象池。
     private readonly List<PooledWeaponEffect> _activeEffects = new List<PooledWeaponEffect>();
     // 直线投射物选敌时复用的已占用目标集合；每个武器控制器实例独立持有，避免不同武器互相阻塞。
     private readonly HashSet<Transform> _occupiedProjectileTargets = new HashSet<Transform>();
+    // 范围武器一次触发内已选中的目标；复用集合以让 count 的多目标施放不产生临时 GC。
+    private readonly HashSet<Transform> _burstTargets = new HashSet<Transform>();
 
     /// <summary>该控制器使用的只读武器配置。</summary>
     public WeaponSO WeaponData => data;
@@ -44,7 +46,7 @@ namespace VampireSurvivorsLike {
     /// 为直线弓箭或子弹选择目标：优先选择当前未被本控制器其他飞行投射物瞄准的最近敌人。
     /// 范围内所有敌人均已被瞄准时返回 null，本次不生成投射物，避免单敌场景浪费多枚直线攻击。
     /// </summary>
-    protected EnemyChasing GetClosestProjectileTarget()
+    protected EnemyChasing GetClosestProjectileTarget(WeaponLevelData levelData)
     {
       _occupiedProjectileTargets.Clear();
       for (int i = 0; i < _activeEffects.Count; i++)
@@ -54,10 +56,57 @@ namespace VampireSurvivorsLike {
           _occupiedProjectileTargets.Add(projectile.LaunchTarget);
       }
 
-      float attackRange = GetAttackRange();
+      float attackRange = GetConfiguredTargetRange(levelData);
       EnemyChasing enemy = EnemyDirector.Instance.GetClosestExcluding(
         player.position, attackRange, _occupiedProjectileTargets);
       return enemy;
+    }
+
+    /// <summary>
+    /// 开始一次范围武器的多目标施放。每次 Fire 前清空，确保 count 只分散本次触发中的目标，
+    /// 不会阻止下一次正常施放再次命中同一名敌人。
+    /// </summary>
+    protected void BeginBurstTargetSelection()
+    {
+      _burstTargets.Clear();
+    }
+
+    /// <summary>从当前施放范围内随机选择一名未被本次触发选中的敌人，并登记其占用状态。</summary>
+    protected EnemyChasing GetRandomBurstTarget(WeaponLevelData levelData)
+    {
+      EnemyChasing enemy = EnemyDirector.Instance.GetRandomExcluding(
+        player.position, GetConfiguredTargetRange(levelData), _burstTargets);
+      if (enemy != null)
+        _burstTargets.Add(enemy.transform);
+      return enemy;
+    }
+
+    /// <summary>从当前施放范围内选择距离最近且未被本次触发选中的敌人，并登记其占用状态。</summary>
+    protected EnemyChasing GetClosestBurstTarget(WeaponLevelData levelData)
+    {
+      EnemyChasing enemy = EnemyDirector.Instance.GetClosestExcluding(
+        player.position, GetConfiguredTargetRange(levelData), _burstTargets);
+      if (enemy != null)
+        _burstTargets.Add(enemy.transform);
+      return enemy;
+    }
+
+    /// <summary>
+    /// 读取配置中的 count。旧资源中 0 表示未单独配置，兼容为一次攻击；大于 1 时由具体武器创建多个独立攻击对象。
+    /// </summary>
+    protected static int GetEffectCount(WeaponLevelData levelData)
+    {
+      return levelData == null ? 1 : Mathf.Max(1, levelData.count);
+    }
+
+    /// <summary>
+    /// 读取武器的施放目标范围。range 为 0 时兼容旧资源并使用玩家 AttackRange；正数作为倍率，
+    /// 例如 2 表示可从两倍玩家攻击范围内选择目标。Saw 的 range 由自身解释为环绕半径，不走该方法。
+    /// </summary>
+    protected float GetConfiguredTargetRange(WeaponLevelData levelData)
+    {
+      float rangeMultiplier = levelData == null ? 1f : Mathf.Max(1f, levelData.range);
+      return GetAttackRange() * rangeMultiplier;
     }
 
     /// <summary>
@@ -126,9 +175,11 @@ namespace VampireSurvivorsLike {
     {
       timer += Time.deltaTime;
       var levelData = GetLevelData();
-      if (timer >= levelData.fireInterval)
+      float fireInterval = Mathf.Max(0.01f, levelData.fireInterval);
+      if (timer >= fireInterval)
       {
-        timer = 0;
+        // 保留多余时间，避免低帧率或升级改变 fireInterval 后长期产生触发节奏漂移。
+        timer -= fireInterval;
         Fire();
       }
     }
@@ -177,8 +228,9 @@ namespace VampireSurvivorsLike {
 
     protected virtual void OnDestroy()
     {
-      // WeaponManager 因场景重载被销毁时的兜底，防止仍挂在控制器下的攻击对象随场景丢失。
-      RecycleActiveEffects();
+      // OnDestroy 时父子对象已经处于 Unity 的销毁阶段，不能再将子对象重新挂到持久化 PoolRoot。
+      // 正常重开由 SurvivorGameplayController 在 LoadScene 前显式调用 ClearActiveWeaponEffects；这里仅释放引用。
+      _activeEffects.Clear();
     }
   }
 

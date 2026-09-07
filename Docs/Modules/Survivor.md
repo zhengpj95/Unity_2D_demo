@@ -200,9 +200,11 @@ WeaponManager
 
 场景中不需要预先创建这些子节点。弓箭、子弹等投射物由对应控制器作为子物体创建；环绕型 Saw 直接挂在 Player 下以保持跟随。
 
-弓箭、子弹、蓝色爆炸、闪电、火焰与 Saw 都继承 `PooledWeaponEffect`，通过框架 `PoolManager.Alloc/Free` 复用，不在普通攻击路径中 `Instantiate/Destroy`。`WeaponController` 会登记本控制器创建的活跃效果：命中或 `WeaponLevelData.duration` 超时后由效果自身归还对象池；场景重开或 `WeaponManager` 销毁前，则通过 `ClearActiveWeaponEffects` 统一归还，避免池对象残留旧场景引用。
+弓箭、子弹、蓝色爆炸、闪电、火焰与 Saw 都继承 `PooledWeaponEffect`，通过框架 `PoolManager.Alloc/Free` 复用，不在普通攻击路径中 `Instantiate/Destroy`。`WeaponController` 会登记本控制器创建的活跃效果：命中或 `WeaponLevelData.duration` 超时后由效果自身归还对象池；场景重开时，`SurvivorGameplayController` 会在 `LoadScene` 前通过 `ClearActiveWeaponEffects` 统一归还，避免池对象残留旧场景引用。`WeaponManager` 和 `WeaponController` 的 `OnDestroy` 只清理引用，不会在 Unity 销毁阶段重新设定效果父节点。
 
 每次出池会清理上一轮的目标、方向、命中列表、伤害计时与初始化状态，并重置子 Animator 的播放进度。`PoolManager` 入池时将对象移到池根节点，控制器取出后再恢复当前武器控制器或 Player 的挂点，因此武器 Prefab 无需预先挂在场景层级中。
+
+SB-004 已将 `WeaponLevelData` 接入实际玩法：`count` 决定一次触发创建的独立攻击对象数，`range` 对定向/范围武器作为 `Hero.AttackRange` 的选敌倍率（Saw 保持为环绕半径），`speed` 作用于投射物与 Saw，`damageInterval` 仅作用于 Fire，`fireInterval` 控制触发节奏，`duration` 控制对象池回收时机。`level` 的运行时来源始终是 `WeaponSO.levels` 数组下标，字段本身只作 Inspector 标识。多发攻击会优先分散目标；候选不足时不为凑数量重复生成定向攻击对象。
 
 普通子弹和弓箭均为直线投射物：对应 Controller 每次开火会先收集本武器仍在飞行投射物的发射目标，并优先从未被占用的范围内敌人中选择最近者。范围内所有敌人都已经被本武器瞄准时，本次不生成投射物，等目标死亡、投射物入池或出现新的可选敌人后再发射，避免单敌场景连续浪费弹药。敌人死亡后会被 `EnemyDirector` 跳过，投射物入池后则从活跃集合注销，下一次选敌不会受旧目标影响。
 

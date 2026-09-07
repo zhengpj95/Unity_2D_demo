@@ -73,9 +73,9 @@
 
 ### SB-004 统一武器等级字段的实际效果
 
-**状态：待实现**  |  **依赖：SB-001**
+**状态：已实现，待 Play Mode 验收**  |  **依赖：SB-001**
 
-`WeaponLevelData` 已包含 `speed`、`damage`、`damageInterval`、`count`、`range`、`fireInterval`、`duration`，但各武器控制器并未完整消费所有字段。逐武器确认并补齐：
+`WeaponLevelData` 的字段已按武器类型落地：直线投射物、范围武器和 Saw 都支持 `count`；选敌型武器支持 `range` 倍率；Saw 将 `range` 解释为环绕半径。`speed` 仅适用于移动投射物与 Saw，`damageInterval` 仅适用于持续伤害 Fire；静态或一次性攻击保持这两个字段为 `0`，详见 `Docs/Modules/UpgradeSystem.md`。
 
 - `count`：多发射物或多目标数量。
 - `speed`：投射物速度或环绕物转速。
@@ -84,7 +84,7 @@
 - `fireInterval`：武器触发间隔。
 - `duration`：特效和投射物的有效时间。
 
-验收标准：每个可配置字段在 Inspector 改动后都有可观察的运行时效果；没有被使用的字段要删除或在文档中明确保留原因。
+验收标准：分别修改 Arrow/Bulletb、BlueOval/Lightning、Fire 与 Saw 的等级字段，确认多目标数、选敌范围、飞行/环绕速度、持续伤害频率、触发间隔和生命周期均有可观察效果；静态或一次性攻击的非适用字段须保持 `0`。
 
 ### SB-005 武器攻击与玩家属性平衡
 

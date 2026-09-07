@@ -33,7 +33,7 @@ MonoBehaviour:
     range: 2
     fireInterval: 6
     duration: 5
-  - level: 4
+  - level: 3
     speed: 0
     damage: 4
     damageInterval: 0

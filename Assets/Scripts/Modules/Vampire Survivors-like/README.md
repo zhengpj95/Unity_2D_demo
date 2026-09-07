@@ -69,14 +69,14 @@ Vampire Survivors-like/
 
 ### 依赖的项目公共框架
 
-| 公共能力 | 本模块使用方式 |
-| --- | --- |
-| `BaseModule` / `ModuleManager` | `SurvivorModule` 注册 Proxy、Presenter，并持有流程 Controller。 |
-| `BaseProxy` | `SurvivorProxy` 持有并修改 `SurvivorModel`，不直接操作 UI。 |
-| `UIManager` / Presenter / View | 主 HUD、三选一、GameOver 按既有 Presenter 生命周期打开、隐藏和关闭。 |
-| `SingletonMono<T>` | `EnemyDirector`、`DropItemManager`、`WeaponManager`、`UpgradeManager` 等场景级组件使用。 |
-| `PoolManager` / `IPoolable` | 敌人、掉落物、投射物和范围特效复用；不另建武器专用池。 |
-| `DamageController` | `VSPlayerHealth` 调用项目现有的伤害飘字能力；该能力不由本模块维护。 |
+| 公共能力                       | 本模块使用方式                                                                           |
+| ------------------------------ | ---------------------------------------------------------------------------------------- |
+| `BaseModule` / `ModuleManager` | `SurvivorModule` 注册 Proxy、Presenter，并持有流程 Controller。                          |
+| `BaseProxy`                    | `SurvivorProxy` 持有并修改 `SurvivorModel`，不直接操作 UI。                              |
+| `UIManager` / Presenter / View | 主 HUD、三选一、GameOver 按既有 Presenter 生命周期打开、隐藏和关闭。                     |
+| `SingletonMono<T>`             | `EnemyDirector`、`DropItemManager`、`WeaponManager`、`UpgradeManager` 等场景级组件使用。 |
+| `PoolManager` / `IPoolable`    | 敌人、掉落物、投射物和范围特效复用；不另建武器专用池。                                   |
+| `DamageController`             | `VSPlayerHealth` 调用项目现有的伤害飘字能力；该能力不由本模块维护。                      |
 
 ## 3. 当前已实现
 
@@ -98,9 +98,31 @@ Vampire Survivors-like/
 ### 武器与对象池
 
 - 当前配置的武器为 Saw、Arrow、Bulletb、BlueOval、Lightning、Fire；`WeaponManager` 在首次获得时动态创建对应 `WeaponController` 子节点，并受 `maxWeaponSlots` 限制。
-- 弓箭、子弹、蓝色爆炸、闪电、火焰和 Saw 都经 `PooledWeaponEffect` 接入 `PoolManager`。命中、`duration` 超时、GameOver 重开和 Manager 销毁都会回收活跃攻击对象。
+- 弓箭、子弹、蓝色爆炸、闪电、火焰和 Saw 都经 `PooledWeaponEffect` 接入 `PoolManager`。命中、`duration` 超时及 GameOver 重开前都会回收活跃攻击对象；`OnDestroy` 只清理引用，不在 Unity 场景销毁阶段重设对象池父节点。
 - 直线弓箭与子弹会优先瞄准本武器尚未被飞行投射物占用的敌人；范围内没有可用目标时本次不生成投射物，避免单敌场景重复浪费。
 - 出池时会清理目标、方向、命中集合、计时与初始化状态；带 Animator 的效果会重置播放进度。
+
+#### 武器类型与扩展入口
+
+当前的“武器类型”按攻击行为划分，而不是按美术名称划分；新武器应优先复用已有 Controller 或池化效果，只有攻击生命周期不同才新增类型。
+
+| 类型             | 当前武器                            | 实际行为                                                                             | 可复用的实现                                                    |
+| ---------------- | ----------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------- |
+| 环绕近战型       | `WeaponSaw`                         | 攻击对象挂在 Player 下绕行；`count` 决定数量，`range` 为环绕半径，`speed` 为角速度。 | `SawController` + `SawWeapon`                                   |
+| 直线投射型       | `WeaponArrow`、`WeaponBulletb`      | 发射时锁定最近的可用敌人后直线飞行；多发会优先分散目标，命中或超时回池。             | `ArrowController` / `BulletbController` + `ArrowWeapon`         |
+| 目标点瞬发范围型 | `WeaponBlueOval`、`WeaponLightning` | 在随机目标位置创建一次性范围效果；`count` 可选多个不同落点，伤害由动画事件结算。     | `BlueOvalController` / `LightningController` + `BlueOvalWeapon` |
+| 目标点持续范围型 | `WeaponFire`                        | 在最近目标位置生成持续伤害区域；`damageInterval` 控制同区域内敌人的结算频率。        | `FireController` + `FireWeapon`                                 |
+
+`ArrowWeapon` 本身还支持追踪模式（`Init` 的 `shouldFollowTarget = true`），但当前 Arrow/Bulletb 均按直线投射模式配置；它属于可复用能力，不是当前已配置的独立武器类型。
+
+新增武器时，按以下最小链路接入：
+
+1. 创建 `WeaponSO` 和对应攻击 Prefab，配置 `weaponId`、图标、等级数组与池化效果组件。
+2. 能复用现有攻击行为时，在 `WeaponManager` 的 Inspector 引用和 `GetConfiguredWeapons()` 中加入该 SO，并在 `GetWeaponType()` 为其 `weaponId` 映射对应 Controller。
+3. 需要新攻击行为时，新建继承 `WeaponController` 的开火/选敌逻辑，以及继承 `PooledWeaponEffect` 的攻击对象；实现出池初始化、命中或超时回收、`ResetEffectState()` 状态清理。
+4. 在 `SurvivorsDemo/UpgradeManager` 配置 NewWeapon 与 WeaponUpgrade；新增或修改字段语义时，同步更新 `Docs/Modules/UpgradeSystem.md` 与本 README。
+
+当前 `WeaponManager` 使用显式的 Inspector 字段与 `weaponId -> Controller` 映射，尚未实现自动注册；只创建 `WeaponSO` 不会自动进入升级候选或生成对应控制器。
 
 ### 三选一升级
 
@@ -119,7 +141,7 @@ Vampire Survivors-like/
 以下内容不能视为当前正式玩法能力：
 
 - SB-001 武器投射物与特效对象池，以及 SB-002 核心玩法闭环（Wave、敌人/掉落、经验升级、GameOver 与连续重开）均已通过 Play Mode 验收。
-- `WeaponLevelData` 的 `count`、部分 `range`、`damageInterval` 等字段尚未由所有武器完整消费；多发、完整范围参数与等级效果需要继续落地。
+- SB-004 已将 `WeaponLevelData` 的 `count`、`range`、`speed`、`damageInterval`、`fireInterval` 与 `duration` 映射到对应武器运行时行为，仍待 Play Mode 验收其各等级数值表现。
 - Buff 尚未接入三选一升级候选和正式构筑流程；当前只是可由场景组件使用的基础能力。
 - 被动道具、武器进化、合成、稀有度、刷新/跳过/禁用升级尚未实现。
 - Coin 仅记录在本局 `SurvivorModel` 和结算面板中，没有局外持久化、商店或局外成长。
@@ -128,15 +150,15 @@ Vampire Survivors-like/
 
 ## 5. 场景与资源配置入口
 
-| 目标 | 主要配置位置 |
-| --- | --- |
-| 敌人、生成距离、Wave、预热数量 | `SurvivorsDemo/EnemyDirector` Inspector。 |
-| 掉落权重、掉落容器 | `SurvivorsDemo/DropItemManager` Inspector。 |
-| 武器引用与最大槽位 | `SurvivorsDemo/WeaponManager` Inspector。 |
-| 武器数值和等级数组 | `WeaponSystem/SO/*.asset` 的 `WeaponSO.levels`。 |
-| 自定义升级、默认属性升级图标 | `SurvivorsDemo/UpgradeManager` Inspector。 |
-| 玩家初始武器、移动/攻击/拾取范围 | Player 的 `Hero` 组件。 |
-| 玩家与敌人生命、Collider、Tag | Player / Enemy Prefab 上的 `VSPlayerHealth`、`VSEnemyHealth` 和 2D Collider。 |
+| 目标                             | 主要配置位置                                                                  |
+| -------------------------------- | ----------------------------------------------------------------------------- |
+| 敌人、生成距离、Wave、预热数量   | `SurvivorsDemo/EnemyDirector` Inspector。                                     |
+| 掉落权重、掉落容器               | `SurvivorsDemo/DropItemManager` Inspector。                                   |
+| 武器引用与最大槽位               | `SurvivorsDemo/WeaponManager` Inspector。                                     |
+| 武器数值和等级数组               | `WeaponSystem/SO/*.asset` 的 `WeaponSO.levels`。                              |
+| 自定义升级、默认属性升级图标     | `SurvivorsDemo/UpgradeManager` Inspector。                                    |
+| 玩家初始武器、移动/攻击/拾取范围 | Player 的 `Hero` 组件。                                                       |
+| 玩家与敌人生命、Collider、Tag    | Player / Enemy Prefab 上的 `VSPlayerHealth`、`VSEnemyHealth` 和 2D Collider。 |
 
 不要在运行时修改 `WeaponSO`、`WaveConfig` 等资源文件；局内等级、Buff 与属性增量应只保存在运行时实例中。
 

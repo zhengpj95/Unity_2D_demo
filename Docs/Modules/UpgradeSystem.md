@@ -231,6 +231,22 @@ Project 面板
 
 不要在 `WeaponUpgradeConfig` 中另建一套等级数组，也不要在运行时修改 `WeaponSO.levels`。
 
+### WeaponLevelData 字段的实际效果（SB-004）
+
+`WeaponSO.levels` 的数组下标是运行时等级的唯一来源；`WeaponLevelData.level` 只作为 Inspector 中的可读标识，填写时应与数组下标对应，但不会单独改变升级结果。其余字段已接入第一阶段武器玩法：
+
+| 字段 | 实际效果 |
+| --- | --- |
+| `damage` | 所有武器的单次命中伤害。 |
+| `count` | 每次触发生成的独立攻击对象数；旧资源的 `0` 兼容为 `1`。Arrow/Bulletb 会分散目标；BlueOval、Lightning、Fire 优先选择本次触发中不同的敌人；Saw 均分环绕起始角度。 |
+| `range` | Arrow、Bulletb、BlueOval、Lightning、Fire 使用 `Hero.AttackRange` 的选敌范围倍率；`0` 兼容为 `1` 倍。Saw 的 `range` 保持为实际环绕半径。 |
+| `speed` | Arrow、Bulletb 的飞行速度，Saw 的环绕角速度；静态范围效果不使用该字段，应填 `0`。 |
+| `damageInterval` | 仅 Fire 的同目标持续伤害间隔；单次命中或碰撞型效果不使用，应填 `0`。 |
+| `fireInterval` | 每个 WeaponController 的触发间隔；运行时最小限制为 `0.01` 秒，且会保留超出的计时余量。 |
+| `duration` | 攻击对象的存活时长，到期后归还 `PoolManager`。 |
+
+配置 `count` 大于当前可选敌人数时，不会为了凑数量重复生成定向攻击对象：直线投射物和目标范围效果只会创建有有效目标的对象。这既避免单敌场景浪费投射物，也让目标死亡或对象回池后可在下一次触发重新选择。
+
 ---
 
 ## 7. WeaponManager 与武器槽位
@@ -259,7 +275,7 @@ WeaponManager
 
 `WeaponManager` 是场景级单例，不跨场景保留。它持有当前 Player 创建的武器控制器；重开场景时必须随 Player 一起重建，避免旧控制器访问已销毁的 Player Transform。
 
-武器控制器创建的投射物和范围特效由框架 `PoolManager` 复用：控制器登记活跃的 `PooledWeaponEffect`，效果命中或到达 `WeaponLevelData.duration` 时自行归还对象池；重开场景和 `WeaponManager.OnDestroy` 时调用 `ClearActiveWeaponEffects` 统一回收。这个对象池职责属于武器运行时生命周期，不改变 `WeaponSO` 的等级配置或升级候选逻辑。
+武器控制器创建的投射物和范围特效由框架 `PoolManager` 复用：控制器登记活跃的 `PooledWeaponEffect`，效果命中或到达 `WeaponLevelData.duration` 时自行归还对象池；重开场景时由 `SurvivorGameplayController` 在 `LoadScene` 前调用 `ClearActiveWeaponEffects` 统一回收。`WeaponManager.OnDestroy` 仅清理引用，避免在 Unity 场景销毁阶段重设已销毁对象的父节点。这个对象池职责属于武器运行时生命周期，不改变 `WeaponSO` 的等级配置或升级候选逻辑。
 
 ---
 

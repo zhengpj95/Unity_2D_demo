@@ -16,7 +16,7 @@ namespace VampireSurvivorsLike {
     private float angle;
 
     /// <summary>启动绕玩家旋转的 Saw，并登记到创建它的武器控制器。</summary>
-    public void Init(WeaponController owner, WeaponLevelData weaponLevelData)
+    public void Init(WeaponController owner, WeaponLevelData weaponLevelData, int index, int totalCount)
     {
       if (weaponLevelData == null)
       {
@@ -28,6 +28,9 @@ namespace VampireSurvivorsLike {
       radius = weaponLevelData.range;
       damage = weaponLevelData.damage;
       rotateSpeed = weaponLevelData.speed;
+      // 同一次施放的 Saw 均分圆周起始位置，count 增长时不会堆叠在同一个碰撞点上。
+      angle = totalCount <= 1 ? 0f : 360f * index / totalCount;
+      ApplyLocalPosition();
       initialized = true;
       BeginEffect(owner, weaponLevelData.duration);
     }
@@ -36,13 +39,13 @@ namespace VampireSurvivorsLike {
     {
       if (!initialized || TryRecycleWhenExpired()) return;
       transform.Rotate(0, 0, 360 * Time.deltaTime);
-      RotateAroundPlayer();
+      angle += rotateSpeed * Time.deltaTime;
+      ApplyLocalPosition();
     }
 
-    void RotateAroundPlayer()
+    /// <summary>根据当前角度刷新 Saw 的局部坐标；旋转时间只在 Update 中累计，保证初始均分位置准确。</summary>
+    private void ApplyLocalPosition()
     {
-      angle += rotateSpeed * Time.deltaTime;
-
       Vector2 offset = new Vector2(
         Mathf.Cos(angle * Mathf.Deg2Rad),
         Mathf.Sin(angle * Mathf.Deg2Rad)

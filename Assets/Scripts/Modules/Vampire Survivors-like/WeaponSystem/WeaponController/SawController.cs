@@ -1,21 +1,23 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-namespace VampireSurvivorsLike {
-
+namespace VampireSurvivorsLike
+{
+  /// <summary>Saw 控制器：count 决定同时环绕的 Saw 数，range 为环绕半径，speed 为角速度。</summary>
   public class SawController : WeaponController
   {
     protected override void Fire()
     {
-      var levelData = GetLevelData();
-      // Saw 保持挂在 Player 下，才能沿用原有的本地坐标环绕行为。
-      SawWeapon saw = SpawnPooledEffect<SawWeapon>(data.prefab, player.position, Quaternion.identity, player);
-      if (saw == null)
-        return;
+      WeaponLevelData levelData = GetLevelData();
+      int sawCount = GetEffectCount(levelData);
+      for (int i = 0; i < sawCount; i++)
+      {
+        // Saw 挂在 Player 下以使用本地坐标环绕；每把 Saw 使用均分的初始角度避免重叠。
+        SawWeapon saw = SpawnPooledEffect<SawWeapon>(data.prefab, player.position, Quaternion.identity, player);
+        if (saw == null)
+          break;
 
-      saw.Init(this, levelData);
+        saw.Init(this, levelData, i, sawCount);
+      }
     }
   }
-
 }

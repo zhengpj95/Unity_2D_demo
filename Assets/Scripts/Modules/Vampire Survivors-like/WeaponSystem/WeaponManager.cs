@@ -71,7 +71,7 @@ namespace VampireSurvivorsLike {
 
     /// <summary>
     /// 回收当前回合中全部活跃的武器攻击对象。
-    /// 场景重开和 WeaponManager 销毁前调用，避免对象池实例仍挂在旧场景层级而被直接销毁。
+    /// 场景重开前调用，避免对象池实例仍挂在旧场景层级而被直接销毁。
     /// </summary>
     public void ClearActiveWeaponEffects()
     {
@@ -152,8 +152,8 @@ namespace VampireSurvivorsLike {
 
     protected override void OnDestroy()
     {
-      // 非持久化 WeaponManager 会在场景重开时销毁，先把活跃攻击对象送回持久化 PoolRoot。
-      ClearActiveWeaponEffects();
+      // 场景销毁阶段不能再把子层级中的效果重设父节点；重开前已经由 GameplayController 集中回收。
+      // 此处只断开控制器引用，避免因 Unity 销毁顺序不确定而访问已销毁的效果对象。
       weaponControllers.Clear();
       base.OnDestroy();
     }

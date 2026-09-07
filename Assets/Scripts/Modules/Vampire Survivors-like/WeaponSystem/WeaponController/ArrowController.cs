@@ -1,27 +1,27 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-namespace VampireSurvivorsLike {
-
-  /// <summary>直线弓箭武器控制器，复用直线投射物分散选敌规则避免连续集中射向同一敌人。</summary>
+namespace VampireSurvivorsLike
+{
+  /// <summary>直线弓箭控制器：count 决定单次触发的投射物数，range 决定选敌范围倍率。</summary>
   public class ArrowController : WeaponController
   {
     protected override void Fire()
     {
-      EnemyChasing enemy = GetClosestProjectileTarget();
-      if (enemy)
+      WeaponLevelData levelData = GetLevelData();
+      int projectileCount = GetEffectCount(levelData);
+      for (int i = 0; i < projectileCount; i++)
       {
-        var levelData = GetLevelData();
-        // transform 是 WeaponManager 创建的 WeaponArrow 节点；出池后仍挂在这里便于分类和重开统一回收。
+        EnemyChasing enemy = GetClosestProjectileTarget(levelData);
+        if (enemy == null)
+          break;
+
         ArrowWeapon arrow = SpawnPooledEffect<ArrowWeapon>(data.prefab, player.position, Quaternion.identity, transform);
         if (arrow == null)
-          return;
+          break;
 
-        // false：弓箭仅在发射时锁定方向，之后沿直线飞行。
+        // 弓箭仅在发射瞬间锁定方向，之后保持直线飞行。
         arrow.Init(this, enemy.transform, levelData, false);
       }
     }
   }
-
 }

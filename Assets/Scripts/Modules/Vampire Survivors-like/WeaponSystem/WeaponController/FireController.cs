@@ -1,25 +1,27 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-namespace VampireSurvivorsLike {
-
+namespace VampireSurvivorsLike
+{
+  /// <summary>火圈控制器：count 在一次触发中选择多个不同落点，range 决定可选敌范围倍率。</summary>
   public class FireController : WeaponController
   {
     protected override void Fire()
     {
-      var enemy = EnemyDirector.Instance.GetCloseest(player.position, GetAttackRange());
-      if (enemy)
+      WeaponLevelData levelData = GetLevelData();
+      BeginBurstTargetSelection();
+      int effectCount = GetEffectCount(levelData);
+      for (int i = 0; i < effectCount; i++)
       {
-        var levelData = GetLevelData();
+        EnemyChasing enemy = GetClosestBurstTarget(levelData);
+        if (enemy == null)
+          break;
+
         FireWeapon weapon = SpawnPooledEffect<FireWeapon>(data.prefab, enemy.transform.position, Quaternion.identity, transform);
         if (weapon == null)
-          return;
+          break;
 
-        // 旧实现遗漏 Init，导致 FireWeapon 的持续伤害逻辑不会真正启动；对象池改造时在出池后统一初始化。
         weapon.Init(this, levelData);
       }
     }
   }
-
 }

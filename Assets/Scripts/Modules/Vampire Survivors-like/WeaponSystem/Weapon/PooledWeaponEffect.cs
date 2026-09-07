@@ -4,7 +4,7 @@ namespace VampireSurvivorsLike
 {
   /// <summary>
   /// 武器投射物和范围特效的对象池生命周期基类。
-  /// 由 WeaponController 登记所有活跃效果；命中、超时或场景重开时统一归还 PoolManager。
+  /// 由 WeaponController 登记所有活跃效果；命中、超时或场景重开前统一归还 PoolManager。
   /// </summary>
   public abstract class PooledWeaponEffect : MonoBehaviour, IPoolable
   {
@@ -25,7 +25,7 @@ namespace VampireSurvivorsLike
     /// <summary>
     /// 开始一次效果生命周期，并登记到创建它的武器控制器。
     /// </summary>
-    /// <param name="owner">负责场景重开和销毁时统一回收效果的武器控制器。</param>
+    /// <param name="owner">负责场景重开前统一回收效果的武器控制器。</param>
     /// <param name="duration">效果存活时间；0 表示下一帧回收，时间受 Time.timeScale 影响。</param>
     protected void BeginEffect(WeaponController owner, float duration)
     {

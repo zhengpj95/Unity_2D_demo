@@ -396,6 +396,36 @@ namespace VampireSurvivorsLike
       }
       return selected;
     }
+
+    /// <summary>
+    /// 在攻击范围内等概率选择一名未被排除的有效敌人。
+    /// 范围武器的 count 大于 1 时复用调用方提供的集合，确保同一轮多目标施放优先分散到不同敌人而不创建候选列表。
+    /// </summary>
+    public EnemyChasing GetRandomExcluding(Vector3 center, float maxRange, ISet<Transform> excludedTargets)
+    {
+      if (excludedTargets == null || excludedTargets.Count == 0)
+        return GetRandom(center, maxRange);
+
+      float maxSqr = float.IsInfinity(maxRange) ? float.MaxValue : maxRange * maxRange;
+      EnemyChasing selected = null;
+      int eligibleCount = 0;
+      for (int i = 0; i < enemies.Count; i++)
+      {
+        EnemyChasing candidate = enemies[i];
+        if (candidate == null || !candidate.gameObject.activeInHierarchy || excludedTargets.Contains(candidate.transform))
+          continue;
+
+        float sqrDist = (candidate.transform.position - center).sqrMagnitude;
+        if (sqrDist > maxSqr)
+          continue;
+
+        eligibleCount++;
+        if (Random.Range(0, eligibleCount) == 0)
+          selected = candidate;
+      }
+
+      return selected;
+    }
     #endregion
   }
 }
