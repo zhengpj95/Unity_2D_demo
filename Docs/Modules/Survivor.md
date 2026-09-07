@@ -18,9 +18,9 @@ Presenter / View
 主要实现文件：
 
 ```text
-Assets/Scripts/Modules/Vampire Survivors-like/SurvivorModel.cs
-Assets/Scripts/Modules/Vampire Survivors-like/SurvivorProxy.cs
-Assets/Scripts/Modules/Vampire Survivors-like/SurvivorGameplayController.cs
+Assets/Scripts/Modules/Vampire Survivors-like/Model/SurvivorModel.cs
+Assets/Scripts/Modules/Vampire Survivors-like/Model/SurvivorProxy.cs
+Assets/Scripts/Modules/Vampire Survivors-like/Gameplay/SurvivorGameplayController.cs
 Assets/Scripts/Modules/Vampire Survivors-like/SurvivorModule.cs
 Assets/Scripts/Modules/Vampire Survivors-like/View/SurvivorMainPresenter.cs
 Assets/Scripts/Modules/Vampire Survivors-like/View/SurvivorSkillSelectPanelPresenter.cs

@@ -31,9 +31,12 @@ Hero
 ```text
 Vampire Survivors-like/
 ├── SurvivorModule.cs                    # BaseModule：注册 Proxy 与 Presenter
-├── SurvivorModel.cs                     # 一局生命、等级、经验、货币、游戏状态
-├── SurvivorProxy.cs                     # BaseProxy：唯一的局内数据修改入口
-├── SurvivorGameplayController.cs        # 升级、暂停、结算、重开流程编排
+├── Model/                               # 模块运行时数据与数据修改入口
+│   ├── SurvivorModel.cs                  # 一局生命、等级、经验、货币、游戏状态
+│   └── SurvivorProxy.cs                  # BaseProxy：唯一的局内数据修改入口
+├── Gameplay/                            # 局内流程编排和可复用玩法辅助
+│   ├── SurvivorGameplayController.cs     # 升级、暂停、结算、重开流程编排
+│   └── PointUtil.cs                      # 刷怪、扇形、圆形等二维坐标工具
 ├── PlayerAttributeSystem/               # 玩家属性枚举、修正结构、永久增量与计算规则
 ├── View/
 │   ├── SurvivorMainPresenter.cs          # 主界面 Presenter
@@ -46,7 +49,6 @@ Vampire Survivors-like/
 │   ├── EnemyChasing.cs                   # 敌人追击与超距回收
 │   ├── DropItem.cs                       # Gem/Coin 拾取及对象池状态
 │   ├── DropItemManager.cs                # 掉落抽取、生成与回收
-│   ├── WaveConfig.cs                     # Wave 与 SpawnEntry ScriptableObject 配置
 │   └── Health/
 │       ├── VSPlayerHealth.cs             # 伤害上报和死亡通知
 │       ├── VSEnemyHealth.cs              # 敌人生命、死亡与对象池重置
@@ -59,11 +61,12 @@ Vampire Survivors-like/
 ├── UpgradeSystem/
 │   ├── UpgradeManager.cs                 # 候选构建、过滤、随机抽取
 │   └── UpgradeConfig.cs                  # NewWeapon / Weapon / Player 升级配置
+├── WaveSystem/
+│   └── WaveConfig.cs                     # Wave 与 SpawnEntry ScriptableObject 配置
 ├── Map/
 │   ├── InfiniteGroundTilemap.cs          # 无限地表
 │   └── SurvivorCameraFollow.cs           # 相机跟随
-├── BuffSystem/                           # Buff 基础模型、Handler 与示例 SO
-└── PointUtil.cs                          # 刷怪、扇形、圆形等二维坐标工具
+└── BuffSystem/                           # Buff 基础模型、Handler 与示例 SO
 ```
 
 本模块的 Presenter 位于 `View/`。实际的 Unity View 位于项目公共目录 `Assets/Scripts/Define/UI/`：`SurvivorMainView`、`SurvivorSkillSelectPanelView` 和 `SurvivorGameOverView`。它们通过项目 UI 框架由对应 Presenter 打开和刷新，不在本目录重复实现 View 基类。

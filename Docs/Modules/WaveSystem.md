@@ -7,7 +7,7 @@ WaveSystem 第一阶段已经接入 Survivor 敌人生成流程。实现目标�
 当前实现文件：
 
 ```text
-Assets/Scripts/Modules/Vampire Survivors-like/Entity/WaveConfig.cs
+Assets/Scripts/Modules/Vampire Survivors-like/WaveSystem/WaveConfig.cs
 Assets/Scripts/Modules/Vampire Survivors-like/Entity/EnemyDirector.cs
 Assets/Scripts/Modules/Vampire Survivors-like/Entity/EnemySpawner.cs
 ```

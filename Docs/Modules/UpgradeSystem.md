@@ -30,7 +30,7 @@ Assets/Scripts/Modules/Vampire Survivors-like/UpgradeSystem/UpgradeManager.cs
 Assets/Scripts/Modules/Vampire Survivors-like/WeaponSystem/WeaponManager.cs
 Assets/Scripts/Modules/Vampire Survivors-like/WeaponSystem/WeaponSO.cs
 Assets/Scripts/Modules/Vampire Survivors-like/WeaponSystem/WeaponLevelData.cs
-Assets/Scripts/Modules/Vampire Survivors-like/SurvivorGameplayController.cs
+Assets/Scripts/Modules/Vampire Survivors-like/Gameplay/SurvivorGameplayController.cs
 Assets/Scripts/Modules/Vampire Survivors-like/View/SurvivorSkillSelectPanelPresenter.cs
 ```
 
