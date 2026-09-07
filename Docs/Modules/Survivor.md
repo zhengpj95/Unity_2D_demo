@@ -22,8 +22,8 @@ Assets/Scripts/Modules/Vampire Survivors-like/SurvivorModel.cs
 Assets/Scripts/Modules/Vampire Survivors-like/SurvivorProxy.cs
 Assets/Scripts/Modules/Vampire Survivors-like/SurvivorGameplayController.cs
 Assets/Scripts/Modules/Vampire Survivors-like/SurvivorModule.cs
-Assets/Scripts/Modules/Vampire Survivors-like/SurvivorMainPresenter.cs
-Assets/Scripts/Modules/Vampire Survivors-like/SurvivorSkillSelectPanelPresenter.cs
+Assets/Scripts/Modules/Vampire Survivors-like/View/SurvivorMainPresenter.cs
+Assets/Scripts/Modules/Vampire Survivors-like/View/SurvivorSkillSelectPanelPresenter.cs
 ```
 
 ---

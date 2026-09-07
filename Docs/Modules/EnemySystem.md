@@ -22,7 +22,7 @@ DropItemManager
 Assets/Scripts/Modules/Vampire Survivors-like/Entity/EnemyDirector.cs
 Assets/Scripts/Modules/Vampire Survivors-like/Entity/EnemySpawner.cs
 Assets/Scripts/Modules/Vampire Survivors-like/Entity/EnemyChasing.cs
-Assets/Scripts/Modules/Vampire Survivors-like/UI/VSEnemyHealth.cs
+Assets/Scripts/Modules/Vampire Survivors-like/Entity/Health/VSEnemyHealth.cs
 Assets/Scripts/Framework/Pool/PoolManager.cs
 ```
 
