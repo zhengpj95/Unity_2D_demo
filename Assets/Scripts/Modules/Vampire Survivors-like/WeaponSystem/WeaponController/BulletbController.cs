@@ -4,11 +4,15 @@ using UnityEngine;
 
 namespace VampireSurvivorsLike {
 
+  /// <summary>
+  /// 直线子弹武器控制器。
+  /// 复用直线投射物分散选敌规则，减少同一目标被连续重复射击；敌人不足时才允许重复目标。
+  /// </summary>
   public class BulletbController : WeaponController
   {
     protected override void Fire()
     {
-      var enemy = EnemyDirector.Instance.GetCloseest(player.position, GetAttackRange());
+      EnemyChasing enemy = GetClosestProjectileTarget();
       if (enemy)
       {
         var levelData = GetLevelData();

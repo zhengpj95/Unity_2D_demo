@@ -15,6 +15,8 @@ namespace VampireSurvivorsLike {
     protected float timer;
     // 当前控制器创建且尚未回收的攻击对象；用于场景重开和控制器销毁时统一归还对象池。
     private readonly List<PooledWeaponEffect> _activeEffects = new List<PooledWeaponEffect>();
+    // 直线投射物选敌时复用的已占用目标集合；每个武器控制器实例独立持有，避免不同武器互相阻塞。
+    private readonly HashSet<Transform> _occupiedProjectileTargets = new HashSet<Transform>();
 
     /// <summary>该控制器使用的只读武器配置。</summary>
     public WeaponSO WeaponData => data;
@@ -36,6 +38,26 @@ namespace VampireSurvivorsLike {
     public virtual void Init(WeaponSO weaponSO)
     {
       this.data = weaponSO;
+    }
+
+    /// <summary>
+    /// 为直线弓箭或子弹选择目标：优先选择当前未被本控制器其他飞行投射物瞄准的最近敌人。
+    /// 范围内所有敌人均已被瞄准时返回 null，本次不生成投射物，避免单敌场景浪费多枚直线攻击。
+    /// </summary>
+    protected EnemyChasing GetClosestProjectileTarget()
+    {
+      _occupiedProjectileTargets.Clear();
+      for (int i = 0; i < _activeEffects.Count; i++)
+      {
+        ArrowWeapon projectile = _activeEffects[i] as ArrowWeapon;
+        if (projectile != null && projectile.LaunchTarget != null)
+          _occupiedProjectileTargets.Add(projectile.LaunchTarget);
+      }
+
+      float attackRange = GetAttackRange();
+      EnemyChasing enemy = EnemyDirector.Instance.GetClosestExcluding(
+        player.position, attackRange, _occupiedProjectileTargets);
+      return enemy;
     }
 
     /// <summary>

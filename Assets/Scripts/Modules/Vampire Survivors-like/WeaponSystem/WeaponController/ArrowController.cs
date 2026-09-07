@@ -4,11 +4,12 @@ using UnityEngine;
 
 namespace VampireSurvivorsLike {
 
+  /// <summary>直线弓箭武器控制器，复用直线投射物分散选敌规则避免连续集中射向同一敌人。</summary>
   public class ArrowController : WeaponController
   {
     protected override void Fire()
     {
-      EnemyChasing enemy = EnemyDirector.Instance.GetCloseest(player.position, GetAttackRange());
+      EnemyChasing enemy = GetClosestProjectileTarget();
       if (enemy)
       {
         var levelData = GetLevelData();

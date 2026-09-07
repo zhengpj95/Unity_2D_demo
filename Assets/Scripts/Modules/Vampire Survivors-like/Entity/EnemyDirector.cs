@@ -338,6 +338,38 @@ namespace VampireSurvivorsLike
       return enemy;
     }
 
+    /// <summary>
+    /// 在攻击范围内查找距离中心点最近、且未被指定目标集合占用的有效敌人。
+    /// 用于直线投射物优先分散目标，调用方应复用 excludedTargets，避免攻击循环创建临时集合。
+    /// </summary>
+    /// <param name="center">用于计算距离的中心点。</param>
+    /// <param name="maxRange">允许选中的最大距离。</param>
+    /// <param name="excludedTargets">本次选敌需要跳过的敌人 Transform；传 null 时等价于普通最近目标查询。</param>
+    public EnemyChasing GetClosestExcluding(Vector3 center, float maxRange, ISet<Transform> excludedTargets)
+    {
+      if (excludedTargets == null || excludedTargets.Count == 0)
+        return GetCloseest(center, maxRange);
+
+      EnemyChasing enemy = null;
+      float bestSqrDist = float.MaxValue;
+      float maxSqr = float.IsInfinity(maxRange) ? float.MaxValue : maxRange * maxRange;
+      for (int i = 0; i < enemies.Count; i++)
+      {
+        EnemyChasing candidate = enemies[i];
+        if (candidate == null || !candidate.gameObject.activeInHierarchy || excludedTargets.Contains(candidate.transform))
+          continue;
+
+        float sqrDist = (candidate.transform.position - center).sqrMagnitude;
+        if (sqrDist < bestSqrDist && sqrDist <= maxSqr)
+        {
+          bestSqrDist = sqrDist;
+          enemy = candidate;
+        }
+      }
+
+      return enemy;
+    }
+
     /// <summary>在攻击范围内等概率选择一名有效敌人，不创建候选列表或执行排序。</summary>
     public EnemyChasing GetRandom(Vector3 center, float maxRange = Mathf.Infinity)
     {

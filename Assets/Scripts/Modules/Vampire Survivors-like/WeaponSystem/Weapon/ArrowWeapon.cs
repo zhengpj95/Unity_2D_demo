@@ -13,10 +13,15 @@ namespace VampireSurvivorsLike {
     private float speed = 2f;
     private int damage = 1;
     private Transform target;
+    // 发射瞬间选中的目标；直线投射物不跟随目标，但控制器仍用此引用避免多枚子弹重复瞄准同一敌人。
+    private Transform launchTarget;
     // 投射物当前的飞行方向；直线投射物初始化后不再修改它。
     private Vector3 direction;
     // true: 每帧朝目标修正方向（追踪投射物）；false: 保持初始方向（直线投射物）。
     private bool followTarget;
+
+    /// <summary>本次发射瞬间选中的目标，效果入池后会清空。</summary>
+    public Transform LaunchTarget => launchTarget;
 
     /// <summary>
     /// 初始化投射物的伤害、速度及飞行方式。
@@ -41,6 +46,7 @@ namespace VampireSurvivorsLike {
       speed = levelData.speed;
       damage = levelData.damage;
       followTarget = shouldFollowTarget;
+      launchTarget = targetTransform;
       target = shouldFollowTarget ? targetTransform : null;
 
       direction = targetTransform != null
@@ -101,6 +107,7 @@ namespace VampireSurvivorsLike {
       speed = 2f;
       damage = 1;
       target = null;
+      launchTarget = null;
       direction = Vector3.zero;
       followTarget = false;
     }
