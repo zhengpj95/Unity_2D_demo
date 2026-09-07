@@ -141,12 +141,16 @@ Vampire Survivors-like/
 - 无限地表与相机跟随已经实现，均属于场景表现层。
 - `BuffSystem` 已有 `BuffSO`、`BuffInstance`、`BuffHandler`、移动速度与索敌范围 Buff 的基础堆叠/刷新/替换逻辑；Hero 缺少组件时会在 Awake 补充 `BuffHandler`，Buff 通过 `PlayerStatModifier` 参与最终属性计算。
 
+#### 已通过 Play Mode 验收
+
+- SB-001 武器投射物与特效对象池。
+- SB-002 核心玩法闭环（Wave、敌人/掉落、经验升级、GameOver 与连续重开）。
+- SB-004 武器等级字段实际效果：`WeaponLevelData` 的 `count`、`range`、`speed`、`damageInterval`、`fireInterval` 与 `duration` 已按对应武器类型生效。
+
 ## 4. 未实现或尚未闭合
 
 以下内容不能视为当前正式玩法能力：
 
-- SB-001 武器投射物与特效对象池，以及 SB-002 核心玩法闭环（Wave、敌人/掉落、经验升级、GameOver 与连续重开）均已通过 Play Mode 验收。
-- SB-004 已将 `WeaponLevelData` 的 `count`、`range`、`speed`、`damageInterval`、`fireInterval` 与 `duration` 映射到对应武器运行时行为，仍待 Play Mode 验收其各等级数值表现。
 - Buff 尚未接入三选一升级候选和正式构筑流程；当前只是可由场景组件使用的基础能力。
 - 被动道具、武器进化、合成、稀有度、刷新/跳过/禁用升级尚未实现。
 - Coin 仅记录在本局 `SurvivorModel` 和结算面板中，没有局外持久化、商店或局外成长。

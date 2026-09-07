@@ -233,6 +233,7 @@ SB-004 已将 `WeaponLevelData` 接入实际玩法：`count` 决定一次触发�
 - 对象池敌人、掉落物、武器投射物和范围特效。
 - 武器投射物与特效对象池已完成 Play Mode 验收。
 - 核心玩法闭环（Wave、敌人/掉落、经验升级、GameOver 与连续重开）已完成 Play Mode 验收。
+- SB-004 武器等级字段实际效果已完成 Play Mode 验收。
 - Wave 第一阶段和旧固定刷怪兼容模式。
 - NewWeapon、WeaponUpgrade、PlayerUpgrade 三类候选。
 - 独立玩家属性基础系统，以及永久升级和临时 Buff 的统一计算入口。

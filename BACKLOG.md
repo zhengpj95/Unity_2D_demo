@@ -74,7 +74,7 @@
 
 ### SB-004 统一武器等级字段的实际效果
 
-**状态：已实现，待 Play Mode 验收**  |  **依赖：SB-001**
+**状态：已完成（Play Mode 验收通过）**  |  **依赖：SB-001**
 
 `WeaponLevelData` 的字段已按武器类型落地：直线投射物、范围武器和 Saw 都支持 `count`；选敌型武器支持 `range` 倍率；Saw 将 `range` 解释为环绕半径。`speed` 仅适用于移动投射物与 Saw，`damageInterval` 仅适用于持续伤害 Fire；静态或一次性攻击保持这两个字段为 `0`，详见 `Docs/Modules/UpgradeSystem.md`。
 
@@ -86,6 +86,8 @@
 - `duration`：特效和投射物的有效时间。
 
 验收标准：分别修改 Arrow/Bulletb、BlueOval/Lightning、Fire 与 Saw 的等级字段，确认多目标数、选敌范围、飞行/环绕速度、持续伤害频率、触发间隔和生命周期均有可观察效果；静态或一次性攻击的非适用字段须保持 `0`。
+
+验收结论：已在 Unity Play Mode 验收 Arrow/Bulletb、BlueOval/Lightning、Fire 与 Saw 的等级字段实际效果，运行正常。
 
 ### SB-005 武器攻击与玩家属性平衡
 
@@ -194,8 +196,6 @@ Play Mode 测试再覆盖 UI、碰撞、场景重开和 Time.timeScale。
 ## 推荐执行顺序
 
 ```text
-SB-004 武器等级字段落地
-    ↓
 SB-005 数值平衡
     ↓
 SB-006 UI 与视觉比例
@@ -207,7 +207,7 @@ SB-008 Wave 扩展 / SB-009 局外 Coin / SB-011 反馈
 SB-012～SB-014 工程化与发布
 ```
 
-SB-001 与 SB-002 已完成 Play Mode 验收。下一步执行 **SB-004 武器等级字段的实际效果统一**，使各武器完整消费 `WeaponLevelData` 中的等级字段。
+SB-001、SB-002 与 SB-004 均已完成 Play Mode 验收。下一步执行 **SB-005 武器攻击与玩家属性平衡**，建立当前玩法的可调参数表与数值验收基线。
 
 ## 变更同步规则
 

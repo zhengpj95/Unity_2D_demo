@@ -234,6 +234,8 @@ Project 面板
 
 `WeaponSO.levels` 的数组下标是运行时等级的唯一来源；`WeaponLevelData.level` 只作为 Inspector 中的可读标识，填写时应与数组下标对应，但不会单独改变升级结果。其余字段已接入第一阶段武器玩法：
 
+> 验收状态：SB-004 已通过 Unity Play Mode 验收；Arrow/Bulletb、BlueOval/Lightning、Fire 与 Saw 的适用等级字段均已确认生效。
+
 | 字段 | 实际效果 |
 | --- | --- |
 | `damage` | 所有武器的单次命中伤害。 |
