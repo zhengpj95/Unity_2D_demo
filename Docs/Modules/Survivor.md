@@ -140,10 +140,6 @@ SurvivorProxy.ResetRound + Time.timeScale = 1
 
 当前结算窗口使用 `Resources/Prefabs/SurvivorGameOver`，由 `SurvivorGameOverPresenter` 通过 `SurvivorGameOverView` 绑定标题、结算信息与按钮；“下一轮”只通过回调请求 Controller 重开，不直接修改战斗状态或场景，“退出”仅在构建版本中退出应用。
 
-### GameOver 测试开关
-
-`SurvivorsDemo/EnemyDirector` 当前挂载 `SurvivorGameOverTestSetup`，用于人工快速验证该闭环：初始生命为 `1`，所有已配置武器伤害按 `0.25` 倍计算（当前初始 1 点伤害武器会变为 0），并禁用本局已创建的武器控制器以阻止发射。该组件会在运行时缓存并在禁用、删除或场景重载时恢复原始伤害和武器启用状态；它不会写入 `WeaponSO` 资源文件。测试完成后，在 Inspector 禁用或移除该组件并重载场景即可恢复正式数值。
-
 ---
 
 ## 6. 玩家实体与拾取范围
@@ -220,6 +216,7 @@ WeaponManager
 - Gem/Coin 分离结算。
 - 对象池敌人、掉落物、武器投射物和范围特效。
 - 武器投射物与特效对象池已完成 Play Mode 验收。
+- 核心玩法闭环（Wave、敌人/掉落、经验升级、GameOver 与连续重开）已完成 Play Mode 验收。
 - Wave 第一阶段和旧固定刷怪兼容模式。
 - NewWeapon、WeaponUpgrade、PlayerUpgrade 三类候选。
 

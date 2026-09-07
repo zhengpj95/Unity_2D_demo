@@ -118,14 +118,13 @@ Vampire Survivors-like/
 
 以下内容不能视为当前正式玩法能力：
 
-- SB-001 武器投射物与特效对象池已通过 Play Mode 验收。SB-002 核心玩法闭环尚未形成完整的人工测试记录；连续重开、Wave 切换和 UI 暂停等组合流程仍需要在 Unity Editor 中持续验证。
+- SB-001 武器投射物与特效对象池，以及 SB-002 核心玩法闭环（Wave、敌人/掉落、经验升级、GameOver 与连续重开）均已通过 Play Mode 验收。
 - `WeaponLevelData` 的 `count`、部分 `range`、`damageInterval` 等字段尚未由所有武器完整消费；多发、完整范围参数与等级效果需要继续落地。
 - Buff 尚未接入三选一升级候选和正式构筑流程；当前只是可由场景组件使用的基础能力。
 - 被动道具、武器进化、合成、稀有度、刷新/跳过/禁用升级尚未实现。
 - Coin 仅记录在本局 `SurvivorModel` 和结算面板中，没有局外持久化、商店或局外成长。
 - Boss、Elite、特殊 Wave 事件、动态难度、Wave 奖励和胜利条件尚未实现。
 - 正式的数值平衡、UI 多分辨率验收、音效/特效反馈、性能监控和自动化测试尚未完成。
-- GameOver 测试开关仍保留用于开发验证，完成 Play Mode 验收后应从正式场景移除或默认禁用。
 
 ## 5. 场景与资源配置入口
 
@@ -144,9 +143,10 @@ Vampire Survivors-like/
 ## 6. 文档导航与同步规则
 
 - [Survivor.md](../../../../Docs/Modules/Survivor.md)：局内主流程、对象池、拾取、GameOver 和场景约定。
-- [EnemySystem.md](../../../../Docs/Systems/EnemySystem.md)：敌人、掉落和对象池规则。
+- [PlayModeAcceptance.md](../../../../Docs/Modules/PlayModeAcceptance.md)：SB-002 的场景基线、正式流程验收步骤和实机记录模板。
+- [EnemySystem.md](../../../../Docs/Modules/EnemySystem.md)：敌人、掉落和对象池规则。
 - [UpgradeSystem.md](../../../../Docs/Modules/UpgradeSystem.md)：升级配置、`UpgradeId` 和武器等级规则。
-- [WaveSystem.md](../../../../Docs/Systems/WaveSystem.md)：Wave 配置与时间区间规则。
+- [WaveSystem.md](../../../../Docs/Modules/WaveSystem.md)：Wave 配置与时间区间规则。
 - [Architecture.md](../../../../Docs/Architecture.md)：项目级 Module、UI、网络和全局生命周期事实源。
 - [BACKLOG.md](../../../../BACKLOG.md)：已经确认的后续工作和验收项。
 

@@ -53,7 +53,7 @@
 
 ### SB-002 核心玩法闭环 Play Mode 验收
 
-**状态：待验证**  |  **依赖：SB-001 已完成**
+**状态：已完成（Play Mode 验收通过）**  |  **依赖：SB-001 已完成**
 
 使用 `SurvivorsDemo` 建立一组可重复的人工验收记录：
 
@@ -64,19 +64,10 @@
 - GameOver 期间时间冻结、结算数据正确、重新开始后敌人/掉落/武器/Wave 全部重置。
 - 连续重开多次后不出现重复单例、旧 UI、旧武器控制器或旧对象池实体。
 
-验收产物应记录 Unity Console、关键 Inspector 配置和必要的运行截图；没有 Editor 运行记录前，不把“流程已闭合”视为最终验收完成。
+验收步骤与记录模板：`Docs/Modules/PlayModeAcceptance.md`。验收产物应记录 Unity Console、关键 Inspector 配置和必要的运行截图；没有 Editor 运行记录前，不把“流程已闭合”视为最终验收完成。
 
-### SB-003 清理 GameOver 测试开关
+验收结论：已在 Unity Play Mode 完成 Wave、敌人/掉落、经验升级、GameOver 与连续重开的核心闭环验收，Console 无 Error。
 
-**状态：等待 SB-002**  |  **依赖：SB-002**
-
-`SurvivorsDemo/EnemyDirector` 当前挂载 `SurvivorGameOverTestSetup`，用于把生命和武器伤害压到测试值。完成 GameOver 验收后：
-
-- 将测试组件从正式场景移除或默认禁用。
-- 保留组件代码作为开发测试工具，但不能影响正式平衡。
-- 在文档中记录如何重新启用测试开关。
-
----
 
 ## P1：完善当前玩法
 
@@ -202,15 +193,11 @@ Play Mode 测试再覆盖 UI、碰撞、场景重开和 Time.timeScale。
 ## 推荐执行顺序
 
 ```text
-SB-002 核心闭环验收
-    ↓
 SB-004 武器等级字段落地
     ↓
 SB-005 数值平衡
     ↓
 SB-006 UI 与视觉比例
-    ↓
-SB-003 移除 GameOver 测试开关
     ↓
 SB-007 运行时监控
     ↓
@@ -219,7 +206,7 @@ SB-008 Wave 扩展 / SB-009 局外 Coin / SB-011 反馈
 SB-012～SB-014 工程化与发布
 ```
 
-SB-001 已完成代码与 Play Mode 验收。下一步执行 **SB-002 核心闭环 Play Mode 验收**，重点验证 Wave、敌人/掉落、升级、GameOver 与多次重开；验收后再进入 SB-004 的武器等级字段落地。
+SB-001 与 SB-002 已完成 Play Mode 验收。下一步执行 **SB-004 武器等级字段的实际效果统一**，使各武器完整消费 `WeaponLevelData` 中的等级字段。
 
 ## 变更同步规则
 
