@@ -42,11 +42,33 @@ public class SurvivorModule : BaseModule
     RefreshMainView();
   }
 
-  /// <summary>应用最大生命升级；实际数据由 SurvivorProxy 持有和修改。</summary>
+  /// <summary>兼容旧调用入口：应用最大生命升级。</summary>
   public void ApplyPlayerMaxHealthUpgrade(float value, bool isPercent)
   {
-    _proxy.AddMaxHealth(value, isPercent);
-    RefreshMainView();
+    ApplyPlayerStatUpgrade(PlayerStat.MaxHealth, value, isPercent);
+  }
+
+  /// <summary>
+  /// 通过 SurvivorProxy 应用一条本局永久玩家属性升级，并刷新依赖 Model 的界面。
+  /// </summary>
+  public bool ApplyPlayerStatUpgrade(PlayerStat stat, float value, bool isPercent)
+  {
+    bool applied = _proxy.ApplyPlayerStatUpgrade(stat, value, isPercent);
+    if (applied)
+      RefreshMainView();
+    return applied;
+  }
+
+  /// <summary>读取指定玩家属性的本局永久修正。</summary>
+  public PlayerStatModifier GetPermanentPlayerStatModifier(PlayerStat stat)
+  {
+    return _proxy.GetPermanentPlayerStatModifier(stat);
+  }
+
+  /// <summary>合并基础值、本局永久升级和临时 Buff，返回实体实际使用的最终属性。</summary>
+  public float CalculatePlayerStat(PlayerStat stat, float baseValue, PlayerStatModifier temporaryModifier)
+  {
+    return _proxy.CalculatePlayerStat(stat, baseValue, temporaryModifier);
   }
 
   public void UpdateExp(int addExp)

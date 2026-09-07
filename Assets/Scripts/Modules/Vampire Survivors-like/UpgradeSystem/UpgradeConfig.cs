@@ -60,27 +60,15 @@ namespace VampireSurvivorsLike
   {
     /// <summary>当前局使用的武器管理器。</summary>
     public WeaponManager WeaponManager { get; }
-    /// <summary>当前局玩家实体及其持久属性。</summary>
-    public Hero Hero { get; }
-    /// <summary>当前局玩家生命组件。</summary>
-    public VSPlayerHealth PlayerHealth { get; }
+    /// <summary>玩家永久属性的模块入口；具体数据由其 SurvivorProxy 持有。</summary>
+    public SurvivorModule SurvivorModule { get; }
 
     /// <summary>创建一次升级应用所需的运行时依赖快照。</summary>
-    public PlayerUpgradeContext(WeaponManager weaponManager, Hero hero, VSPlayerHealth playerHealth)
+    public PlayerUpgradeContext(WeaponManager weaponManager, SurvivorModule survivorModule)
     {
       WeaponManager = weaponManager;
-      Hero = hero;
-      PlayerHealth = playerHealth;
+      SurvivorModule = survivorModule;
     }
-  }
-
-  public enum PlayerUpgradeStat
-  {
-    // 百分比或固定值都由 PlayerUpgradeConfig 的 isPercent 决定。
-    MoveSpeed,
-    PickupRadius,
-    MaxHealth,
-    AttackRange,
   }
 
   /// <summary>
@@ -195,8 +183,8 @@ namespace VampireSurvivorsLike
   [CreateAssetMenu(fileName = "PlayerUpgrade", menuName = "Survivor/Upgrade/Player Stat")]
   public sealed class PlayerUpgradeConfig : UpgradeConfig
   {
-    // 要修改的玩家属性。
-    [SerializeField] private PlayerUpgradeStat stat;
+    // 要修改的统一玩家属性；枚举值与旧 PlayerUpgradeStat 一致，已有资源可直接兼容。
+    [SerializeField] private PlayerStat stat;
     // 增量值；isPercent 为 true 时按百分比解释。
     [SerializeField] private float value = 0.1f;
     // 是否按百分比叠加，否则按固定值叠加。
@@ -205,14 +193,15 @@ namespace VampireSurvivorsLike
     /// <summary>根据玩家属性映射固定枚举，保证同一属性不会因手填 ID 而产生重复候选。</summary>
     public override UpgradeId TypeId => GetUpgradeId(stat);
 
-    private static UpgradeId GetUpgradeId(PlayerUpgradeStat playerStat)
+    /// <summary>把玩家属性映射为候选去重使用的稳定 UpgradeId。</summary>
+    private static UpgradeId GetUpgradeId(PlayerStat playerStat)
     {
       switch (playerStat)
       {
-        case PlayerUpgradeStat.MoveSpeed: return UpgradeId.PlayerMoveSpeed;
-        case PlayerUpgradeStat.PickupRadius: return UpgradeId.PlayerPickupRadius;
-        case PlayerUpgradeStat.MaxHealth: return UpgradeId.PlayerMaxHealth;
-        case PlayerUpgradeStat.AttackRange: return UpgradeId.PlayerAttackRange;
+        case PlayerStat.MoveSpeed: return UpgradeId.PlayerMoveSpeed;
+        case PlayerStat.PickupRadius: return UpgradeId.PlayerPickupRadius;
+        case PlayerStat.MaxHealth: return UpgradeId.PlayerMaxHealth;
+        case PlayerStat.TargetingRange: return UpgradeId.PlayerAttackRange;
         default: return UpgradeId.PlayerMoveSpeed;
       }
     }
@@ -224,24 +213,18 @@ namespace VampireSurvivorsLike
 
     public override bool IsAvailable(PlayerUpgradeContext context)
     {
-      return context?.Hero != null || (stat == PlayerUpgradeStat.MaxHealth && context?.PlayerHealth != null);
+      return context?.SurvivorModule != null;
     }
 
     public override void Apply(PlayerUpgradeContext context)
     {
-      if (context == null) return;
-      if (stat == PlayerUpgradeStat.MaxHealth)
-      {
-        context.PlayerHealth?.ApplyMaxHealthUpgrade(value, isPercent);
-        return;
-      }
-
-      context.Hero?.ApplyUpgrade(stat, value, isPercent);
+      // UpgradeSystem 只描述升级内容，永久属性统一交给 SurvivorProxy 修改。
+      context?.SurvivorModule?.ApplyPlayerStatUpgrade(stat, value, isPercent);
     }
 
     /// <summary>初始化一个运行时生成的玩家属性候选。</summary>
     /// <param name="runtimeIcon">运行时升级卡片使用的图标；由 UpgradeManager 从场景配置传入。</param>
-    public void InitializeRuntime(PlayerUpgradeStat runtimeStat, float runtimeValue, bool runtimeIsPercent, Sprite runtimeIcon)
+    public void InitializeRuntime(PlayerStat runtimeStat, float runtimeValue, bool runtimeIsPercent, Sprite runtimeIcon)
     {
       stat = runtimeStat;
       value = runtimeValue;
@@ -254,10 +237,10 @@ namespace VampireSurvivorsLike
     {
       switch (stat)
       {
-        case PlayerUpgradeStat.MoveSpeed: return "移动速度提升";
-        case PlayerUpgradeStat.PickupRadius: return "拾取范围提升";
-        case PlayerUpgradeStat.MaxHealth: return "最大生命提升";
-        case PlayerUpgradeStat.AttackRange: return "攻击范围提升";
+        case PlayerStat.MoveSpeed: return "移动速度提升";
+        case PlayerStat.PickupRadius: return "拾取范围提升";
+        case PlayerStat.MaxHealth: return "最大生命提升";
+        case PlayerStat.TargetingRange: return "索敌范围提升";
         default: return "玩家属性提升";
       }
     }

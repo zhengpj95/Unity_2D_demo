@@ -19,7 +19,7 @@ SurvivorSkillSelectPanelPresenter 展示
     ↓
 Controller 再次校验并 Apply
     ↓
-WeaponManager / Hero / VSPlayerHealth
+WeaponManager / SurvivorModule / SurvivorProxy.PlayerAttributes
 ```
 
 主要实现文件：
@@ -73,12 +73,12 @@ AND WeaponManager.CanUpgrade(weapon)
 MoveSpeed
 PickupRadius
 MaxHealth
-AttackRange
+TargetingRange
 ```
 
-`MoveSpeed`、`PickupRadius`、`AttackRange` 应用到 `Hero.ApplyUpgrade`；`MaxHealth` 应用到 `VSPlayerHealth.ApplyMaxHealthUpgrade`。配置的 `value` 由 `isPercent` 决定是百分比还是固定值。
+所有玩家属性升级都通过 `SurvivorModule.ApplyPlayerStatUpgrade` 进入 `SurvivorProxy`，永久修正统一保存在 `SurvivorModel.PlayerAttributes`。`Hero` 和 `VSPlayerHealth` 不再持有三选一升级结果。配置的 `value` 由 `isPercent` 决定是百分比还是固定值。
 
-默认运行时候选目前只自动创建：移动速度、拾取范围、最大生命；攻击范围可以通过自定义 `PlayerUpgradeConfig` 资源加入。
+默认运行时候选目前只自动创建：移动速度、拾取范围、最大生命；索敌范围可以通过自定义 `PlayerUpgradeConfig` 资源加入。
 
 ---
 
@@ -107,7 +107,7 @@ public enum UpgradeId
 | 移动速度 | `PlayerMoveSpeed` |
 | 拾取范围 | `PlayerPickupRadius` |
 | 最大生命 | `PlayerMaxHealth` |
-| 攻击范围 | `PlayerAttackRange` |
+| 索敌范围 | `PlayerAttackRange`（为保持候选 ID 稳定保留旧名称） |
 
 武器类配置会在枚举值后追加 `WeaponSO.weaponId`，避免不同武器互相去重；玩家属性按属性枚举映射。`UpgradeManager` 每轮使用 `HashSet<string>` 去重，自定义资源和运行时默认候选重复时只保留一个。
 
@@ -132,7 +132,7 @@ GetUpgradeOptions(int count)
 GetUpgradeOptions(int count, PlayerUpgradeContext context)
 ```
 
-无 Context 时，Manager 会按 `Player` 标签解析 `Hero` 和 `VSPlayerHealth`；Controller 会主动组装 Context，避免 `UpgradeConfig` 自己查找场景对象。
+无 Context 时，Manager 会从 `ModuleManager` 解析 `SurvivorModule`；Controller 会主动注入当前 Module，避免 `UpgradeConfig` 自己查找场景对象或直接修改 Hero。
 
 每次调用都会重新过滤：
 
@@ -162,8 +162,7 @@ Fisher-Yates 普通随机打乱
 
 ```csharp
 WeaponManager WeaponManager
-Hero Hero
-VSPlayerHealth PlayerHealth
+SurvivorModule SurvivorModule
 ```
 
 `UpgradeConfig` 只读取配置并通过 Context 修改运行时实例，不修改 `WeaponSO` 或其他 ScriptableObject 原始数据。
@@ -172,12 +171,12 @@ VSPlayerHealth PlayerHealth
 
 | 属性 | 运行时写入 |
 | --- | --- |
-| 移动速度 | `Hero` 的升级平坦值/百分比字段 |
-| 拾取范围 | `Hero` 的升级平坦值/百分比字段，随后同步 CircleCollider2D 半径 |
-| 攻击范围 | `Hero` 的升级平坦值/百分比字段 |
-| 最大生命 | `SurvivorProxy` 持有的 `SurvivorModel.MaxHealth/CurrentHealth`；`VSPlayerHealth` 只转发升级调用 |
+| 移动速度 | `SurvivorModel.PlayerAttributes`；Hero 合并基础值与临时 Buff 后用于移动 |
+| 拾取范围 | `SurvivorModel.PlayerAttributes`；Hero 计算后同步 CircleCollider2D 半径 |
+| 索敌范围 | `SurvivorModel.PlayerAttributes`；WeaponController 读取 `Hero.TargetingRange` |
+| 最大生命 | `SurvivorModel.PlayerAttributes` 与 `MaxHealth/CurrentHealth`；由 SurvivorProxy 统一计算和同步 |
 
-最大生命升级会同时增加当前生命；百分比值按当前 Model 最大生命计算，固定值按整数处理，最小增加 1。
+普通玩家属性统一按 `(基础值 + 固定值总和) × (1 + 百分比总和)` 计算。最大生命升级会同时补充新增的生命上限；百分比始终基于 `BaseMaxHealth` 和累计修正重新计算，避免不同升级顺序产生不同结果。
 
 ---
 
@@ -239,7 +238,7 @@ Project 面板
 | --- | --- |
 | `damage` | 所有武器的单次命中伤害。 |
 | `count` | 每次触发生成的独立攻击对象数；旧资源的 `0` 兼容为 `1`。Arrow/Bulletb 会分散目标；BlueOval、Lightning、Fire 优先选择本次触发中不同的敌人；Saw 均分环绕起始角度。 |
-| `range` | Arrow、Bulletb、BlueOval、Lightning、Fire 使用 `Hero.AttackRange` 的选敌范围倍率；`0` 兼容为 `1` 倍。Saw 的 `range` 保持为实际环绕半径。 |
+| `range` | Arrow、Bulletb、BlueOval、Lightning、Fire 使用 `Hero.TargetingRange` 的选敌范围倍率；`0` 兼容为 `1` 倍。Saw 的 `range` 保持为实际环绕半径。 |
 | `speed` | Arrow、Bulletb 的飞行速度，Saw 的环绕角速度；静态范围效果不使用该字段，应填 `0`。 |
 | `damageInterval` | 仅 Fire 的同目标持续伤害间隔；单次命中或碰撞型效果不使用，应填 `0`。 |
 | `fireInterval` | 每个 WeaponController 的触发间隔；运行时最小限制为 `0.01` 秒，且会保留超出的计时余量。 |
@@ -366,7 +365,7 @@ Create
 5. `WeaponSO.levels` 达到最大等级后，相关 WeaponUpgrade 消失。
 6. `maxWeaponSlots` 满时，所有 NewWeapon 都不可用。
 7. 同一轮不会出现相同 `Id` 的候选。
-8. 选择玩家属性后，Hero 或 VSPlayerHealth 的运行时属性立即更新。
+8. 选择玩家属性后，`SurvivorModel.PlayerAttributes` 立即更新，Hero、拾取触发器、武器索敌或生命界面表现同步生效。
 9. 选择升级时游戏暂停，倒计时仍能工作。
 10. 连续升级每一轮都会重新生成候选。
 11. 面板候选不足 3 个时多余卡片隐藏。

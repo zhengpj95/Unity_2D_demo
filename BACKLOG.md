@@ -19,6 +19,7 @@
 - [x] 经验溢出和连续升级队列。
 - [x] NewWeapon、WeaponUpgrade、PlayerUpgrade 三类三选一候选。
 - [x] `UpgradeId` 枚举去重和 `WeaponSO.levels` 武器等级。
+- [x] 独立玩家属性基础系统，统一永久升级、临时 Buff 与实体最终属性计算。
 - [x] GameOver 结算窗口、暂停、回收当前实体和场景重开。
 - [x] 拾取范围运行时触发器和 Scene Gizmos。
 - [x] 武器投射物与范围特效使用通用对象池回收。
@@ -39,7 +40,7 @@
 - 回收时清理目标引用、飞行方向、命中列表、计时器与初始化标记；带 Animator 的范围特效会重新绑定动画状态。
 - 保留当前不同武器的挂点规则：投射物挂在对应 WeaponController，Saw 挂在 Player。
 - 命中、`duration` 超时和场景重开都走同一个回收入口。
-- `WeaponController` 登记本控制器创建的活跃效果；`WeaponManager` 在销毁或重开场景前统一归还它们。
+- `WeaponController` 登记本控制器创建的活跃效果；重开时由 GameplayController 在 `LoadScene` 前统一归还，销毁阶段只清理引用。
 - 直线子弹和弓箭优先选择未被同武器飞行投射物瞄准的范围内敌人；全部目标已被瞄准时本次不发射，避免单敌连续浪费投射物。
 
 验收结论：已在 Unity Play Mode 正常运行并完成验收。

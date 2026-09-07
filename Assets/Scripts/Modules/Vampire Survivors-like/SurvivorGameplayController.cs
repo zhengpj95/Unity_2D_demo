@@ -155,10 +155,7 @@ public sealed class SurvivorGameplayController
 
   private PlayerUpgradeContext CreateUpgradeContext()
   {
-    // Controller 负责组装上下文，UpgradeConfig 本身不查找场景对象。
-    GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-    Hero hero = playerObject == null ? null : playerObject.GetComponent<Hero>();
-    VSPlayerHealth health = playerObject == null ? null : playerObject.GetComponent<VSPlayerHealth>();
-    return new PlayerUpgradeContext(WeaponManager.Instance, hero, health);
+    // Controller 注入当前 Module 和武器管理器，UpgradeConfig 不查找场景对象或直接修改 Hero。
+    return new PlayerUpgradeContext(WeaponManager.Instance, _module);
   }
 }

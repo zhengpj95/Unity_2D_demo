@@ -34,12 +34,13 @@ Vampire Survivors-like/
 ├── SurvivorModel.cs                     # 一局生命、等级、经验、货币、游戏状态
 ├── SurvivorProxy.cs                     # BaseProxy：唯一的局内数据修改入口
 ├── SurvivorGameplayController.cs        # 升级、暂停、结算、重开流程编排
+├── PlayerAttributeSystem/               # 玩家属性枚举、修正结构、永久增量与计算规则
 ├── View/
 │   ├── SurvivorMainPresenter.cs          # 主界面 Presenter
 │   ├── SurvivorSkillSelectPanelPresenter.cs # 三选一 Presenter
 │   └── SurvivorGameOverPresenter.cs      # GameOver Presenter
 ├── Entity/
-│   ├── Hero.cs                           # 玩家移动、攻击/拾取范围、局内属性升级
+│   ├── Hero.cs                           # 玩家移动、基础属性配置与最终属性消费
 │   ├── EnemyDirector.cs                  # 敌人列表、刷怪、Wave、选敌、回收
 │   ├── EnemySpawner.cs                   # EnemyDirector 的生成与预热协作类
 │   ├── EnemyChasing.cs                   # 敌人追击与超距回收
@@ -89,7 +90,8 @@ Vampire Survivors-like/
 
 ### 玩家、敌人、掉落与 Wave
 
-- `Hero` 支持上下左右移动、攻击范围和拾取范围；拾取范围由独立 `CircleCollider2D` 触发器驱动，并有 Scene Gizmos。
+- `PlayerAttributeSystem` 统一管理 `MoveSpeed`、`PickupRadius`、`MaxHealth`、`TargetingRange` 的类型与计算规则；永久增量在 `SurvivorModel`，临时增量由 `BuffHandler` 提供。
+- `Hero` 支持上下左右移动、武器索敌范围和拾取范围；它只保存 Inspector 基础值并消费最终属性，拾取范围由独立 `CircleCollider2D` 触发器驱动，并有 Scene Gizmos。
 - 敌人通过 `EnemyDirector` 管理活跃列表，支持追击玩家、超出回收距离时入池、死亡后入池和击杀计数。
 - `EnemySpawner` 使用玩家为中心的生成半径，在相机外生成；`EnemyDirector` 支持预热敌人 Prefab。
 - `WaveConfig` 支持 `StartTime <= GameTime < EndTime` 的 Wave 区间、多个 `SpawnEntry` 和每个条目的独立生成间隔；未配置 Wave 时保留旧固定频率刷怪模式。
@@ -134,7 +136,7 @@ Vampire Survivors-like/
 ### 地图与 Buff 基础能力
 
 - 无限地表与相机跟随已经实现，均属于场景表现层。
-- `BuffSystem` 已有 `BuffSO`、`BuffInstance`、`BuffHandler`、移动速度与攻击范围 Buff 的基础堆叠/刷新/替换逻辑；`Hero` 会读取挂载在自身的 `BuffHandler`。
+- `BuffSystem` 已有 `BuffSO`、`BuffInstance`、`BuffHandler`、移动速度与索敌范围 Buff 的基础堆叠/刷新/替换逻辑；Hero 缺少组件时会在 Awake 补充 `BuffHandler`，Buff 通过 `PlayerStatModifier` 参与最终属性计算。
 
 ## 4. 未实现或尚未闭合
 
@@ -157,7 +159,7 @@ Vampire Survivors-like/
 | 武器引用与最大槽位               | `SurvivorsDemo/WeaponManager` Inspector。                                     |
 | 武器数值和等级数组               | `WeaponSystem/SO/*.asset` 的 `WeaponSO.levels`。                              |
 | 自定义升级、默认属性升级图标     | `SurvivorsDemo/UpgradeManager` Inspector。                                    |
-| 玩家初始武器、移动/攻击/拾取范围 | Player 的 `Hero` 组件。                                                       |
+| 玩家初始武器、基础移动/索敌/拾取范围 | Player 的 `Hero` 组件；永久增量保存在 `SurvivorModel.PlayerAttributes`。       |
 | 玩家与敌人生命、Collider、Tag    | Player / Enemy Prefab 上的 `VSPlayerHealth`、`VSEnemyHealth` 和 2D Collider。 |
 
 不要在运行时修改 `WeaponSO`、`WaveConfig` 等资源文件；局内等级、Buff 与属性增量应只保存在运行时实例中。

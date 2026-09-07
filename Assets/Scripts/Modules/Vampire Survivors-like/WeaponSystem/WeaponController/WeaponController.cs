@@ -100,13 +100,13 @@ namespace VampireSurvivorsLike {
     }
 
     /// <summary>
-    /// 读取武器的施放目标范围。range 为 0 时兼容旧资源并使用玩家 AttackRange；正数作为倍率，
+    /// 读取武器的施放目标范围。range 为 0 时兼容旧资源并使用玩家 TargetingRange；正数作为倍率，
     /// 例如 2 表示可从两倍玩家攻击范围内选择目标。Saw 的 range 由自身解释为环绕半径，不走该方法。
     /// </summary>
     protected float GetConfiguredTargetRange(WeaponLevelData levelData)
     {
       float rangeMultiplier = levelData == null ? 1f : Mathf.Max(1f, levelData.range);
-      return GetAttackRange() * rangeMultiplier;
+      return GetTargetingRange() * rangeMultiplier;
     }
 
     /// <summary>
@@ -220,10 +220,16 @@ namespace VampireSurvivorsLike {
       };
     }
 
-    // 攻击范围
+    /// <summary>读取玩家属性系统计算后的武器索敌范围。</summary>
+    public float GetTargetingRange()
+    {
+      return player.GetComponent<Hero>().TargetingRange;
+    }
+
+    /// <summary>兼容旧调用入口；新武器代码应使用 GetTargetingRange。</summary>
     public float GetAttackRange()
     {
-      return player.GetComponent<Hero>().AttackRange;
+      return GetTargetingRange();
     }
 
     protected virtual void OnDestroy()

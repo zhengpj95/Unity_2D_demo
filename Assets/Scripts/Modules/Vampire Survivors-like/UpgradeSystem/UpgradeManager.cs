@@ -27,12 +27,13 @@ namespace VampireSurvivorsLike
     /// <summary>使用当前场景中的玩家和武器管理器生成候选升级。</summary>
     public UpgradeConfig[] GetUpgradeOptions(int count)
     {
-      GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-      Hero hero = playerObject == null ? null : playerObject.GetComponent<Hero>();
-      VSPlayerHealth health = playerObject == null ? null : playerObject.GetComponent<VSPlayerHealth>();
-      return GetUpgradeOptions(count, new PlayerUpgradeContext(WeaponManager.Instance, hero, health));
+      SurvivorModule survivorModule = ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor);
+      return GetUpgradeOptions(count, new PlayerUpgradeContext(WeaponManager.Instance, survivorModule));
     }
 
+    /// <summary>
+    /// 使用调用方注入的当前局依赖生成候选，避免配置资源主动查找和修改场景对象。
+    /// </summary>
     public UpgradeConfig[] GetUpgradeOptions(int count, PlayerUpgradeContext context)
     {
       // 候选池在每次调用时重新过滤，确保上一次选择已立即影响下一轮结果。
@@ -94,14 +95,14 @@ namespace VampireSurvivorsLike
       }
 
       // 这些候选不是 ScriptableObject 资源，而是根据当前局状态动态创建；图标从场景上的 UpgradeManager 读取。
-      AddRuntimePlayerUpgrade(PlayerUpgradeStat.MoveSpeed, 0.1f, true, moveSpeedUpgradeIcon);
-      AddRuntimePlayerUpgrade(PlayerUpgradeStat.PickupRadius, 0.2f, true, pickupRadiusUpgradeIcon);
-      AddRuntimePlayerUpgrade(PlayerUpgradeStat.MaxHealth, 1f, false, maxHealthUpgradeIcon);
+      AddRuntimePlayerUpgrade(PlayerStat.MoveSpeed, 0.1f, true, moveSpeedUpgradeIcon);
+      AddRuntimePlayerUpgrade(PlayerStat.PickupRadius, 0.2f, true, pickupRadiusUpgradeIcon);
+      AddRuntimePlayerUpgrade(PlayerStat.MaxHealth, 1f, false, maxHealthUpgradeIcon);
     }
 
     /// <summary>创建一个默认玩家属性候选并加入运行时池。</summary>
     /// <param name="icon">该属性升级在三选一面板上显示的图标。</param>
-    private void AddRuntimePlayerUpgrade(PlayerUpgradeStat stat, float value, bool isPercent, Sprite icon)
+    private void AddRuntimePlayerUpgrade(PlayerStat stat, float value, bool isPercent, Sprite icon)
     {
       PlayerUpgradeConfig config = ScriptableObject.CreateInstance<PlayerUpgradeConfig>();
       config.InitializeRuntime(stat, value, isPercent, icon);

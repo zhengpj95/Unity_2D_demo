@@ -5,15 +5,22 @@ using UnityEngine;
 
 namespace VampireSurvivorsLike {
 
-  /**
-   * buff处理类，需要挂载在需要处理buff的物体上
-   */
+  /// <summary>
+  /// 玩家临时 Buff 的生命周期和叠加处理器。
+  /// 它只提供临时 PlayerStatModifier，不保存三选一产生的永久属性升级。
+  /// </summary>
   public class BuffHandler : MonoBehaviour
   {
     public List<BuffInstance> buffs = new List<BuffInstance>();
 
+    /// <summary>添加一个临时 Buff，并按配置执行刷新、叠加或替换规则。</summary>
     public void AddBuff(BuffSO data)
     {
+      if (data == null)
+      {
+        Debug.LogWarning("[BuffHandler] Cannot add a null BuffSO.", this);
+        return;
+      }
 
       var exist = buffs.Find(b => b.Data.GetType() == data.GetType());
       if (exist != null)
@@ -70,32 +77,32 @@ namespace VampireSurvivorsLike {
       }
     }
 
-    // 获取移动速度
-    public float GetMoveSpeedMultiplier()
+    /// <summary>
+    /// 汇总所有活跃 Buff 对指定玩家属性的临时修正。
+    /// 该方法只遍历现有列表，不创建临时候选集合。
+    /// </summary>
+    public PlayerStatModifier GetStatModifier(PlayerStat stat)
     {
-      float moveSpeedMultiplier = 0f;
-      foreach (var buff in buffs)
+      PlayerStatModifier result = default;
+      for (int i = 0; i < buffs.Count; i++)
       {
-        if (buff is MoveSpeedBuffInstance moveSpeedBuff)
-        {
-          moveSpeedMultiplier += moveSpeedBuff.moveSpeedMultiplier;
-        }
+        BuffInstance buff = buffs[i];
+        if (buff != null)
+          result = result.Combine(buff.GetStatModifier(stat));
       }
-      return moveSpeedMultiplier;
+      return result;
     }
 
-    // 获取攻击范围
+    /// <summary>兼容旧调用入口：返回移动速度的临时百分比修正。</summary>
+    public float GetMoveSpeedMultiplier()
+    {
+      return GetStatModifier(PlayerStat.MoveSpeed).Percent;
+    }
+
+    /// <summary>兼容旧调用入口：当前“攻击范围 Buff”实际映射为武器索敌范围百分比。</summary>
     public float GetAttackRangeMultiplier()
     {
-      float rangeMultiplier = 0f;
-      foreach (var buff in buffs)
-      {
-        if (buff is AttackRangeBuffInstance attackRangeBuff)
-        {
-          rangeMultiplier += attackRangeBuff.rangeMultiplier;
-        }
-      }
-      return rangeMultiplier;
+      return GetStatModifier(PlayerStat.TargetingRange).Percent;
     }
   }
 
