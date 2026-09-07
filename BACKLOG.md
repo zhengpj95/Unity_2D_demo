@@ -29,7 +29,7 @@
 
 ### SB-001 武器投射物与特效对象池
 
-**状态：已实现，待 Play Mode 验收**  |  **依赖：无**
+**状态：已完成（Play Mode 验收通过）**  |  **依赖：无**
 
 `ArrowController`、`BulletbController`、`BlueOvalController`、`LightningController`、`FireController`、`SawController` 已改为经 `PoolManager.Alloc/Free` 复用攻击对象。没有新建第二套武器池；池对象的生命周期统一由 `PooledWeaponEffect` 管理。
 
@@ -42,16 +42,18 @@
 - `WeaponController` 登记本控制器创建的活跃效果；`WeaponManager` 在销毁或重开场景前统一归还它们。
 - 直线子弹和弓箭优先选择未被同武器飞行投射物瞄准的范围内敌人；全部目标已被瞄准时本次不发射，避免单敌连续浪费投射物。
 
-验收标准：
+验收结论：已在 Unity Play Mode 正常运行并完成验收。
 
-1. 长时间发射时 Hierarchy 和 Profiler 不再持续产生投射物实例。
-2. 投射物重复取出后不会继承上一次目标、方向、命中列表或状态。
-3. 场景重开前可安全回收武器产生的活跃对象。
-4. `PoolManager` 中不存在第二套武器专用池管理器。
+验收项：
+
+1. [x] 长时间发射时 Hierarchy 和 Profiler 不再持续产生投射物实例。
+2. [x] 投射物重复取出后不会继承上一次目标、方向、命中列表或状态。
+3. [x] 场景重开前可安全回收武器产生的活跃对象。
+4. [x] `PoolManager` 中不存在第二套武器专用池管理器。
 
 ### SB-002 核心玩法闭环 Play Mode 验收
 
-**状态：待验证**  |  **依赖：SB-001 可并行**
+**状态：待验证**  |  **依赖：SB-001 已完成**
 
 使用 `SurvivorsDemo` 建立一组可重复的人工验收记录：
 
@@ -200,7 +202,7 @@ Play Mode 测试再覆盖 UI、碰撞、场景重开和 Time.timeScale。
 ## 推荐执行顺序
 
 ```text
-SB-002 核心闭环验收（包含 SB-001 Play Mode 验收）
+SB-002 核心闭环验收
     ↓
 SB-004 武器等级字段落地
     ↓
@@ -217,7 +219,7 @@ SB-008 Wave 扩展 / SB-009 局外 Coin / SB-011 反馈
 SB-012～SB-014 工程化与发布
 ```
 
-SB-001 已完成代码实现，下一步先执行 **SB-002 核心闭环 Play Mode 验收**，重点观察连续发射、命中回收、Animator 特效复用与多次重开场景；验收后再进入 SB-004 的武器等级字段落地。
+SB-001 已完成代码与 Play Mode 验收。下一步执行 **SB-002 核心闭环 Play Mode 验收**，重点验证 Wave、敌人/掉落、升级、GameOver 与多次重开；验收后再进入 SB-004 的武器等级字段落地。
 
 ## 变更同步规则
 

@@ -118,7 +118,7 @@ Vampire Survivors-like/
 
 以下内容不能视为当前正式玩法能力：
 
-- SB-002 Play Mode 验收尚未形成完整的人工测试记录；对象池复用、连续重开、Wave 切换和 UI 暂停仍需要在 Unity Editor 中持续验证。
+- SB-001 武器投射物与特效对象池已通过 Play Mode 验收。SB-002 核心玩法闭环尚未形成完整的人工测试记录；连续重开、Wave 切换和 UI 暂停等组合流程仍需要在 Unity Editor 中持续验证。
 - `WeaponLevelData` 的 `count`、部分 `range`、`damageInterval` 等字段尚未由所有武器完整消费；多发、完整范围参数与等级效果需要继续落地。
 - Buff 尚未接入三选一升级候选和正式构筑流程；当前只是可由场景组件使用的基础能力。
 - 被动道具、武器进化、合成、稀有度、刷新/跳过/禁用升级尚未实现。

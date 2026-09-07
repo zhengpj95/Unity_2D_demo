@@ -219,6 +219,7 @@ WeaponManager
 - 一局状态、经验溢出和连续升级队列。
 - Gem/Coin 分离结算。
 - 对象池敌人、掉落物、武器投射物和范围特效。
+- 武器投射物与特效对象池已完成 Play Mode 验收。
 - Wave 第一阶段和旧固定刷怪兼容模式。
 - NewWeapon、WeaponUpgrade、PlayerUpgrade 三类候选。
 
