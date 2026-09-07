@@ -11,11 +11,12 @@ namespace VampireSurvivorsLike {
       var enemy = EnemyDirector.Instance.GetRandom(transform.position, GetAttackRange());
       if (enemy)
       {
-        Transform blueOval = Instantiate(data.prefab, player.position, Quaternion.identity, transform);
-        BlueOvalWeapon blueOvalWeapon = blueOval.GetComponent<BlueOvalWeapon>();
         var levelData = GetLevelData();
-        blueOvalWeapon.Init(enemy.transform, levelData);
-        Destroy(blueOval.gameObject, levelData.duration);
+        BlueOvalWeapon blueOval = SpawnPooledEffect<BlueOvalWeapon>(data.prefab, player.position, Quaternion.identity, transform);
+        if (blueOval == null)
+          return;
+
+        blueOval.Init(this, enemy.transform, levelData);
       }
     }
   }

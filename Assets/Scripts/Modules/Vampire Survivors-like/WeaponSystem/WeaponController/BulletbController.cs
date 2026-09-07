@@ -11,13 +11,14 @@ namespace VampireSurvivorsLike {
       var enemy = EnemyDirector.Instance.GetCloseest(player.position, GetAttackRange());
       if (enemy)
       {
-        // transform 是 WeaponManager 创建的 WeaponBulletb 节点，因此子弹实例位于 WeaponManager/WeaponBulletb 下。
-        var bulletb = Instantiate(data.prefab, player.position, Quaternion.identity, transform);
-        var bulletbScript = bulletb.GetComponent<ArrowWeapon>();
         var levelData = GetLevelData();
+        // transform 是 WeaponManager 创建的 WeaponBulletb 节点；出池后仍挂在这里便于分类和重开统一回收。
+        ArrowWeapon bulletb = SpawnPooledEffect<ArrowWeapon>(data.prefab, player.position, Quaternion.identity, transform);
+        if (bulletb == null)
+          return;
+
         // false：普通子弹仅在发射时锁定方向，敌人移动或回收后都不会影响弹道。
-        bulletbScript.Init(enemy.transform, levelData, false);
-        Destroy(bulletb.gameObject, levelData.duration);
+        bulletb.Init(this, enemy.transform, levelData, false);
       }
     }
   }

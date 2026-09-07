@@ -69,6 +69,20 @@ namespace VampireSurvivorsLike {
       yield return fireSO;
     }
 
+    /// <summary>
+    /// 回收当前回合中全部活跃的武器攻击对象。
+    /// 场景重开和 WeaponManager 销毁前调用，避免对象池实例仍挂在旧场景层级而被直接销毁。
+    /// </summary>
+    public void ClearActiveWeaponEffects()
+    {
+      for (int i = 0; i < weaponControllers.Count; i++)
+      {
+        WeaponController controller = weaponControllers[i];
+        if (controller != null)
+          controller.RecycleActiveEffects();
+      }
+    }
+
     /// <summary>兼容旧调用方：已拥有则升级，否则尝试新增。</summary>
     public void AddOrUpgrade(WeaponSO soData)
     {
@@ -134,6 +148,14 @@ namespace VampireSurvivorsLike {
         "WeaponBlueOval" => typeof(BlueOvalController),
         _ => null,
       };
+    }
+
+    protected override void OnDestroy()
+    {
+      // 非持久化 WeaponManager 会在场景重开时销毁，先把活跃攻击对象送回持久化 PoolRoot。
+      ClearActiveWeaponEffects();
+      weaponControllers.Clear();
+      base.OnDestroy();
     }
   }
 

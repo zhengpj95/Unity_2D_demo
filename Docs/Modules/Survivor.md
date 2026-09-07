@@ -131,7 +131,7 @@ GameState = GameOver，Time.timeScale = 0
     ↓
 玩家点击“重新开始”
     ↓
-回收当前活跃敌人与掉落物
+回收当前活跃敌人、掉落物与武器攻击对象
     ↓
 SurvivorProxy.ResetRound + Time.timeScale = 1
     ↓
@@ -204,6 +204,10 @@ WeaponManager
 
 场景中不需要预先创建这些子节点。弓箭、子弹等投射物由对应控制器作为子物体创建；环绕型 Saw 直接挂在 Player 下以保持跟随。
 
+弓箭、子弹、蓝色爆炸、闪电、火焰与 Saw 都继承 `PooledWeaponEffect`，通过框架 `PoolManager.Alloc/Free` 复用，不在普通攻击路径中 `Instantiate/Destroy`。`WeaponController` 会登记本控制器创建的活跃效果：命中或 `WeaponLevelData.duration` 超时后由效果自身归还对象池；场景重开或 `WeaponManager` 销毁前，则通过 `ClearActiveWeaponEffects` 统一归还，避免池对象残留旧场景引用。
+
+每次出池会清理上一轮的目标、方向、命中列表、伤害计时与初始化状态，并重置子 Animator 的播放进度。`PoolManager` 入池时将对象移到池根节点，控制器取出后再恢复当前武器控制器或 Player 的挂点，因此武器 Prefab 无需预先挂在场景层级中。
+
 ---
 
 ## 9. 当前限制
@@ -212,7 +216,7 @@ WeaponManager
 
 - 一局状态、经验溢出和连续升级队列。
 - Gem/Coin 分离结算。
-- 对象池敌人和掉落物。
+- 对象池敌人、掉落物、武器投射物和范围特效。
 - Wave 第一阶段和旧固定刷怪兼容模式。
 - NewWeapon、WeaponUpgrade、PlayerUpgrade 三类候选。
 
@@ -234,7 +238,7 @@ WeaponManager
 | Model、经验、暂停、升级弹窗、GameOver 或重开流程 | `Survivor.md`、`UpgradeSystem.md` |
 | EnemyDirector、EnemySpawner、EnemyChasing、掉落回收 | `EnemySystem.md`、`WaveSystem.md`，必要时同步本文件 |
 | WaveConfig、Wave 时间和 SpawnEntry | `WaveSystem.md`、`EnemySystem.md` |
-| UpgradeConfig、WeaponManager、WeaponSO 等级 | `UpgradeSystem.md`，必要时同步本文件 |
+| UpgradeConfig、WeaponManager、WeaponSO 等级、武器投射物/特效对象池 | `UpgradeSystem.md`，必要时同步本文件 |
 | 场景层级、相机、无限地表或拾取范围 | `Survivor.md` |
 
 文档中的“当前实现”必须以仓库代码和场景为准；计划中的功能统一放在“当前限制/后续方向”，不能写成已完成。

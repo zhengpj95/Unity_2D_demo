@@ -8,11 +8,13 @@ namespace VampireSurvivorsLike {
   {
     protected override void Fire()
     {
-      var saw = Instantiate(data.prefab, player.position, Quaternion.identity, player);
-      var sawScript = saw.GetComponent<SawWeapon>();
       var levelData = GetLevelData();
-      sawScript.Init(levelData);
-      Destroy(saw.gameObject, levelData.duration);
+      // Saw 保持挂在 Player 下，才能沿用原有的本地坐标环绕行为。
+      SawWeapon saw = SpawnPooledEffect<SawWeapon>(data.prefab, player.position, Quaternion.identity, player);
+      if (saw == null)
+        return;
+
+      saw.Init(this, levelData);
     }
   }
 

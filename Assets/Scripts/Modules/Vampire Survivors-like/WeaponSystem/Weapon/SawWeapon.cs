@@ -7,7 +7,7 @@ namespace VampireSurvivorsLike {
   /**
    * 锯子武器
    */
-  public class SawWeapon : MonoBehaviour
+  public class SawWeapon : PooledWeaponEffect
   {
     private bool initialized;
     private float radius = 1.2f;
@@ -15,17 +15,26 @@ namespace VampireSurvivorsLike {
     private int damage = 1;
     private float angle;
 
-    public void Init(WeaponLevelData weaponLevelData)
+    /// <summary>启动绕玩家旋转的 Saw，并登记到创建它的武器控制器。</summary>
+    public void Init(WeaponController owner, WeaponLevelData weaponLevelData)
     {
+      if (weaponLevelData == null)
+      {
+        Debug.LogWarning("[SawWeapon] Missing weapon level data; effect was skipped.", this);
+        PoolManager.Instance.Free(gameObject);
+        return;
+      }
+
       radius = weaponLevelData.range;
       damage = weaponLevelData.damage;
       rotateSpeed = weaponLevelData.speed;
       initialized = true;
+      BeginEffect(owner, weaponLevelData.duration);
     }
 
     void Update()
     {
-      if (!initialized) return;
+      if (!initialized || TryRecycleWhenExpired()) return;
       transform.Rotate(0, 0, 360 * Time.deltaTime);
       RotateAroundPlayer();
     }
@@ -44,12 +53,25 @@ namespace VampireSurvivorsLike {
 
     void OnTriggerEnter2D(Collider2D collision)
     {
-      if (!initialized) return;
+      if (!initialized || !IsActiveEffect) return;
       if (collision.gameObject.CompareTag("Enemy"))
       {
         VSEnemyHealth vSHealth = collision.gameObject.GetComponent<VSEnemyHealth>();
-        vSHealth.TakeDamage(damage);
+        if (vSHealth != null)
+          vSHealth.TakeDamage(damage);
       }
+    }
+
+    /// <summary>重置环绕角度和变换，保证重复取出的 Saw 从一致位置开始旋转。</summary>
+    protected override void ResetEffectState()
+    {
+      initialized = false;
+      radius = 1.2f;
+      rotateSpeed = 180f;
+      damage = 1;
+      angle = 0f;
+      transform.localPosition = Vector3.zero;
+      transform.localRotation = Quaternion.identity;
     }
   }
 

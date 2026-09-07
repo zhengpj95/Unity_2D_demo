@@ -259,6 +259,8 @@ WeaponManager
 
 `WeaponManager` 是场景级单例，不跨场景保留。它持有当前 Player 创建的武器控制器；重开场景时必须随 Player 一起重建，避免旧控制器访问已销毁的 Player Transform。
 
+武器控制器创建的投射物和范围特效由框架 `PoolManager` 复用：控制器登记活跃的 `PooledWeaponEffect`，效果命中或到达 `WeaponLevelData.duration` 时自行归还对象池；重开场景和 `WeaponManager.OnDestroy` 时调用 `ClearActiveWeaponEffects` 统一回收。这个对象池职责属于武器运行时生命周期，不改变 `WeaponSO` 的等级配置或升级候选逻辑。
+
 ---
 
 ## 8. 三选一面板与连续升级
@@ -363,7 +365,7 @@ Create
 | 代码变更 | 需要同步的文档 |
 | --- | --- |
 | `UpgradeConfig`、`UpgradeManager`、`UpgradeId` | 本文件、`Survivor.md` |
-| `WeaponManager`、`WeaponSO`、`WeaponLevelData`、WeaponController | 本文件、`Survivor.md` |
+| `WeaponManager`、`WeaponSO`、`WeaponLevelData`、WeaponController、武器投射物/特效对象池 | 本文件、`Survivor.md` |
 | `SurvivorGameplayController`、升级面板、经验队列 | 本文件、`Survivor.md` |
 | `DropItem`、Gem/Coin 结算 | `Survivor.md`、必要时 `EnemySystem.md` |
 | 敌人生成和 Wave | `EnemySystem.md`、`WaveSystem.md` |

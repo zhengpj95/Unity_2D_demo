@@ -11,13 +11,14 @@ namespace VampireSurvivorsLike {
       EnemyChasing enemy = EnemyDirector.Instance.GetCloseest(player.position, GetAttackRange());
       if (enemy)
       {
-        // transform 是 WeaponManager 创建的 WeaponArrow 节点，因此弓箭实例位于 WeaponManager/WeaponArrow 下。
-        var arrow = Instantiate(data.prefab, player.position, Quaternion.identity, transform);
         var levelData = GetLevelData();
+        // transform 是 WeaponManager 创建的 WeaponArrow 节点；出池后仍挂在这里便于分类和重开统一回收。
+        ArrowWeapon arrow = SpawnPooledEffect<ArrowWeapon>(data.prefab, player.position, Quaternion.identity, transform);
+        if (arrow == null)
+          return;
+
         // false：弓箭仅在发射时锁定方向，之后沿直线飞行。
-        var arrowScript = arrow.GetComponent<ArrowWeapon>();
-        arrowScript.Init(enemy.transform, levelData, false);
-        Destroy(arrow.gameObject, levelData.duration);
+        arrow.Init(this, enemy.transform, levelData, false);
       }
     }
   }

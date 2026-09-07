@@ -7,7 +7,7 @@ namespace VampireSurvivorsLike {
   /**
    * 弓箭武器
    */
-  public class ArrowWeapon : MonoBehaviour
+  public class ArrowWeapon : PooledWeaponEffect
   {
     private bool initialized;
     private float speed = 2f;
@@ -21,6 +21,7 @@ namespace VampireSurvivorsLike {
     /// <summary>
     /// 初始化投射物的伤害、速度及飞行方式。
     /// </summary>
+    /// <param name="owner">创建本次投射物并负责统一回收的武器控制器。</param>
     /// <param name="targetTransform">
     /// 发射瞬间用于计算初始方向的目标。仅当 <paramref name="shouldFollowTarget"/> 为 true 时才会在飞行过程中持续追踪。
     /// </param>
@@ -28,8 +29,15 @@ namespace VampireSurvivorsLike {
     /// <param name="shouldFollowTarget">
     /// true 表示追踪投射物：每帧朝目标转向；false 表示直线投射物：只在初始化时瞄准一次，之后直线飞行。
     /// </param>
-    public void Init(Transform targetTransform, WeaponLevelData levelData, bool shouldFollowTarget = true)
+    public void Init(WeaponController owner, Transform targetTransform, WeaponLevelData levelData, bool shouldFollowTarget = true)
     {
+      if (levelData == null)
+      {
+        Debug.LogWarning("[ArrowWeapon] Missing weapon level data; projectile was recycled.", this);
+        PoolManager.Instance.Free(gameObject);
+        return;
+      }
+
       speed = levelData.speed;
       damage = levelData.damage;
       followTarget = shouldFollowTarget;
@@ -46,11 +54,12 @@ namespace VampireSurvivorsLike {
       direction.Normalize();
       UpdateRotation();
       initialized = true;
+      BeginEffect(owner, levelData.duration);
     }
 
     private void Update()
     {
-      if (!initialized) return;
+      if (!initialized || TryRecycleWhenExpired()) return;
       if (followTarget && target != null)
       {
         Vector3 targetDirection = target.position - transform.position;
@@ -72,13 +81,28 @@ namespace VampireSurvivorsLike {
 
     void OnTriggerEnter2D(Collider2D collision)
     {
-      if (!initialized) return;
+      // Collider 可能在对象入池后的同一物理帧继续派发回调，只处理本次出池已完成初始化的攻击。
+      if (!initialized || !IsActiveEffect) return;
       if (collision.gameObject.CompareTag("Enemy"))
       {
         VSEnemyHealth vSHealth = collision.gameObject.GetComponent<VSEnemyHealth>();
-        vSHealth.TakeDamage(damage);
-        Destroy(gameObject); // 销毁弓箭
+        if (vSHealth != null)
+          vSHealth.TakeDamage(damage);
+
+        // 命中后统一归还对象池，不再销毁投射物实例。
+        Recycle();
       }
+    }
+
+    /// <summary>清理直线/追踪投射物的目标、方向和数值，避免下一次出池沿用旧弹道。</summary>
+    protected override void ResetEffectState()
+    {
+      initialized = false;
+      speed = 2f;
+      damage = 1;
+      target = null;
+      direction = Vector3.zero;
+      followTarget = false;
     }
   }
 
