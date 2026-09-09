@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0194648388a941d0a304e8aeb5ddf663, type: 3}
+  m_Name: VampireQualityConfig
+  m_EditorClassIdentifier: 
+  _entries:
+  - Enabled: 1
+    Quality: 6
+    DisplayName: "铜棕"
+    Color: {r: 0.6274509803921569, g: 0.4392156862745098, b: 0.2823529411764706, a: 1}
+    Note: "Poor / 粗糙"
+  - Enabled: 1
+    Quality: 0
+    DisplayName: "银灰"
+    Color: {r: 0.7215686274509804, g: 0.7215686274509804, b: 0.7215686274509804, a: 1}
+    Note: "Common / 普通"
+  - Enabled: 1
+    Quality: 1
+    DisplayName: "绿色"
+    Color: {r: 0.3843137254901961, g: 0.788235294117647, b: 0.4196078431372549, a: 1}
+    Note: "Uncommon / 优秀"
+  - Enabled: 1
+    Quality: 2
+    DisplayName: "蓝色"
+    Color: {r: 0.2901960784313726, g: 0.6235294117647059, b: 0.9607843137254902, a: 1}
+    Note: "Rare / 稀有"
+  - Enabled: 1
+    Quality: 3
+    DisplayName: "紫色"
+    Color: {r: 0.7058823529411765, g: 0.3607843137254902, b: 0.9019607843137255, a: 1}
+    Note: "Epic / 史诗"
+  - Enabled: 1
+    Quality: 4
+    DisplayName: "橙金"
+    Color: {r: 0.9411764705882353, g: 0.6627450980392157, b: 0.1803921568627451, a: 1}
+    Note: "Legendary / 传奇"
+  - Enabled: 1
+    Quality: 5
+    DisplayName: "亮红"
+    Color: {r: 0.9294117647058824, g: 0.29411764705882354, b: 0.23137254901960785, a: 1}
+    Note: "Mythic / 神话"
+  - Enabled: 1
+    Quality: 7
+    DisplayName: "黑红"
+    Color: {r: 0.6627450980392157, g: 0.12156862745098039, b: 0.16862745098039217, a: 1}
+    Note: "Cursed / 诅咒"
+  - Enabled: 1
+    Quality: 8
+    DisplayName: "白金"
+    Color: {r: 0.9490196078431372, g: 0.8862745098039215, b: 0.6862745098039216, a: 1}
+    Note: "Ancient / 远古"
