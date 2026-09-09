@@ -264,7 +264,7 @@ Assets/Scenes/Vampire Survivors-like/SurvivorsDemo.unity
 | 代码变更 | 文档 |
 | --- | --- |
 | `EnemyDirector`、`EnemySpawner`、`EnemyChasing`、`VSEnemyHealth` | 本文件、`WaveSystem.md` |
-| `WaveConfig` 或 Wave 调度规则 | `WaveSystem.md`、本文件 |
+| `WaveConfig`、敌人生命/速度或 Wave 调度规则 | `WaveSystem.md`、`BalanceSystem.md`、本文件 |
 | `PoolManager` 的敌人池生命周期 | 本文件、`Survivor.md` |
 | 掉落类型、死亡结算或拾取规则 | `Survivor.md`，必要时本文件 |
 

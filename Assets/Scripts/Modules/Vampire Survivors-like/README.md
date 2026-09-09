@@ -152,6 +152,7 @@ Vampire Survivors-like/
 以下内容不能视为当前正式玩法能力：
 
 - Buff 尚未接入三选一升级候选和正式构筑流程；当前只是可由场景组件使用的基础能力。
+- SB-005 已建立首版玩家、武器、敌人、Wave 与掉落数值基线，仍待按 `BalanceSystem.md` 完成 Play Mode 数值验收。
 - 被动道具、武器进化、合成、稀有度、刷新/跳过/禁用升级尚未实现。
 - Coin 仅记录在本局 `SurvivorModel` 和结算面板中，没有局外持久化、商店或局外成长。
 - Boss、Elite、特殊 Wave 事件、动态难度、Wave 奖励和胜利条件尚未实现。
@@ -178,6 +179,7 @@ Vampire Survivors-like/
 - [EnemySystem.md](../../../../Docs/Modules/EnemySystem.md)：敌人、掉落和对象池规则。
 - [UpgradeSystem.md](../../../../Docs/Modules/UpgradeSystem.md)：升级配置、`UpgradeId` 和武器等级规则。
 - [WaveSystem.md](../../../../Docs/Modules/WaveSystem.md)：Wave 配置与时间区间规则。
+- [BalanceSystem.md](../../../../Docs/Modules/BalanceSystem.md)：SB-005 的玩家、武器、敌人、Wave 与掉落数值基线。
 - [Architecture.md](../../../../Docs/Architecture.md)：项目级 Module、UI、网络和全局生命周期事实源。
 - [BACKLOG.md](../../../../BACKLOG.md)：已经确认的后续工作和验收项。
 

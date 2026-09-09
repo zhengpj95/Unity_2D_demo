@@ -18,26 +18,26 @@ MonoBehaviour:
   weaponName: "\u5C04\u7BAD"
   levels:
   - level: 1
-    speed: 1
-    damage: 1
-    damageInterval: 0
-    count: 0
-    range: 0
-    fireInterval: 1
-    duration: 15
-  - level: 2
-    speed: 2
+    speed: 5
     damage: 2
     damageInterval: 0
-    count: 0
-    range: 0
+    count: 1
+    range: 1
     fireInterval: 0.8
     duration: 15
-  - level: 3
-    speed: 3
+  - level: 2
+    speed: 6
     damage: 3
     damageInterval: 0
-    count: 0
-    range: 0
+    count: 1
+    range: 1.25
+    fireInterval: 0.7
+    duration: 15
+  - level: 3
+    speed: 7
+    damage: 4
+    damageInterval: 0
+    count: 2
+    range: 1.5
     fireInterval: 0.6
     duration: 15

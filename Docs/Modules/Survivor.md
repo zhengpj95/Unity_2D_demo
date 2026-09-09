@@ -237,6 +237,7 @@ SB-004 已将 `WeaponLevelData` 接入实际玩法：`count` 决定一次触发�
 - Wave 第一阶段和旧固定刷怪兼容模式。
 - NewWeapon、WeaponUpgrade、PlayerUpgrade 三类候选。
 - 独立玩家属性基础系统，以及永久升级和临时 Buff 的统一计算入口。
+- SB-005 首版数值平衡基线；详细参数表见 `BalanceSystem.md`，尚待 Play Mode 验收。
 
 当前没有：
 

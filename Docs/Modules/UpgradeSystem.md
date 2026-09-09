@@ -236,6 +236,8 @@ Project 面板
 
 > 验收状态：SB-004 已通过 Unity Play Mode 验收；Arrow/Bulletb、BlueOval/Lightning、Fire 与 Saw 的适用等级字段均已确认生效。
 
+SB-005 的首版 WeaponSO 数值基线记录在 `BalanceSystem.md`。调整武器等级数值时，需要同时核对该表、敌人生命和 Wave 压力，不能只孤立修改单一武器。
+
 | 字段 | 实际效果 |
 | --- | --- |
 | `damage` | 所有武器的单次命中伤害。 |
@@ -382,7 +384,7 @@ Create
 | 代码变更 | 需要同步的文档 |
 | --- | --- |
 | `UpgradeConfig`、`UpgradeManager`、`UpgradeId` | 本文件、`Survivor.md` |
-| `WeaponManager`、`WeaponSO`、`WeaponLevelData`、WeaponController、武器投射物/特效对象池 | 本文件、`Survivor.md` |
+| `WeaponManager`、`WeaponSO`、`WeaponLevelData`、WeaponController、武器投射物/特效对象池 | 本文件、`Survivor.md`、`BalanceSystem.md` |
 | `SurvivorGameplayController`、升级面板、经验队列 | 本文件、`Survivor.md` |
 | `DropItem`、Gem/Coin 结算 | `Survivor.md`、必要时 `EnemySystem.md` |
 | 敌人生成和 Wave | `EnemySystem.md`、`WaveSystem.md` |

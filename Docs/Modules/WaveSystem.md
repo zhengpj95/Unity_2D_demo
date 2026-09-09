@@ -348,7 +348,7 @@ UpgradeSystem
 
 | 代码变更 | 需要同步的文档 |
 | --- | --- |
-| `WaveConfig`、`SpawnEntry`、Wave 时间区间或计时器 | 本文件、`EnemySystem.md` |
+| `WaveConfig`、`SpawnEntry`、Wave 时间区间或示例数值 | 本文件、`EnemySystem.md`、`BalanceSystem.md` |
 | `EnemyDirector`、`EnemySpawner`、`EnemyChasing` | 本文件、`EnemySystem.md`，必要时 `Survivor.md` |
 | `PoolManager` 的敌人预热、取出或回收流程 | 本文件、`EnemySystem.md`、`Survivor.md` |
 | 场景中的 Wave 资源、敌人参数或示例配置 | 本文件及对应场景/系统文档 |
