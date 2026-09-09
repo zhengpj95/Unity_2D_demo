@@ -24,6 +24,15 @@ namespace VampireSurvivorsLike {
     public virtual void OnRemove() { }
     public virtual void OnTick(float deltaTime) { }
 
+    /// <summary>
+    /// 返回当前 Buff 对指定玩家属性提供的临时修正。
+    /// 不影响该属性时返回 default，BuffHandler 会统一合并所有活跃 Buff。
+    /// </summary>
+    public virtual PlayerStatModifier GetStatModifier(PlayerStat stat)
+    {
+      return default;
+    }
+
     public void Init(GameObject target, int stack = 1)
     {
       this.target = target;
@@ -36,13 +45,13 @@ namespace VampireSurvivorsLike {
       OnTick(deltaTime);
     }
 
-    // 刷新过期时间
+    /// <summary>刷新 Buff 剩余时间；未传值时使用 BuffSO.duration。</summary>
     public void RefreshDuration(float? duration)
     {
       timeLeft = duration ?? data.duration;
     }
 
-    // 过期了否
+    /// <summary>Buff 是否已经到期。</summary>
     public bool IsExpired => timeLeft <= 0;
   }
 

@@ -21,23 +21,23 @@ MonoBehaviour:
     speed: 0
     damage: 2
     damageInterval: 0
-    count: 0
-    range: 0
-    fireInterval: 1
+    count: 1
+    range: 1
+    fireInterval: 1.3
     duration: 2
   - level: 2
     speed: 0
-    damage: 3
+    damage: 4
     damageInterval: 0
-    count: 0
-    range: 0
-    fireInterval: 0.8
+    count: 1
+    range: 1.25
+    fireInterval: 1
     duration: 2
   - level: 3
     speed: 0
-    damage: 4
+    damage: 5
     damageInterval: 0
-    count: 0
-    range: 0
-    fireInterval: 0.5
+    count: 2
+    range: 1.5
+    fireInterval: 0.8
     duration: 2

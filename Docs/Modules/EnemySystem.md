@@ -22,7 +22,7 @@ DropItemManager
 Assets/Scripts/Modules/Vampire Survivors-like/Entity/EnemyDirector.cs
 Assets/Scripts/Modules/Vampire Survivors-like/Entity/EnemySpawner.cs
 Assets/Scripts/Modules/Vampire Survivors-like/Entity/EnemyChasing.cs
-Assets/Scripts/Modules/Vampire Survivors-like/UI/VSEnemyHealth.cs
+Assets/Scripts/Modules/Vampire Survivors-like/Entity/Health/VSEnemyHealth.cs
 Assets/Scripts/Framework/Pool/PoolManager.cs
 ```
 
@@ -43,6 +43,7 @@ Assets/Scripts/Framework/Pool/PoolManager.cs
 - 限制场景中同时存活的敌人数量 `maxEnemies`。
 - 预热当前模式会使用的敌人 Prefab。
 - 提供 `RecycleEnemy(GameObject)` 作为统一回收入口。
+- 提供最近/随机选敌接口；`GetRandomExcluding` 支持调用方复用排除集合，让同一次多目标施放优先命中不同敌人。
 
 `EnemyDirector` 是场景级单例，不跨场景保留。它持有当前场景的 Player、敌人容器和 Wave 运行时计时；重开时通过重载场景重新创建，避免继续引用上一局已销毁的 Player。
 
@@ -263,7 +264,7 @@ Assets/Scenes/Vampire Survivors-like/SurvivorsDemo.unity
 | 代码变更 | 文档 |
 | --- | --- |
 | `EnemyDirector`、`EnemySpawner`、`EnemyChasing`、`VSEnemyHealth` | 本文件、`WaveSystem.md` |
-| `WaveConfig` 或 Wave 调度规则 | `WaveSystem.md`、本文件 |
+| `WaveConfig`、敌人生命/速度或 Wave 调度规则 | `WaveSystem.md`、`BalanceSystem.md`、本文件 |
 | `PoolManager` 的敌人池生命周期 | 本文件、`Survivor.md` |
 | 掉落类型、死亡结算或拾取规则 | `Survivor.md`，必要时本文件 |
 

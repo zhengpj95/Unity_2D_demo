@@ -168,7 +168,23 @@ public class PoolManager : Singleton<PoolManager>
         p.OnFree();
       }
 
+      // OnFree 或场景卸载可能在回调期间销毁对象；退出 Play Mode 时持久化 PoolRoot 也会一起销毁。
+      // 此时不能再访问 Transform 或压入池栈，否则会触发 MissingReferenceException。
+      if (obj == null || _poolRoot == null)
+      {
+        _instanceToPrefabId.Remove(instanceId);
+        return;
+      }
+
       obj.SetActive(false);
+
+      // SetActive 的生命周期回调也可能销毁对象，因此设父节点前再次确认有效性。
+      if (obj == null || _poolRoot == null)
+      {
+        _instanceToPrefabId.Remove(instanceId);
+        return;
+      }
+
       obj.transform.SetParent(_poolRoot.transform);
       _poolDict[prefabId].Push(obj);
     }

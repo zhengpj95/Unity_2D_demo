@@ -25,7 +25,8 @@ public sealed class SurvivorProxy : BaseProxy
   /// <summary>仅供 GameOver 测试覆盖本局生命；正式初始值直接由 SurvivorModel 定义。</summary>
   public void OverrideHealthForTesting(int maxHealth)
   {
-    Model.MaxHealth = Math.Max(1, maxHealth);
+    Model.BaseMaxHealth = Math.Max(1, maxHealth);
+    Model.MaxHealth = CalculateMaxHealth();
     Model.CurrentHealth = Model.MaxHealth;
   }
 
@@ -38,17 +39,56 @@ public sealed class SurvivorProxy : BaseProxy
     Model.CurrentHealth = Math.Max(0, Model.CurrentHealth - damage);
   }
 
-  /// <summary>增加最大生命并同步增加当前生命，不修改场景组件或配置资源。</summary>
+  /// <summary>兼容旧调用入口：将最大生命升级转交统一玩家属性系统。</summary>
   public void AddMaxHealth(float value, bool isPercent)
   {
-    if (value <= 0f)
-      return;
+    ApplyPlayerStatUpgrade(PlayerStat.MaxHealth, value, isPercent);
+  }
 
-    int increase = isPercent
-      ? Math.Max(1, (int)Math.Ceiling(Model.MaxHealth * value))
-      : Math.Max(1, (int)Math.Round(value));
-    Model.MaxHealth += increase;
-    Model.CurrentHealth += increase;
+  /// <summary>
+  /// 应用一条本局永久玩家属性升级。普通属性只记录修正值；最大生命还会同步更新当前生命。
+  /// </summary>
+  /// <param name="stat">要修改的统一玩家属性。</param>
+  /// <param name="value">固定增量或百分比小数。</param>
+  /// <param name="isPercent">true 表示百分比，false 表示固定值。</param>
+  /// <returns>配置有效并成功写入时返回 true。</returns>
+  public bool ApplyPlayerStatUpgrade(PlayerStat stat, float value, bool isPercent)
+  {
+    if (value <= 0f)
+      return false;
+
+    int previousMaxHealth = Model.MaxHealth;
+    if (!Model.PlayerAttributes.AddPermanentModifier(stat, value, isPercent))
+      return false;
+
+    if (stat == PlayerStat.MaxHealth)
+    {
+      Model.MaxHealth = CalculateMaxHealth();
+      // 永久最大生命提升同时补充新增的生命上限，保持旧玩法升级后的即时收益。
+      Model.CurrentHealth = Math.Min(Model.MaxHealth,
+        Model.CurrentHealth + Math.Max(0, Model.MaxHealth - previousMaxHealth));
+    }
+
+    return true;
+  }
+
+  /// <summary>读取指定玩家属性的本局永久修正，供实体层合并基础值与临时 Buff。</summary>
+  public PlayerStatModifier GetPermanentPlayerStatModifier(PlayerStat stat)
+  {
+    return Model.PlayerAttributes.GetPermanentModifier(stat);
+  }
+
+  /// <summary>按统一公式计算基础值、永久升级和临时 Buff 合并后的最终属性。</summary>
+  public float CalculatePlayerStat(PlayerStat stat, float baseValue, PlayerStatModifier temporaryModifier)
+  {
+    return Model.PlayerAttributes.Calculate(stat, baseValue, temporaryModifier);
+  }
+
+  private int CalculateMaxHealth()
+  {
+    float value = Model.PlayerAttributes.Calculate(
+      PlayerStat.MaxHealth, Model.BaseMaxHealth, default);
+    return Math.Max(1, (int)Math.Ceiling(value));
   }
 
   /// <summary>

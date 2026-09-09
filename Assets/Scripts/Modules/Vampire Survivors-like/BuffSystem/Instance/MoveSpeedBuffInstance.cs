@@ -28,5 +28,13 @@ namespace VampireSurvivorsLike {
     {
       moveSpeedMultiplier -= rate * stack;
     }
+
+    /// <summary>将当前叠加后的移速效果暴露为统一玩家属性临时修正。</summary>
+    public override PlayerStatModifier GetStatModifier(PlayerStat stat)
+    {
+      return stat == PlayerStat.MoveSpeed
+        ? new PlayerStatModifier(0f, moveSpeedMultiplier)
+        : default;
+    }
   }
 }

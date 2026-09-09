@@ -1,25 +1,27 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-namespace VampireSurvivorsLike {
-
+namespace VampireSurvivorsLike
+{
+  /// <summary>直线弓箭控制器：count 决定单次触发的投射物数，range 决定选敌范围倍率。</summary>
   public class ArrowController : WeaponController
   {
     protected override void Fire()
     {
-      EnemyChasing enemy = EnemyDirector.Instance.GetCloseest(player.position, GetAttackRange());
-      if (enemy)
+      WeaponLevelData levelData = GetLevelData();
+      int projectileCount = GetEffectCount(levelData);
+      for (int i = 0; i < projectileCount; i++)
       {
-        // transform 是 WeaponManager 创建的 WeaponArrow 节点，因此弓箭实例位于 WeaponManager/WeaponArrow 下。
-        var arrow = Instantiate(data.prefab, player.position, Quaternion.identity, transform);
-        var levelData = GetLevelData();
-        // false：弓箭仅在发射时锁定方向，之后沿直线飞行。
-        var arrowScript = arrow.GetComponent<ArrowWeapon>();
-        arrowScript.Init(enemy.transform, levelData, false);
-        Destroy(arrow.gameObject, levelData.duration);
+        EnemyChasing enemy = GetClosestProjectileTarget(levelData);
+        if (enemy == null)
+          break;
+
+        ArrowWeapon arrow = SpawnPooledEffect<ArrowWeapon>(data.prefab, player.position, Quaternion.identity, transform);
+        if (arrow == null)
+          break;
+
+        // 弓箭仅在发射瞬间锁定方向，之后保持直线飞行。
+        arrow.Init(this, enemy.transform, levelData, false);
       }
     }
   }
-
 }

@@ -138,7 +138,7 @@ public sealed class SurvivorGameplayController
   }
 
   /// <summary>
-  /// 在场景重载前回收本局活跃实体，确保 GameOver 点击重开后不会遗留敌人或掉落物。
+  /// 在场景重载前回收本局活跃实体，确保 GameOver 点击重开后不会遗留敌人、掉落物或武器攻击对象。
   /// 使用场景查找避免在异常场景配置下通过单例 getter 意外创建新 Manager。
   /// </summary>
   private static void ClearCurrentRoundEntities()
@@ -148,14 +148,14 @@ public sealed class SurvivorGameplayController
 
     DropItemManager dropItemManager = UnityEngine.Object.FindObjectOfType<DropItemManager>();
     dropItemManager?.ClearActiveDropItems();
+
+    WeaponManager weaponManager = UnityEngine.Object.FindObjectOfType<WeaponManager>();
+    weaponManager?.ClearActiveWeaponEffects();
   }
 
   private PlayerUpgradeContext CreateUpgradeContext()
   {
-    // Controller 负责组装上下文，UpgradeConfig 本身不查找场景对象。
-    GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-    Hero hero = playerObject == null ? null : playerObject.GetComponent<Hero>();
-    VSPlayerHealth health = playerObject == null ? null : playerObject.GetComponent<VSPlayerHealth>();
-    return new PlayerUpgradeContext(WeaponManager.Instance, hero, health);
+    // Controller 注入当前 Module 和武器管理器，UpgradeConfig 不查找场景对象或直接修改 Hero。
+    return new PlayerUpgradeContext(WeaponManager.Instance, _module);
   }
 }

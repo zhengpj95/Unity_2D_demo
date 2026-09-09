@@ -1,25 +1,27 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-namespace VampireSurvivorsLike {
-
+namespace VampireSurvivorsLike
+{
+  /// <summary>直线子弹控制器：count 会发射多个独立子弹，并优先分散至未被飞行子弹占用的目标。</summary>
   public class BulletbController : WeaponController
   {
     protected override void Fire()
     {
-      var enemy = EnemyDirector.Instance.GetCloseest(player.position, GetAttackRange());
-      if (enemy)
+      WeaponLevelData levelData = GetLevelData();
+      int projectileCount = GetEffectCount(levelData);
+      for (int i = 0; i < projectileCount; i++)
       {
-        // transform 是 WeaponManager 创建的 WeaponBulletb 节点，因此子弹实例位于 WeaponManager/WeaponBulletb 下。
-        var bulletb = Instantiate(data.prefab, player.position, Quaternion.identity, transform);
-        var bulletbScript = bulletb.GetComponent<ArrowWeapon>();
-        var levelData = GetLevelData();
-        // false：普通子弹仅在发射时锁定方向，敌人移动或回收后都不会影响弹道。
-        bulletbScript.Init(enemy.transform, levelData, false);
-        Destroy(bulletb.gameObject, levelData.duration);
+        EnemyChasing enemy = GetClosestProjectileTarget(levelData);
+        if (enemy == null)
+          break;
+
+        ArrowWeapon bullet = SpawnPooledEffect<ArrowWeapon>(data.prefab, player.position, Quaternion.identity, transform);
+        if (bullet == null)
+          break;
+
+        // 普通子弹仅在发射瞬间锁定方向，之后保持直线飞行。
+        bullet.Init(this, enemy.transform, levelData, false);
       }
     }
   }
-
 }
