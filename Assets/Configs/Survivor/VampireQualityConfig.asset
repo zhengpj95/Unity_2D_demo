@@ -14,37 +14,37 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _entries:
   - Enabled: 1
-    Quality: 6
+    Quality: 0
     DisplayName: "铜棕"
     Color: {r: 0.6274509803921569, g: 0.4392156862745098, b: 0.2823529411764706, a: 1}
     Note: "Poor / 粗糙"
   - Enabled: 1
-    Quality: 0
+    Quality: 1
     DisplayName: "银灰"
     Color: {r: 0.7215686274509804, g: 0.7215686274509804, b: 0.7215686274509804, a: 1}
     Note: "Common / 普通"
   - Enabled: 1
-    Quality: 1
+    Quality: 2
     DisplayName: "绿色"
     Color: {r: 0.3843137254901961, g: 0.788235294117647, b: 0.4196078431372549, a: 1}
     Note: "Uncommon / 优秀"
   - Enabled: 1
-    Quality: 2
+    Quality: 3
     DisplayName: "蓝色"
     Color: {r: 0.2901960784313726, g: 0.6235294117647059, b: 0.9607843137254902, a: 1}
     Note: "Rare / 稀有"
   - Enabled: 1
-    Quality: 3
+    Quality: 4
     DisplayName: "紫色"
     Color: {r: 0.7058823529411765, g: 0.3607843137254902, b: 0.9019607843137255, a: 1}
     Note: "Epic / 史诗"
   - Enabled: 1
-    Quality: 4
+    Quality: 5
     DisplayName: "橙金"
     Color: {r: 0.9411764705882353, g: 0.6627450980392157, b: 0.1803921568627451, a: 1}
     Note: "Legendary / 传奇"
   - Enabled: 1
-    Quality: 5
+    Quality: 6
     DisplayName: "亮红"
     Color: {r: 0.9294117647058824, g: 0.29411764705882354, b: 0.23137254901960785, a: 1}
     Note: "Mythic / 神话"
