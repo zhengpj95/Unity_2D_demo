@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Events;
 
 /// <summary>
 /// 为 UI 按钮提供按下缩放反馈；使用非缩放时间，游戏暂停时仍可正常播放。
@@ -7,7 +8,8 @@ using UnityEngine.EventSystems;
 public class UIButtonScale : MonoBehaviour,
     IPointerDownHandler,
     IPointerUpHandler,
-    IPointerExitHandler
+    IPointerExitHandler,
+    IPointerClickHandler
 {
   private const float ScaleSnapSqrDistance = 0.000001f;
 
@@ -20,10 +22,25 @@ public class UIButtonScale : MonoBehaviour,
   [SerializeField, Min(0f), Tooltip("缩放平滑时间；设为 0 时立即切换。")]
   private float smoothTime = 0.02f;
 
+  [SerializeField, Tooltip("普通短按松开时触发。")]
+  private UnityEvent onClick = new UnityEvent();
+
+  [SerializeField, Tooltip("是否启用长按回调。")]
+  private bool enableLongPress;
+
+  [SerializeField, Min(0.1f), Tooltip("持续按住多少秒后触发长按回调。")]
+  private float longPressDuration = 0.5f;
+
+  [SerializeField, Tooltip("达到长按时长时触发；每次按下最多调用一次，并取消本次普通点击。")]
+  private UnityEvent onLongPress = new UnityEvent();
+
   private Vector3 _normalScale;
   private Vector3 _targetScale;
   private Vector3 _velocity;
   private bool _isAnimating;
+  private bool _isPointerDown;
+  private float _pressedDuration;
+  private PointerEventData _pressedEventData;
 
   private void OnEnable()
   {
@@ -36,10 +53,13 @@ public class UIButtonScale : MonoBehaviour,
     _targetScale = _normalScale;
     _velocity = Vector3.zero;
     _isAnimating = false;
+    ResetLongPress();
   }
 
   private void Update()
   {
+    UpdateLongPress();
+
     if (!_isAnimating)
     {
       return;
@@ -75,6 +95,13 @@ public class UIButtonScale : MonoBehaviour,
   /// <param name="eventData">当前指针事件数据。</param>
   public void OnPointerDown(PointerEventData eventData)
   {
+    if (enableLongPress)
+    {
+      _isPointerDown = true;
+      _pressedDuration = 0f;
+      _pressedEventData = eventData;
+    }
+
     AnimateTo(_normalScale * pressedScale);
   }
 
@@ -82,6 +109,7 @@ public class UIButtonScale : MonoBehaviour,
   /// <param name="eventData">当前指针事件数据。</param>
   public void OnPointerUp(PointerEventData eventData)
   {
+    ResetLongPress();
     AnimateTo(_normalScale);
   }
 
@@ -89,7 +117,18 @@ public class UIButtonScale : MonoBehaviour,
   /// <param name="eventData">当前指针事件数据。</param>
   public void OnPointerExit(PointerEventData eventData)
   {
+    ResetLongPress();
     AnimateTo(_normalScale);
+  }
+
+  /// <summary>未被长按消费的短按在松开后触发普通点击回调。</summary>
+  /// <param name="eventData">当前指针事件数据。</param>
+  public void OnPointerClick(PointerEventData eventData)
+  {
+    if (eventData == null || eventData.eligibleForClick)
+    {
+      onClick?.Invoke();
+    }
   }
 
   private void OnDisable()
@@ -101,6 +140,41 @@ public class UIButtonScale : MonoBehaviour,
 
     _velocity = Vector3.zero;
     _isAnimating = false;
+    ResetLongPress();
+  }
+
+  /// <summary>累计长按时间，并在达到阈值时触发一次 Inspector 回调。</summary>
+  private void UpdateLongPress()
+  {
+    if (!enableLongPress || !_isPointerDown)
+    {
+      return;
+    }
+
+    _pressedDuration += Time.unscaledDeltaTime;
+    if (_pressedDuration < longPressDuration)
+    {
+      return;
+    }
+
+    PointerEventData pressedEventData = _pressedEventData;
+    ResetLongPress();
+
+    // 长按已经执行，本次抬起不再派发 Button.onClick 或其他点击回调。
+    if (pressedEventData != null)
+    {
+      pressedEventData.eligibleForClick = false;
+    }
+
+    onLongPress?.Invoke();
+  }
+
+  /// <summary>取消当前长按计时。</summary>
+  private void ResetLongPress()
+  {
+    _isPointerDown = false;
+    _pressedDuration = 0f;
+    _pressedEventData = null;
   }
 
   /// <summary>开始向目标缩放平滑过渡。</summary>
