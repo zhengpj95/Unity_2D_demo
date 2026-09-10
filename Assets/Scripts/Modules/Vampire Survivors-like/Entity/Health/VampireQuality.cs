@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 namespace VampireSurvivorsLike
@@ -47,45 +46,5 @@ namespace VampireSurvivorsLike
     [InspectorName("白金 / PaleGold（Ancient / 远古）")]
     PaleGold = 8,
 
-  }
-
-  /// <summary>按颜色标识解析品质显示，不绑定实际 Sprite 资源。</summary>
-  public static class VampireQualityExtensions
-  {
-    /// <summary>返回 quality 对应的颜色；无效值抛出 ArgumentOutOfRangeException。</summary>
-    public static Color32 GetColor(this VampireQuality quality)
-    {
-      switch (quality)
-      {
-        case VampireQuality.Bronze: return VampireUIColors.Quality.Bronze;
-        case VampireQuality.Silver: return VampireUIColors.Quality.Silver;
-        case VampireQuality.Green: return VampireUIColors.Quality.Green;
-        case VampireQuality.Blue: return VampireUIColors.Quality.Blue;
-        case VampireQuality.Purple: return VampireUIColors.Quality.Purple;
-        case VampireQuality.OrangeGold: return VampireUIColors.Quality.OrangeGold;
-        case VampireQuality.Red: return VampireUIColors.Quality.Red;
-        case VampireQuality.DarkRed: return VampireUIColors.Quality.DarkRed;
-        case VampireQuality.PaleGold: return VampireUIColors.Quality.PaleGold;
-        default: throw new ArgumentOutOfRangeException(nameof(quality), quality, "未知的品质颜色。");
-      }
-    }
-
-    /// <summary>返回 quality 的中文颜色名称；无效值抛出 ArgumentOutOfRangeException。</summary>
-    public static string GetDisplayName(this VampireQuality quality)
-    {
-      switch (quality)
-      {
-        case VampireQuality.Bronze: return "铜棕";
-        case VampireQuality.Silver: return "银灰";
-        case VampireQuality.Green: return "绿色";
-        case VampireQuality.Blue: return "蓝色";
-        case VampireQuality.Purple: return "紫色";
-        case VampireQuality.OrangeGold: return "橙金";
-        case VampireQuality.Red: return "亮红";
-        case VampireQuality.DarkRed: return "黑红";
-        case VampireQuality.PaleGold: return "白金";
-        default: throw new ArgumentOutOfRangeException(nameof(quality), quality, "未知的品质颜色。");
-      }
-    }
   }
 }
