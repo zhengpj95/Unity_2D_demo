@@ -147,13 +147,13 @@ Vampire Survivors-like/
 - SB-001 武器投射物与特效对象池。
 - SB-002 核心玩法闭环（Wave、敌人/掉落、经验升级、GameOver 与连续重开）。
 - SB-004 武器等级字段实际效果：`WeaponLevelData` 的 `count`、`range`、`speed`、`damageInterval`、`fireInterval` 与 `duration` 已按对应武器类型生效。
+- SB-005 武器攻击与玩家属性平衡：首版玩家、武器、敌人、Wave 与掉落数值基线已验收通过。
 
 ## 4. 未实现或尚未闭合
 
 以下内容不能视为当前正式玩法能力：
 
 - Buff 尚未接入三选一升级候选和正式构筑流程；当前只是可由场景组件使用的基础能力。
-- SB-005 已建立首版玩家、武器、敌人、Wave 与掉落数值基线，仍待按 `BalanceSystem.md` 完成 Play Mode 数值验收。
 - 被动道具、武器进化、合成、稀有度、刷新/跳过/禁用升级尚未实现。
 - Coin 仅记录在本局 `SurvivorModel` 和结算面板中，没有局外持久化、商店或局外成长。
 - Boss、Elite、特殊 Wave 事件、动态难度、Wave 奖励和胜利条件尚未实现。
