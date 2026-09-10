@@ -12,8 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c91ce9992d3457e8b2927cf68286ce8, type: 3}
   m_Name: Wave_02_Threat
   m_EditorClassIdentifier: 
-  startTime: 60
-  endTime: 120
   spawnEntries:
   - enemyPrefab: {fileID: 5408803987995198023, guid: 93efd6b0d0006e64b9cddfee1ef2a143, type: 3}
     spawnInterval: 0.8

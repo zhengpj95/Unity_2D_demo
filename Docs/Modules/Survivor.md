@@ -234,7 +234,7 @@ SB-004 已将 `WeaponLevelData` 接入实际玩法：`count` 决定一次触发�
 - 武器投射物与特效对象池已完成 Play Mode 验收。
 - 核心玩法闭环（Wave、敌人/掉落、经验升级、GameOver 与连续重开）已完成 Play Mode 验收。
 - SB-004 武器等级字段实际效果已完成 Play Mode 验收。
-- Wave 第一阶段和旧固定刷怪兼容模式。
+- 可复用 `WaveSpawnConfig` 与顺序 `WaveTimelineConfig` 刷怪调度。
 - NewWeapon、WeaponUpgrade、PlayerUpgrade 三类候选。
 - 独立玩家属性基础系统，以及永久升级和临时 Buff 的统一计算入口。
 - SB-005 首版数值平衡基线；详细参数表见 `BalanceSystem.md`，尚待 Play Mode 验收。
@@ -256,7 +256,7 @@ SB-004 已将 `WeaponLevelData` 接入实际玩法：`count` 决定一次触发�
 | --- | --- |
 | Model、经验、暂停、升级弹窗、GameOver 或重开流程 | `Survivor.md`、`UpgradeSystem.md` |
 | EnemyDirector、EnemySpawner、EnemyChasing、掉落回收 | `EnemySystem.md`、`WaveSystem.md`，必要时同步本文件 |
-| WaveConfig、Wave 时间和 SpawnEntry | `WaveSystem.md`、`EnemySystem.md` |
+| WaveSpawnConfig、WaveTimelineConfig、Wave 时间和 WaveSpawnEntry | `WaveSystem.md`、`EnemySystem.md` |
 | UpgradeConfig、WeaponManager、WeaponSO 等级、武器投射物/特效对象池 | `UpgradeSystem.md`，必要时同步本文件 |
 | 场景层级、相机、无限地表或拾取范围 | `Survivor.md` |
 

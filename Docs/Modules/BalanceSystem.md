@@ -40,9 +40,10 @@
 
 | 项目 | 当前基线 | 配置位置 | 说明 |
 | --- | --- | --- | --- |
-| Wave 1 | Slime：`1 / 秒` | `Wave_01_Intro.asset` | `0 ~ 60` 秒的初期压力。 |
-| Wave 2 | Slime：`1.25 / 秒`；Rino：约 `0.67 / 秒` | `Wave_02_Threat.asset` | `60 ~ 120` 秒。 |
-| Wave 3 | Slime：约 `3.33 / 秒`；Treant：约 `0.83 / 秒`；Rino：`0.5 / 秒` | `Wave_03_Heavy.asset` | `120` 秒后，场上上限仍由 `EnemyDirector.maxEnemies=20` 限制。 |
+| Wave 时间轴 | `60 秒 / 60 秒 / 无限` | `WaveTimeline_Default.asset` | 按列表顺序连续执行，时间与可复用刷怪组合分离。 |
+| Wave 1 | Slime：`1 / 秒` | `Wave_01_Intro.asset` | 初期压力。 |
+| Wave 2 | Slime：`1.25 / 秒`；Rino：约 `0.67 / 秒` | `Wave_02_Threat.asset` | 中期混合敌人。 |
+| Wave 3 | Slime：约 `3.33 / 秒`；Treant：约 `0.83 / 秒`；Rino：`0.5 / 秒` | `Wave_03_Heavy.asset` | 最终无限段，场上上限仍由 `EnemyDirector.maxEnemies=20` 限制。 |
 | 生成/回收半径 | `10 / 20` | `SurvivorsDemo/EnemyDirector` | 保证敌人在镜头外生成并在过远时回收。 |
 | Gem / Coin 权重 | `80 / 10` | `SurvivorsDemo/DropItemManager` | Coin 概率约 `11.1%`，保持稀缺但可稳定出现。 |
 

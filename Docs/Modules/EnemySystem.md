@@ -6,7 +6,7 @@
 
 ```text
 EnemyDirector
-    ↓ 固定刷怪或 Wave 调度
+    ↓ 按 WaveTimelineConfig 调度
 EnemySpawner
     ↓ 计算出生点并从 PoolManager 取出实例
 EnemyChasing
@@ -38,8 +38,7 @@ Assets/Scripts/Framework/Pool/PoolManager.cs
 
 - 保存场景中的敌人列表和击杀计数。
 - 解析 Player 引用并创建 `EnemySpawner`。
-- 在兼容模式下按 `spawnInterval/spawnCount` 刷怪。
-- 在 Wave 模式下累计 `gameTime`、切换当前 Wave，并驱动每个 `SpawnEntry` 的独立计时器。
+- 累计 `gameTime`，按 `WaveTimelineConfig` 切换当前 Wave，并驱动每个 `WaveSpawnEntry` 的独立计时器。
 - 限制场景中同时存活的敌人数量 `maxEnemies`。
 - 预热当前模式会使用的敌人 Prefab。
 - 提供 `RecycleEnemy(GameObject)` 作为统一回收入口。
@@ -58,7 +57,7 @@ Assets/Scripts/Framework/Pool/PoolManager.cs
 - 设置运行时父节点 `enemyContainer`。
 - 调用 `EnemyChasing.Initialize(player, director)` 注入运行时依赖。
 
-它同时保留旧接口：随机选择 `EnemyDirector.enemyPrefab` 列表中的 Prefab；Wave 模式使用带 `GameObject prefab` 参数的重载。
+它只生成当前 `WaveSpawnEntry` 明确指定的 Prefab，不保存候选列表，也不负责随机选择敌人类型。
 
 ### EnemyChasing
 
@@ -106,34 +105,16 @@ spawnRadius = 10
 
 ---
 
-## 4. 两种刷怪模式
+## 4. Wave 刷怪
 
-### 兼容模式
+`EnemyDirector` 从 `WaveTimelineConfig` 的第一个条目开始，按各段 `duration` 自动计算连续的起止时间：
 
-当 `EnemyDirector.waves` 为空时，沿用旧逻辑：
-
-```text
-timer += Time.deltaTime
-timer >= spawnInterval
-    ↓
-按 spawnCount 尝试生成
-```
-
-场景中的旧字段仍然保留：
-
-- `enemyPrefab`：随机候选 Prefab 数组。
-- `spawnInterval`：刷怪间隔。
-- `spawnCount`：每次尝试数量。
-
-### Wave 模式
-
-当 `waves` 至少包含一个资源时：
-
-- 按 `WaveConfig.StartTime` 排序运行时列表。
-- 使用 `StartTime <= gameTime < EndTime` 查找当前 Wave。
-- 当前 Wave 变化时重建运行时 SpawnEntry 列表，旧计时器不会带入新 Wave。
-- 每个 SpawnEntry 独立计时，并使用其自己的 Prefab、间隔和批量数量。
+- `WaveSpawnConfig` 只描述可复用的 `WaveSpawnEntry` 组合，不保存时间。
+- `WaveTimelineEntry` 引用一个 `WaveSpawnConfig`，并保存本次使用的持续时间或无限标记。
+- 当前 Wave 变化时重建运行时 WaveSpawnEntry 列表，旧计时器不会带入新 Wave。
+- 每个 WaveSpawnEntry 独立计时，并使用其自己的 Prefab、间隔和批量数量。
 - 场上敌人数量达到 `maxEnemies` 时不再继续增加；计时器仍保留一个触发周期，不会低帧率补刷大量敌人。
+- 未配置有效时间轴时不生成敌人，并在 Console 输出 Warning。
 
 详细配置和示例资源见 [WaveSystem.md](WaveSystem.md)。
 
@@ -199,7 +180,7 @@ RecycleEnemy
     ↓ Free(enemy)
 ```
 
-`PoolManager` 以 Prefab 的 `InstanceID` 区分池，池中没有实例时会按需 `Instantiate`。当前场景 `preloadCountPerPrefab = 3`，Wave 模式会对所有 Wave 中有效条目的不同 Prefab 各预热一次。
+`PoolManager` 以 Prefab 的 `InstanceID` 区分池，池中没有实例时会按需 `Instantiate`。当前场景 `preloadCountPerPrefab = 3`，时间轴会对所有 Wave 中有效条目的不同 Prefab 各预热一次。
 
 常规敌人生命周期不直接调用 `Destroy(gameObject)`。只有不属于池的对象交给 `PoolManager.Free` 时，PoolManager 才会记录警告并销毁它。
 
@@ -224,16 +205,13 @@ Assets/Scenes/Vampire Survivors-like/SurvivorsDemo.unity
 
 | 字段 | 当前用途 |
 | --- | --- |
-| `enemyPrefab` | 兼容模式的随机敌人 Prefab 列表 |
-| `spawnInterval` | 兼容模式刷怪间隔 |
-| `spawnCount` | 兼容模式单次数量 |
 | `maxEnemies` | 场景中同时存活敌人上限，当前为 20 |
 | `enemyContainer` | 运行时敌人父节点 |
 | `player` | 生成中心和追击目标；为空时按 Player 标签解析一次 |
 | `spawnRadius` | 出生半径，当前为 10 |
 | `despawnRadius` | 超距回收半径，当前为 20 |
 | `preloadCountPerPrefab` | 每种 Prefab 预热数量，当前为 3 |
-| `waves` | 可选的 WaveConfig 数组 |
+| `waveTimeline` | 本局唯一的 Wave 时间轴；当前引用 `WaveTimeline_Default` |
 
 不需要在场景中创建独立 EnemyPool 节点。`enemyContainer` 只负责运行时层级整理，不改变敌人的世界坐标。
 
@@ -244,7 +222,7 @@ Assets/Scenes/Vampire Survivors-like/SurvivorsDemo.unity
 已实现：
 
 - 无限地图下的玩家中心刷怪。
-- 固定刷怪兼容模式和第一阶段 Wave 模式。
+- 可复用 `WaveSpawnConfig` 与顺序 `WaveTimelineConfig` 调度。
 - EnemyChasing 追击、超距回收和碰撞玩家回收。
 - 受伤、死亡、击杀统计、掉落和对象池复用。
 
@@ -264,7 +242,7 @@ Assets/Scenes/Vampire Survivors-like/SurvivorsDemo.unity
 | 代码变更 | 文档 |
 | --- | --- |
 | `EnemyDirector`、`EnemySpawner`、`EnemyChasing`、`VSEnemyHealth` | 本文件、`WaveSystem.md` |
-| `WaveConfig`、敌人生命/速度或 Wave 调度规则 | `WaveSystem.md`、`BalanceSystem.md`、本文件 |
+| `WaveSpawnConfig`、`WaveTimelineConfig`、敌人生命/速度或 Wave 调度规则 | `WaveSystem.md`、`BalanceSystem.md`、本文件 |
 | `PoolManager` 的敌人池生命周期 | 本文件、`Survivor.md` |
 | 掉落类型、死亡结算或拾取规则 | `Survivor.md`，必要时本文件 |
 

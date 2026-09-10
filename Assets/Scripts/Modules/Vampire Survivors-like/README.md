@@ -62,7 +62,8 @@ Vampire Survivors-like/
 │   ├── UpgradeManager.cs                 # 候选构建、过滤、随机抽取
 │   └── UpgradeConfig.cs                  # NewWeapon / Weapon / Player 升级配置
 ├── WaveSystem/
-│   └── WaveConfig.cs                     # Wave 与 SpawnEntry ScriptableObject 配置
+│   ├── WaveTimelineConfig.cs             # 一局 Wave 顺序与持续时间配置
+│   └── WaveSpawnConfig.cs                # 可复用 Wave 与敌人生成条目配置
 ├── Map/
 │   ├── InfiniteGroundTilemap.cs          # 无限地表
 │   └── SurvivorCameraFollow.cs           # 相机跟随
@@ -97,7 +98,7 @@ Vampire Survivors-like/
 - `Hero` 支持上下左右移动、武器索敌范围和拾取范围；它只保存 Inspector 基础值并消费最终属性，拾取范围由独立 `CircleCollider2D` 触发器驱动，并有 Scene Gizmos。
 - 敌人通过 `EnemyDirector` 管理活跃列表，支持追击玩家、超出回收距离时入池、死亡后入池和击杀计数。
 - `EnemySpawner` 使用玩家为中心的生成半径，在相机外生成；`EnemyDirector` 支持预热敌人 Prefab。
-- `WaveConfig` 支持 `StartTime <= GameTime < EndTime` 的 Wave 区间、多个 `SpawnEntry` 和每个条目的独立生成间隔；未配置 Wave 时保留旧固定频率刷怪模式。
+- `WaveTimelineConfig` 保存一局的有序 `WaveTimelineEntry`，`WaveSpawnConfig` 保存可复用的 `WaveSpawnEntry` 组合；未配置有效时间轴时不会刷怪。
 - 敌人死亡通过 `DropItemManager` 按权重生成 Gem 或 Coin。Gem 增加经验，Coin 只增加本局货币；两者都使用对象池。
 
 ### 武器与对象池
@@ -170,7 +171,7 @@ Vampire Survivors-like/
 | 玩家初始武器、基础移动/索敌/拾取范围 | Player 的 `Hero` 组件；永久增量保存在 `SurvivorModel.PlayerAttributes`。       |
 | 玩家与敌人生命、Collider、Tag    | Player / Enemy Prefab 上的 `VSPlayerHealth`、`VSEnemyHealth` 和 2D Collider。 |
 
-不要在运行时修改 `WeaponSO`、`WaveConfig` 等资源文件；局内等级、Buff 与属性增量应只保存在运行时实例中。
+不要在运行时修改 `WeaponSO`、`WaveSpawnConfig`、`WaveTimelineConfig` 等资源文件；局内等级、Buff 与属性增量应只保存在运行时实例中。
 
 ## 6. 文档导航与同步规则
 
