@@ -122,6 +122,13 @@
 
 代码结构比较清晰，适合继续扩展更多网络消息类型。当前的示例逻辑里，`s2c_user_login` 已经接入了分发处理，说明该网络层具备较好的扩展基础。
 
+### 协议源文件与生成代码
+
+- 协议源文件位于 `Assets/Configs/message.proto`，它是登录、注册与配置消息的定义来源。
+- 运行时不读取 `.proto` 文件；客户端实际编译和注册的是由 `protoc` 生成的 `Assets/Scripts/Define/Proto/Message.cs`。
+- 修改 `message.proto` 后，必须重新生成 `Message.cs`，再同步检查 `MessageID.cs` 与 `ProtoRegister.cs` 的命令号和 Parser 注册是否一致。
+- 移动协议源文件时必须同时移动其 `.meta`，以保留 Unity GUID；不要复制已有 `.meta` 创建新协议文件。
+
 ## 6. 典型用法
 
 在实际业务中，通常是这样使用：
