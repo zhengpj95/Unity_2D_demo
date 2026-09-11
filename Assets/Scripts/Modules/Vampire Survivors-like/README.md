@@ -181,7 +181,10 @@ Vampire Survivors-like/
 - [UpgradeSystem.md](../../../../Docs/Modules/UpgradeSystem.md)：升级配置、`UpgradeId` 和武器等级规则。
 - [WaveSystem.md](../../../../Docs/Modules/WaveSystem.md)：Wave 配置与时间区间规则。
 - [BalanceSystem.md](../../../../Docs/Modules/BalanceSystem.md)：SB-005 的玩家、武器、敌人、Wave 与掉落数值基线。
+- [SurvivorVisualStyleGuide.md](../../../../Docs/Art/SurvivorVisualStyleGuide.md)：Survivor 的项目素材基准、颜色语义、竖屏布局与后续图片生成约束。
 - [Architecture.md](../../../../Docs/Architecture.md)：项目级 Module、UI、网络和全局生命周期事实源。
 - [BACKLOG.md](../../../../BACKLOG.md)：已经确认的后续工作和验收项。
 
 后续代码修改时，应同步更新与职责相符的模块文档；如果修改了项目级 Manager、Module 生命周期、UI 主关系或跨模块数据流，还必须检查 `Docs/Architecture.md` 是否需要更新。
+
+新增或生成 Survivor 的 UI、图标、背景或界面参考图前，必须先阅读 `SurvivorVisualStyleGuide.md`，并以其中列出的项目素材作为唯一美术基准。
