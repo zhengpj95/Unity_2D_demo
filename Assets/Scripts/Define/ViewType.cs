@@ -12,6 +12,8 @@ public enum SurvivorViewType
   Main,
   SkillSelect,
   GameOver,
+  // 追加在末尾，避免改变已有 ViewType 的枚举值和 Presenter 缓存语义。
+  Home,
 }
 
 /// <summary>

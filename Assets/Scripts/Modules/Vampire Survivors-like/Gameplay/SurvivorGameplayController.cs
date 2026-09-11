@@ -8,13 +8,54 @@ using VampireSurvivorsLike;
 /// </summary>
 public sealed class SurvivorGameplayController
 {
+  // 场景名必须与 EditorBuildSettings 中启用的场景保持一致。
+  private const string LauncherSceneName = "Launcher";
+  private const string SurvivorsSceneName = "SurvivorsDemo";
+
   private readonly SurvivorModule _module;
   private readonly SurvivorProxy _proxy;
+  private bool _isSceneTransitioning;
 
   public SurvivorGameplayController(SurvivorModule module, SurvivorProxy proxy)
   {
     _module = module ?? throw new ArgumentNullException(nameof(module));
     _proxy = proxy ?? throw new ArgumentNullException(nameof(proxy));
+  }
+
+  /// <summary>
+  /// 响应 Home 的开始战斗请求：重置本局状态、隐藏局外界面并异步加载战斗场景。
+  /// 重复点击由场景切换标记拦截，Presenter 不直接接触 SceneManager。
+  /// </summary>
+  public void StartBattle()
+  {
+    if (_isSceneTransitioning)
+      return;
+
+    if (string.Equals(SceneManager.GetActiveScene().name, SurvivorsSceneName, StringComparison.Ordinal))
+    {
+      Debug.Log("[SurvivorGameplayController] 已处于战斗场景，忽略重复开始请求。");
+      return;
+    }
+
+    _isSceneTransitioning = true;
+    _proxy.ResetRound();
+    _module.HideSkillSelectPanel();
+    _module.HideSurvivorMain();
+    _module.HideSurvivorHome();
+    Time.timeScale = 1f;
+
+    LoadSceneAsync(
+      SurvivorsSceneName,
+      () =>
+      {
+        Time.timeScale = 1f;
+        _module.OpenSurvivorMain();
+      },
+      () =>
+      {
+        Time.timeScale = 1f;
+        _module.OpenSurvivorHome();
+      });
   }
 
   public void OnExpCollected(int value)
@@ -74,10 +115,41 @@ public sealed class SurvivorGameplayController
     Time.timeScale = 0f;
     _module.RefreshMainView();
 
-    SurvivorGameOverPresenter panel = _module.OpenGameOverPanel(
-      new SurvivorGameOverArgs(_proxy.Model.Level, _proxy.Model.KillCount, _proxy.Model.CoinCount, RestartRound));
+    SurvivorGameOverPresenter panel = _module.OpenGameOverPanel(CreateGameOverArgs());
     if (panel == null)
       Debug.LogError("[SurvivorGameplayController] Failed to open game over panel.");
+  }
+
+  /// <summary>
+  /// 从战斗结算返回 Launcher：先隐藏局内 UI、回收当前场景的池化对象，再加载并显示 Home。
+  /// 加载期间保持暂停，避免场景卸载前仍有玩家移动或武器继续触发。
+  /// </summary>
+  private void ReturnToHome()
+  {
+    if (_isSceneTransitioning)
+      return;
+
+    _isSceneTransitioning = true;
+    _module.HideSkillSelectPanel();
+    _module.HideSurvivorMain();
+    ClearCurrentRoundEntities();
+    Time.timeScale = 0f;
+
+    LoadSceneAsync(
+      LauncherSceneName,
+      () =>
+      {
+        _proxy.ResetRound();
+        Time.timeScale = 1f;
+        _module.OpenSurvivorHome();
+      },
+      () =>
+      {
+        // 加载失败时恢复 GameOver 界面，让玩家仍能重试或再次返回。
+        Time.timeScale = 0f;
+        _module.OpenSurvivorMain();
+        _module.OpenGameOverPanel(CreateGameOverArgs());
+      });
   }
 
   private void OpenNextLevelUp()
@@ -151,6 +223,54 @@ public sealed class SurvivorGameplayController
 
     WeaponManager weaponManager = UnityEngine.Object.FindObjectOfType<WeaponManager>();
     weaponManager?.ClearActiveWeaponEffects();
+  }
+
+  /// <summary>创建本次结算窗口所需的数据和流程回调，避免失败恢复时复制参数组装逻辑。</summary>
+  private SurvivorGameOverArgs CreateGameOverArgs()
+  {
+    return new SurvivorGameOverArgs(
+      _proxy.Model.Level,
+      _proxy.Model.KillCount,
+      _proxy.Model.CoinCount,
+      RestartRound,
+      ReturnToHome);
+  }
+
+  /// <summary>
+  /// 发起一次带成功/失败收口的单场景异步加载。
+  /// 统一复位切换标记，防止场景配置错误后 Home 或 GameOver 按钮永久失效。
+  /// </summary>
+  /// <param name="sceneName">Build Settings 中注册的目标场景名。</param>
+  /// <param name="onLoaded">场景加载并激活后的主线程回调。</param>
+  /// <param name="onFailed">无法创建加载操作时的恢复回调。</param>
+  private void LoadSceneAsync(string sceneName, Action onLoaded, Action onFailed)
+  {
+    AsyncOperation loadOperation;
+    try
+    {
+      loadOperation = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
+    }
+    catch (Exception exception)
+    {
+      _isSceneTransitioning = false;
+      Debug.LogError($"[SurvivorGameplayController] 加载场景 '{sceneName}' 时发生异常：{exception}");
+      onFailed?.Invoke();
+      return;
+    }
+
+    if (loadOperation == null)
+    {
+      _isSceneTransitioning = false;
+      Debug.LogError($"[SurvivorGameplayController] 无法创建场景加载操作：{sceneName}");
+      onFailed?.Invoke();
+      return;
+    }
+
+    loadOperation.completed += _ =>
+    {
+      _isSceneTransitioning = false;
+      onLoaded?.Invoke();
+    };
   }
 
   private PlayerUpgradeContext CreateUpgradeContext()

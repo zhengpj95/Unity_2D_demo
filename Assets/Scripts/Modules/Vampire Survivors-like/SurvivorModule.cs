@@ -14,9 +14,18 @@ public class SurvivorModule : BaseModule
     _proxy = RegProxy<SurvivorProxy>();
     _gameplayController = new SurvivorGameplayController(this, _proxy);
 
+    RegPresenter<SurvivorHomePresenter>(SurvivorViewType.Home);
     RegPresenter<SurvivorMainPresenter>(SurvivorViewType.Main);
     RegPresenter<SurvivorSkillSelectPanelPresenter>(SurvivorViewType.SkillSelect);
     RegPresenter<SurvivorGameOverPresenter>(SurvivorViewType.GameOver);
+  }
+
+  /// <summary>打开 Launcher 场景中的 Survivor 局外主界面。</summary>
+  public SurvivorHomePresenter OpenSurvivorHome()
+  {
+    return OpenWindow<SurvivorHomePresenter>(
+      SurvivorViewType.Home,
+      new SurvivorHomeArgs(_gameplayController.StartBattle));
   }
 
   /// <summary>打开幸存者主界面，并按当前 Model 快照刷新显示。</summary>
@@ -104,7 +113,7 @@ public class SurvivorModule : BaseModule
     return OpenWindow<SurvivorSkillSelectPanelPresenter>(SurvivorViewType.SkillSelect, args);
   }
 
-  /// <summary>打开本局结束结算窗口，重开操作由 Presenter 回调给 GameplayController。</summary>
+  /// <summary>打开本局结束结算窗口，重开和返回主页操作都由 Presenter 回调给 GameplayController。</summary>
   public SurvivorGameOverPresenter OpenGameOverPanel(SurvivorGameOverArgs args)
   {
     return OpenWindow<SurvivorGameOverPresenter>(SurvivorViewType.GameOver, args);
@@ -116,6 +125,18 @@ public class SurvivorModule : BaseModule
     SurvivorSkillSelectPanelPresenter presenter = GetPresenter(SurvivorViewType.SkillSelect) as SurvivorSkillSelectPanelPresenter;
     if (presenter != null)
       UIManager.Instance.HidePresenter(presenter);
+  }
+
+  /// <summary>开始加载战斗场景前隐藏局外主界面，并保留 Presenter 缓存供返回时复用。</summary>
+  public void HideSurvivorHome()
+  {
+    HidePresenter(SurvivorViewType.Home);
+  }
+
+  /// <summary>离开战斗场景前隐藏局内 HUD，并保留 Presenter 缓存供下一局复用。</summary>
+  public void HideSurvivorMain()
+  {
+    HidePresenter(SurvivorViewType.Main);
   }
 
   /// <summary>用 SurvivorModel 的当前快照刷新已打开的主界面。</summary>
@@ -144,5 +165,13 @@ public class SurvivorModule : BaseModule
 
     SurvivorModel model = _proxy.Model;
     presenter.Refresh(model);
+  }
+
+  /// <summary>按 ViewType 隐藏已创建的 Presenter；未打开时不做处理。</summary>
+  private void HidePresenter(SurvivorViewType viewType)
+  {
+    BasePresenter presenter = GetPresenter(viewType);
+    if (presenter != null)
+      UIManager.Instance.HidePresenter(presenter);
   }
 }

@@ -60,6 +60,7 @@ Awake
   └─ InitializeModules
        ├─ PushModules<MiscModule>()
        ├─ PushModules<LoginModule>()
+       ├─ PushModules<SurvivorModule>()
        └─ ModuleManager.InitializeAll()
 
 Start
@@ -83,6 +84,20 @@ OnDestroy
 - 或仅属于单一场景/玩法。
 
 不要把具体业务逻辑继续堆入 `GameMgr`。
+
+当前 Survivor 的场景入口由常驻的 `SurvivorModule` 统一编排：
+
+```text
+Launcher 登录成功
+  → SurvivorHomePresenter（Launcher 场景，不加载战斗对象）
+  → 点击开始
+  → 异步加载 SurvivorsDemo
+  → SurvivorMainPresenter / 战斗
+  → GameOver 返回主页
+  → 异步加载 Launcher 并重新显示 SurvivorHomePresenter
+```
+
+`UILauncher/UIRoot` 与 `GameMgr` 都会跨场景保留。Home、局内 HUD 和 GameOver 因而可以复用原有 UIManager Presenter 缓存；新加载的 Launcher 中若存在重复启动对象，继续由现有单例逻辑销毁。完整规则见 `Docs/Modules/SurvivorSceneFlow.md`。
 
 ## 5. Module / MVC 业务框架
 
@@ -350,8 +365,8 @@ Docs/Modules/Survivor.md
 
 - `SurvivorModel` 保存一局 Survivor 的血量、等级、经验、待处理升级次数、击杀数、局内宝石/金币、玩家永久属性修正和游戏状态；
 - `SurvivorProxy` 持有 Model，是生命和永久玩家属性的唯一修改入口，负责数据修改及未来协议同步，不直接操作 UI；
-- `SurvivorGameplayController` 编排经验结算、连续升级、暂停和技能选择结果；
-- 主界面 Presenter 只读取 Model 快照并展示；
+- `SurvivorGameplayController` 编排 Home 开始战斗、场景切换、经验结算、连续升级、暂停、结算重开和返回主页；
+- `SurvivorHomePresenter` 只提交开始战斗请求，局内主界面 Presenter 只读取 Model 快照并展示；
 - 技能选择 Presenter 仅将玩家选择通过回调交给 GameplayController。
 
 Survivor 内部的 `PlayerAttributeSystem` 统一定义 `PlayerStat`、固定/百分比修正和最终计算公式。`UpgradeSystem` 只提交永久升级，`BuffSystem` 只提供有生命周期的临时修正，`Hero` 和武器只消费最终属性，不各自保存永久升级数据。该能力属于 Survivor 业务域，不是项目级全局 Manager。

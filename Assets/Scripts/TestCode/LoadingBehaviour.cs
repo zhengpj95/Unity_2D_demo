@@ -1,6 +1,5 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using Msg;
 using TMPro;
 
@@ -10,32 +9,30 @@ public class TestCodeMonoBehavior : MonoBehaviour
   private Coroutine _outlineTestCoroutine;
   private bool _isEnteringGame;
 
-  private const string SurvivorsSceneName = "SurvivorsDemo";
-
+  /// <summary>登录成功后打开 Survivor Home；战斗场景只由 Home 的开始按钮触发加载。</summary>
   public void OnLogin()
   {
     if (_isEnteringGame) return;
     _isEnteringGame = true;
-    StartCoroutine(LoadSurvivorsScene());
-  }
 
-  private IEnumerator LoadSurvivorsScene()
-  {
-    AsyncOperation loadOperation = SceneManager.LoadSceneAsync(SurvivorsSceneName);
-    if (loadOperation == null)
+    SurvivorModule survivorModule = ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor);
+    if (survivorModule == null)
     {
       _isEnteringGame = false;
-      Debug.LogError($"[Login] Failed to start loading scene: {SurvivorsSceneName}", this);
-      yield break;
+      Debug.LogError("[Login] SurvivorModule 尚未初始化，无法打开 SurvivorHome。", this);
+      return;
     }
 
-    yield return loadOperation;
+    SurvivorHomePresenter homePresenter = survivorModule.OpenSurvivorHome();
+    if (homePresenter == null)
+    {
+      _isEnteringGame = false;
+      Debug.LogError("[Login] SurvivorHome 打开失败，请检查 Resources/Prefabs/SurvivorHome。", this);
+      return;
+    }
 
-    // 等待新场景完成首帧初始化，避免隐藏登录页时短暂显示相机清屏色。
-    yield return null;
+    // Loading 是持久化 UIRoot 下的登录内容；隐藏后返回 Launcher 时不会再次遮挡 Home。
     gameObject.SetActive(false);
-    SurvivorModule survivorModule = ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor);
-    survivorModule?.OpenSurvivorMain();
   }
 
   public void OnOpenAlert()

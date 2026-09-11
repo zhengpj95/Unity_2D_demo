@@ -1,12 +1,18 @@
 # Vampire Survivors-like 模块
 
-更新时间：2026-09-07
+更新时间：2026-09-11
 
-这是当前项目的类 Vampire Survivors 局内战斗模块。本文只记录当前代码和 `SurvivorsDemo` 场景能够确认的能力；后续规划以 [BACKLOG.md](../../../../BACKLOG.md) 为准，详细规则见 [Docs/Modules](../../../../Docs/Modules/)。
+这是当前项目的类 Vampire Survivors 玩法模块，覆盖 `Launcher` 中的 SurvivorHome、场景流转和 `SurvivorsDemo` 局内战斗。本文只记录当前代码能够确认的能力；后续规划以 [BACKLOG.md](../../../../BACKLOG.md) 为准，详细规则见 [Docs/Modules](../../../../Docs/Modules/)。
 
 ## 1. 模块边界与运行流程
 
-模块负责一局战斗中的玩家、敌人、掉落、武器、升级、Wave 与结算流程。局内数据由 `SurvivorModel` 保存，业务修改由 `SurvivorProxy` 完成；场景组件不直接保存 UI 业务状态。
+模块负责局外 Home、战斗场景进入/返回，以及一局战斗中的玩家、敌人、掉落、武器、升级、Wave 与结算流程。局内数据由 `SurvivorModel` 保存，业务修改由 `SurvivorProxy` 完成；场景组件不直接保存 UI 业务状态。
+
+```text
+Launcher 登录 → SurvivorHome → 点击开始 → SurvivorsDemo 战斗
+                                         ↓
+Launcher + SurvivorHome ← 返回主页 ← GameOver
+```
 
 ```text
 EnemyDirector / EnemySpawner
@@ -24,7 +30,7 @@ Hero
     → VSEnemyHealth
 ```
 
-`SurvivorGameplayController` 是局内流程编排点：经验溢出后逐次打开升级面板；升级和 GameOver 时暂停 `Time.timeScale`；重开场景前回收活跃敌人、掉落物及武器攻击对象，再重置 Model 与重载当前场景。
+`SurvivorGameplayController` 是流程编排点：处理 Home 开始战斗与 GameOver 返回主页；经验溢出后逐次打开升级面板；升级和 GameOver 时暂停 `Time.timeScale`；重开或离开战斗前回收活跃敌人、掉落物及武器攻击对象。
 
 ## 2. 目录与模块内框架大纲
 
@@ -35,10 +41,11 @@ Vampire Survivors-like/
 │   ├── SurvivorModel.cs                  # 一局生命、等级、经验、货币、游戏状态
 │   └── SurvivorProxy.cs                  # BaseProxy：唯一的局内数据修改入口
 ├── Gameplay/                            # 局内流程编排和可复用玩法辅助
-│   ├── SurvivorGameplayController.cs     # 升级、暂停、结算、重开流程编排
+│   ├── SurvivorGameplayController.cs     # 场景切换、升级、暂停、结算与重开编排
 │   └── PointUtil.cs                      # 刷怪、扇形、圆形等二维坐标工具
 ├── PlayerAttributeSystem/               # 玩家属性枚举、修正结构、永久增量与计算规则
 ├── View/
+│   ├── SurvivorHomePresenter.cs          # Launcher 局外主界面 Presenter
 │   ├── SurvivorMainPresenter.cs          # 主界面 Presenter
 │   ├── SurvivorSkillSelectPanelPresenter.cs # 三选一 Presenter
 │   └── SurvivorGameOverPresenter.cs      # GameOver Presenter
@@ -70,7 +77,7 @@ Vampire Survivors-like/
 └── BuffSystem/                           # Buff 基础模型、Handler 与示例 SO
 ```
 
-本模块的 Presenter 位于 `View/`。实际的 Unity View 位于项目公共目录 `Assets/Scripts/Define/UI/`：`SurvivorMainView`、`SurvivorSkillSelectPanelView` 和 `SurvivorGameOverView`。它们通过项目 UI 框架由对应 Presenter 打开和刷新，不在本目录重复实现 View 基类。
+本模块的 Presenter 位于 `View/`。实际的 Unity View 位于项目公共目录 `Assets/Scripts/Define/UI/`：`SurvivorHomeView`、`SurvivorMainView`、`SurvivorSkillSelectPanelView` 和 `SurvivorGameOverView`。它们通过项目 UI 框架由对应 Presenter 打开和刷新，不在本目录重复实现 View 基类。
 
 ### 依赖的项目公共框架
 
@@ -78,7 +85,7 @@ Vampire Survivors-like/
 | ------------------------------ | ---------------------------------------------------------------------------------------- |
 | `BaseModule` / `ModuleManager` | `SurvivorModule` 注册 Proxy、Presenter，并持有流程 Controller。                          |
 | `BaseProxy`                    | `SurvivorProxy` 持有并修改 `SurvivorModel`，不直接操作 UI。                              |
-| `UIManager` / Presenter / View | 主 HUD、三选一、GameOver 按既有 Presenter 生命周期打开、隐藏和关闭。                     |
+| `UIManager` / Presenter / View | Home、主 HUD、三选一、GameOver 按既有 Presenter 生命周期打开、隐藏和关闭。             |
 | `SingletonMono<T>`             | `EnemyDirector`、`DropItemManager`、`WeaponManager`、`UpgradeManager` 等场景级组件使用。 |
 | `PoolManager` / `IPoolable`    | 敌人、掉落物、投射物和范围特效复用；不另建武器专用池。                                   |
 | `DamageController`             | `VSPlayerHealth` 调用项目现有的伤害飘字能力；该能力不由本模块维护。                      |
@@ -87,6 +94,7 @@ Vampire Survivors-like/
 
 ### 局内状态、UI 与结算
 
+- Launcher 登录成功后打开 SurvivorHome；点击开始后异步加载 `SurvivorsDemo`，GameOver 可返回 Launcher/Home。
 - `SurvivorModel` 保存当前/最大生命、等级、经验、待处理升级次数、击杀数、Gem 数、Coin 数和 `Playing`、`LevelUp`、`GameOver` 状态。
 - Gem 经验支持溢出与连续升级：一次拾取跨多个等级时，升级面板会逐轮重新生成候选。
 - 主 HUD 显示局内状态；三选一升级面板显示图标、标题和描述；GameOver 面板显示等级、击杀与 Coin。
@@ -156,6 +164,7 @@ Vampire Survivors-like/
 - Buff 尚未接入三选一升级候选和正式构筑流程；当前只是可由场景组件使用的基础能力。
 - 被动道具、武器进化、合成、稀有度、刷新/跳过/禁用升级尚未实现。
 - Coin 仅记录在本局 `SurvivorModel` 和结算面板中，没有局外持久化、商店或局外成长。
+- Home 目前只闭合开始战斗与返回入口，角色选择、局外资源展示和设置按钮尚未接入业务。
 - Boss、Elite、特殊 Wave 事件、动态难度、Wave 奖励和胜利条件尚未实现。
 - 正式的数值平衡、UI 多分辨率验收、音效/特效反馈、性能监控和自动化测试尚未完成。
 
@@ -176,6 +185,7 @@ Vampire Survivors-like/
 ## 6. 文档导航与同步规则
 
 - [Survivor.md](../../../../Docs/Modules/Survivor.md)：局内主流程、对象池、拾取、GameOver 和场景约定。
+- [SurvivorSceneFlow.md](../../../../Docs/Modules/SurvivorSceneFlow.md)：Launcher、SurvivorHome、战斗和返回主页的完整场景流转。
 - [PlayModeAcceptance.md](../../../../Docs/Modules/PlayModeAcceptance.md)：SB-002 的场景基线、正式流程验收步骤和实机记录模板。
 - [EnemySystem.md](../../../../Docs/Modules/EnemySystem.md)：敌人、掉落和对象池规则。
 - [UpgradeSystem.md](../../../../Docs/Modules/UpgradeSystem.md)：升级配置、`UpgradeId` 和武器等级规则。

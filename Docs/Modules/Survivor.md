@@ -2,7 +2,7 @@
 
 ## 1. 当前职责
 
-Survivor 模块负责一局 Vampire Survivors-like 战斗中的运行时状态、升级流程和主界面刷新。当前实现以代码为准：
+Survivor 模块负责 Vampire Survivors-like 的局外 Home、场景进入/返回，以及一局战斗中的运行时状态、升级流程和界面刷新。当前实现以代码为准：
 
 ```text
 SurvivorProxy
@@ -22,8 +22,10 @@ Assets/Scripts/Modules/Vampire Survivors-like/Model/SurvivorModel.cs
 Assets/Scripts/Modules/Vampire Survivors-like/Model/SurvivorProxy.cs
 Assets/Scripts/Modules/Vampire Survivors-like/Gameplay/SurvivorGameplayController.cs
 Assets/Scripts/Modules/Vampire Survivors-like/SurvivorModule.cs
+Assets/Scripts/Modules/Vampire Survivors-like/View/SurvivorHomePresenter.cs
 Assets/Scripts/Modules/Vampire Survivors-like/View/SurvivorMainPresenter.cs
 Assets/Scripts/Modules/Vampire Survivors-like/View/SurvivorSkillSelectPanelPresenter.cs
+Assets/Scripts/Modules/Vampire Survivors-like/View/SurvivorGameOverPresenter.cs
 ```
 
 ---
@@ -117,7 +119,23 @@ Presenter 只负责显示图标、标题、描述和点击输入。隐藏弹窗�
 
 ---
 
-## 5. GameOver 与重开
+## 5. 主界面、GameOver 与场景流转
+
+当前正式入口为：登录成功后先在 `Launcher.unity` 打开 `SurvivorHomePresenter`，而不是直接加载战斗场景。Home 位于常驻 `UILauncher/UIRoot` 的 `Main` 层；显示 Home 时没有加载 Player、EnemyDirector、WeaponManager 和 Wave，因此不需要用暂停状态维持局外界面。
+
+```text
+Launcher 登录成功
+    ↓
+打开 SurvivorHome，隐藏登录节点
+    ↓ 点击 btnStart
+重置本局 Model，异步加载 SurvivorsDemo
+    ↓
+打开 SurvivorMain，开始战斗
+```
+
+Home 只通过 `SurvivorHomeArgs.OnStartBattle` 将按钮输入交给 `SurvivorGameplayController`，不直接加载场景或修改 `Time.timeScale`。详细职责、异常恢复和 Play Mode 验收步骤见 [SurvivorSceneFlow.md](SurvivorSceneFlow.md)。
+
+### GameOver 与重新开始
 
 `VSPlayerHealth` 只负责扣减生命与上报死亡；当生命降至 `0` 时，它只向 `SurvivorModule` 上报一次，由 `SurvivorGameplayController.OnPlayerDied` 编排后续流程：
 
@@ -139,7 +157,11 @@ SurvivorProxy.ResetRound + Time.timeScale = 1
 重载当前场景，重置玩家、武器、敌人、掉落和 Wave 运行时状态
 ```
 
-当前结算窗口使用 `Resources/Prefabs/SurvivorGameOver`，由 `SurvivorGameOverPresenter` 通过 `SurvivorGameOverView` 绑定标题、结算信息与按钮；“下一轮”只通过回调请求 Controller 重开，不直接修改战斗状态或场景，“退出”仅在构建版本中退出应用。
+当前结算窗口使用 `Resources/Prefabs/SurvivorGameOver`，由 `SurvivorGameOverPresenter` 通过 `SurvivorGameOverView` 绑定标题、结算信息与按钮；“重新开始”只通过回调请求 Controller 重开，不直接修改战斗状态或场景。
+
+### GameOver 返回主页
+
+结算窗口的原“退出”按钮已改为“返回主页”。Presenter 关闭自身后只触发 `SurvivorGameOverArgs.OnReturnHome`；Controller 隐藏局内 UI、回收敌人/掉落物/武器效果，异步加载 `Launcher.unity`，重置本局 Model 并重新打开 Home。场景加载期间使用切换标记防止重复请求，并保持 `Time.timeScale = 0`，加载完成后恢复为 `1`。
 
 ---
 
@@ -238,10 +260,11 @@ SB-004 已将 `WeaponLevelData` 接入实际玩法：`count` 决定一次触发�
 - NewWeapon、WeaponUpgrade、PlayerUpgrade 三类候选。
 - 独立玩家属性基础系统，以及永久升级和临时 Buff 的统一计算入口。
 - SB-005 首版数值平衡基线已完成 Play Mode 验收；详细参数表见 `BalanceSystem.md`。
+- Launcher 登录后进入 SurvivorHome，点击开始进入战斗；GameOver 可重新开始或返回主页。
 
 当前没有：
 
-- 独立美术样式的 GameOver Prefab、局外结算与局外成长流程。
+- 正式的局外结算数据持久化、角色选择与局外成长流程。
 - 被动道具、武器进化、稀有度、刷新/跳过/禁用升级。
 - 完整的 Buff 结算；部分技能进度代码仍是占位。
 - 复杂敌人 AI、Boss、Elite 和特殊 Wave 事件。
@@ -255,6 +278,7 @@ SB-004 已将 `WeaponLevelData` 接入实际玩法：`count` 决定一次触发�
 | 代码变更 | 需要同步的文档 |
 | --- | --- |
 | Model、经验、暂停、升级弹窗、GameOver 或重开流程 | `Survivor.md`、`UpgradeSystem.md` |
+| 登录、Home、开始战斗、返回主页或场景切换 | `SurvivorSceneFlow.md`、`Survivor.md`，必要时同步 `Architecture.md` |
 | EnemyDirector、EnemySpawner、EnemyChasing、掉落回收 | `EnemySystem.md`、`WaveSystem.md`，必要时同步本文件 |
 | WaveSpawnConfig、WaveTimelineConfig、Wave 时间和 WaveSpawnEntry | `WaveSystem.md`、`EnemySystem.md` |
 | UpgradeConfig、WeaponManager、WeaponSO 等级、武器投射物/特效对象池 | `UpgradeSystem.md`，必要时同步本文件 |
