@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System;
 
 /// <summary>Survivor 主界面的打开参数；场景切换由 GameplayController 编排。</summary>
@@ -25,7 +25,7 @@ public sealed class SurvivorHomePresenter : BasePresenter<SurvivorHomeView, Surv
   /// <summary>Home 使用主界面层，避免占用局内弹窗层级。</summary>
   public override UILayerIndex Layer => UILayerIndex.Main;
   /// <summary>Resources 下的 SurvivorHome Prefab 路径。</summary>
-  public override string PrefabPath => "Prefabs/SurvivorHome";
+  public override string PrefabPath => "View/SurvivorHome";
 
   public override void OnInit(UIView view)
   {

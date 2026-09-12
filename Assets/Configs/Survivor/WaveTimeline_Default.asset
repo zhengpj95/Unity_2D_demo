@@ -11,14 +11,17 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9310f8e5da4542b8ba3d342891e1248a, type: 3}
   m_Name: WaveTimeline_Default
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   waveEntries:
   - waveSpawnConfig: {fileID: 11400000, guid: 4e5468fffafc4553aee29b17895b31e9, type: 2}
-    duration: 60
+    duration: 30
     isInfinite: 0
   - waveSpawnConfig: {fileID: 11400000, guid: 0a6fa8fbbb2b4d38952eda0bb011e89e, type: 2}
-    duration: 60
+    duration: 30
     isInfinite: 0
   - waveSpawnConfig: {fileID: 11400000, guid: a3ea4e93ef4047d687b8237a5ec71ad6, type: 2}
+    duration: 30
+    isInfinite: 0
+  - waveSpawnConfig: {fileID: 11400000, guid: 037c804a57c8e294381e5c5e91f15d90, type: 2}
     duration: 60
     isInfinite: 1

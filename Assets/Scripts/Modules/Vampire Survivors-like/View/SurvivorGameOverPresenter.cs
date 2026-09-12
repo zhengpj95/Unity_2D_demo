@@ -37,7 +37,7 @@ public sealed class SurvivorGameOverPresenter : BasePresenter<SurvivorGameOverVi
   private Action _onReturnHome;
 
   public override UILayerIndex Layer => UILayerIndex.Model;
-  public override string PrefabPath => "Prefabs/SurvivorGameOver";
+  public override string PrefabPath => "View/SurvivorGameOver";
 
   public override void OnInit(UIView view)
   {
