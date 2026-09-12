@@ -23,7 +23,7 @@ public sealed class SurvivorGameplayController
   }
 
   /// <summary>
-  /// 响应 Home 的开始战斗请求：重置本局状态、隐藏局外界面并异步加载战斗场景。
+  /// 响应 Home 的开始战斗请求：重置本局状态，保留局外界面直到战斗场景加载完成。
   /// 重复点击由场景切换标记拦截，Presenter 不直接接触 SceneManager。
   /// </summary>
   public void StartBattle()
@@ -41,7 +41,7 @@ public sealed class SurvivorGameplayController
     _proxy.ResetRound();
     _module.HideSkillSelectPanel();
     _module.HideSurvivorMain();
-    _module.HideSurvivorHome();
+    // Home 随 UIRoot 跨场景保留，加载期间继续覆盖画面，避免提前隐藏后露出空白。
     Time.timeScale = 1f;
 
     LoadSceneAsync(
@@ -50,6 +50,8 @@ public sealed class SurvivorGameplayController
       {
         Time.timeScale = 1f;
         _module.OpenSurvivorMain();
+        // 场景已激活且 HUD 已打开，在同一回调内交接显示，不留下两者都隐藏的加载帧。
+        _module.HideSurvivorHome();
       },
       () =>
       {

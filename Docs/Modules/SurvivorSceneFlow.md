@@ -35,9 +35,10 @@ Launcher.unity
 ### SurvivorHomePresenter
 
 - `PrefabPath` 为 `Prefabs/SurvivorHome`，显示在 `UILayerIndex.Main`。
+- `Launcher/UIRoot/UIMain` 的独立 Canvas 必须同时挂载启用的 `GraphicRaycaster`；根 UIRoot 的射线检测不会代替子 Canvas 检测 Home 按钮。缺少该组件时界面可见，但开始按钮无法收到点击。
 - 接收类型明确的开始战斗回调。
 - `btnStart` 只提交“开始战斗”请求，不直接调用 `SceneManager`、不直接修改 `Time.timeScale`。
-- 开始加载战斗后由 `SurvivorModule` 隐藏；返回 Launcher 后从 UIManager 缓存重新显示。
+- 加载战斗期间保持显示，场景激活并打开战斗 HUD 后由 `SurvivorModule` 隐藏，避免加载空白；返回 Launcher 后从 UIManager 缓存重新显示。
 
 ### SurvivorMainPresenter
 
@@ -76,10 +77,11 @@ SurvivorHomePresenter.btnStart
   → SurvivorGameplayController.StartBattle
   → 防重复切换
   → SurvivorProxy.ResetRound
-  → SurvivorModule.HideSurvivorHome
+  → 保持 Home 显示，覆盖加载期间的画面
   → SceneManager.LoadSceneAsync("SurvivorsDemo")
   → Time.timeScale = 1
   → SurvivorModule.OpenSurvivorMain
+  → SurvivorModule.HideSurvivorHome
 ```
 
 ### GameOver 返回 Home

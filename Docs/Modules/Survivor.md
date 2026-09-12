@@ -128,12 +128,14 @@ Launcher 登录成功
     ↓
 打开 SurvivorHome，隐藏登录节点
     ↓ 点击 btnStart
-重置本局 Model，异步加载 SurvivorsDemo
+重置本局 Model，保持 Home 显示并异步加载 SurvivorsDemo
     ↓
-打开 SurvivorMain，开始战斗
+场景激活后打开 SurvivorMain，再隐藏 Home，开始战斗
 ```
 
 Home 只通过 `SurvivorHomeArgs.OnStartBattle` 将按钮输入交给 `SurvivorGameplayController`，不直接加载场景或修改 `Time.timeScale`。详细职责、异常恢复和 Play Mode 验收步骤见 [SurvivorSceneFlow.md](SurvivorSceneFlow.md)。
+
+`Launcher/UIRoot/UIMain` 配有独立 Canvas 和 `GraphicRaycaster`，负责 Home 按钮的射线检测；仅在根 UIRoot 挂载 `GraphicRaycaster` 无法覆盖该子 Canvas 的交互。
 
 ### GameOver 与重新开始
 

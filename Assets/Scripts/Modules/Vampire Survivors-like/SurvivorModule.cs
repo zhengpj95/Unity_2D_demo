@@ -127,7 +127,7 @@ public class SurvivorModule : BaseModule
       UIManager.Instance.HidePresenter(presenter);
   }
 
-  /// <summary>开始加载战斗场景前隐藏局外主界面，并保留 Presenter 缓存供返回时复用。</summary>
+  /// <summary>战斗场景加载完成后隐藏局外主界面，并保留 Presenter 缓存供返回时复用。</summary>
   public void HideSurvivorHome()
   {
     HidePresenter(SurvivorViewType.Home);
