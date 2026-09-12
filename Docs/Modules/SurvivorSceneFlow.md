@@ -65,11 +65,16 @@ Launcher.unity
 
 ```text
 LoadingBehaviour.OnLogin
+  → btnLogin 通过 OnEnable/OnDisable 代码绑定与解绑；点击后隐藏按钮、显示进度条
+  → UIProgressBar 使用非缩放时间从 0.00% 播放到 100.00%，持续 1 秒
   → SurvivorModule.OpenSurvivorHome
   → 隐藏 Launcher/Loading 登录节点
 ```
 
+登录进度属于展示过程，不代表真实网络或资源加载进度。重复点击不会重启计时；Loading 节点禁用时取消协程。`LoadingBehaviour.progressBar` 优先使用 Inspector 绑定，未绑定时查找子节点中的 `UIProgressBar`；缺失时输出错误并保留登录界面。
+
 ### Home 开始战斗
+
 
 ```text
 SurvivorHomePresenter.btnStart

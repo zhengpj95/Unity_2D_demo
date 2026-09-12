@@ -30,17 +30,10 @@ public class UIProgressBar : MonoBehaviour
   private RectMask2D _mask2D;
   private float _normalizedValue = 0f; // 归一化的进度值 (0 到 1)
 
-  private void Start()
+  // 初始化只刷新已有值，避免首次激活时覆盖调用方预先设置的进度。
+  private void Awake()
   {
-    if (barMode == ProgressBarMode.Fill)
-    {
-      _fillImg = img.GetComponent<Image>();
-    }
-    else if (barMode == ProgressBarMode.Mask)
-    {
-      _mask2D = img.GetComponent<RectMask2D>();
-    }
-    Reset();
+    SetValue(_normalizedValue);
   }
 
   /// <summary>
@@ -56,7 +49,7 @@ public class UIProgressBar : MonoBehaviour
     }
     else if (textType == ProgressBarTextType.Percent)
     {
-      SetText($"{_normalizedValue * 100}%");
+      SetText($"{_normalizedValue * 100:F2}%");
     }
     else if (textType == ProgressBarTextType.None)
     {
@@ -73,7 +66,7 @@ public class UIProgressBar : MonoBehaviour
     }
     else if (textType == ProgressBarTextType.Percent)
     {
-      SetText($"{_normalizedValue * 100}%");
+      SetText($"{_normalizedValue * 100:F2}%");
     }
     else if (textType == ProgressBarTextType.None)
     {
@@ -90,7 +83,7 @@ public class UIProgressBar : MonoBehaviour
     }
     else if (textType == ProgressBarTextType.Percent)
     {
-      SetText($"{_normalizedValue * 100}%");
+      SetText($"{_normalizedValue * 100:F2}%");
     }
     else if (textType == ProgressBarTextType.None)
     {
@@ -124,10 +117,15 @@ public class UIProgressBar : MonoBehaviour
 
     if (barMode == ProgressBarMode.Fill)
     {
+      // 允许调用方在进度条首次激活前设置 0%，引用按需缓存。
+      if (_fillImg == null) _fillImg = img.GetComponent<Image>();
+      if (_fillImg == null) return;
       _fillImg.fillAmount = _normalizedValue;
     }
     else if (barMode == ProgressBarMode.Mask)
     {
+      if (_mask2D == null) _mask2D = img.GetComponent<RectMask2D>();
+      if (_mask2D == null) return;
       Vector4 padding = _mask2D.padding;
       padding.z = img.rect.width * (1 - _normalizedValue);
       _mask2D.padding = padding;
