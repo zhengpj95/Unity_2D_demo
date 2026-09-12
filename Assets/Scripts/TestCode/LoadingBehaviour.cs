@@ -3,7 +3,8 @@ using UnityEngine;
 using Msg;
 using TMPro;
 
-public class TestCodeMonoBehavior : MonoBehaviour
+/// <summary>承载 Launcher 登录界面交互，以及网络、提示和 TMP 效果的测试入口。</summary>
+public class LoadingBehaviour : MonoBehaviour
 {
   public TMP_Text tMP_Text;
   private Coroutine _outlineTestCoroutine;
@@ -67,7 +68,7 @@ public class TestCodeMonoBehavior : MonoBehaviour
   {
     if (tMP_Text == null)
     {
-      Debug.LogWarning("[TestCodeMonoBehavior] 未指定用于测试的 TMP_Text。", this);
+      Debug.LogWarning("[LoadingBehaviour] 未指定用于测试的 TMP_Text。", this);
       return;
     }
 
@@ -90,14 +91,14 @@ public class TestCodeMonoBehavior : MonoBehaviour
     TMPOutline outline = tMP_Text.GetComponent<TMPOutline>();
     if (outline == null)
     {
-      Debug.LogWarning("[TestCodeMonoBehavior] 指定的 TMP_Text 没有挂载 TMPOutline。", tMP_Text);
+      Debug.LogWarning("[LoadingBehaviour] 指定的 TMP_Text 没有挂载 TMPOutline。", tMP_Text);
     }
     else
     {
       if (ColorUtility.TryParseHtmlString("#806f03", out Color outlineColor))
         outline.SetOutlineColor(outlineColor);
       else
-        Debug.LogWarning("[TestCodeMonoBehavior] 无法解析描边颜色 #FFEB67。", this);
+        Debug.LogWarning("[LoadingBehaviour] 无法解析描边颜色 #FFEB67。", this);
     }
 
     _outlineTestCoroutine = null;

@@ -380,7 +380,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1217438500}
-        m_TargetAssemblyTypeName: TestCodeMonoBehavior, Assembly-CSharp
+        m_TargetAssemblyTypeName: LoadingBehaviour, Assembly-CSharp
         m_MethodName: OnSendLogin
         m_Mode: 1
         m_Arguments:
@@ -1309,7 +1309,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1217438500}
-        m_TargetAssemblyTypeName: TestCodeMonoBehavior, Assembly-CSharp
+        m_TargetAssemblyTypeName: LoadingBehaviour, Assembly-CSharp
         m_MethodName: OnConnectProtobuf
         m_Mode: 1
         m_Arguments:
@@ -1979,7 +1979,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1217438500}
-        m_TargetAssemblyTypeName: TestCodeMonoBehavior, Assembly-CSharp
+        m_TargetAssemblyTypeName: LoadingBehaviour, Assembly-CSharp
         m_MethodName: OnOpenAlert
         m_Mode: 1
         m_Arguments:
@@ -2332,7 +2332,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1217438500}
-        m_TargetAssemblyTypeName: TestCodeMonoBehavior, Assembly-CSharp
+        m_TargetAssemblyTypeName: LoadingBehaviour, Assembly-CSharp
         m_MethodName: OnClickBtnCmd
         m_Mode: 1
         m_Arguments:
@@ -2411,7 +2411,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 433118842311335132, guid: ca996696a683ae048bd66c53e5badab8, type: 3}
       propertyPath: onClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
-      value: TestCodeMonoBehavior, Assembly-CSharp
+      value: LoadingBehaviour, Assembly-CSharp
       objectReference: {fileID: 0}
     - target: {fileID: 433118842311335132, guid: ca996696a683ae048bd66c53e5badab8, type: 3}
       propertyPath: onClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName

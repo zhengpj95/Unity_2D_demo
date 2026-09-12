@@ -64,7 +64,7 @@ Launcher.unity
 ### 登录进入 Home
 
 ```text
-TestCodeMonoBehavior.OnLogin
+LoadingBehaviour.OnLogin
   → SurvivorModule.OpenSurvivorHome
   → 隐藏 Launcher/Loading 登录节点
 ```
