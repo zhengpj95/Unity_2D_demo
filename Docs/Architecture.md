@@ -33,7 +33,8 @@ Assets/Scripts/
 ├── Framework/                 # 通用框架与基础设施
 │   ├── Launcher/              # 游戏启动与全局生命周期编排
 │   ├── MVC/                   # Module / Proxy / Command / Presenter / UIManager
-│   └── Network/               # 网络、Packet、Proto、消息分发
+│   ├── Network/               # 网络、Packet、Proto、消息分发
+│   └── Resource/              # 统一资源加载抽象与具体后端
 ├── Modules/                   # 具体玩法或业务模块
 │   ├── Misc/                  # 通用杂项业务/提示类功能
 │   ├── FrogAdventure/         # 青蛙冒险相关玩法
@@ -214,7 +215,7 @@ Assets/Scripts/Framework/MVC/UIManager.cs
 `UIManager` 当前是纯 C# 单例，已经包含：
 
 - UI 层级配置；
-- Resources Prefab 加载；
+- 通过 `AssetLoader` 加载 Prefab；
 - GameObject 缓存；
 - Presenter 创建、缓存和生命周期调用；
 - Window 打开/关闭；
@@ -230,7 +231,7 @@ Tip
 
 需要注意：
 
-1. 当前加载实现仍直接使用 `Resources.Load`，代码注释已为 Addressables / AssetBundle 等资源方案预留替换空间；不要把“未来资源系统”描述成当前已实现。
+1. `AssetLoader` 是项目资源加载的唯一入口，提供同步 `Load<T>` 和异步 `LoadAsync<T>`；`UIManager`、`AudioManager` 等调用方不得直接使用 `Resources.Load`。当前 `ResourcesAssetLoader` 后端分别使用 `Resources.Load` 与 `Resources.LoadAsync`，资源键仍是相对 `Resources` 目录的路径；异步调用必须从 Unity 主线程发起。Addressables / AssetBundle 尚未接入，后续只替换后端实现，不将其描述为当前能力。
 2. `CloseWindow` 会关闭并销毁 Presenter；`HidePresenter` 只关闭显示状态并保留缓存。`Model` 仅表示 UI 渲染层级，不参与弹窗栈管理。
 3. 修改 UI 层级、粒子、红点等渲染顺序时，优先遵循现有 Canvas/父子层级模型，而不是无限放大 `sortingOrder`。
 
@@ -347,7 +348,7 @@ Unity / Network / Resource implementation
 
 以下是演进原则，不代表已经完成：
 
-- UI 资源加载可逐步从 `Resources.Load` 抽象为统一资源层；
+- 资源加载已抽象为 `AssetLoader`，后续可逐步将当前 `ResourcesAssetLoader` 后端替换为 Addressables 或其他实现；
 - Module 系统继续保持显式生命周期和依赖边界；
 - Proto 注册继续向生成式/自动注册方向演进；
 - 具体玩法逐步复用 Framework，而不是把玩法特例塞回 Framework；

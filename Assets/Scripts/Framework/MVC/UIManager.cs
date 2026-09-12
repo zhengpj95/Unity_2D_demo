@@ -136,7 +136,7 @@ public class UIManager : Singleton<UIManager>
   /// <summary>
   /// 显示UI
   /// </summary>
-  /// <param name="prefabPath">Prefab路径（Resources下的相对路径）</param>
+  /// <param name="prefabPath">由 AssetLoader 解析的 Prefab 资源键。</param>
   /// <param name="layer">UI层级</param>
   public void ShowUI(string prefabPath, UILayerIndex layer)
   {
@@ -144,7 +144,7 @@ public class UIManager : Singleton<UIManager>
 
     if (!_uiCache.TryGetValue(prefabPath, out GameObject uiObj) || uiObj == null)
     {
-      var prefab = Resources.Load<GameObject>(prefabPath);
+      GameObject prefab = AssetLoader.Instance.Load<GameObject>(prefabPath);
       if (prefab == null)
       {
         Debug.LogError($"[UIManager] Prefab not found: {prefabPath}");
@@ -313,8 +313,8 @@ public class UIManager : Singleton<UIManager>
         return null;
       }
 
-      // 1. 模拟异步/同步加载 Prefab (实际项目中可替换为 Addressables / AssetBundle)
-      GameObject prefab = Resources.Load<GameObject>(presenter.PrefabPath);
+      // 1. 通过统一资源入口加载 Prefab；后续切换资源后端不修改 UIManager 或 Presenter。
+      GameObject prefab = AssetLoader.Instance.Load<GameObject>(presenter.PrefabPath);
       if (prefab == null)
       {
         Debug.LogError($"[UIManager] Prefab not found: {presenter.PrefabPath}");

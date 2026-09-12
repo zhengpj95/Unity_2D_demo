@@ -102,7 +102,7 @@ public class AudioManager : MonoBehaviour
 
   public void PlayBGM(string soundType)
   {
-    var clip = Resources.Load<AudioClip>("Audio/" + soundType);
+    AudioClip clip = AssetLoader.Instance.Load<AudioClip>("Audio/" + soundType);
     PlayBGM(clip);
   }
 
@@ -160,7 +160,7 @@ public class AudioManager : MonoBehaviour
 
   public void PlaySfx(string soundType, bool loop = false)
   {
-    var clip = Resources.Load<AudioClip>("Audio/" + soundType);
+    AudioClip clip = AssetLoader.Instance.Load<AudioClip>("Audio/" + soundType);
     PlaySfx(clip, soundType, loop);
   }
 
