@@ -2,7 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace VampireSurvivorsLike {
+namespace VampireSurvivorsLike
+{
 
   [CreateAssetMenu(fileName = "New Weapon", menuName = "Weapon/WeaponSO")]
   public class WeaponSO : ScriptableObject

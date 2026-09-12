@@ -2,8 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace VampireSurvivorsLike {
-
+namespace VampireSurvivorsLike
+{
   /**
    * 炸弹武器、闪电武器
    */

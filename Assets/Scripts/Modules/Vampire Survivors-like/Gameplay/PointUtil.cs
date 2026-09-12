@@ -1,6 +1,7 @@
 using UnityEngine;
 
-namespace VampireSurvivorsLike {
+namespace VampireSurvivorsLike
+{
 
   /// <summary>
   /// 坐标点工具类（2D）

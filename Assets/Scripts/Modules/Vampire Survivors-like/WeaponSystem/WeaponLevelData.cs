@@ -1,6 +1,7 @@
 using UnityEngine;
 
-namespace VampireSurvivorsLike {
+namespace VampireSurvivorsLike
+{
 
   [System.Serializable]
   /// <summary>

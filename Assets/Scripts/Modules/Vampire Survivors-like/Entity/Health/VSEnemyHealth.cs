@@ -1,6 +1,7 @@
 using UnityEngine;
 
-namespace VampireSurvivorsLike {
+namespace VampireSurvivorsLike
+{
 
   /// <summary>管理敌人的运行时生命、死亡结算、场景统一掉落与对象池回收。</summary>
   public class VSEnemyHealth : MonoBehaviour, IPoolable
