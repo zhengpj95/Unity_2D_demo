@@ -466,6 +466,426 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: survivor01_17
+      rect:
+        serializedVersion: 2
+        x: 21
+        y: 559
+        width: 70
+        height: 70
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8a6eb9ee262d70b43a073acdb9de3ddf
+      internalID: -1913406634
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: survivor01_18
+      rect:
+        serializedVersion: 2
+        x: 121
+        y: 559
+        width: 70
+        height: 70
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6939c3b92e449cc4e81aabdeace139c0
+      internalID: -1884238832
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: survivor01_19
+      rect:
+        serializedVersion: 2
+        x: 242
+        y: 555
+        width: 121
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6b94704babe90614b98a97978cdc8c92
+      internalID: 562157611
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: survivor01_20
+      rect:
+        serializedVersion: 2
+        x: 393
+        y: 555
+        width: 141
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 01b05697769c66d47a6a8f5b7114bc0c
+      internalID: 933991275
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: survivor01_21
+      rect:
+        serializedVersion: 2
+        x: 604
+        y: 491
+        width: 150
+        height: 160
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 52d3cfa60cb0a1e45aa25611f805917b
+      internalID: 1590624487
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: survivor01_22
+      rect:
+        serializedVersion: 2
+        x: 769
+        y: 491
+        width: 150
+        height: 160
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b5a7fd740d97e284baec0b04ed282667
+      internalID: 1397330774
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: survivor01_23
+      rect:
+        serializedVersion: 2
+        x: 935
+        y: 491
+        width: 150
+        height: 160
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 29bf32d8a9ae28a4fbfc4b4e42d5f342
+      internalID: 316122343
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: survivor01_24
+      rect:
+        serializedVersion: 2
+        x: 1098
+        y: 491
+        width: 150
+        height: 160
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 444b2e4989e3cdf40990fe4dbc44c662
+      internalID: 710644919
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: survivor01_25
+      rect:
+        serializedVersion: 2
+        x: 1033
+        y: 300
+        width: 78
+        height: 140
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 585e649c781fa1448a9d99eb96c12e01
+      internalID: -812450553
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: survivor01_26
+      rect:
+        serializedVersion: 2
+        x: 1161
+        y: 300
+        width: 78
+        height: 140
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 133df1613ce3f6a4aa0b5679a5ab817c
+      internalID: -1265352890
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: survivor01_27
+      rect:
+        serializedVersion: 2
+        x: 996
+        y: 167
+        width: 92
+        height: 120
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bfe2e6eed61183c47990ae2ab417cdd3
+      internalID: 1639726162
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: survivor01_28
+      rect:
+        serializedVersion: 2
+        x: 1115
+        y: 164
+        width: 116
+        height: 117
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dce161e58ea562141809389fc3eee730
+      internalID: -304079200
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: survivor01_29
+      rect:
+        serializedVersion: 2
+        x: 9
+        y: 22
+        width: 310
+        height: 195
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2705844fa0dfc454783a27aab1615eec
+      internalID: -1073558272
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: survivor01_30
+      rect:
+        serializedVersion: 2
+        x: 9
+        y: 227
+        width: 506
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7e626250d47d1bb4ebd23ed3b57b8da1
+      internalID: 1559307291
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: survivor01_31
+      rect:
+        serializedVersion: 2
+        x: 363
+        y: 478
+        width: 235
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 270d7f954bca19e4fbacb1a9e13880f6
+      internalID: 322978459
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: survivor01_32
+      rect:
+        serializedVersion: 2
+        x: 363
+        y: 405
+        width: 235
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f599662088bc5474fb4c7ef096af22b8
+      internalID: -1751245367
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: survivor01_33
+      rect:
+        serializedVersion: 2
+        x: 363
+        y: 335
+        width: 235
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4e4e3e1adc10ca242b26ece7885080e5
+      internalID: 1560490563
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: survivor01_34
+      rect:
+        serializedVersion: 2
+        x: 9
+        y: 462
+        width: 344
+        height: 75
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b7ac1e1e61edc744b9b54731df5fd3ad
+      internalID: 922579659
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: survivor01_35
+      rect:
+        serializedVersion: 2
+        x: 9
+        y: 389
+        width: 344
+        height: 73
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dda4a1c6f29b5cc41bda791add600f41
+      internalID: -991615426
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: survivor01_36
+      rect:
+        serializedVersion: 2
+        x: 9
+        y: 318
+        width: 344
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1353729471c1155439a23c8ca97bf006
+      internalID: 1265449127
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     physicsShape: []
     bones: []
@@ -486,8 +906,28 @@ TextureImporter:
       survivor01_14: 1920293115
       survivor01_15: -204667817
       survivor01_16: -578867134
+      survivor01_17: -1913406634
+      survivor01_18: -1884238832
+      survivor01_19: 562157611
       survivor01_2: -56095429
+      survivor01_20: 933991275
+      survivor01_21: 1590624487
+      survivor01_22: 1397330774
+      survivor01_23: 316122343
+      survivor01_24: 710644919
+      survivor01_25: -812450553
+      survivor01_26: -1265352890
+      survivor01_27: 1639726162
+      survivor01_28: -304079200
+      survivor01_29: -1073558272
       survivor01_3: 1246906028
+      survivor01_30: 1559307291
+      survivor01_31: 322978459
+      survivor01_32: -1751245367
+      survivor01_33: 1560490563
+      survivor01_34: 922579659
+      survivor01_35: -991615426
+      survivor01_36: 1265449127
       survivor01_4: -94050560
       survivor01_5: 1346945689
       survivor01_6: 1317241128
