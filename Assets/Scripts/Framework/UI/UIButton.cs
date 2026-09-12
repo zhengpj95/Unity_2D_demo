@@ -6,7 +6,7 @@ using System;
 /// 为 UI 按钮提供按下缩放反馈；使用非缩放时间，游戏暂停时仍可正常播放。
 /// 点击与长按仅通过 C# 事件订阅，不提供 Inspector 回调配置。
 /// </summary>
-public class UIButtonScale : MonoBehaviour,
+public class UIButton : MonoBehaviour,
     IPointerDownHandler,
     IPointerUpHandler,
     IPointerExitHandler,

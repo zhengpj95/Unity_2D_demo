@@ -8,7 +8,7 @@ public class LoadingBehaviour : MonoBehaviour
 {
   public UIProgressBar progressBar;
   /// <summary>登录按钮的缩放与点击组件；通过 Clicked 事件提交登录请求。</summary>
-  public UIButtonScale btnLogin;
+  public UIButton btnLogin;
   public TMP_Text tMP_Text;
   private Coroutine _outlineTestCoroutine;
   private Coroutine _loadingCoroutine;
@@ -20,7 +20,7 @@ public class LoadingBehaviour : MonoBehaviour
     if (progressBar == null)
       progressBar = GetComponentInChildren<UIProgressBar>(true);
     if (btnLogin == null)
-      btnLogin = transform.Find("btnLogin")?.GetComponent<UIButtonScale>();
+      btnLogin = transform.Find("btnLogin")?.GetComponent<UIButton>();
   }
 
   /// <summary>每次启用恢复登录状态，并注册本组件拥有的按钮回调。</summary>
@@ -30,7 +30,7 @@ public class LoadingBehaviour : MonoBehaviour
     if (btnLogin != null)
       btnLogin.Clicked += OnLogin;
     else
-      Debug.LogError("[LoadingBehaviour] 未绑定 btnLogin UIButtonScale。", this);
+      Debug.LogError("[LoadingBehaviour] 未绑定 btnLogin UIButton。", this);
   }
 
   /// <summary>按钮和进度条互斥显示；失败重试时回到登录按钮。</summary>

@@ -65,7 +65,7 @@ Launcher.unity
 
 ```text
 LoadingBehaviour.OnLogin
-  → btnLogin 使用 UIButtonScale.Clicked，通过 OnEnable/OnDisable 代码绑定与解绑；点击后隐藏按钮、显示进度条
+  → btnLogin 使用 UIButton.Clicked，通过 OnEnable/OnDisable 代码绑定与解绑；点击后隐藏按钮、显示进度条
   → UIProgressBar 使用非缩放时间从 0.00% 播放到 100.00%，持续 1 秒
   → SurvivorModule.OpenSurvivorHome
   → 隐藏 Launcher/Loading 登录节点
