@@ -125,7 +125,7 @@ Presenter 只负责显示图标、标题、描述和点击输入。隐藏弹窗�
 
 ```text
 Launcher 登录成功
-    ↓ 隐藏代码绑定的 btnLogin，显示 UIProgressBar（两者互斥）
+    ↓ 通过 UIButtonScale.Clicked 响应 btnLogin，隐藏按钮并显示 UIProgressBar（两者互斥）
     ↓ 播放一秒展示进度：0.00% → 100.00%（不受 Time.timeScale 影响）
     ↓
 打开 SurvivorHome，隐藏登录节点

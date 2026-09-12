@@ -2,13 +2,13 @@ using System.Collections;
 using UnityEngine;
 using Msg;
 using TMPro;
-using UnityEngine.UI;
 
 /// <summary>承载 Launcher 登录界面交互，以及网络、提示和 TMP 效果的测试入口。</summary>
 public class LoadingBehaviour : MonoBehaviour
 {
   public UIProgressBar progressBar;
-  public Button btnLogin;
+  /// <summary>登录按钮的缩放与点击组件；通过 Clicked 事件提交登录请求。</summary>
+  public UIButtonScale btnLogin;
   public TMP_Text tMP_Text;
   private Coroutine _outlineTestCoroutine;
   private Coroutine _loadingCoroutine;
@@ -20,7 +20,7 @@ public class LoadingBehaviour : MonoBehaviour
     if (progressBar == null)
       progressBar = GetComponentInChildren<UIProgressBar>(true);
     if (btnLogin == null)
-      btnLogin = transform.Find("btnLogin")?.GetComponent<Button>();
+      btnLogin = transform.Find("btnLogin")?.GetComponent<UIButtonScale>();
   }
 
   /// <summary>每次启用恢复登录状态，并注册本组件拥有的按钮回调。</summary>
@@ -28,9 +28,9 @@ public class LoadingBehaviour : MonoBehaviour
   {
     SetLoadingVisible(false);
     if (btnLogin != null)
-      btnLogin.onClick.AddListener(OnLogin);
+      btnLogin.Clicked += OnLogin;
     else
-      Debug.LogError("[LoadingBehaviour] 未绑定 btnLogin Button。", this);
+      Debug.LogError("[LoadingBehaviour] 未绑定 btnLogin UIButtonScale。", this);
   }
 
   /// <summary>按钮和进度条互斥显示；失败重试时回到登录按钮。</summary>
@@ -182,7 +182,7 @@ public class LoadingBehaviour : MonoBehaviour
   private void OnDisable()
   {
     if (btnLogin != null)
-      btnLogin.onClick.RemoveListener(OnLogin);
+      btnLogin.Clicked -= OnLogin;
     // 登录节点关闭或销毁时取消流程，避免延迟回调重新打开 Home；再次启用后允许重试。
     if (_loadingCoroutine != null)
     {
