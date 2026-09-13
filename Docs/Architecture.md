@@ -231,9 +231,11 @@ Tip
 
 需要注意：
 
-1. `AssetLoader` 是项目资源加载的唯一入口，提供同步 `Load<T>` 和异步 `LoadAsync<T>`；`UIManager`、`AudioManager` 等调用方不得直接使用 `Resources.Load`。当前 `ResourcesAssetLoader` 后端分别使用 `Resources.Load` 与 `Resources.LoadAsync`，资源键仍是相对 `Resources` 目录的路径；异步调用必须从 Unity 主线程发起。Addressables / AssetBundle 尚未接入，后续只替换后端实现，不将其描述为当前能力。
+1. `AssetLoader` 是项目资源加载的唯一入口，提供同步 `Load<T>` 和异步 `LoadAsync<T>`；`UIManager`、`AudioManager` 等调用方不得直接使用 `Resources.Load`。当前 `ResourcesAssetLoader` 后端分别使用 `Resources.Load` 与 `Resources.LoadAsync`，资源键仍是相对 `Resources` 目录的路径；异步调用必须从 Unity 主线程发起。Addressables 与 YooAsset 尚未接入；后续仅替换后端实现，不将其描述为当前能力。当前后续选型优先 Addressables，具体边界见 `ResourceManagement.md`。
 2. `CloseWindow` 会关闭并销毁 Presenter；`HidePresenter` 只关闭显示状态并保留缓存。`Model` 仅表示 UI 渲染层级，不参与弹窗栈管理。
 3. 修改 UI 层级、粒子、红点等渲染顺序时，优先遵循现有 Canvas/父子层级模型，而不是无限放大 `sortingOrder`。
+
+资源系统的当前能力、所有权边界、对象池协作和 Addressables 演进计划见 [ResourceManagement.md](ResourceManagement.md)。
 
 ## 7. Network / Protobuf 现状
 
