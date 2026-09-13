@@ -24,7 +24,7 @@ namespace VampireSurvivorsLike
     /// <summary>是否持续到本局结束。</summary>
     public bool IsInfinite => isInfinite;
     /// <summary>时间段是否包含可执行的 Wave 和有效时长。</summary>
-    public bool IsValid => waveSpawnConfig != null && (isInfinite || duration > 0f);
+    public bool IsValid => waveSpawnConfig != null && waveSpawnConfig.MaxEnemies > 0 && (isInfinite || duration > 0f);
   }
 
   /// <summary>按列表顺序组织一局战斗的 Wave 时间轴，起止时间由各段 Duration 自动累加。</summary>

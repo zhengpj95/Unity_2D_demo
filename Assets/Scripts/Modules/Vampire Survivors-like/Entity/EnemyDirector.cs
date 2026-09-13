@@ -10,8 +10,6 @@ namespace VampireSurvivorsLike
     // EnemyDirector 持有当前场景的 Player、敌人容器和 Wave 运行时计时，重开时必须随场景重建。
     protected override bool PersistAcrossScenes => false;
 
-    [Tooltip("场景中同时存活的敌人上限，不包含已回收到对象池的敌人。")]
-    [SerializeField] private int maxEnemies = 20;
     [Tooltip("生成后的敌人父节点；只用于整理层级，不改变敌人的世界坐标。")]
     [SerializeField] private Transform enemyContainer;
     [Header("Infinite Map Spawn")]
@@ -49,6 +47,11 @@ namespace VampireSurvivorsLike
     public int CurrentWaveIndex => _currentWaveIndex;
     /// <summary>当前 Wave 的显示编号；没有生效 Wave 时返回 0。</summary>
     public int CurrentWaveNumber => _currentWaveIndex < 0 ? 0 : _currentWaveIndex + 1;
+    /// <summary>当前 Wave 允许同时存活的敌人上限；没有生效 Wave 时返回 100。</summary>
+    public int CurrentMaxEnemies =>
+      _currentWaveIndex >= 0 && _currentWaveIndex < _waveSchedule.Count
+        ? _waveSchedule[_currentWaveIndex].Config.MaxEnemies
+        : 100;
 
     /// <summary>记录一个 WaveSpawnEntry 在当前 Wave 中的运行时计时器，不修改配置资源。</summary>
     private sealed class WaveSpawnRuntime
@@ -170,10 +173,11 @@ namespace VampireSurvivorsLike
       if (runtime.Timer < interval)
         return;
 
-      // 满载时保留一个触发周期，等场上敌人回收后再继续，不因暂停期间积累大量补刷。
-      if (enemies.Count < maxEnemies)
+      int currentMaxEnemies = CurrentMaxEnemies;
+      // 每种敌人仍按各自的固定间隔触发；容量只决定本次还能生成多少只。
+      if (enemies.Count < currentMaxEnemies)
       {
-        int count = Mathf.Min(runtime.Config.SpawnCount, maxEnemies - enemies.Count);
+        int count = Mathf.Min(runtime.Config.SpawnCount, currentMaxEnemies - enemies.Count);
         for (int i = 0; i < count; i++)
           _spawner.Spawn(player, spawnRadius, this, runtime.Config.EnemyPrefab);
       }

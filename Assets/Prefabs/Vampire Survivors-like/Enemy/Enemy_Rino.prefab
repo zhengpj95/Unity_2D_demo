@@ -309,27 +309,59 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!95 &532344834699218748
-Animator:
-  serializedVersion: 5
+--- !u!114 &532344834699218748
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4135054980470647529}
   m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 7fe8303e82a15f044919cea7c7690aa0, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 259cb51216d84ae4b30bd5606984ed74, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  animations:
+  - animName: Move
+    frames:
+    - {fileID: 6858001784930192701, guid: 5f6e4279b73f74146bcf36013201d778, type: 3}
+    - {fileID: -144779502802482253, guid: 5f6e4279b73f74146bcf36013201d778, type: 3}
+    - {fileID: -4586267875643385387, guid: 5f6e4279b73f74146bcf36013201d778, type: 3}
+    - {fileID: 3195440121365438547, guid: 5f6e4279b73f74146bcf36013201d778, type: 3}
+    - {fileID: 5954703513139029531, guid: 5f6e4279b73f74146bcf36013201d778, type: 3}
+    - {fileID: 3645781599010443287, guid: 5f6e4279b73f74146bcf36013201d778, type: 3}
+    frameRate: 12
+    loop: 1
+    randomStartFrame: 1
+  - animName: Idle
+    frames:
+    - {fileID: -1075854790282143660, guid: e3531be27cb827743bac8ea66dae5bfd, type: 3}
+    - {fileID: 8655131874898858446, guid: e3531be27cb827743bac8ea66dae5bfd, type: 3}
+    - {fileID: -820654707376584040, guid: e3531be27cb827743bac8ea66dae5bfd, type: 3}
+    - {fileID: 156153531355689427, guid: e3531be27cb827743bac8ea66dae5bfd, type: 3}
+    - {fileID: 9127768303896570375, guid: e3531be27cb827743bac8ea66dae5bfd, type: 3}
+    - {fileID: 6417604408115182409, guid: e3531be27cb827743bac8ea66dae5bfd, type: 3}
+    - {fileID: 1174575801267489233, guid: e3531be27cb827743bac8ea66dae5bfd, type: 3}
+    - {fileID: 7140330242567135557, guid: e3531be27cb827743bac8ea66dae5bfd, type: 3}
+    - {fileID: -3136031247263263121, guid: e3531be27cb827743bac8ea66dae5bfd, type: 3}
+    - {fileID: 1513087955126141088, guid: e3531be27cb827743bac8ea66dae5bfd, type: 3}
+    - {fileID: -1195877170302790509, guid: e3531be27cb827743bac8ea66dae5bfd, type: 3}
+    frameRate: 12
+    loop: 1
+    randomStartFrame: 0
+  - animName: Hit
+    frames:
+    - {fileID: -5629135272633566843, guid: 0d45a0d8b949d0a4e9eafdc24f22ef64, type: 3}
+    - {fileID: -2715152553310997712, guid: 0d45a0d8b949d0a4e9eafdc24f22ef64, type: 3}
+    - {fileID: -4919157991825847783, guid: 0d45a0d8b949d0a4e9eafdc24f22ef64, type: 3}
+    - {fileID: 5977564812290476861, guid: 0d45a0d8b949d0a4e9eafdc24f22ef64, type: 3}
+    - {fileID: 2439156637083800784, guid: 0d45a0d8b949d0a4e9eafdc24f22ef64, type: 3}
+    frameRate: 12
+    loop: 0
+    randomStartFrame: 0
+  defaultAnimName: Move
+  playOnEnable: 1
+  target: {fileID: 7859222473702140540}
 --- !u!1 &7437596646902730000
 GameObject:
   m_ObjectHideFlags: 0

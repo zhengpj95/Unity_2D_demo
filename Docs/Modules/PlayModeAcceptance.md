@@ -14,7 +14,7 @@
 
 | 对象              | 验收基线                                                              |
 | ----------------- | --------------------------------------------------------------------- |
-| `EnemyDirector`   | `maxEnemies=20`、`spawnRadius=10`、`despawnRadius=20`、3 个 Wave 配置 |
+| `EnemyDirector`   | `spawnRadius=10`、`despawnRadius=20`、4 个 Wave 配置；上限由各 Wave 配置 |
 | `DropItemManager` | Gem 权重 `80`、Coin 权重 `10`、每种预热 `8` 个                        |
 | `WeaponManager`   | `maxWeaponSlots=3`                                                    |
 | Hero              | 场景覆盖 `basePickupRadius=0.3`                                       |
@@ -25,9 +25,9 @@
 
 ### A. Wave、敌人与对象池
 
-1. 以正常配置进入 Play Mode，记录 `EnemyDirector.GameTime` 在 0、60、120 秒附近的 `CurrentWaveNumber`，确认旧 Wave 停止新生成、场上旧敌人仍能继续追击。
+1. 以正常配置进入 Play Mode，记录 `EnemyDirector.GameTime` 在 0、30、60、90 秒附近的 `CurrentWaveNumber`，确认旧 Wave 停止新生成、场上旧敌人仍能继续追击；同时确认 `CurrentMaxEnemies` 依次为 20、30、40、80，第四波三种条目保持各自的生成间隔。
 2. 用临时复制的 Wave 资源构造重叠区间和空 `Spawn Entries` 区间，确认 Console 分别出现重叠 Warning，且空区间不生成新敌人。验证后撤销临时资源/场景修改。
-3. 持续运行至敌人数达到 `maxEnemies`，确认不再增加；将玩家移离一批敌人超过 `despawnRadius`，确认它们从 `Enemies` 容器移除并由对象池复用。
+3. 持续运行至敌人数达到当前 Wave 的 `maxEnemies`，确认不再增加；将玩家移离一批敌人超过 `despawnRadius`，确认它们从 `Enemies` 容器移除并由对象池复用。
 4. 让敌人与玩家碰撞，确认玩家受伤、敌人回收；击杀敌人，确认敌人死亡后生成一份 Gem 或 Coin。
 
 ### B. 掉落、经验与升级

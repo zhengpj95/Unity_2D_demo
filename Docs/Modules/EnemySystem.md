@@ -12,7 +12,7 @@ EnemySpawner
 EnemyChasing
     ↓ 追击、超距回收、碰撞玩家回收
 VSEnemyHealth
-    ↓ 受伤、死亡、击杀统计和掉落
+    ↓ 受伤动画、死亡、击杀统计和掉落
 DropItemManager
 ```
 
@@ -39,7 +39,7 @@ Assets/Scripts/Framework/Pool/PoolManager.cs
 - 保存场景中的敌人列表和击杀计数。
 - 解析 Player 引用并创建 `EnemySpawner`。
 - 累计 `gameTime`，按 `WaveTimelineConfig` 切换当前 Wave，并驱动每个 `WaveSpawnEntry` 的独立计时器。
-- 限制场景中同时存活的敌人数量 `maxEnemies`。
+- 按当前 `WaveSpawnConfig.maxEnemies` 限制同时存活的敌人数量。
 - 预热当前模式会使用的敌人 Prefab。
 - 提供 `RecycleEnemy(GameObject)` 作为统一回收入口。
 - 提供最近/随机选敌接口；`GetRandomExcluding` 支持调用方复用排除集合，让同一次多目标施放优先命中不同敌人。
@@ -76,6 +76,8 @@ Assets/Scripts/Framework/Pool/PoolManager.cs
 
 - 在 `OnAlloc` 时恢复满血。
 - 受伤后刷新 `UI_HpBar` 和伤害飘字。
+- 对配置了 `AnimSprite` 的敌人播放一次 `Hit`，完成后恢复循环的 `Move`；旧敌人未配置该组件时保持原行为。
+- 当前 `Enemy_01/02/03`、`Enemy_Rino`、`Enemy_Slime` 和 `Enemy_Treant` 均使用 `AnimSprite`；Treant 没有 `Hit` 素材，受伤时继续保持 `Move`。
 - 生命值归零时累计击杀、生成掉落并通过 `EnemyDirector.RecycleEnemy` 回收。
 - 武器高频调用的最近/随机选敌直接遍历已注册敌人；随机选择使用蓄水池抽样，不创建候选列表或按距离排序。
 - `ClearActiveEnemies` 在重开前回收当前活跃敌人，避免旧回合实体进入下一局。
@@ -109,11 +111,11 @@ spawnRadius = 10
 
 `EnemyDirector` 从 `WaveTimelineConfig` 的第一个条目开始，按各段 `duration` 自动计算连续的起止时间：
 
-- `WaveSpawnConfig` 只描述可复用的 `WaveSpawnEntry` 组合，不保存时间。
+- `WaveSpawnConfig` 描述可复用的敌人上限和 `WaveSpawnEntry` 组合，不保存时间。
 - `WaveTimelineEntry` 引用一个 `WaveSpawnConfig`，并保存本次使用的持续时间或无限标记。
 - 当前 Wave 变化时重建运行时 WaveSpawnEntry 列表，旧计时器不会带入新 Wave。
 - 每个 WaveSpawnEntry 独立计时，并使用其自己的 Prefab、间隔和批量数量。
-- 场上敌人数量达到 `maxEnemies` 时不再继续增加；计时器仍保留一个触发周期，不会低帧率补刷大量敌人。
+- 场上敌人数量达到当前 Wave 的 `maxEnemies` 时不再继续增加；各条目仍按原间隔计时，不积累待补刷数量。
 - 未配置有效时间轴时不生成敌人，并在 Console 输出 Warning。
 
 详细配置和示例资源见 [WaveSystem.md](WaveSystem.md)。
@@ -187,6 +189,7 @@ RecycleEnemy
 池复用时必须重置状态：
 
 - `VSEnemyHealth.OnAlloc` 恢复满血。
+- `VSEnemyHealth.OnAlloc` 将 `AnimSprite` 恢复为 `Move`，入池时停止动画并清理上一轮完成回调。
 - `EnemyChasing.OnAlloc` 清零 Rigidbody2D 速度。
 - `EnemyChasing.OnFree` 注销敌人。
 
@@ -205,7 +208,6 @@ Assets/Scenes/Vampire Survivors-like/SurvivorsDemo.unity
 
 | 字段 | 当前用途 |
 | --- | --- |
-| `maxEnemies` | 场景中同时存活敌人上限，当前为 20 |
 | `enemyContainer` | 运行时敌人父节点 |
 | `player` | 生成中心和追击目标；为空时按 Player 标签解析一次 |
 | `spawnRadius` | 出生半径，当前为 10 |

@@ -31,14 +31,21 @@ namespace VampireSurvivorsLike
   [CreateAssetMenu(fileName = "WaveSpawnConfig", menuName = "Survivor/Wave/Wave Spawn Config")]
   public sealed class WaveSpawnConfig : ScriptableObject
   {
+    [Tooltip("该 Wave 允许同时存活的敌人上限。")]
+    [SerializeField, Min(1)] private int maxEnemies = 20;
     [Tooltip("该 Wave 中各敌人类型独立的生成条目；至少需要一条有效配置。")]
     [SerializeField] private List<WaveSpawnEntry> spawnEntries = new List<WaveSpawnEntry>();
 
+    /// <summary>该 Wave 允许同时存活的敌人上限。</summary>
+    public int MaxEnemies => maxEnemies;
     /// <summary>该 Wave 的静态刷怪条目。</summary>
     public IReadOnlyList<WaveSpawnEntry> SpawnEntries => spawnEntries;
 
     private void OnValidate()
     {
+      if (maxEnemies <= 0)
+        Debug.LogWarning($"[WaveSpawnConfig] '{name}' 的 maxEnemies 必须大于 0。", this);
+
       if (spawnEntries == null || spawnEntries.Count == 0)
       {
         Debug.LogWarning($"[WaveSpawnConfig] '{name}' 至少需要一条 WaveSpawnEntry。", this);

@@ -309,27 +309,38 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!95 &532344834699218748
-Animator:
-  serializedVersion: 5
+--- !u!114 &532344834699218748
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4135054980470647529}
   m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 6a5edc78beb12f146af44b00629890d9, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 259cb51216d84ae4b30bd5606984ed74, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  animations:
+  - animName: Move
+    frames:
+    - {fileID: -1133438033, guid: 0d2c39cec07c94949b3ca163555ab5c0, type: 3}
+    - {fileID: 2045062292, guid: 0d2c39cec07c94949b3ca163555ab5c0, type: 3}
+    - {fileID: -1714467342, guid: 0d2c39cec07c94949b3ca163555ab5c0, type: 3}
+    - {fileID: 1954965592, guid: 0d2c39cec07c94949b3ca163555ab5c0, type: 3}
+    frameRate: 12
+    loop: 1
+    randomStartFrame: 1
+  - animName: Hit
+    frames:
+    - {fileID: 103020101, guid: c1ddf6736e0c27249bb2054a95d15920, type: 3}
+    - {fileID: 103020102, guid: c1ddf6736e0c27249bb2054a95d15920, type: 3}
+    frameRate: 12
+    loop: 0
+    randomStartFrame: 0
+  defaultAnimName: Move
+  playOnEnable: 1
+  target: {fileID: 7859222473702140540}
 --- !u!1 &7437596646902730000
 GameObject:
   m_ObjectHideFlags: 0

@@ -628,7 +628,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5d6d3114c546e84295da3a5a25b7656, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxEnemies: 20
   enemyContainer: {fileID: 1418470572}
   player: {fileID: 0}
   spawnRadius: 10

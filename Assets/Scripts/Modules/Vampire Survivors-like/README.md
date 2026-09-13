@@ -106,7 +106,7 @@ Vampire Survivors-like/
 - `Hero` 支持上下左右移动、武器索敌范围和拾取范围；它只保存 Inspector 基础值并消费最终属性，拾取范围由独立 `CircleCollider2D` 触发器驱动，并有 Scene Gizmos。
 - 敌人通过 `EnemyDirector` 管理活跃列表，支持追击玩家、超出回收距离时入池、死亡后入池和击杀计数。
 - `EnemySpawner` 使用玩家为中心的生成半径，在相机外生成；`EnemyDirector` 支持预热敌人 Prefab。
-- `WaveTimelineConfig` 保存一局的有序 `WaveTimelineEntry`，`WaveSpawnConfig` 保存可复用的 `WaveSpawnEntry` 组合；未配置有效时间轴时不会刷怪。
+- `WaveTimelineConfig` 保存一局的有序 `WaveTimelineEntry`，`WaveSpawnConfig` 保存可复用的敌人上限和 `WaveSpawnEntry` 组合；未配置有效时间轴时不会刷怪。
 - 敌人死亡通过 `DropItemManager` 按权重生成 Gem 或 Coin。Gem 增加经验，Coin 只增加本局货币；两者都使用对象池。
 
 ### 武器与对象池

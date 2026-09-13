@@ -45,7 +45,7 @@ Prefab 为空、间隔不大于 0 或数量不大于 0 时，条目无效并在�
 
 ### WaveSpawnConfig
 
-`WaveSpawnConfig` 只保存 `spawnEntries`，表示一组可以复用的刷怪组合，不保存开始或结束时间。同一份 `WaveSpawnConfig` 可以被不同时间轴引用，也可以在同一时间轴中重复使用。
+`WaveSpawnConfig` 保存本波同时存活的敌人上限 `maxEnemies` 和 `spawnEntries`，表示一组可以复用的刷怪强度配置，不保存开始或结束时间。同一份 `WaveSpawnConfig` 可以被不同时间轴引用，也可以在同一时间轴中重复使用。`maxEnemies` 必须大于 0，否则引用它的时间轴条目无效。
 
 创建路径：
 
@@ -84,10 +84,10 @@ Wave 变化时重建 WaveSpawnRuntime
 ↓
 分别推进每条 WaveSpawnEntry 的计时器
 ↓
-到达间隔且未超过 maxEnemies 时调用 EnemySpawner
+到达间隔且未超过当前 Wave 的 maxEnemies 时调用 EnemySpawner
 ```
 
-每个 `WaveSpawnEntry` 使用独立计时器。进入新 Wave 时允许下一帧立即触发一次；每帧最多处理一次该条目的生成触发，避免低帧率时集中补刷。切换 Wave 只停止旧规则继续生成，不清除场上已有敌人。
+每个 `WaveSpawnEntry` 使用独立计时器。进入新 Wave 时允许下一帧立即触发一次；每帧最多处理一次该条目的生成触发，避免低帧率时集中补刷。切换 Wave 只停止旧规则继续生成，不清除场上已有敌人。达到当前 Wave 的 `maxEnemies` 时，本次触发不生成并继续按原间隔推进，不积累待补刷数量。
 
 游戏暂停时 `Time.deltaTime` 为 0，时间轴和生成计时器都会暂停。
 
@@ -111,16 +111,18 @@ Assets/Configs/Survivor/
 ├── WaveTimeline_Default.asset
 ├── Wave_01_Intro.asset
 ├── Wave_02_Threat.asset
-└── Wave_03_Heavy.asset
+├── Wave_03_Heavy.asset
+└── Wave_04.asset
 ```
 
-| 时间轴段 | 持续时间 | WaveSpawnEntry |
-| --- | --- | --- |
-| Wave 1 | 60 秒 | Slime：间隔 1.0 秒，数量 1 |
-| Wave 2 | 60 秒 | Slime：0.8 秒/1；Rino：1.5 秒/1 |
-| Wave 3 | 无限 | Slime：0.6 秒/2；Treant：1.2 秒/1；Rino：2.0 秒/1 |
+| 时间轴段 | 持续时间 | 存活上限 | WaveSpawnEntry |
+| --- | --- | --- | --- |
+| Wave 1 | 30 秒 | 20 | Slime：间隔 1.0 秒，数量 1 |
+| Wave 2 | 30 秒 | 30 | Slime：0.8 秒/1；Rino：1.5 秒/1 |
+| Wave 3 | 30 秒 | 40 | Slime：0.6 秒/2；Treant：1.2 秒/1；Rino：2.0 秒/1 |
+| Wave 4 | 无限 | 80 | Enemy_01：0.6 秒/5；Enemy_02：1.2 秒/3；Enemy_03：1.8 秒/2 |
 
-场景 `SurvivorsDemo/EnemyDirector` 只需引用 `WaveTimeline_Default`。场景级上限、生成半径、回收半径和预热数量仍配置在 `EnemyDirector`。
+场景 `SurvivorsDemo/EnemyDirector` 只需引用 `WaveTimeline_Default`。敌人上限完全由当前 `WaveSpawnConfig` 决定；生成半径、回收半径和预热数量仍配置在 `EnemyDirector`。
 
 ## 6. 当前未实现
 
@@ -134,14 +136,15 @@ Assets/Configs/Survivor/
 
 ## 7. 验收清单
 
-1. 0～60 秒仅生成 Slime。
-2. 60～120 秒按各自间隔生成 Slime 和 Rino。
-3. 120 秒后持续按第三条 Wave 生成 Slime、Treant 和 Rino。
-4. Wave 切换不删除场上已有敌人。
-5. 场上敌人不超过 `maxEnemies`。
-6. 敌人仍从 `PoolManager` 取出并回收。
-7. 暂停期间时间轴和生成计时器不推进。
-8. 缺少 Timeline、存在无效条目或无限段不在末尾时，Console 给出 Warning。
+1. 0～30 秒仅生成 Slime。
+2. 30～60 秒按各自间隔生成 Slime 和 Rino。
+3. 60～90 秒生成 Slime、Treant 和 Rino。
+4. 90 秒后持续按各自间隔生成 Enemy_01、Enemy_02 和 Enemy_03。
+5. Wave 切换不删除场上已有敌人。
+6. 四个 Wave 的场上敌人上限依次为 20、30、40、80。
+7. 敌人仍从 `PoolManager` 取出并回收。
+8. 暂停期间时间轴和生成计时器不推进。
+9. 缺少 Timeline、存在无效条目或无限段不在末尾时，Console 给出 Warning。
 
 Unity Editor 内的实际运行效果需要在编辑器中确认。
 
