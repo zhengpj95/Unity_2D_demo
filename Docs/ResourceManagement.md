@@ -184,7 +184,7 @@ UI、音频和对象池需要分别明确释放时机：
 
 ### 4.1 技术选型：Addressables 与 YooAsset
 
-项目当前使用 Unity 2022.3.62f2c1，且尚未接入任一资源包方案。Addressables 1.21.21 已发布支持 Unity 2022.3，YooAsset 3.x 也明确支持 Unity 2022.3，因此版本兼容性不是本项目的决策因素。
+项目当前使用 Unity 2022.3.62f2c1。`com.unity.addressables` 1.21.21 已安装，YooAsset 尚未引入；但 `AssetLoader` 当前仍使用 `ResourcesAssetLoader`，Addressables Group、Catalog 和 `AddressablesAssetLoader` 尚未落地。Addressables 1.21.21 与 YooAsset 3.x 均支持 Unity 2022.3，因此版本兼容性不是本项目的决策因素。
 
 | 维度         | Addressables                                                                         | YooAsset                                                                                     |
 | ------------ | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
@@ -198,7 +198,7 @@ UI、音频和对象池需要分别明确释放时机：
 
 原因是本项目目前资源量和业务形态仍处于小型单工程阶段，当前需求是把 `Resources` 调用收敛到 `AssetLoader` 并补齐异步、所有权和对象池协作；仓库中没有已经落地的 CDN、热更新、分包、原生文件或多 Package 需求。Addressables 能在不改变调用方资源键的前提下完成渐进迁移，并由 Unity 官方包维护。
 
-这不是立即安装 Addressables 的决定。应先完成第 3 章中的异步调用链、资源句柄与释放语义、对象池活跃实例统计；准备迁移时，再只新增 `AddressablesAssetLoader` 后端并保持 `IAssetLoader` 作为业务层唯一入口。
+安装 Addressables 不等于已完成迁移。应先完成第 3 章中的异步调用链、资源句柄与释放语义、对象池活跃实例统计；准备迁移时，再新增 `AddressablesAssetLoader` 后端并保持 `IAssetLoader` 作为业务层唯一入口。
 
 出现以下任一明确需求时，重新评估并可改选 YooAsset：
 
@@ -211,7 +211,7 @@ UI、音频和对象池需要分别明确释放时机：
 
 ### 4.2 推荐落地形态：Addressables 后端
 
-当 UI、敌人、武器、场景或音频规模明显增长，或项目需要资源热更新、远端下载和包体拆分时，再增加 Addressables 后端。目标调用关系为：
+后续将 UI、敌人、武器、场景和音频逐步迁移到 Addressables 后端；资源热更新、远端下载和包体拆分需求出现后，再配置对应的 Group、Catalog 与发布流程。目标调用关系为：
 
 ```text
 业务层 / Framework
