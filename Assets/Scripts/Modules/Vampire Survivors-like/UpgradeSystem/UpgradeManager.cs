@@ -8,6 +8,9 @@ namespace VampireSurvivorsLike
   /// </summary>
   public sealed class UpgradeManager : SingletonMono<UpgradeManager>
   {
+    // 候选依赖当前战斗场景的武器配置，离开场景时销毁运行时候选并在下一局重新构建。
+    protected override bool PersistAcrossScenes => false;
+
     // 可选的资源配置会与运行时自动生成候选合并，便于 Inspector 扩展新升级。
     [Tooltip("可选的自定义升级配置；运行时会与现有武器及基础玩家升级合并。")]
     [SerializeField] private UpgradeConfig[] upgradeConfigs;

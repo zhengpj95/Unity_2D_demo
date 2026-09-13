@@ -98,7 +98,7 @@ Launcher 登录成功
   → 异步加载 Launcher 并重新显示 SurvivorHomePresenter
 ```
 
-`UILauncher/UIRoot` 与 `GameMgr` 都会跨场景保留。Home、局内 HUD 和 GameOver 因而可以复用原有 UIManager Presenter 缓存；新加载的 Launcher 中若存在重复启动对象，继续由现有单例逻辑销毁。完整规则见 `Docs/Modules/SurvivorSceneFlow.md`。
+`UILauncher/UIRoot` 与 `GameMgr` 都会跨场景保留。Home、局内 HUD 和 GameOver 因而可以复用原有 UIManager Presenter 缓存；新加载的 Launcher 中若存在重复启动对象，继续由现有单例逻辑销毁。`EventSystem` 不再序列化到 Launcher 场景，而由首个有效 `UILauncher` 在常驻 UIRoot 下创建一次，避免返回场景时短暂启用两个 EventSystem。完整规则见 `Docs/Modules/SurvivorSceneFlow.md`。
 
 ## 5. Module / MVC 业务框架
 

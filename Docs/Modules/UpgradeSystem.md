@@ -152,7 +152,7 @@ Fisher-Yates 普通随机打乱
 
 候选不足 3 个时返回实际数量，面板会隐藏多余卡片，不使用空配置凑数。运行时默认候选只创建一次，并在 `UpgradeManager.OnDestroy` 中销毁。
 
-当前场景的 `UpgradeManager.upgradeConfigs` 为空，因此主要使用运行时默认候选；自定义资源仍可拖入该数组扩展内容。
+当前场景的 `UpgradeManager.upgradeConfigs` 为空，因此主要使用运行时默认候选；自定义资源仍可拖入该数组扩展内容。`UpgradeManager` 是战斗场景级单例，不跨场景保留；离开 `SurvivorsDemo` 时随场景销毁，并在下一局基于新的 `WeaponManager` 重建运行时候选。
 
 ---
 

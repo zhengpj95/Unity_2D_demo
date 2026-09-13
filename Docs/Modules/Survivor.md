@@ -137,7 +137,7 @@ Launcher 登录成功
 
 Home 只通过 `SurvivorHomeArgs.OnStartBattle` 将按钮输入交给 `SurvivorGameplayController`，不直接加载场景或修改 `Time.timeScale`。详细职责、异常恢复和 Play Mode 验收步骤见 [SurvivorSceneFlow.md](SurvivorSceneFlow.md)。
 
-`Launcher/UIRoot/UIMain` 配有独立 Canvas 和 `GraphicRaycaster`，负责 Home 按钮的射线检测；仅在根 UIRoot 挂载 `GraphicRaycaster` 无法覆盖该子 Canvas 的交互。
+`Launcher/UIRoot/UIMain` 配有独立 Canvas 和 `GraphicRaycaster`，负责 Home 按钮的射线检测；仅在根 UIRoot 挂载 `GraphicRaycaster` 无法覆盖该子 Canvas 的交互。EventSystem 由首个有效 `UILauncher` 在常驻 UIRoot 下运行时创建，Launcher 场景不再序列化第二份 EventSystem，因此从战斗返回时不会短暂同时启用两个实例。
 
 ### GameOver 与重新开始
 
@@ -189,6 +189,8 @@ Hero / SurvivorModel 基础值
 - `MaxHealth`：基础生命和永久修正由 `SurvivorProxy` 计算并向上取整，提升上限时同步补充新增生命。
 
 当前已有的临时 Buff 仅覆盖 `MoveSpeed` 和 `TargetingRange`。`PickupRadius` 与 `MaxHealth` 已接入统一永久升级数据，但对应的限时 Buff 及最大生命 Buff 到期时的当前生命处理规则尚未实现，不能把它们当作已闭合能力。
+
+场景中的 `BuffManager` 只持有当前局 Hero 与 Buff 配置引用，和 `UpgradeManager` 一样属于战斗场景级单例；两者不跨场景保留，返回 Launcher 时随 `SurvivorsDemo` 销毁，再次进入战斗时使用新场景实例。
 
 `Hero` 只保留 Inspector 基础配置，不再保存永久升级字段。为兼容现有场景，`baseAttackRange` 和 `AttackRange` 旧名称暂时保留，但内部都按 `TargetingRange` 解释。Hero 在 `Awake` 中确保自身存在 `BuffHandler` 和拾取 `CircleCollider2D`；拾取半径在运行时同步为 `PickupRadius`，所以圆心是玩家根节点中心而不是脚部 Sprite。
 

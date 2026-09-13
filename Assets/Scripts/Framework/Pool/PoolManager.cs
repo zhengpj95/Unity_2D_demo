@@ -56,26 +56,29 @@ public class PoolManager : Singleton<PoolManager>
   }
 
   /// <summary>
-  /// 预加载对象
+  /// 确保指定 Prefab 的池中至少缓存目标数量的可用对象；已有缓存会被计入，不重复预加载。
   /// </summary>
   /// <param name="prefab">预设体</param>
-  /// <param name="count">数量</param>
+  /// <param name="count">期望的最少可用缓存数量</param>
   public void Preload(GameObject prefab, int count)
   {
-    if (prefab == null) return;
+    if (prefab == null || count <= 0) return;
 
     int prefabId = prefab.GetInstanceID();
-    if (!_poolDict.ContainsKey(prefabId))
+    if (!_poolDict.TryGetValue(prefabId, out Stack<GameObject> pool))
     {
-      _poolDict[prefabId] = new Stack<GameObject>();
+      pool = new Stack<GameObject>();
+      _poolDict[prefabId] = pool;
     }
 
-    for (int i = 0; i < count; i++)
+    // Preload 表示目标缓存量。重复进入场景时只补齐缺口，避免每次都追加 count 个实例。
+    int missingCount = Mathf.Max(0, count - pool.Count);
+    for (int i = 0; i < missingCount; i++)
     {
       GameObject obj = Object.Instantiate(prefab, _poolRoot.transform);
       obj.SetActive(false);
       _instanceToPrefabId[obj.GetInstanceID()] = prefabId;
-      _poolDict[prefabId].Push(obj);
+      pool.Push(obj);
     }
   }
 

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 /// <summary>
 /// UI启动器
@@ -20,8 +21,7 @@ public class UILauncher : MonoBehaviour
 
   private void Awake()
   {
-    // UILauncher 会跨场景保留；场景重载时销毁新场景中的重复实例，
-    // 避免其子节点 EventSystem 与旧场景的 EventSystem 同时存在。
+    // UILauncher 会跨场景保留；场景重载时先销毁新场景中的重复实例。
     if (_instance != null && _instance != this)
     {
       _isDuplicate = true;
@@ -30,6 +30,8 @@ public class UILauncher : MonoBehaviour
     }
 
     _instance = this;
+    // EventSystem 只由首个有效 UILauncher 创建，避免返回 Launcher 时场景序列化对象先触发重复 OnEnable。
+    EnsureEventSystem();
     InitializeUIManager();
   }
 
@@ -53,6 +55,23 @@ public class UILauncher : MonoBehaviour
     {
       DontDestroyOnLoad(gameObject);
     }
+  }
+
+  /// <summary>
+  /// 在常驻 UIRoot 下创建唯一的 EventSystem；已有子节点时保持原实例，兼容旧场景配置。
+  /// </summary>
+  private void EnsureEventSystem()
+  {
+    if (GetComponentInChildren<EventSystem>(true) != null)
+    {
+      return;
+    }
+
+    GameObject eventSystemObject = new GameObject(
+      "EventSystem",
+      typeof(EventSystem),
+      typeof(StandaloneInputModule));
+    eventSystemObject.transform.SetParent(transform, false);
   }
 
   private void OnDestroy()

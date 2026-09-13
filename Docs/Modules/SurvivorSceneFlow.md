@@ -24,11 +24,11 @@ Launcher.unity
 | `Launcher.unity` | 登录或返回主界面时加载 | 承载登录入口与 Home 所需的非战斗场景环境。 |
 | `SurvivorsDemo.unity` | 点击开始战斗后加载 | 承载 Player、EnemyDirector、WeaponManager、DropItemManager、Wave 和地图。 |
 | `GameMgr` | `DontDestroyOnLoad` | 初始化并持续驱动 Module、Network、Timer 和 Pool。 |
-| `UILauncher/UIRoot` | `DontDestroyOnLoad` | 持有 UIManager 的 Main/Window/Model/Tip 层和已缓存 Presenter 的 View。 |
+| `UILauncher/UIRoot` | `DontDestroyOnLoad` | 持有 UIManager 的 Main/Window/Model/Tip 层、唯一 EventSystem 和已缓存 Presenter 的 View。 |
 | `SurvivorModule` | 随 GameMgr 常驻 | 注册 Home、战斗 HUD、升级选择和 GameOver Presenter，向流程控制器提供 UI 开关入口。 |
 | `SurvivorGameplayController` | 随 SurvivorModule 常驻 | 编排开始战斗、重开、返回主界面及场景切换前后的状态收口。 |
 
-返回 `Launcher.unity` 时，新场景中的重复 `GameMgr` 和 `UILauncher` 会按现有单例规则销毁；原有持久化 UIRoot、UIManager 和 Presenter 缓存继续使用。
+返回 `Launcher.unity` 时，新场景中的重复 `GameMgr` 和 `UILauncher` 会按现有单例规则销毁；原有持久化 UIRoot、UIManager 和 Presenter 缓存继续使用。Launcher 场景不再保存 EventSystem 对象，只有首个有效 `UILauncher.Awake` 会在常驻 UIRoot 下创建一次，防止新场景对象在被销毁前触发重复 EventSystem 警告。
 
 ## 3. 界面职责
 
@@ -127,6 +127,7 @@ SurvivorGameOverPresenter.btnQuit
 5. GameOver 点击“再来一局”仍能正常重开战斗。
 6. GameOver 点击“返回主界面”会回收活跃对象、加载 Launcher，并显示 Home 而不是登录内容。
 7. 再次点击 Home 的开始按钮能够进入一局全新战斗，生命、经验、等级、击杀及局内金币均已重置。
+8. 从战斗返回 Launcher 时，Hierarchy 中始终只有一个启用的 EventSystem，Console 不出现 `There can be only one active Event System`。
 
 ## 8. 文档同步规则
 

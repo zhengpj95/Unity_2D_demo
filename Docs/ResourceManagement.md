@@ -112,6 +112,8 @@ Presenter 的 `PrefabPath` 当前实际表示“资源键”。该属性名暂�
 
 当前 Resources 后端没有显式资源句柄。`AddressablesAssetLoader` 会持有成功加载的句柄，并在 `GameMgr.OnDestroy` 中统一释放；这满足当前 Survivor UI 的迁移验证，但还没有实现按单个 UI、音频或对象池生命周期释放。`PoolManager.ClearPool` 只清理池中未使用实例，不能证明该 Prefab 已没有活跃实例。
 
+`PoolManager.Preload(prefab, count)` 中的 `count` 表示该 Prefab 池期望的最少可用缓存数量。重复进入场景时会复用已有缓存，只创建 `count - 当前缓存数` 的缺口，避免预加载在每次场景进入时固定追加对象。
+
 ### 2.6 当前限制
 
 当前尚未实现：
