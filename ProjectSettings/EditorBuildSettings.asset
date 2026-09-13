@@ -23,4 +23,5 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SurvivorsDemo.unity
     guid: fb209873997f0cd47ba9d0c1bb650b05
-  m_configObjects: {}
+  m_configObjects:
+    com.unity.addressableassets: {fileID: 11400000, guid: 9bdeb6eac3d67f647bd2dd61048a74e1, type: 2}
