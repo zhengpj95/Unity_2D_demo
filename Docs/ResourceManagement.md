@@ -15,8 +15,9 @@
 ```text
 Assets/Scripts/Framework/Resource/
 ├── IAssetLoader.cs            # 同步、异步加载契约
-├── AssetLoader.cs             # 项目统一访问入口
-└── ResourcesAssetLoader.cs    # 当前 Resources 后端
+├── AssetLoader.cs             # 项目统一访问入口与迁移期回退顺序
+├── ResourcesAssetLoader.cs    # 未迁移资源的 Resources 后端
+└── AddressablesAssetLoader.cs # 已迁移资源的 Addressables 后端
 ```
 
 当前调用关系：
@@ -29,11 +30,15 @@ UIManager / AudioManager / 后续业务调用方
              IAssetLoader
                     ↓
         ResourcesAssetLoader
-          ├─ Resources.Load<T>
-          └─ Resources.LoadAsync<T>
+          ├─ 命中：返回 Resources 资源
+          └─ 未命中
+                ↓
+        AddressablesAssetLoader
+          ├─ Addressables.LoadAssetAsync<T>
+          └─ 持有成功加载句柄
 ```
 
-`AssetLoader` 是项目级纯 C# 单例，不需要挂载到 GameObject，也不参与逐帧更新。`ResourcesAssetLoader` 是唯一允许直接调用 Unity `Resources` API 的实现；其他 Framework 和业务代码不得新增散落的 `Resources.Load` 或 `Resources.LoadAsync`。
+`AssetLoader` 是项目级纯 C# 单例，不需要挂载到 GameObject，也不参与逐帧更新。迁移期间优先查询 `ResourcesAssetLoader`，未命中时再查询 `AddressablesAssetLoader`。具体后端 API 只允许出现在各自实现中；其他 Framework 和业务代码不得新增散落的 `Resources.Load`、`Resources.LoadAsync` 或 Addressables API。当前四个 Survivor UI Prefab 已统一迁入本地 `SurvivorUI` Group。
 
 ### 2.2 已实现 API
 
@@ -54,7 +59,7 @@ GameObject prefab = await AssetLoader.Instance.LoadAsync<GameObject>("View/Survi
 - `assetKey` 为空、空白时抛出 `ArgumentException`。
 - 找不到资源或资源类型不匹配时返回 `null`。
 - 泛型类型必须继承 `UnityEngine.Object`。
-- 异步加载必须从 Unity 主线程发起；当前后端使用 `Resources.LoadAsync<T>`。
+- 异步加载必须从 Unity 主线程发起；迁移期间先使用 `Resources.LoadAsync<T>`，未命中时使用 `Addressables.LoadAssetAsync<T>`。
 - 当前异步接口不支持取消、进度回调、超时或加载优先级。
 
 ### 2.3 已接入调用方
@@ -70,12 +75,12 @@ GameObject prefab = await AssetLoader.Instance.LoadAsync<GameObject>("View/Survi
 
 ### 2.4 当前资源键规则
 
-当前后端以最近的 `Resources` 目录为根，资源键不包含 `Resources` 之前的路径和文件扩展名。
+Resources 后端仍以最近的 `Resources` 目录为根；Addressables 后端使用 Group 中配置的 Address。迁移时保持原资源键不变，键不包含文件扩展名。
 
 例如：
 
 ```text
-实际文件：Assets/Prefabs/Vampire Survivors-like/Resources/View/SurvivorHome.prefab
+实际文件：Assets/Prefabs/Vampire Survivors-like/Addressables/View/SurvivorHome.prefab
 资源键：View/SurvivorHome
 
 实际文件：Assets/Resources/Audio/game-start-6104.mp3
@@ -105,7 +110,7 @@ Presenter 的 `PrefabPath` 当前实际表示“资源键”。该属性名暂�
              PoolManager.Free
 ```
 
-当前 Resources 后端没有显式资源句柄，因此暂时没有引用计数和释放顺序问题。`PoolManager.ClearPool` 只清理池中未使用实例，不能证明该 Prefab 已没有活跃实例。
+当前 Resources 后端没有显式资源句柄。`AddressablesAssetLoader` 会持有成功加载的句柄，并在 `GameMgr.OnDestroy` 中统一释放；这满足当前 Survivor UI 的迁移验证，但还没有实现按单个 UI、音频或对象池生命周期释放。`PoolManager.ClearPool` 只清理池中未使用实例，不能证明该 Prefab 已没有活跃实例。
 
 ### 2.6 当前限制
 
@@ -115,7 +120,7 @@ Presenter 的 `PrefabPath` 当前实际表示“资源键”。该属性名暂�
 - 相同资源的异步请求合并；
 - 加载缓存、引用计数和依赖资源统计；
 - 异步取消、超时、进度回调和失败原因分类；
-- Addressables Group、Catalog、远端下载和内容更新；
+- 远端 Addressables Group、远端 Catalog、下载和内容更新；
 - 资源键常量、强类型资源引用或自动生成注册表；
 - 编辑器资源键重复检查和构建前校验；
 - 资源加载耗时、命中率和内存占用诊断。
@@ -184,7 +189,7 @@ UI、音频和对象池需要分别明确释放时机：
 
 ### 4.1 技术选型：Addressables 与 YooAsset
 
-项目当前使用 Unity 2022.3.62f2c1。`com.unity.addressables` 1.21.21 已安装，YooAsset 尚未引入；但 `AssetLoader` 当前仍使用 `ResourcesAssetLoader`，Addressables Group、Catalog 和 `AddressablesAssetLoader` 尚未落地。Addressables 1.21.21 与 YooAsset 3.x 均支持 Unity 2022.3，因此版本兼容性不是本项目的决策因素。
+项目当前使用 Unity 2022.3.62f2c1。`com.unity.addressables` 1.21.21 已安装，`AddressablesAssetLoader` 和本地 Catalog 已落地，四个 Survivor UI Prefab 已迁入本地 `SurvivorUI` Group；其余资源仍通过 `ResourcesAssetLoader` 加载。YooAsset 尚未引入。Addressables 1.21.21 与 YooAsset 3.x 均支持 Unity 2022.3，因此版本兼容性不是本项目的决策因素。
 
 | 维度         | Addressables                                                                         | YooAsset                                                                                     |
 | ------------ | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
@@ -198,7 +203,7 @@ UI、音频和对象池需要分别明确释放时机：
 
 原因是本项目目前资源量和业务形态仍处于小型单工程阶段，当前需求是把 `Resources` 调用收敛到 `AssetLoader` 并补齐异步、所有权和对象池协作；仓库中没有已经落地的 CDN、热更新、分包、原生文件或多 Package 需求。Addressables 能在不改变调用方资源键的前提下完成渐进迁移，并由 Unity 官方包维护。
 
-安装 Addressables 不等于已完成迁移。应先完成第 3 章中的异步调用链、资源句柄与释放语义、对象池活跃实例统计；准备迁移时，再新增 `AddressablesAssetLoader` 后端并保持 `IAssetLoader` 作为业务层唯一入口。
+安装 Addressables 和迁移当前 Survivor UI 不等于已完成资源系统迁移。后续仍需完成第 3 章中的异步 UI 调用链、按资源释放语义、并发请求合并和对象池活跃实例统计，并保持 `IAssetLoader` 作为业务层唯一入口。
 
 出现以下任一明确需求时，重新评估并可改选 YooAsset：
 
@@ -285,8 +290,8 @@ AudioMusic      # 可独立下载或切换的音乐
 
 ### 当前阶段
 
-- 源码中只有 `ResourcesAssetLoader` 可以直接调用 `Resources.Load` 或 `Resources.LoadAsync`。
-- UI 和音频通过 `AssetLoader` 同步加载，原有行为不变。
+- 具体 Resources 与 Addressables API 只出现在各自后端中。
+- `SurvivorHome`、`SurvivorMain`、`SurvivorGameOver` 和 `SurvivorSkillSelectPanel` 通过本地 `SurvivorUI` Group 加载，其余 UI 和音频仍通过 Resources 加载。
 - `LoadAsync<T>` 能在主线程异步返回资源或 `null`。
 - 空资源键能得到一致的参数异常。
 

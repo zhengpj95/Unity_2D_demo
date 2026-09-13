@@ -161,7 +161,7 @@ SurvivorProxy.ResetRound + Time.timeScale = 1
 重载当前场景，重置玩家、武器、敌人、掉落和 Wave 运行时状态
 ```
 
-当前结算窗口使用 `Resources/View/SurvivorGameOver`，由 `SurvivorGameOverPresenter` 通过 `SurvivorGameOverView` 绑定标题、结算信息与按钮；“重新开始”只通过回调请求 Controller 重开，不直接修改战斗状态或场景。
+当前结算窗口使用 `View/SurvivorGameOver` 稳定资源键，并与其他 Survivor UI 一同归入本地 Addressables `SurvivorUI` Group；`SurvivorGameOverPresenter` 通过 `SurvivorGameOverView` 绑定标题、结算信息与按钮，“重新开始”只通过回调请求 Controller 重开，不直接修改战斗状态或场景。
 
 ### GameOver 返回主页
 

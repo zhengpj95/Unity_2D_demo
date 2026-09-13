@@ -52,6 +52,10 @@ public sealed class GameMgr : MonoBehaviour
     if (NetworkMgr.IsCreated)
       NetworkMgr.Instance.Dispose();
 
+    // GameMgr 是跨场景资源加载的全局生命周期边界，退出时统一释放 Addressables 句柄。
+    if (AssetLoader.IsCreated)
+      AssetLoader.Instance.ReleaseAll();
+
     _instance = null;
   }
 

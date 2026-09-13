@@ -189,11 +189,13 @@ public class VirtualListEx : ScrollRect, IPointerClickHandler, IPointerDownHandl
   /// <remarks>
   /// 不要把运行时初始化逻辑放在 Reset() 中，因为它在发布后的游戏（包括微信小游戏）中不会执行。运行时初始化应放在 Awake()、OnEnable() 或 Start() 中。
   /// </remarks>
+#if UNITY_EDITOR
   protected override void Reset()
   {
     base.Reset();
     AutoAssignReferences();
   }
+#endif
 
   private void AutoAssignReferences()
   {
@@ -288,6 +290,7 @@ public class VirtualListEx : ScrollRect, IPointerClickHandler, IPointerDownHandl
   /// <remarks>
   /// （OnValidate 属性发生变化就执行）
   /// </remarks>
+#if UNITY_EDITOR
   protected override void OnValidate()
   {
     base.OnValidate();
@@ -308,6 +311,7 @@ public class VirtualListEx : ScrollRect, IPointerClickHandler, IPointerDownHandl
     }
 #endif
   }
+#endif
 
 #if UNITY_EDITOR
   private void ValidateDelayed()

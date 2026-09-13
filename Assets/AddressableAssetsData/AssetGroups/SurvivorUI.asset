@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: SurvivorUI
+  m_EditorClassIdentifier: 
+  m_GroupName: SurvivorUI
+  m_Data:
+    m_SerializedData: []
+  m_GUID: f1bea1568a28969449814a6d0ba02469
+  m_SerializeEntries:
+  - m_GUID: f93c8f3a8945c8942882467037e7029d
+    m_Address: View/SurvivorHome
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 82e89ba4622da434eaaf27ab8989cde2
+    m_Address: View/SurvivorMain
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5a8dde5a273b10a4dadc7cec9f041cb7
+    m_Address: View/SurvivorGameOver
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e086897ffc9bc9945b3ac7d4448c749c
+    m_Address: View/SurvivorSkillSelectPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 8a054adbc01b7bc43ae8bb7c69ea80ae, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 1a00b14de0bbd924a88a5657a3c73c7b, type: 2}
+    - {fileID: 11400000, guid: a064f245b3d62c34fb18ed73c2b4999b, type: 2}

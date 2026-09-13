@@ -35,7 +35,7 @@ Launcher.unity
 ### SurvivorHomePresenter
 
 - `PrefabPath` 为 `View/SurvivorHome`，显示在 `UILayerIndex.Main`。
-- 四个 Survivor UI 预制体统一放在 `Assets/Prefabs/Vampire Survivors-like/Resources/View/`；`Resources.Load` 使用相对 Resources 的路径 `View/预制体名`，不包含扩展名。
+- `SurvivorHome`、`SurvivorMain`、`SurvivorGameOver` 和 `SurvivorSkillSelectPanel` 均位于 `Assets/Prefabs/Vampire Survivors-like/Addressables/View/`，统一归入本地 `SurvivorUI` Group。Address 继续沿用各 Presenter 的 `View/Survivor...` 稳定资源键，业务代码不依赖 Group 名称。
 - `Launcher/UIRoot/UIMain` 的独立 Canvas 必须同时挂载启用的 `GraphicRaycaster`；根 UIRoot 的射线检测不会代替子 Canvas 检测 Home 按钮。缺少该组件时界面可见，但开始按钮无法收到点击。
 - 接收类型明确的开始战斗回调。
 - `btnStart` 只提交“开始战斗”请求，不直接调用 `SceneManager`、不直接修改 `Time.timeScale`。

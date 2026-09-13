@@ -231,7 +231,7 @@ Tip
 
 需要注意：
 
-1. `AssetLoader` 是项目资源加载的唯一入口，提供同步 `Load<T>` 和异步 `LoadAsync<T>`；`UIManager`、`AudioManager` 等调用方不得直接使用 `Resources.Load`。当前 `ResourcesAssetLoader` 后端分别使用 `Resources.Load` 与 `Resources.LoadAsync`，资源键仍是相对 `Resources` 目录的路径；异步调用必须从 Unity 主线程发起。Addressables 1.21.21 已安装，但尚未接入 `AssetLoader`、Group 或 Catalog；YooAsset 尚未接入。后续仅替换后端实现，不将 Addressables 的运行时能力描述为当前能力。具体边界见 `ResourceManagement.md`。
+1. `AssetLoader` 是项目资源加载的唯一入口，提供同步 `Load<T>` 和异步 `LoadAsync<T>`；`UIManager`、`AudioManager` 等调用方不得直接使用 `Resources.Load` 或 Addressables API。迁移期间先查询 `ResourcesAssetLoader`，未命中时再查询 `AddressablesAssetLoader`，因此未迁移资源仍保持原行为。四个 Survivor UI Prefab 已统一迁移到本地 `SurvivorUI` Group，地址保持为各 Presenter 使用的 `View/Survivor...` 稳定资源键；成功加载的 Addressables 句柄由后端持有，并在 `GameMgr.OnDestroy` 中统一释放。具体边界见 `ResourceManagement.md`。
 2. `CloseWindow` 会关闭并销毁 Presenter；`HidePresenter` 只关闭显示状态并保留缓存。`Model` 仅表示 UI 渲染层级，不参与弹窗栈管理。
 3. 修改 UI 层级、粒子、红点等渲染顺序时，优先遵循现有 Canvas/父子层级模型，而不是无限放大 `sortingOrder`。
 
@@ -350,7 +350,7 @@ Unity / Network / Resource implementation
 
 以下是演进原则，不代表已经完成：
 
-- 资源加载已抽象为 `AssetLoader`，后续可逐步将当前 `ResourcesAssetLoader` 后端替换为 Addressables 或其他实现；
+- 资源加载已抽象为 `AssetLoader`，当前采用 Resources 优先、Addressables 回退的迁移模式，后续逐步迁移剩余资源并补齐按资源生命周期释放；
 - Module 系统继续保持显式生命周期和依赖边界；
 - Proto 注册继续向生成式/自动注册方向演进；
 - 具体玩法逐步复用 Framework，而不是把玩法特例塞回 Framework；

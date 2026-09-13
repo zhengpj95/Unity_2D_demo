@@ -102,7 +102,7 @@ public class LoadingBehaviour : MonoBehaviour
     if (homePresenter == null)
     {
       _isEnteringGame = false;
-      Debug.LogError("[Login] SurvivorHome 打开失败，请检查 Resources/View/SurvivorHome。", this);
+      Debug.LogError("[Login] SurvivorHome 打开失败，请检查资源键 View/SurvivorHome。", this);
       SetLoadingVisible(false);
       return;
     }
