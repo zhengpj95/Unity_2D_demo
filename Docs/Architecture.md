@@ -287,6 +287,8 @@ Presenter / UI
 - `ModuleManager`
 - `NetworkMgr`
 
+`PoolManager` 的普通 GameObject 池按 Prefab 分组复用实例，并通过最低保留量、最大隐藏缓存量和空闲超时进行分批缩容；这些限制只作用于 `[PoolRoot]` 中已归还的对象，不限制场上活跃对象。UI 池保持独立生命周期。
+
 这些属于项目级基础设施。新增 Manager 前先检查是否已有同职责实现，避免产生：
 
 ```text

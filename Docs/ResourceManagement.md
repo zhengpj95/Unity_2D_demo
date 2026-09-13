@@ -114,6 +114,8 @@ Presenter 的 `PrefabPath` 当前实际表示“资源键”。该属性名暂�
 
 `PoolManager.Preload(prefab, count)` 中的 `count` 表示该 Prefab 池期望的最少可用缓存数量。重复进入场景时会复用已有缓存，只创建 `count - 当前缓存数` 的缺口，避免预加载在每次场景进入时固定追加对象。
 
+普通 GameObject 池还提供每个 Prefab 独立的缓存策略：默认最多保留 `64` 个隐藏实例，空闲超过 `30` 秒且高于 `Preload` 最低保留量的对象，由 `GameMgr` 驱动的 `PoolManager.OnUpdate` 每 `5` 秒最多销毁 `16` 个。缓存达到上限后，新活跃对象仍可正常创建；多余对象归还时会执行 `OnFree` 后直接销毁。业务需要不同参数时可调用 `ConfigurePool(prefab, minRetained, maxCachedCount, idleLifetime)`。该策略不作用于 UI 池，也不自动回收仍在场上的活跃对象。
+
 ### 2.6 当前限制
 
 当前尚未实现：

@@ -6,11 +6,37 @@ using UnityEngine;
 /// </summary>
 public class PoolManager : Singleton<PoolManager>
 {
-  // 存储所有对象池，Key 为 Prefab 的 InstanceID
-  private readonly Dictionary<int, Stack<GameObject>> _poolDict = new Dictionary<int, Stack<GameObject>>();
+  private const int DefaultMaxCachedCount = 64;
+  private const float DefaultIdleLifetime = 30f;
+  private const float TrimInterval = 5f;
+  private const int TrimBudgetPerInterval = 16;
+
+  /// <summary>记录一个已回收实例及其进入空闲状态的时间。</summary>
+  private sealed class PooledItem
+  {
+    public GameObject Instance;
+    public int InstanceId;
+    public float ReleasedAt;
+  }
+
+  /// <summary>保存单个 Prefab 的缓存对象和缩容策略。</summary>
+  private sealed class PoolEntry
+  {
+    // 尾部用于 LIFO 复用，头部保存最早归还的对象，便于定时缩容。
+    public readonly LinkedList<PooledItem> CachedItems = new LinkedList<PooledItem>();
+    public int MinRetained;
+    public int MaxCachedCount = DefaultMaxCachedCount;
+    public float IdleLifetime = DefaultIdleLifetime;
+  }
+
+  // 存储所有普通对象池，Key 为 Prefab 的 InstanceID。
+  private readonly Dictionary<int, PoolEntry> _poolDict = new Dictionary<int, PoolEntry>();
 
   // 存储正在运行的对象与其所属 Prefab InstanceID 的映射，用于回收
   private readonly Dictionary<int, int> _instanceToPrefabId = new Dictionary<int, int>();
+
+  // 防止同一实例被重复压入缓存集合，避免一次实例被连续分配给多个调用方。
+  private readonly HashSet<int> _inactiveInstanceIds = new HashSet<int>();
 
   // UI 专用池，Key 为 Prefab 的 InstanceID
   private readonly Dictionary<int, Stack<GameObject>> _uiPoolDict = new Dictionary<int, Stack<GameObject>>();
@@ -26,6 +52,9 @@ public class PoolManager : Singleton<PoolManager>
 
   // 主 Canvas（用于 UI 池）
   private Canvas _mainCanvas;
+
+  // 使用非缩放时间按固定间隔缩容，暂停和 GameOver 状态下也能释放长期空闲缓存。
+  private float _trimElapsed;
 
   /// <summary>
   /// 私有构造函数（由 Singleton 基类通过反射调用）
@@ -65,21 +94,48 @@ public class PoolManager : Singleton<PoolManager>
     if (prefab == null || count <= 0) return;
 
     int prefabId = prefab.GetInstanceID();
-    if (!_poolDict.TryGetValue(prefabId, out Stack<GameObject> pool))
-    {
-      pool = new Stack<GameObject>();
-      _poolDict[prefabId] = pool;
-    }
+    PoolEntry pool = GetOrCreatePool(prefabId);
+    RemoveDestroyedCachedItems(pool);
+
+    // 预加载数量同时作为该池的最低保留量；若超过默认上限，则同步扩大上限以兑现预加载请求。
+    pool.MinRetained = Mathf.Max(pool.MinRetained, count);
+    pool.MaxCachedCount = Mathf.Max(pool.MaxCachedCount, pool.MinRetained);
 
     // Preload 表示目标缓存量。重复进入场景时只补齐缺口，避免每次都追加 count 个实例。
-    int missingCount = Mathf.Max(0, count - pool.Count);
+    int missingCount = Mathf.Max(0, count - pool.CachedItems.Count);
     for (int i = 0; i < missingCount; i++)
     {
       GameObject obj = Object.Instantiate(prefab, _poolRoot.transform);
       obj.SetActive(false);
-      _instanceToPrefabId[obj.GetInstanceID()] = prefabId;
-      pool.Push(obj);
+      int instanceId = obj.GetInstanceID();
+      _instanceToPrefabId[instanceId] = prefabId;
+      AddCachedItem(pool, obj, instanceId);
     }
+  }
+
+  /// <summary>
+  /// 配置指定 Prefab 的空闲缓存策略。该策略只限制隐藏缓存，不限制场上活跃对象的创建数量。
+  /// </summary>
+  /// <param name="prefab">需要配置的 Prefab。</param>
+  /// <param name="minRetained">定时缩容后至少保留的缓存数量。</param>
+  /// <param name="maxCachedCount">允许保留在 PoolRoot 中的最大缓存数量。</param>
+  /// <param name="idleLifetime">对象空闲多少秒后允许被定时销毁，使用非缩放时间。</param>
+  public void ConfigurePool(GameObject prefab, int minRetained, int maxCachedCount, float idleLifetime)
+  {
+    if (prefab == null)
+      return;
+
+    minRetained = Mathf.Max(0, minRetained);
+    maxCachedCount = Mathf.Max(minRetained, maxCachedCount);
+    idleLifetime = Mathf.Max(0f, idleLifetime);
+
+    int prefabId = prefab.GetInstanceID();
+    PoolEntry pool = GetOrCreatePool(prefabId);
+    RemoveDestroyedCachedItems(pool);
+    pool.MinRetained = minRetained;
+    pool.MaxCachedCount = maxCachedCount;
+    pool.IdleLifetime = idleLifetime;
+    TrimToMaximum(pool);
   }
 
   /// <summary>
@@ -92,17 +148,22 @@ public class PoolManager : Singleton<PoolManager>
     if (prefab == null) return null;
 
     int prefabId = prefab.GetInstanceID();
-    if (!_poolDict.ContainsKey(prefabId))
+    PoolEntry pool = GetOrCreatePool(prefabId);
+
+    GameObject obj = null;
+    while (pool.CachedItems.Count > 0 && obj == null)
     {
-      _poolDict[prefabId] = new Stack<GameObject>();
+      LinkedListNode<PooledItem> node = pool.CachedItems.Last;
+      PooledItem item = node.Value;
+      pool.CachedItems.RemoveLast();
+      _inactiveInstanceIds.Remove(item.InstanceId);
+
+      obj = item.Instance;
+      if (obj == null)
+        _instanceToPrefabId.Remove(item.InstanceId);
     }
 
-    GameObject obj;
-    if (_poolDict[prefabId].Count > 0)
-    {
-      obj = _poolDict[prefabId].Pop();
-    }
-    else
+    if (obj == null)
     {
       obj = Object.Instantiate(prefab);
       _instanceToPrefabId[obj.GetInstanceID()] = prefabId;
@@ -164,6 +225,12 @@ public class PoolManager : Singleton<PoolManager>
     int instanceId = obj.GetInstanceID();
     if (_instanceToPrefabId.TryGetValue(instanceId, out int prefabId))
     {
+      if (_inactiveInstanceIds.Contains(instanceId))
+      {
+        Debug.LogWarning($"Object {obj.name} has already been returned to PoolManager.", obj);
+        return;
+      }
+
       // 处理 IPoolable 接口
       var poolables = obj.GetComponentsInChildren<IPoolable>();
       foreach (var p in poolables)
@@ -188,8 +255,24 @@ public class PoolManager : Singleton<PoolManager>
         return;
       }
 
+      // ClearPool/ClearAll 后仍在场上的对象可以完成 OnFree，但不再重建已释放的池。
+      if (!_poolDict.TryGetValue(prefabId, out PoolEntry pool))
+      {
+        _instanceToPrefabId.Remove(instanceId);
+        Object.Destroy(obj);
+        return;
+      }
+
+      // 缓存达到上限时销毁多余实例；MaxCachedCount 不会影响仍在场上的活跃对象。
+      if (pool.CachedItems.Count >= pool.MaxCachedCount)
+      {
+        _instanceToPrefabId.Remove(instanceId);
+        Object.Destroy(obj);
+        return;
+      }
+
       obj.transform.SetParent(_poolRoot.transform);
-      _poolDict[prefabId].Push(obj);
+      AddCachedItem(pool, obj, instanceId);
     }
     else
     {
@@ -206,16 +289,12 @@ public class PoolManager : Singleton<PoolManager>
   {
     if (prefab == null) return;
     int prefabId = prefab.GetInstanceID();
-    if (_poolDict.TryGetValue(prefabId, out var stack))
+    if (_poolDict.TryGetValue(prefabId, out PoolEntry pool))
     {
-      while (stack.Count > 0)
+      while (pool.CachedItems.Count > 0)
       {
-        var obj = stack.Pop();
-        if (obj != null)
-        {
-          _instanceToPrefabId.Remove(obj.GetInstanceID());
-          Object.Destroy(obj);
-        }
+        DestroyCachedItem(pool.CachedItems.First.Value);
+        pool.CachedItems.RemoveFirst();
       }
       _poolDict.Remove(prefabId);
     }
@@ -226,20 +305,106 @@ public class PoolManager : Singleton<PoolManager>
   /// </summary>
   public void ClearAll()
   {
-    foreach (var stack in _poolDict.Values)
+    foreach (PoolEntry pool in _poolDict.Values)
     {
-      while (stack.Count > 0)
+      while (pool.CachedItems.Count > 0)
       {
-        Object.Destroy(stack.Pop());
+        DestroyCachedItem(pool.CachedItems.First.Value);
+        pool.CachedItems.RemoveFirst();
       }
     }
     _poolDict.Clear();
-    _instanceToPrefabId.Clear();
+    _inactiveInstanceIds.Clear();
   }
 
+  /// <summary>
+  /// 按固定间隔分批销毁超过空闲期限的缓存对象，避免每帧扫描和同一帧集中 Destroy。
+  /// </summary>
   public void OnUpdate()
   {
-    // 可以在这里处理一些定时回收或其他逻辑
+    _trimElapsed += Time.unscaledDeltaTime;
+    if (_trimElapsed < TrimInterval)
+      return;
+
+    _trimElapsed = 0f;
+    float now = Time.realtimeSinceStartup;
+    int remainingBudget = TrimBudgetPerInterval;
+
+    foreach (PoolEntry pool in _poolDict.Values)
+    {
+      while (pool.CachedItems.Count > pool.MinRetained && remainingBudget > 0)
+      {
+        PooledItem item = pool.CachedItems.First.Value;
+        if (item.Instance != null && now - item.ReleasedAt < pool.IdleLifetime)
+          break;
+
+        pool.CachedItems.RemoveFirst();
+        DestroyCachedItem(item);
+        remainingBudget--;
+      }
+
+      if (remainingBudget <= 0)
+        break;
+    }
+  }
+
+  /// <summary>获取或创建指定 Prefab 的普通对象池配置。</summary>
+  private PoolEntry GetOrCreatePool(int prefabId)
+  {
+    if (!_poolDict.TryGetValue(prefabId, out PoolEntry pool))
+    {
+      pool = new PoolEntry();
+      _poolDict[prefabId] = pool;
+    }
+    return pool;
+  }
+
+  /// <summary>记录一个已禁用并归还到 PoolRoot 的实例。</summary>
+  private void AddCachedItem(PoolEntry pool, GameObject instance, int instanceId)
+  {
+    pool.CachedItems.AddLast(new PooledItem
+    {
+      Instance = instance,
+      InstanceId = instanceId,
+      ReleasedAt = Time.realtimeSinceStartup
+    });
+    _inactiveInstanceIds.Add(instanceId);
+  }
+
+  /// <summary>立即将指定池缩减到最大缓存数量。</summary>
+  private void TrimToMaximum(PoolEntry pool)
+  {
+    while (pool.CachedItems.Count > pool.MaxCachedCount)
+    {
+      PooledItem item = pool.CachedItems.First.Value;
+      pool.CachedItems.RemoveFirst();
+      DestroyCachedItem(item);
+    }
+  }
+
+  /// <summary>清除被外部销毁的缓存引用，避免失效节点占用预加载数量。</summary>
+  private void RemoveDestroyedCachedItems(PoolEntry pool)
+  {
+    LinkedListNode<PooledItem> node = pool.CachedItems.First;
+    while (node != null)
+    {
+      LinkedListNode<PooledItem> next = node.Next;
+      if (node.Value.Instance == null)
+      {
+        pool.CachedItems.Remove(node);
+        DestroyCachedItem(node.Value);
+      }
+      node = next;
+    }
+  }
+
+  /// <summary>销毁一个缓存实例，并同步清理普通池的索引。</summary>
+  private void DestroyCachedItem(PooledItem item)
+  {
+    _inactiveInstanceIds.Remove(item.InstanceId);
+    _instanceToPrefabId.Remove(item.InstanceId);
+    if (item.Instance != null)
+      Object.Destroy(item.Instance);
   }
 
 
