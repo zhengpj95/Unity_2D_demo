@@ -81,6 +81,7 @@ OpenNextLevelUp
 - 敌人死亡时由 `DropItemManager` 按场景权重抽取 Gem/Coin；`SurvivorsDemo` 当前为 Gem `80`、Coin `10`，每次击杀掉落一件，金币用于后续局外武器升级而保持稀缺。
 - 掉落物通过 `PoolManager.Alloc/Free` 复用，不以 `Destroy` 作为普通拾取流程。
 - `DropItem.OnAlloc/OnFree` 会重置已拾取状态。
+- Gem 和 Coin 使用 `AnimSprite` 播放 4 帧、8 FPS 的循环 `Idle` 动画；出池启用时自动从随机帧开始，入池禁用时停止播放并清理状态。
 - 掉落物没有额外的分数、刷怪加速或未落地技能进度；Gem 的 `score` 仅作为经验值使用。
 
 ---

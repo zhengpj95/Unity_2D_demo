@@ -163,7 +163,7 @@ HP <= 0：
     └── EnemyDirector.RecycleEnemy()
 ```
 
-死亡掉落由场景 `DropItemManager` 的 `gemDropWeight/coinDropWeight` 统一抽取；当前 `SurvivorsDemo` 配置为 `80:10`，每次击杀必定掉落一件，金币作为局外武器升级资源保持稀缺。掉落物之后由 [Survivor.md](Survivor.md) 中的拾取流程处理。
+死亡掉落由场景 `DropItemManager` 的 `gemDropWeight/coinDropWeight` 统一抽取；当前 `SurvivorsDemo` 配置为 `80:10`，每次击杀必定掉落一件，金币作为局外武器升级资源保持稀缺。Gem 和 Coin 的显示动画由 `AnimSprite` 驱动，不再依赖各自的 Animator Controller；拾取流程见 [Survivor.md](Survivor.md)。
 
 ---
 

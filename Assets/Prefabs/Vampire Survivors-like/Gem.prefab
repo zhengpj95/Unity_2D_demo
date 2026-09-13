@@ -87,27 +87,31 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!95 &8838484169527565335
-Animator:
-  serializedVersion: 5
+--- !u!114 &8838484169527565335
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3970094827338883468}
   m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 4dd42d67af50acd4c9bc2f7371676b8b, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 259cb51216d84ae4b30bd5606984ed74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animations:
+  - animName: Idle
+    frames:
+    - {fileID: 21300000, guid: d1c1523651c71449cb32c2c7933acf8c, type: 3}
+    - {fileID: 21300000, guid: 0cf9bf4506ad5439987f6fdb1805dcc2, type: 3}
+    - {fileID: 21300000, guid: 5bfad33111cd74875afe141dc1db8c66, type: 3}
+    - {fileID: 21300000, guid: c43e5b8489c04479bafe8967422f3abb, type: 3}
+    frameRate: 8
+    loop: 1
+    randomStartFrame: 0
+  defaultAnimName: Idle
+  playOnEnable: 1
+  target: {fileID: 4053046580337605870}
 --- !u!58 &-2950449392546027937
 CircleCollider2D:
   m_ObjectHideFlags: 0
