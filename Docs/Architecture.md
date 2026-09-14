@@ -243,7 +243,7 @@ Tip
 
 需要注意：
 
-1. `AssetLoader` 是项目资源加载的唯一入口，提供同步 `Load<T>` 和异步 `LoadAsync<T>`；`UIManager`、`AudioManager` 等调用方不得直接使用 `Resources.Load` 或 Addressables API。迁移期间先查询 `ResourcesAssetLoader`，未命中时再查询 `AddressablesAssetLoader`，因此未迁移资源仍保持原行为。四个 Survivor UI Prefab 已统一迁移到本地 `SurvivorUI` Group，地址保持为各 Presenter 使用的 `View/Survivor...` 稳定资源键；成功加载的 Addressables 句柄由后端持有，并在 `GameMgr.OnDestroy` 中统一释放。具体边界见 `ResourceManagement.md`。
+1. `AssetLoader` 是项目资源加载的唯一入口，提供同步 `Load<T>` 和异步 `LoadAsync<T>`；`UIManager`、`AudioManager` 等调用方不得直接使用 `Resources.Load` 或 Addressables API。迁移期间先查询 `ResourcesAssetLoader`，未命中时再查询 `AddressablesAssetLoader`，因此未迁移资源仍保持原行为。四个 Survivor UI Prefab 已统一迁移到本地 `SurvivorUI` Group，通用弹窗 `AlertTipsPanel` 位于本地 `CommonView` Group；资源地址保持 Presenter 使用的稳定资源键。成功加载的 Addressables 句柄由后端持有，并在 `GameMgr.OnDestroy` 中统一释放。具体边界见 `ResourceManagement.md`。
 2. `CloseWindow` 会关闭并销毁 Presenter；`HidePresenter` 只关闭显示状态并保留缓存。`Model` 仅表示 UI 渲染层级，不参与弹窗栈管理。
 3. 修改 UI 层级、粒子、红点等渲染顺序时，优先遵循现有 Canvas/父子层级模型，而不是无限放大 `sortingOrder`。
 
