@@ -122,8 +122,8 @@ public abstract class BaseModule : BaseEmitter
     T command = new T();
     RegisterCommand(command);
 
-    // 统一使用 Action<object>，这样无参和有参 Dispatch 都能进入同一个 Command。
-    Action<object> listener = args => command.Execute(args);
+    // 所有事件统一携带 EventContext，Command 可同时读取事件类型和可选数据。
+    Action<EventContext> listener = command.Execute;
     On(eventName, listener);
     return command;
   }

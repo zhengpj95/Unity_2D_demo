@@ -1,232 +1,166 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
-/**
- * 全局消息中心（支持无参与有参事件）
- * 游戏全局消息中心（字符串 Key 版）
- * 支持泛型参数
- *
- * 设计目标：
- * 1. 同一个事件可以被多个界面 / 对象同时监听；
- * 2. 同一个 owner 只允许注册一次同一个回调；
- * 3. 解绑时按 owner 精确清理，不会误删其他界面的监听。
- *
- * 团队约定：
- * - 统一使用 On(eventName, listener, owner) / Off(eventName, listener, owner)
- * - owner 表示订阅归属对象，通常为 this、Presenter、Module 或 UI 实例
- * - 同一事件名允许多个 owner 监听；同一 owner + 同一 listener 仅注册一次
- * - 销毁或关闭时必须调用 Off(eventName, listener, this) 或 OffAll(this)
- * - 禁止再写 On(eventName, listener) / Off(eventName, listener) 这类无 owner 版本
- *
- * 用法示例：
- * EventBus.On("UPDATE_HP", RefreshHp, this);
- * EventBus.Off("UPDATE_HP", RefreshHp, this);
- * EventBus.Emit("UPDATE_HP");
- *
- * 复制模板：
- * // 事件名 + owner + callback，必须在生命周期结束前 OffAll(this)
- * EventBus.On("EVENT_NAME", OnEvent, this);
- * EventBus.Off("EVENT_NAME", OnEvent, this);
- */
+/// <summary>
+/// 统一事件消息。所有 EventBus 监听器都会收到该结构，EventType 表示事件类型，Data 保存可选数据。
+/// </summary>
+public readonly struct EventContext
+{
+  /// <summary>事件类型，同时也是 EventBus 的路由键。</summary>
+  public string EventType { get; }
+
+  /// <summary>事件携带的数据；无参事件时为 null。</summary>
+  public object Data { get; }
+
+  /// <summary>事件是否携带非 null 数据。</summary>
+  public bool HasData => Data != null;
+
+  internal EventContext(string eventType, object data)
+  {
+    EventType = eventType;
+    Data = data;
+  }
+
+  /// <summary>
+  /// 尝试读取指定类型的事件数据；无数据或类型不匹配时返回 false。
+  /// </summary>
+  public bool TryGetData<T>(out T data)
+  {
+    if (Data is T typedData)
+    {
+      data = typedData;
+      return true;
+    }
+
+    data = default;
+    return false;
+  }
+
+  /// <summary>
+  /// 获取指定类型的事件数据；无数据或类型不匹配时抛出异常，适合参数类型固定的事件。
+  /// </summary>
+  public T GetData<T>()
+  {
+    if (TryGetData(out T data)) return data;
+
+    string actualType = Data == null ? "null" : Data.GetType().Name;
+    throw new InvalidCastException(
+      $"Event '{EventType}' data type mismatch. Expected: {typeof(T).Name}, Actual: {actualType}.");
+  }
+}
+
+/// <summary>
+/// 游戏全局事件中心。事件统一分发 EventContext，并按 owner 管理监听生命周期。
+/// </summary>
 public static class EventBus
 {
   private sealed class EventSubscription
   {
     public object Owner;
-    public Delegate Handler;
+    public Action<EventContext> Handler;
   }
 
-  private sealed class EventChannel
+  private static readonly Dictionary<string, List<EventSubscription>> EventTable = new();
+
+  /// <summary>
+  /// 监听指定事件。监听器统一接收包含 EventType、Data 和 HasData 的 EventContext。
+  /// </summary>
+  public static void On(string eventName, Action<EventContext> listener, object owner)
   {
-    public Type ArgumentType;
-    public readonly List<EventSubscription> Subscriptions = new();
-  }
-
-  private static readonly Type NoArgumentType = typeof(void);
-
-  // 用字符串为 key 的事件表
-  private static readonly Dictionary<string, EventChannel> EventTable = new();
-
-  #region --- 添加监听 ---
-
-  // 主 API：强制要求提供 owner，确保同一事件可以被多个对象同时监听。
-  public static void On(string eventName, Action listener, object owner)
-  {
-    Register(eventName, owner, listener, NoArgumentType);
-  }
-
-  public static void On<T>(string eventName, Action<T> listener, object owner)
-  {
-    // Action<object> 是 Command 使用的通用监听器：它不定义事件签名。
-    Register(eventName, owner, listener, GetArgumentType<T>());
-  }
-
-  #endregion
-
-  #region --- 移除监听 ---
-
-  public static void Off(string eventName, Action listener, object owner)
-  {
-    Unregister(eventName, owner, listener);
-  }
-
-  public static void Off<T>(string eventName, Action<T> listener, object owner)
-  {
-    Unregister(eventName, owner, listener);
-  }
-
-  #endregion
-
-  #region --- 派发事件 ---
-
-  public static void Emit(string eventName)
-  {
-    if (!EventTable.TryGetValue(eventName, out var channel))
-      return;
-
-    ValidateSignature(eventName, channel, NoArgumentType);
-
-    var snapshot = channel.Subscriptions.ToArray();
-    foreach (var subscription in snapshot)
-    {
-      switch (subscription.Handler)
-      {
-        case Action action:
-          action.Invoke();
-          break;
-
-        case Action<object> objectAction:
-          objectAction.Invoke(null);
-          break;
-      }
-    }
-  }
-
-  public static void Emit<T>(string eventName, T arg)
-  {
-    if (!EventTable.TryGetValue(eventName, out var channel))
-      return;
-
-    ValidateSignature(eventName, channel, typeof(T));
-
-    var snapshot = channel.Subscriptions.ToArray();
-    foreach (var subscription in snapshot)
-    {
-      switch (subscription.Handler)
-      {
-        case Action<T> action:
-          action.Invoke(arg);
-          break;
-
-        case Action<object> objectAction:
-          objectAction.Invoke(arg);
-          break;
-      }
-    }
-  }
-
-  #endregion
-
-  // 清空所有事件（场景切换时调用）
-  public static void OffAll()
-  {
-    EventTable.Clear();
-  }
-
-  public static void OffAll(object owner)
-  {
+    ValidateEventName(eventName);
     ValidateOwner(owner);
+    if (listener == null) throw new ArgumentNullException(nameof(listener));
 
-    foreach (var eventName in EventTable.Keys.ToList())
+    if (!EventTable.TryGetValue(eventName, out List<EventSubscription> subscriptions))
     {
-      var channel = EventTable[eventName];
-      channel.Subscriptions.RemoveAll(item => ReferenceEquals(item.Owner, owner));
-
-      if (channel.Subscriptions.Count == 0)
-        EventTable.Remove(eventName);
-    }
-  }
-
-  private static void Register(string eventName, object owner, Delegate listener, Type argumentType)
-  {
-    if (string.IsNullOrWhiteSpace(eventName))
-      throw new ArgumentException("Event name cannot be null or empty.", nameof(eventName));
-
-    ValidateOwner(owner);
-
-    if (listener == null)
-      throw new ArgumentNullException(nameof(listener));
-
-    if (!EventTable.TryGetValue(eventName, out var channel))
-    {
-      channel = new EventChannel();
-      EventTable[eventName] = channel;
+      subscriptions = new List<EventSubscription>();
+      EventTable.Add(eventName, subscriptions);
     }
 
-    ValidateSignature(eventName, channel, argumentType);
-
-    foreach (var subscription in channel.Subscriptions)
+    foreach (EventSubscription subscription in subscriptions)
     {
       if (ReferenceEquals(subscription.Owner, owner) && Equals(subscription.Handler, listener))
         return;
     }
 
-    channel.Subscriptions.Add(new EventSubscription
+    subscriptions.Add(new EventSubscription
     {
       Owner = owner,
-      Handler = listener,
+      Handler = listener
     });
   }
 
-  private static void Unregister(string eventName, object owner, Delegate listener)
+  /// <summary>取消指定 owner 的事件监听。</summary>
+  public static void Off(string eventName, Action<EventContext> listener, object owner)
+  {
+    ValidateOwner(owner);
+    if (!EventTable.TryGetValue(eventName, out List<EventSubscription> subscriptions)) return;
+
+    for (int i = subscriptions.Count - 1; i >= 0; i--)
+    {
+      EventSubscription subscription = subscriptions[i];
+      if (ReferenceEquals(subscription.Owner, owner) && Equals(subscription.Handler, listener))
+        subscriptions.RemoveAt(i);
+    }
+
+    if (subscriptions.Count == 0) EventTable.Remove(eventName);
+  }
+
+  /// <summary>发出不携带数据的事件。</summary>
+  public static void Emit(string eventName)
+  {
+    Dispatch(new EventContext(eventName, null));
+  }
+
+  /// <summary>发出携带数据的事件，数据会保存在 EventContext.Data 中。</summary>
+  public static void Emit<T>(string eventName, T data)
+  {
+    Dispatch(new EventContext(eventName, data));
+  }
+
+  /// <summary>清空所有事件监听。</summary>
+  public static void OffAll()
+  {
+    EventTable.Clear();
+  }
+
+  /// <summary>清空指定 owner 的全部事件监听。</summary>
+  public static void OffAll(object owner)
   {
     ValidateOwner(owner);
 
-    if (!EventTable.TryGetValue(eventName, out var channel))
-      return;
-
-    for (int i = channel.Subscriptions.Count - 1; i >= 0; i--)
+    List<string> emptyEvents = null;
+    foreach (KeyValuePair<string, List<EventSubscription>> pair in EventTable)
     {
-      var subscription = channel.Subscriptions[i];
-      if (ReferenceEquals(subscription.Owner, owner) && Equals(subscription.Handler, listener))
-      {
-        channel.Subscriptions.RemoveAt(i);
-      }
+      pair.Value.RemoveAll(item => ReferenceEquals(item.Owner, owner));
+      if (pair.Value.Count != 0) continue;
+
+      emptyEvents ??= new List<string>();
+      emptyEvents.Add(pair.Key);
     }
 
-    if (channel.Subscriptions.Count == 0)
-      EventTable.Remove(eventName);
+    if (emptyEvents == null) return;
+    foreach (string eventName in emptyEvents) EventTable.Remove(eventName);
   }
 
-  private static void ValidateSignature(string eventName, EventChannel channel, Type argumentType)
+  private static void Dispatch(EventContext message)
   {
-    if (argumentType == null)
-      return;
+    ValidateEventName(message.EventType);
+    if (!EventTable.TryGetValue(message.EventType, out List<EventSubscription> subscriptions)) return;
 
-    if (channel.ArgumentType == null)
-    {
-      channel.ArgumentType = argumentType;
-      return;
-    }
-
-    if (channel.ArgumentType != argumentType)
-      throw new InvalidOperationException($"Event '{eventName}' expects {DescribeSignature(channel.ArgumentType)}, but received {DescribeSignature(argumentType)}.");
+    EventSubscription[] snapshot = subscriptions.ToArray();
+    foreach (EventSubscription subscription in snapshot)
+      subscription.Handler.Invoke(message);
   }
 
-  private static string DescribeSignature(Type argumentType)
+  private static void ValidateEventName(string eventName)
   {
-    return argumentType == NoArgumentType ? "no arguments" : $"an argument of type {argumentType.Name}";
-  }
-
-  private static Type GetArgumentType<T>()
-  {
-    return typeof(T) == typeof(object) ? null : typeof(T);
+    if (string.IsNullOrWhiteSpace(eventName))
+      throw new ArgumentException("Event name cannot be null or empty.", nameof(eventName));
   }
 
   private static void ValidateOwner(object owner)
   {
-    if (owner == null)
-      throw new ArgumentNullException(nameof(owner));
+    if (owner == null) throw new ArgumentNullException(nameof(owner));
   }
 }

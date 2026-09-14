@@ -12,14 +12,21 @@ namespace Rpg
 
     private void Start()
     {
-      EventBus.On("Event_UpdatePlayerHealth", UpdatePlayerHealth, this);
+      EventBus.On("Event_UpdatePlayerHealth", OnUpdatePlayerHealth, this);
     }
 
     void OnDestroy()
     {
-      EventBus.Off("Event_UpdatePlayerHealth", UpdatePlayerHealth, this);
+      EventBus.Off("Event_UpdatePlayerHealth", OnUpdatePlayerHealth, this);
     }
 
+    /// <summary>响应玩家生命值事件；事件本身不需要额外数据。</summary>
+    private void OnUpdatePlayerHealth(EventContext context)
+    {
+      UpdatePlayerHealth();
+    }
+
+    /// <summary>从当前属性状态刷新生命值显示。</summary>
     public void UpdatePlayerHealth()
     {
       var maxHealth = StatsManager.Instance.MaxHealth;

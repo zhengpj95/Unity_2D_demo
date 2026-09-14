@@ -11,7 +11,7 @@ namespace FrogAdventure
   {
     private void Start()
     {
-      UpdateScore();
+      RefreshScore();
       EventBus.On("update_score", UpdateScore, this); // 自定义事件监听
     }
 
@@ -20,7 +20,12 @@ namespace FrogAdventure
       EventBus.Off("update_score", UpdateScore, this);
     }
 
-    private void UpdateScore()
+    private void UpdateScore(EventContext context)
+    {
+      RefreshScore();
+    }
+
+    private void RefreshScore()
     {
       var text = gameObject?.GetComponent<Text>();
       if (text)

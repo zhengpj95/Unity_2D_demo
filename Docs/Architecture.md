@@ -173,14 +173,26 @@ Command 不自行成为长期事件中心，不应承担持久化数据容器，
 - 同一事件名允许多个 `owner` 同时监听；同一 `owner + listener` 仅允许注册一次，避免重复订阅。
 - 发生销毁、关闭或场景切换时，必须按 owner 做清理，例如 `EventBus.Off(..., this)` 或 `EventBus.OffAll(this)`。
 - 不再使用无 owner 的旧写法：`EventBus.On(eventName, listener)`、`EventBus.Off(eventName, listener)`。
-- `Emit` 允许无参和有参两种形式，但同一事件名的业务监听签名必须保持一致：无参事件注册 `Action`，有参事件注册 `Action<T>`；混用会抛出异常。
-- `Action<object>` 是 Command 分发使用的通用监听器：无参事件收到 `null`，有参事件收到实际参数。它不定义事件签名，可与上述业务监听器共存。
+- 所有监听器统一使用 `Action<EventContext>`；`EventContext.EventType` 保存事件名，`Data` 保存可选数据，`HasData` 直接根据 `Data != null` 判断是否存在数据，因此无参派发与显式传入 `null` 都视为无数据。
+- `Emit(eventName)` 与 `Emit(eventName, data)` 可以用于同一事件名，监听方通过 `HasData` 判断是否携带数据，并通过 `TryGetData<T>` 或 `GetData<T>` 读取具体类型。
+- 统一消息结构以一次 `object` 装箱换取相同事件名下的有参/无参派发能力；高频且类型固定的对象内部通知仍优先使用直接调用或强类型 C# 事件。
 - `owner` 不可为 `null`；传入 `null` 会抛出 `ArgumentNullException`，避免产生无法通过 `OffAll(owner)` 清理的订阅。
 
 ```csharp
 // 正确：按 owner 归属注册
-EventBus.On("UPDATE_HP", RefreshHp, this);
-EventBus.Off("UPDATE_HP", RefreshHp, this);
+EventBus.On("UPDATE_HP", OnUpdateHp, this);
+EventBus.Off("UPDATE_HP", OnUpdateHp, this);
+
+void OnUpdateHp(EventContext context)
+{
+    if (context.TryGetData(out int hp))
+    {
+        // 有参事件：使用本次携带的数据。
+        return;
+    }
+
+    // 无参事件：从当前业务状态刷新。
+}
 
 // 正确：一个事件可被多个界面同时监听
 EventBus.On("UPDATE_HP", RefreshUIA, panelA);

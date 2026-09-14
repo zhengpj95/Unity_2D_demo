@@ -20,7 +20,7 @@ public abstract class BaseCommand : BaseEmitter
   }
 
   /// <summary>
-  /// 执行命令。无参事件的 args 为 null；有参事件会传入对应的事件参数。
+  /// 执行命令。事件类型、可选数据及有无数据状态统一由 message 提供。
   /// </summary>
-  public abstract void Execute(object args = null);
+  public abstract void Execute(EventContext context);
 }

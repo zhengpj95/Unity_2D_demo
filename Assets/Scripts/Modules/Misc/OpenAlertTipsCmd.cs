@@ -3,9 +3,9 @@ using UnityEngine;
 
 public sealed class OpenAlertTipsCmd : BaseCommand
 {
-  public override void Execute(object args = null)
+  public override void Execute(EventContext context)
   {
-    if (!(args is AlertTipsPanelArgs alertArgs))
+    if (!context.TryGetData(out AlertTipsPanelArgs alertArgs))
     {
       Debug.LogWarning("[OpenAlertTipsCmd] Invalid AlertTipsPanelArgs.");
       return;

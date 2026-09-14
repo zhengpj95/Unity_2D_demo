@@ -19,7 +19,7 @@ namespace FrogAdventure
       EventBus.Off("PLAYER_REVIVE", Revive, this);
     }
 
-    private void Revive()
+    private void Revive(EventContext context)
     {
       Instantiate(playerPrefab, spawnPoint.position, Quaternion.identity);
     }

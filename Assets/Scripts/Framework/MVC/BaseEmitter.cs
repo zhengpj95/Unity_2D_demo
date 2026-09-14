@@ -2,57 +2,20 @@ using System;
 using System.Collections.Generic;
 
 /// <summary>
-/// 带生命周期的 EventBus 使用基类。
-/// 负责记录当前对象创建的订阅，并在 OffAll 时统一解绑；不维护独立事件表。
+/// 带生命周期的 EventBus 使用基类，统一记录并清理由当前对象创建的事件订阅。
 /// </summary>
 public abstract class BaseEmitter
 {
   private sealed class EventSubscription
   {
     public string EventName;
-    public Delegate Listener;
-    public Action Unsubscribe;
+    public Action<EventContext> Listener;
   }
 
   private readonly List<EventSubscription> _subscriptions = new();
 
-  protected void On(string eventName, Action listener)
-  {
-    Register(eventName, listener, () => EventBus.On(eventName, listener, this), () => EventBus.Off(eventName, listener, this));
-  }
-
-  protected void On(string eventName, Action<object> listener)
-  {
-    Register(eventName, listener, () => EventBus.On(eventName, listener, this), () => EventBus.Off(eventName, listener, this));
-  }
-
-  protected void On<T>(string eventName, Action<T> listener)
-  {
-    Register(eventName, listener, () => EventBus.On(eventName, listener, this), () => EventBus.Off(eventName, listener, this));
-  }
-
-  protected void Emit(string eventName)
-  {
-    ValidateEventName(eventName);
-    EventBus.Emit(eventName);
-  }
-
-  protected void Emit<T>(string eventName, T args)
-  {
-    ValidateEventName(eventName);
-    EventBus.Emit(eventName, args);
-  }
-
-  /// <summary>解除当前对象经由 On 创建的全部事件订阅；可重复调用。</summary>
-  protected void OffAll()
-  {
-    for (int i = _subscriptions.Count - 1; i >= 0; i--)
-      _subscriptions[i].Unsubscribe();
-    _subscriptions.Clear();
-    EventBus.OffAll(this);
-  }
-
-  private void Register(string eventName, Delegate listener, Action subscribe, Action unsubscribe)
+  /// <summary>监听事件；所有监听器统一接收 EventContext。</summary>
+  protected void On(string eventName, Action<EventContext> listener)
   {
     ValidateEventName(eventName);
     if (listener == null) throw new ArgumentNullException(nameof(listener));
@@ -63,13 +26,39 @@ public abstract class BaseEmitter
         return;
     }
 
-    subscribe();
+    EventBus.On(eventName, listener, this);
     _subscriptions.Add(new EventSubscription
     {
       EventName = eventName,
-      Listener = listener,
-      Unsubscribe = unsubscribe
+      Listener = listener
     });
+  }
+
+  /// <summary>发出不携带数据的事件。</summary>
+  protected void Emit(string eventName)
+  {
+    ValidateEventName(eventName);
+    EventBus.Emit(eventName);
+  }
+
+  /// <summary>发出携带数据的事件。</summary>
+  protected void Emit<T>(string eventName, T data)
+  {
+    ValidateEventName(eventName);
+    EventBus.Emit(eventName, data);
+  }
+
+  /// <summary>解除当前对象通过 On 创建的全部事件订阅；可重复调用。</summary>
+  protected void OffAll()
+  {
+    for (int i = _subscriptions.Count - 1; i >= 0; i--)
+    {
+      EventSubscription subscription = _subscriptions[i];
+      EventBus.Off(subscription.EventName, subscription.Listener, this);
+    }
+
+    _subscriptions.Clear();
+    EventBus.OffAll(this);
   }
 
   protected static void ValidateEventName(string eventName)

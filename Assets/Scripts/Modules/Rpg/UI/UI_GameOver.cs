@@ -11,24 +11,24 @@ namespace Rpg
 
     void Start()
     {
-      EventBus.On<bool>("Event_GameOver", UpdateActive, this);
+      EventBus.On("Event_GameOver", UpdateActive, this);
     }
 
     void OnDestroy()
     {
-      EventBus.Off<bool>("Event_GameOver", UpdateActive, this);
+      EventBus.Off("Event_GameOver", UpdateActive, this);
     }
 
-    void UpdateActive(bool active)
+    void UpdateActive(EventContext context)
     {
-      gameOverPanel.SetActive(active);
+      if (context.TryGetData(out bool active)) gameOverPanel.SetActive(active);
     }
 
     // ui Button点击调用
     public void RestartGame()
     {
       Debug.Log("Restart Game UI_GameOver");
-      UpdateActive(false);
+      gameOverPanel.SetActive(false);
 
       StartCoroutine(SpawnPlayerAfterDelay(0.5f));
     }

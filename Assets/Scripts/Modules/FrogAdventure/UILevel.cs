@@ -11,17 +11,22 @@ namespace FrogAdventure
 
     private void Start()
     {
-      SetLevelText();
+      RefreshLevelText();
       EventBus.On("UPDATE_LEVEL", SetLevelText, this);
       EventBus.On("UPDATE_HP", SetHeart, this);
     }
 
-    private void SetLevelText()
+    private void SetLevelText(EventContext context)
+    {
+      RefreshLevelText();
+    }
+
+    private void RefreshLevelText()
     {
       levelText.text = "关卡：" + GameController.Instance.Level;
     }
 
-    private void SetHeart()
+    private void SetHeart(EventContext context)
     {
       int hp = GameController.Instance.MaxHp;
       for (int i = 0; i < img.Length; i++)
