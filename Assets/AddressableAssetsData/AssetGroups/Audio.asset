@@ -1,0 +1,110 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Audio
+  m_EditorClassIdentifier: 
+  m_GroupName: Audio
+  m_Data:
+    m_SerializedData: []
+  m_GUID: c0d8f37d122f4ae0afcb87123c779a13
+  m_SerializeEntries:
+  - m_GUID: 72477fbff8dafd346a1a7ee64f4e823b
+    m_Address: Audio/356-8-bit-chiptune-game-music-357518
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4559935c00ef8e94b846e2e03e39f0d0
+    m_Address: Audio/BGM
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eb26c952ee97ee34b9d859bf13d09328
+    m_Address: Audio/cartoon-jump-6462
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 427a0b83b8919af4ab9c3dc46310146e
+    m_Address: Audio/collect-points-190037
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 291608b8d286e2a4580ff36324455ce2
+    m_Address: Audio/Dead
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 260725f0266d76b4aaf55e3f41d8a7d0
+    m_Address: Audio/game-over-arcade-6435
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 61917688242658840b35a0812466bc7d
+    m_Address: Audio/game-start-6104
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0bddcb411d826e14bb26d40ae45d8e22
+    m_Address: Audio/Hit0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6b7eaf4532a2f614595ad58d2b86efc4
+    m_Address: Audio/Hit1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 64795b87003c2324fa0814fbc336066c
+    m_Address: Audio/LevelUp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c8a3fe17a6641ec48b38fb455a40a223
+    m_Address: Audio/Lose
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 14f24de2a9a70154e96297de25e2184c
+    m_Address: Audio/Melee0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d1bef3102d08ba944ac7bcac65733a26
+    m_Address: Audio/Melee1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1b1c43f9c00b5cb4e8bdac1624804709
+    m_Address: Audio/mobile-casual-video-game-music-158301
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6f0c572d865b4664db7a460972bc4768
+    m_Address: Audio/Range
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4b294d59d2399014daa718b35c9de73b
+    m_Address: Audio/Select
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2c4bc183a5df5aa4baf7c4fcf236a2de
+    m_Address: Audio/Win
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 8a054adbc01b7bc43ae8bb7c69ea80ae, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: f4f77821f37c44d2a8bd117d2474704f, type: 2}
+    - {fileID: 11400000, guid: adb7e03887184f9691232717d9af7118, type: 2}

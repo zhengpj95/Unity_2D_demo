@@ -38,7 +38,7 @@ UIManager / AudioManager / 后续业务调用方
           └─ 持有成功加载句柄
 ```
 
-`AssetLoader` 是项目级纯 C# 单例，不需要挂载到 GameObject，也不参与逐帧更新。迁移期间优先查询 `ResourcesAssetLoader`，未命中时再查询 `AddressablesAssetLoader`。具体后端 API 只允许出现在各自实现中；其他 Framework 和业务代码不得新增散落的 `Resources.Load`、`Resources.LoadAsync` 或 Addressables API。当前四个 Survivor UI Prefab 已统一迁入本地 `SurvivorUI` Group；跨模块通用 UI 使用本地 `CommonView` Group。
+`AssetLoader` 是项目级纯 C# 单例，不需要挂载到 GameObject，也不参与逐帧更新。迁移期间优先查询 `ResourcesAssetLoader`，未命中时再查询 `AddressablesAssetLoader`。具体后端 API 只允许出现在各自实现中；其他 Framework 和业务代码不得新增散落的 `Resources.Load`、`Resources.LoadAsync` 或 Addressables API。当前四个 Survivor UI Prefab 已统一迁入本地 `SurvivorUI` Group；跨模块通用 UI 使用本地 `CommonView` Group；公共音频 Clip 使用本地 `Audio` Group。
 
 ### 2.2 已实现 API
 
@@ -86,7 +86,7 @@ Resources 后端仍以最近的 `Resources` 目录为根；Addressables 后端�
 实际文件：Assets/Prefabs/CommonView/AlertTipsPanel.prefab
 资源键：Prefabs/AlertTipsPanel
 
-实际文件：Assets/Resources/Audio/game-start-6104.mp3
+实际文件：Assets/Arts/Audio/game-start-6104.mp3
 资源键：Audio/game-start-6104
 ```
 
@@ -196,7 +196,7 @@ UI、音频和对象池需要分别明确释放时机：
 
 ### 4.1 技术选型：Addressables 与 YooAsset
 
-项目当前使用 Unity 2022.3.62f2c1。`com.unity.addressables` 1.21.21 已安装，`AddressablesAssetLoader` 和本地 Catalog 已落地，四个 Survivor UI Prefab 已迁入本地 `SurvivorUI` Group，通用弹窗已迁入本地 `CommonView` Group；其余资源仍通过 `ResourcesAssetLoader` 加载。YooAsset 尚未引入。Addressables 1.21.21 与 YooAsset 3.x 均支持 Unity 2022.3，因此版本兼容性不是本项目的决策因素。
+项目当前使用 Unity 2022.3.62f2c1。`com.unity.addressables` 1.21.21 已安装，`AddressablesAssetLoader` 和本地 Catalog 已落地，四个 Survivor UI Prefab 已迁入本地 `SurvivorUI` Group，通用弹窗已迁入本地 `CommonView` Group，公共音频 Clip 已迁入本地 `Audio` Group；其余资源仍通过 `ResourcesAssetLoader` 加载。YooAsset 尚未引入。Addressables 1.21.21 与 YooAsset 3.x 均支持 Unity 2022.3，因此版本兼容性不是本项目的决策因素。
 
 | 维度         | Addressables                                                                         | YooAsset                                                                                     |
 | ------------ | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
@@ -250,7 +250,7 @@ Bootstrap       # 启动和 Loading 必需资源
 SharedUI        # 多模块共用 UI、字体和图集
 SurvivorHome    # Survivor 局外界面
 SurvivorBattle  # 战斗角色、敌人、武器、特效和 HUD
-AudioCommon     # 通用点击与提示音
+Audio           # 通用点击与提示音
 AudioMusic      # 可独立下载或切换的音乐
 ```
 
@@ -298,7 +298,7 @@ AudioMusic      # 可独立下载或切换的音乐
 ### 当前阶段
 
 - 具体 Resources 与 Addressables API 只出现在各自后端中。
-- `SurvivorHome`、`SurvivorMain`、`SurvivorGameOver` 和 `SurvivorSkillSelectPanel` 通过本地 `SurvivorUI` Group 加载；`AlertTipsPanel` 通过本地 `CommonView` Group 加载，其余 UI 和音频仍通过 Resources 加载。
+- `SurvivorHome`、`SurvivorMain`、`SurvivorGameOver` 和 `SurvivorSkillSelectPanel` 通过本地 `SurvivorUI` Group 加载；`AlertTipsPanel` 通过本地 `CommonView` Group 加载；公共音频 Clip 通过本地 `Audio` Group 加载，其余未迁移资源仍通过 Resources 加载。
 - `LoadAsync<T>` 能在主线程异步返回资源或 `null`。
 - 空资源键能得到一致的参数异常。
 
