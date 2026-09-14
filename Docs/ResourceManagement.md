@@ -45,13 +45,13 @@ UIManager / AudioManager / 后续业务调用方
 同步加载：
 
 ```csharp
-GameObject prefab = AssetLoader.Instance.Load<GameObject>("View/SurvivorHome");
+GameObject prefab = AssetLoader.Instance.Load<GameObject>("Prefabs/Survivor/View/SurvivorHome");
 ```
 
 异步加载：
 
 ```csharp
-GameObject prefab = await AssetLoader.Instance.LoadAsync<GameObject>("View/SurvivorHome");
+GameObject prefab = await AssetLoader.Instance.LoadAsync<GameObject>("Prefabs/Survivor/View/SurvivorHome");
 ```
 
 接口行为：
@@ -80,8 +80,8 @@ Resources 后端仍以最近的 `Resources` 目录为根；Addressables 后端�
 例如：
 
 ```text
-实际文件：Assets/Prefabs/Vampire Survivors-like/Addressables/View/SurvivorHome.prefab
-资源键：View/SurvivorHome
+实际文件：Assets/Prefabs/Survivor/View/SurvivorHome.prefab
+资源键：Prefabs/Survivor/View/SurvivorHome
 
 实际文件：Assets/Prefabs/CommonView/AlertTipsPanel.prefab
 资源键：Prefabs/AlertTipsPanel

@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class SurvivorMainPresenter : BasePresenter
 {
-  public override string PrefabPath => "View/SurvivorMain";
+  public override string PrefabPath => "Prefabs/Survivor/View/SurvivorMain";
 
   private SurvivorMainView _view;
 

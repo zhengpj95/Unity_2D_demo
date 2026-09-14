@@ -18,22 +18,22 @@ MonoBehaviour:
   m_GUID: f1bea1568a28969449814a6d0ba02469
   m_SerializeEntries:
   - m_GUID: f93c8f3a8945c8942882467037e7029d
-    m_Address: View/SurvivorHome
+    m_Address: Prefabs/Survivor/View/SurvivorHome
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 82e89ba4622da434eaaf27ab8989cde2
-    m_Address: View/SurvivorMain
+    m_Address: Prefabs/Survivor/View/SurvivorMain
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5a8dde5a273b10a4dadc7cec9f041cb7
-    m_Address: View/SurvivorGameOver
+    m_Address: Prefabs/Survivor/View/SurvivorGameOver
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e086897ffc9bc9945b3ac7d4448c749c
-    m_Address: View/SurvivorSkillSelectPanel
+    m_Address: Prefabs/Survivor/View/SurvivorSkillSelectPanel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
