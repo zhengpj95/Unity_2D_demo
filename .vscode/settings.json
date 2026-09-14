@@ -67,7 +67,9 @@
         "Assets/Resources/": true,
         "MdImg": true,
         "Assets/Plugins/": true,
-        "Assets/XLua": true
+        "Assets/XLua": true,
+        "Assets/AddressableAssetsData": true,
+        "Assets/Configs": true,
     },
     "dotnet.defaultSolution": "Unity_2D_demo.sln",
     "dotnet.preferCSharpExtension": true
