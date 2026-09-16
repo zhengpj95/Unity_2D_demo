@@ -165,6 +165,8 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   private int _startIndex = -1;
   private int _columns = 1;
   private int _rows = 1;
+  // Start 完成布局测量后才允许按 Viewport 尺寸重建，避免初始化阶段拿到零尺寸。
+  private bool _isInitialized;
 
   private float _viewportHeight = 0;
   private float _viewportWidth = 0;
@@ -281,7 +283,29 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
       content.pivot = new Vector2(0, 1);
     }
 
-    InitRect();
+    _isInitialized = true;
+    RebuildLayoutAndRefresh();
+  }
+
+  /// <summary>
+  /// 组件禁用时停止平滑滚动，避免关闭界面后协程继续修改 Content 位置。
+  /// </summary>
+  protected override void OnDisable()
+  {
+    StopSmoothScroll();
+    StopMovement();
+    base.OnDisable();
+  }
+
+  /// <summary>
+  /// Viewport 尺寸变化时重新计算可见单元格数量，适配分辨率、横竖屏和动态布局变化。
+  /// </summary>
+  protected override void OnRectTransformDimensionsChange()
+  {
+    base.OnRectTransformDimensionsChange();
+
+    if (Application.isPlaying && _isInitialized)
+      RebuildLayoutAndRefresh();
   }
 
   /// <summary>
@@ -335,7 +359,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   {
     if (itemTemplate == null)
     {
-      Debug.LogError("VirtualListEx itemTemplate is null, Please check your list.");
+      Debug.LogError("VirtualList itemTemplate is null, Please check your list.");
       return;
     }
 
@@ -514,14 +538,56 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   {
     _dataList.Clear();
 
-    foreach (var data in datas)
+    if (datas != null)
     {
-      _dataList.Add(data);
+      foreach (var data in datas)
+      {
+        _dataList.Add(data);
+      }
     }
 
-    UpdateContentLayout();
+    // 数据缩短或清空后，旧的选中索引不再有效时必须清除。
+    if (_selectedIndex >= _dataList.Count)
+      _selectedIndex = -1;
 
+    // Start 前允许缓存数据；待完成 Viewport 测量后由 Start 统一创建并刷新单元格。
+    if (_isInitialized)
+      RebuildLayoutAndRefresh();
+  }
+
+  /// <summary>
+  /// 根据当前 Viewport 和数据重建虚拟项，并将滚动位置限制在新的 Content 范围内。
+  /// </summary>
+  private void RebuildLayoutAndRefresh()
+  {
+    if (content == null || viewport == null || itemTemplate == null)
+      return;
+
+    InitRect();
+    UpdateContentLayout();
+    ClampContentPosition();
     RefreshVisible(true);
+  }
+
+  /// <summary>
+  /// 数据量或 Viewport 改变后，限制 Content 锚点位置，避免停留在已不存在的列表区域。
+  /// </summary>
+  private void ClampContentPosition()
+  {
+    var anchoredPosition = content.anchoredPosition;
+
+    if (IsVertical)
+    {
+      float maxY = Mathf.Max(0f, content.rect.height - _viewportHeight);
+      anchoredPosition.y = Mathf.Clamp(anchoredPosition.y, 0f, maxY);
+    }
+    else
+    {
+      float maxX = Mathf.Max(0f, content.rect.width - _viewportWidth);
+      anchoredPosition.x = -Mathf.Clamp(-anchoredPosition.x, 0f, maxX);
+    }
+
+    content.anchoredPosition = anchoredPosition;
   }
 
   private void ApplyLayoutSettings()
@@ -824,8 +890,9 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
       if (col < 0 || col >= _columns || xInGrid > _columns * _itemWidth + (_columns - 1) * spaceX)
         return -1;
 
-      // 检查是否在item内（不在间距区域）
-      if (yInGrid > _itemHeight)
+      // 同时排除水平和垂直间距，避免点击空隙时误选相邻 item。
+      float xInCell = xInGrid % (_itemWidth + spaceX);
+      if (xInCell > _itemWidth || yInGrid > _itemHeight)
         return -1;
 
       int row = lineIndex;
@@ -845,8 +912,9 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
       if (row < 0 || row >= _rows || yInGrid > _rows * _itemHeight + (_rows - 1) * spaceY)
         return -1;
 
-      // 检查是否在item内（不在间距区域）
-      if (xInGrid > _itemWidth)
+      // 同时排除水平和垂直间距，避免点击空隙时误选相邻 item。
+      float yInCell = yInGrid % (_itemHeight + spaceY);
+      if (xInGrid > _itemWidth || yInCell > _itemHeight)
         return -1;
 
       int col = lineIndex;
@@ -869,11 +937,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     if (content == null || itemTemplate == null) return;
     if (_dataList == null || index < 0 || index >= _dataList.Count) return;
 
-    if (_scrollCoroutine != null)
-    {
-      StopCoroutine(_scrollCoroutine);
-      _scrollCoroutine = null;
-    }
+    StopSmoothScroll();
     StopMovement();
 
     Vector2 targetAnchored = content.anchoredPosition;
@@ -940,6 +1004,18 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
 
     content.anchoredPosition = targetAnchored;
     RefreshVisible(true);
+    _scrollCoroutine = null;
+  }
+
+  /// <summary>
+  /// 停止正在执行的平滑滚动协程；可重复调用，供新滚动请求和生命周期收口复用。
+  /// </summary>
+  private void StopSmoothScroll()
+  {
+    if (_scrollCoroutine == null)
+      return;
+
+    StopCoroutine(_scrollCoroutine);
     _scrollCoroutine = null;
   }
 }
