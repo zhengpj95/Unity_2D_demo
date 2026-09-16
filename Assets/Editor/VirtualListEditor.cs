@@ -2,31 +2,6 @@ using UnityEditor;
 using UnityEditor.UI;
 using UnityEngine;
 
-// namespace EditorTools
-// {
-//   [CustomEditor(typeof(VirtualList))]
-//   [CanEditMultipleObjects]
-//   public class VirtualListEditor : Editor
-//   {
-//     public override void OnInspectorGUI()
-//     {
-//       serializedObject.Update();
-
-//       DrawPropertiesExcluding(
-//         serializedObject,
-//         new[]
-//         {
-//         "m_HorizontalScrollbarVisibility",
-//         "m_VerticalScrollbarVisibility",
-//         "m_HorizontalScrollbarSpacing",
-//         "m_VerticalScrollbarSpacing"
-//         });
-
-//       serializedObject.ApplyModifiedProperties();
-//     }
-//   }
-// }
-
 namespace EditorTools
 {
   [CustomEditor(typeof(VirtualListEx))]
@@ -53,7 +28,7 @@ namespace EditorTools
     public override void OnInspectorGUI()
     {
       serializedObject.Update();
-      // EditorGUILayout.LabelField("VirtualList Settings", EditorStyles.boldLabel);
+      // EditorGUILayout.LabelField("Virtual List Settings", EditorStyles.boldLabel);
       EditorGUILayout.PropertyField(itemTemplate);
       EditorGUILayout.PropertyField(layoutType);
       EditorGUILayout.PropertyField(spaceX);

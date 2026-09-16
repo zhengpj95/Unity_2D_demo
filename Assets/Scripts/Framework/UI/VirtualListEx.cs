@@ -335,7 +335,7 @@ public class VirtualListEx : ScrollRect, IPointerClickHandler, IPointerDownHandl
   {
     if (itemTemplate == null)
     {
-      // Debug.LogError("VirtualList itemTemplate is null, Please check your list.");
+      Debug.LogError("VirtualListEx itemTemplate is null, Please check your list.");
       return;
     }
 
