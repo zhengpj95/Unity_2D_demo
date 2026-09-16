@@ -12,9 +12,9 @@ public class RankData
 
 public class VirtualListTest : MonoBehaviour
 {
-  [SerializeField] private VirtualListEx list;
-  [SerializeField] private VirtualListEx list2;
-  [SerializeField] private VirtualListEx list3;
+  [SerializeField] private VirtualList list;
+  [SerializeField] private VirtualList list2;
+  [SerializeField] private VirtualList list3;
   [SerializeField] private Transform btnRefresh;
 
   private void Start()

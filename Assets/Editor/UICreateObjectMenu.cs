@@ -44,7 +44,7 @@ public class UICreateObjectMenu
     var root = CreateVirtualListUIObject("List", parent, new Vector2(300f, 200f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
     var rootRect = root.GetComponent<RectTransform>();
 
-    var list = root.AddComponent<VirtualListEx>();
+    var list = root.AddComponent<VirtualList>();
     var image = root.AddComponent<Image>();
     image.color = new Color(1f, 1f, 1f, 0f);
 

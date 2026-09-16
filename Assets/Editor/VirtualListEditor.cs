@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace EditorTools
 {
-  [CustomEditor(typeof(VirtualListEx))]
+  [CustomEditor(typeof(VirtualList))]
   public class VirtualListEditor : ScrollRectEditor
   {
     SerializedProperty itemTemplate;

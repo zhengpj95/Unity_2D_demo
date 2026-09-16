@@ -21,7 +21,7 @@ using UnityEditor;
  */
 [ExecuteInEditMode]
 [RequireComponent(typeof(RectTransform))]
-public class VirtualListEx : ScrollRect, IPointerClickHandler, IPointerDownHandler
+public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
 {
   [Header("引用")]
   [SerializeField] private RectTransform itemTemplate;
