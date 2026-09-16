@@ -7,6 +7,35 @@ using UnityEngine.EventSystems;
 using UnityEditor;
 #endif
 
+/// <summary>
+/// 虚拟列表单元格的渲染与点击回调参数。
+/// </summary>
+/// <remarks>
+/// 点击回调只传递数据与索引，<see cref="itemTransform"/> 可能为 null。
+/// </remarks>
+public struct VirtualListRenderInfo
+{
+  public int index;
+  public object data;
+  public int selectedIndex;
+  public RectTransform itemTransform;
+}
+
+/// <summary>
+/// VirtualList 的目标项滚动对齐方式。
+/// </summary>
+public enum VirtualListScrollAlignment
+{
+  /// <summary>目标项已完整可见时不移动，否则移动到最近可见位置。</summary>
+  Nearest,
+  /// <summary>垂直列表顶部对齐；水平列表左侧对齐。</summary>
+  Start,
+  /// <summary>主轴居中对齐。</summary>
+  Center,
+  /// <summary>垂直列表底部对齐；水平列表右侧对齐。</summary>
+  End
+}
+
 /**
  * 虚拟列表，支持 vertical, horizontal, grid
  * 
@@ -53,8 +82,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     {
       if (itemTemplate == value) return;
       itemTemplate = value;
-      InitItemTemplate();
-      ApplyLayoutSettings();
+      ApplyLayoutSettings(true);
     }
   }
 
@@ -65,7 +93,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     {
       if (spaceX == value) return;
       spaceX = value;
-      ApplyLayoutSettings();
+      ApplyLayoutSettings(true);
     }
   }
 
@@ -76,7 +104,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     {
       if (spaceY == value) return;
       spaceY = value;
-      ApplyLayoutSettings();
+      ApplyLayoutSettings(true);
     }
   }
 
@@ -87,7 +115,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     {
       if (repeatX == value) return;
       repeatX = value;
-      ApplyLayoutSettings();
+      ApplyLayoutSettings(true);
     }
   }
 
@@ -98,13 +126,15 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     {
       if (repeatY == value) return;
       repeatY = value;
-      ApplyLayoutSettings();
+      ApplyLayoutSettings(true);
     }
   }
 
   private readonly List<object> _dataList = new();
   private readonly Queue<RectTransform> _pool = new();
   private readonly List<RectTransform> _visibleItems = new();
+  // 仅在单元格复用到新数据索引时改名，避免选中态刷新重复创建字符串。
+  private readonly Dictionary<RectTransform, int> _itemNameIndices = new();
 #if UNITY_EDITOR
   private readonly List<RectTransform> _previewItems = new();
   private Transform _previewRoot;
@@ -147,6 +177,11 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   }
 
   /// <summary>
+  /// 获取当前数据数量。
+  /// </summary>
+  public int Count => _dataList.Count;
+
+  /// <summary>
   /// 是否是垂直布局
   /// </summary>
   private bool IsVertical => layoutType == LayoutType.Vertical;
@@ -180,6 +215,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   private Coroutine _scrollCoroutine = null;
   // 滚动速度（像素/秒），用于计算平滑滚动的持续时间
   private float _scrollSpeed = 1000f;
+  private bool _hasLoggedInvalidLayout;
 
   /// <summary>
   /// 在编辑器中，Reset 会在组件添加到 GameObject 时被调用。用于自动分配引用。
@@ -320,7 +356,11 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     base.OnValidate();
 
     if (Application.isPlaying)
+    {
+      // Inspector 在运行时修改模板或布局字段时同样重建，不能复用旧模板创建的单元格。
+      ApplyLayoutSettings(true);
       return;
+    }
 
     AutoAssignReferences();
 
@@ -374,6 +414,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   private void InitRect()
   {
     if (itemTemplate == null || viewport == null) return;
+    if (!ValidateLayoutMetrics()) return;
 
     _viewportHeight = viewport.rect.height;
     _viewportWidth = viewport.rect.width;
@@ -466,6 +507,30 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     _pool.Enqueue(item);
   }
 
+  /// <summary>
+  /// 销毁当前模板创建的可见项和缓存项。模板或布局参数变更后必须重建，避免复用旧结构。
+  /// </summary>
+  private void DestroyRuntimeItems()
+  {
+    foreach (var item in _visibleItems)
+    {
+      if (item != null)
+        Destroy(item.gameObject);
+    }
+
+    _visibleItems.Clear();
+
+    while (_pool.Count > 0)
+    {
+      var item = _pool.Dequeue();
+      if (item != null)
+        Destroy(item.gameObject);
+    }
+
+    _itemNameIndices.Clear();
+    _startIndex = -1;
+  }
+
 #if UNITY_EDITOR
   private void EnsurePreviewRoot()
   {
@@ -556,6 +621,27 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   }
 
   /// <summary>
+  /// 清空列表数据、选中状态与当前显示内容。
+  /// </summary>
+  public void Clear()
+  {
+    _dataList.Clear();
+    _selectedIndex = -1;
+
+    if (_isInitialized)
+      RebuildLayoutAndRefresh();
+  }
+
+  /// <summary>
+  /// 强制重新渲染当前可见单元格，不改变数据、布局或滚动位置。
+  /// </summary>
+  public void RefreshVisible()
+  {
+    if (_isInitialized)
+      RefreshVisible(true);
+  }
+
+  /// <summary>
   /// 根据当前 Viewport 和数据重建虚拟项，并将滚动位置限制在新的 Content 范围内。
   /// </summary>
   private void RebuildLayoutAndRefresh()
@@ -563,10 +649,50 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     if (content == null || viewport == null || itemTemplate == null)
       return;
 
+    if (!ValidateLayoutMetrics())
+    {
+      SetVisibleItemsActive(false);
+      return;
+    }
+
     InitRect();
     UpdateContentLayout();
     ClampContentPosition();
     RefreshVisible(true);
+  }
+
+  /// <summary>
+  /// 校验单元格及其间距的步长，避免布局和点击计算发生除零或负步长。
+  /// </summary>
+  private bool ValidateLayoutMetrics()
+  {
+    bool isValid = _itemWidth > 0f && _itemHeight > 0f &&
+                   _itemWidth + spaceX > 0f && _itemHeight + spaceY > 0f;
+    if (isValid)
+    {
+      _hasLoggedInvalidLayout = false;
+      return true;
+    }
+
+    if (!_hasLoggedInvalidLayout)
+    {
+      Debug.LogError("VirtualList layout is invalid: item size and item size plus spacing must be greater than zero.", this);
+      _hasLoggedInvalidLayout = true;
+    }
+
+    return false;
+  }
+
+  /// <summary>
+  /// 隐藏可见单元格，在非法布局参数下避免继续显示旧位置的内容。
+  /// </summary>
+  private void SetVisibleItemsActive(bool isActive)
+  {
+    foreach (var item in _visibleItems)
+    {
+      if (item != null)
+        item.gameObject.SetActive(isActive);
+    }
   }
 
   /// <summary>
@@ -590,8 +716,12 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     content.anchoredPosition = anchoredPosition;
   }
 
-  private void ApplyLayoutSettings()
+  private void ApplyLayoutSettings(bool recreateRuntimeItems = false)
   {
+    // 先清理旧实例：模板被置空时也不能让旧单元格继续显示。
+    if (Application.isPlaying && recreateRuntimeItems && _isInitialized)
+      DestroyRuntimeItems();
+
     if (content == null || itemTemplate == null) return;
 
 #if UNITY_EDITOR
@@ -604,11 +734,17 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     if (!Application.isPlaying)
     {
       Canvas.ForceUpdateCanvases();
+      InitRect();
+      UpdateContentLayout();
+      RefreshVisible(true);
+      return;
     }
 
-    InitRect();
-    UpdateContentLayout();
-    RefreshVisible(true);
+    InitItemTemplate();
+    if (!_isInitialized)
+      return;
+
+    RebuildLayoutAndRefresh();
   }
 
   private void UpdateContentLayout()
@@ -665,6 +801,9 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   // Runtime-only refresh (clean, focused on _visibleItems)
   private void Runtime_RefreshVisible(bool force)
   {
+    if (!ValidateLayoutMetrics())
+      return;
+
     int newStartIndex = 0;
     if (IsVertical)
     {
@@ -753,7 +892,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     if (item == null) return;
 
     item.gameObject.SetActive(true);
-    item.name = "item" + dataIndex;
+    SetItemName(item, dataIndex);
     UpdateItemPosition(item, dataIndex);
 
     // 复用缓存的实例，避免重复new
@@ -762,6 +901,18 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     _cachedRenderInfo.selectedIndex = _selectedIndex;
     _cachedRenderInfo.itemTransform = item;
     renderHandler?.Invoke(_cachedRenderInfo);
+  }
+
+  /// <summary>
+  /// 保持 item 名称可读；同一对象仍对应原索引时不重复创建名称字符串。
+  /// </summary>
+  private void SetItemName(RectTransform item, int dataIndex)
+  {
+    if (_itemNameIndices.TryGetValue(item, out int previousIndex) && previousIndex == dataIndex)
+      return;
+
+    item.name = "item" + dataIndex;
+    _itemNameIndices[item] = dataIndex;
   }
 
   private void UpdateItemPosition(RectTransform itemTransform, int dataIndex)
@@ -863,6 +1014,9 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   /// </summary>
   private int GetItemIndexFromClickPosition(Vector2 localPoint)
   {
+    if (!ValidateLayoutMetrics())
+      return -1;
+
     // 计算点击相对于顶部/左侧的距离
     float clickDistance = IsVertical
       ? -localPoint.y  // 垂直滚动：计算距离顶部的距离
@@ -922,20 +1076,22 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     }
   }
 
-  /// <summary>
-  /// Programmatically scrolls the list so the item at <paramref name="index"/> becomes visible.
-  /// </summary>
-  /// <param name="index">目标项索引</param>
-  /// <param name="smooth">是否平滑滚动</param>
   /// <remarks>
   /// 注意：调用此方法时，布局测量应已更新，以确保滚动位置计算正确。
   /// 若有问题，请在调用前使用 Canvas.ForceUpdateCanvases() 强制更新布局
   /// 或修改VirtualList的布局设置后，确保布局已更新再调用此方法。
   /// </remarks>
-  public void ScrollToIndex(int index, bool smooth = false)
+  /// <summary>
+  /// 将指定项滚动到目标对齐位置。
+  /// </summary>
+  /// <param name="index">目标项索引。</param>
+  /// <param name="smooth">是否平滑滚动。</param>
+  /// <param name="alignment">垂直列表对应顶部、居中、底部；水平列表对应左侧、居中、右侧。</param>
+  public void ScrollToIndex(int index, bool smooth = false, VirtualListScrollAlignment alignment = VirtualListScrollAlignment.Nearest)
   {
     if (content == null || itemTemplate == null) return;
     if (_dataList == null || index < 0 || index >= _dataList.Count) return;
+    if (!ValidateLayoutMetrics()) return;
 
     StopSmoothScroll();
     StopMovement();
@@ -946,7 +1102,8 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     if (IsVertical)
     {
       int row = index / _columns;
-      float target = row * (_itemHeight + spaceY);
+      float itemStart = row * (_itemHeight + spaceY);
+      float target = GetScrollOffset(itemStart, _itemHeight, _viewportHeight, content.anchoredPosition.y, alignment);
       float max = Mathf.Max(0f, content.rect.height - _viewportHeight);
       float clamped = Mathf.Clamp(target, 0f, max);
       targetAnchored.y = clamped;
@@ -955,7 +1112,8 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     else
     {
       int col = index / _rows;
-      float target = col * (_itemWidth + spaceX);
+      float itemStart = col * (_itemWidth + spaceX);
+      float target = GetScrollOffset(itemStart, _itemWidth, _viewportWidth, -content.anchoredPosition.x, alignment);
       float max = Mathf.Max(0f, content.rect.width - _viewportWidth);
       float clamped = Mathf.Clamp(target, 0f, max);
       targetAnchored.x = -clamped;
@@ -977,6 +1135,30 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     {
       content.anchoredPosition = targetAnchored;
       RefreshVisible(true);
+    }
+  }
+
+  /// <summary>
+  /// 按对齐方式计算主轴滚动偏移；Nearest 在目标项已完整可见时保留当前位置。
+  /// </summary>
+  private static float GetScrollOffset(float itemStart, float itemSize, float viewportSize, float currentOffset, VirtualListScrollAlignment alignment)
+  {
+    switch (alignment)
+    {
+      case VirtualListScrollAlignment.Start:
+        return itemStart;
+      case VirtualListScrollAlignment.Center:
+        return itemStart + itemSize * 0.5f - viewportSize * 0.5f;
+      case VirtualListScrollAlignment.End:
+        return itemStart + itemSize - viewportSize;
+      default:
+        float itemEnd = itemStart + itemSize;
+        float viewportEnd = currentOffset + viewportSize;
+        if (itemStart < currentOffset)
+          return itemStart;
+        if (itemEnd > viewportEnd)
+          return itemEnd - viewportSize;
+        return currentOffset;
     }
   }
 
