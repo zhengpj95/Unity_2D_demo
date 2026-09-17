@@ -30,15 +30,10 @@ public class VirtualListTest : MonoBehaviour
       });
     }
 
-    // 设置 renderHandler 回调
-    list.renderHandler = OnRenderItem;
-    list2.renderHandler = OnRenderItem;
-    list3.renderHandler = OnRenderItem;
-
-    // 设置点击回调
-    list.onItemClick = OnListItemClick;
-    list2.onItemClick = OnListItemClick;
-    list3.onItemClick = OnListItemClick;
+    // 每个列表只绑定一个处理者，重复设置会替换之前的全部回调。
+    list.SetHandlers(OnRenderItem, OnListItemClick);
+    list2.SetHandlers(OnRenderItem, OnListItemClick);
+    list3.SetHandlers(OnRenderItem, OnListItemClick);
 
     list.RefreshData(datas);
     list2.RefreshData(datas);
@@ -54,6 +49,19 @@ public class VirtualListTest : MonoBehaviour
     {
       list3.ScrollToIndex(5, true);
     }
+  }
+
+  /// <summary>
+  /// 测试对象销毁时清理列表回调，避免列表被缓存时继续持有当前组件。
+  /// </summary>
+  private void OnDestroy()
+  {
+    if (list != null)
+      list.ClearHandlers();
+    if (list2 != null)
+      list2.ClearHandlers();
+    if (list3 != null)
+      list3.ClearHandlers();
   }
 
   /// <summary>

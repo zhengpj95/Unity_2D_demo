@@ -37,7 +37,9 @@ public enum VirtualListScrollAlignment
 }
 
 /**
- * 虚拟列表，支持 vertical, horizontal, grid
+ * 虚拟列表，支持 vertical, horizontal, grid。
+ * 布局约束：运行时会将 Content 固定为左上锚点与 Pivot；ItemTemplate 必须使用固定尺寸及左上锚点与 Pivot。
+ * 当前实现不支持右到左、底部起始或反向滚动布局。
  * 
  * 点击处理采用矩形区域点击判断方式：
  * - 在VirtualList上统一处理点击，计算是否击中某个item
@@ -53,6 +55,7 @@ public enum VirtualListScrollAlignment
 public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
 {
   [Header("引用")]
+  [Tooltip("固定尺寸模板，锚点与 Pivot 必须位于左上角。")]
   [SerializeField] private RectTransform itemTemplate;
 
   [Header("设置")]
@@ -141,18 +144,10 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   private bool _validateScheduled = false;
 #endif
 
-  /// <summary>
-  /// item 渲染回调：(索引, 数据, RectTransform, 是否被选中)
-  /// </summary>
-  public System.Action<VirtualListRenderInfo> renderHandler;
-  /// <summary>
-  /// item 点击回调：(索引, 数据)
-  /// </summary>
-  public System.Action<VirtualListRenderInfo> onItemClick;
-  /// <summary>
-  /// 滚动位置改变回调：(当前滚动位置)
-  /// </summary>
-  public System.Action<Vector2> onScrollChange;
+  // 每类回调仅保留一个处理者，通过 SetHandlers 原子替换，避免多个对象争夺列表所有权。
+  private Action<VirtualListRenderInfo> _renderHandler;
+  private Action<VirtualListRenderInfo> _itemClickHandler;
+  private Action<Vector2> _scrollChangedHandler;
 
   /// <summary>
   /// 当前选中的item索引，-1表示未选中
@@ -182,6 +177,32 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   public int Count => _dataList.Count;
 
   /// <summary>
+  /// 统一设置当前列表的唯一回调处理者。重复调用会整体替换此前设置的全部回调。
+  /// </summary>
+  /// <param name="renderHandler">单元格渲染回调；不需要时传入 null。</param>
+  /// <param name="itemClickHandler">单元格点击回调；不需要时传入 null。</param>
+  /// <param name="scrollChangedHandler">滚动位置变化回调；不需要时传入 null。</param>
+  public void SetHandlers(
+    Action<VirtualListRenderInfo> renderHandler,
+    Action<VirtualListRenderInfo> itemClickHandler = null,
+    Action<Vector2> scrollChangedHandler = null)
+  {
+    _renderHandler = renderHandler;
+    _itemClickHandler = itemClickHandler;
+    _scrollChangedHandler = scrollChangedHandler;
+  }
+
+  /// <summary>
+  /// 清空当前唯一处理者的全部回调。列表缓存时，绑定方应在关闭或销毁时调用。
+  /// </summary>
+  public void ClearHandlers()
+  {
+    _renderHandler = null;
+    _itemClickHandler = null;
+    _scrollChangedHandler = null;
+  }
+
+  /// <summary>
   /// 是否是垂直布局
   /// </summary>
   private bool IsVertical => layoutType == LayoutType.Vertical;
@@ -202,6 +223,11 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   private int _rows = 1;
   // Start 完成布局测量后才允许按 Viewport 尺寸重建，避免初始化阶段拿到零尺寸。
   private bool _isInitialized;
+  // 上次实际参与布局计算的 Viewport 尺寸，用于过滤无效的尺寸变化通知。
+  private Vector2 _lastViewportSize;
+  private bool _hasViewportSize;
+  // 同帧内合并多次 RectTransform 通知，等待 UI 布局稳定后再重建。
+  private Coroutine _deferredLayoutRebuildCoroutine;
 
   private float _viewportHeight = 0;
   private float _viewportWidth = 0;
@@ -329,6 +355,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   protected override void OnDisable()
   {
     StopSmoothScroll();
+    StopDeferredLayoutRebuild();
     StopMovement();
     base.OnDisable();
   }
@@ -341,7 +368,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     base.OnRectTransformDimensionsChange();
 
     if (Application.isPlaying && _isInitialized)
-      RebuildLayoutAndRefresh();
+      ScheduleLayoutRebuild();
   }
 
   /// <summary>
@@ -659,6 +686,55 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     UpdateContentLayout();
     ClampContentPosition();
     RefreshVisible(true);
+    CacheViewportSize();
+  }
+
+  /// <summary>
+  /// 将尺寸变化合并到下一帧处理，避免布局系统在同一帧多次驱动时重复创建和渲染虚拟项。
+  /// </summary>
+  private void ScheduleLayoutRebuild()
+  {
+    if (_deferredLayoutRebuildCoroutine != null)
+      return;
+
+    _deferredLayoutRebuildCoroutine = StartCoroutine(RebuildLayoutAfterLayoutPass());
+  }
+
+  /// <summary>
+  /// 等待当前 UI 布局完成后，只在 Viewport 实际尺寸变化时重建。
+  /// </summary>
+  private System.Collections.IEnumerator RebuildLayoutAfterLayoutPass()
+  {
+    yield return null;
+    _deferredLayoutRebuildCoroutine = null;
+
+    if (!_isInitialized || !HasViewportSizeChanged())
+      yield break;
+
+    RebuildLayoutAndRefresh();
+  }
+
+  /// <summary>
+  /// 记录当前 Viewport 尺寸，作为后续尺寸变化过滤基准。
+  /// </summary>
+  private void CacheViewportSize()
+  {
+    if (viewport == null)
+      return;
+
+    _lastViewportSize = viewport.rect.size;
+    _hasViewportSize = true;
+  }
+
+  /// <summary>
+  /// 判断 Viewport 尺寸是否真实变化，忽略布局系统产生的重复通知。
+  /// </summary>
+  private bool HasViewportSizeChanged()
+  {
+    if (viewport == null)
+      return false;
+
+    return !_hasViewportSize || (viewport.rect.size - _lastViewportSize).sqrMagnitude > 0.0001f;
   }
 
   /// <summary>
@@ -781,7 +857,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   private void OnScroll(Vector2 value)
   {
     RefreshVisible(false);
-    onScrollChange?.Invoke(value);
+    _scrollChangedHandler?.Invoke(value);
   }
 
   private void RefreshVisible(bool force)
@@ -900,7 +976,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     _cachedRenderInfo.data = _dataList[dataIndex];
     _cachedRenderInfo.selectedIndex = _selectedIndex;
     _cachedRenderInfo.itemTransform = item;
-    renderHandler?.Invoke(_cachedRenderInfo);
+    _renderHandler?.Invoke(_cachedRenderInfo);
   }
 
   /// <summary>
@@ -947,7 +1023,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   /// 1. 获取点击位置（世界坐标）
   /// 2. 转换为content相对坐标
   /// 3. 计算点击落在哪个item
-  /// 4. 调用onItemClick回调
+  /// 4. 调用单一点击处理回调
   /// </summary>
   public void OnPointerClick(PointerEventData eventData)
   {
@@ -991,7 +1067,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
       _cachedRenderInfo.data = _dataList[clickedIndex];
       _cachedRenderInfo.selectedIndex = _selectedIndex;
       _cachedRenderInfo.itemTransform = null;
-      onItemClick?.Invoke(_cachedRenderInfo);
+      _itemClickHandler?.Invoke(_cachedRenderInfo);
 
       // 重新刷新可见区域，以更新选中状态的显示
       RefreshVisible(true);
@@ -1199,5 +1275,17 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
 
     StopCoroutine(_scrollCoroutine);
     _scrollCoroutine = null;
+  }
+
+  /// <summary>
+  /// 停止等待布局完成的延迟重建协程，避免组件禁用后继续访问 UI 引用。
+  /// </summary>
+  private void StopDeferredLayoutRebuild()
+  {
+    if (_deferredLayoutRebuildCoroutine == null)
+      return;
+
+    StopCoroutine(_deferredLayoutRebuildCoroutine);
+    _deferredLayoutRebuildCoroutine = null;
   }
 }

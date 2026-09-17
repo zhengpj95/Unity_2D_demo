@@ -3,7 +3,7 @@ using TMPro;
 
 /// <summary>
 /// 排行榜 item 组件
-/// 监听 VirtualList 的 renderHandler 回调，处理自己的渲染逻辑
+/// 由 VirtualList 的 SetHandlers 渲染回调驱动，处理自己的显示逻辑
 /// </summary>
 public class RankItem : MonoBehaviour
 {
