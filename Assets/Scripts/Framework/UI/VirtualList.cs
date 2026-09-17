@@ -133,7 +133,8 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     }
   }
 
-  private readonly List<object> _dataList = new();
+  // 直接持有调用方的数据源，避免 RefreshData 时复制整表；值类型仅在读取到 object 回调参数时按需装箱。
+  private System.Collections.IList _dataSource;
   private readonly Queue<RectTransform> _pool = new();
   private readonly List<RectTransform> _visibleItems = new();
   // 仅在单元格复用到新数据索引时改名，避免选中态刷新重复创建字符串。
@@ -174,7 +175,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   /// <summary>
   /// 获取当前数据数量。
   /// </summary>
-  public int Count => _dataList.Count;
+  public int Count => _dataSource?.Count ?? 0;
 
   /// <summary>
   /// 统一设置当前列表的唯一回调处理者。重复调用会整体替换此前设置的全部回调。
@@ -626,20 +627,16 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
 #endif
   }
 
-  public void RefreshData<T>(List<T> datas)
+  /// <summary>
+  /// 设置列表数据源并刷新布局。列表不会复制数据；调用方修改数据源后需再次调用本方法。
+  /// </summary>
+  /// <param name="datas">支持索引访问的数据源；传入 null 表示清空列表。</param>
+  public void RefreshData(System.Collections.IList datas)
   {
-    _dataList.Clear();
-
-    if (datas != null)
-    {
-      foreach (var data in datas)
-      {
-        _dataList.Add(data);
-      }
-    }
+    _dataSource = datas;
 
     // 数据缩短或清空后，旧的选中索引不再有效时必须清除。
-    if (_selectedIndex >= _dataList.Count)
+    if (_selectedIndex >= Count)
       _selectedIndex = -1;
 
     // Start 前允许缓存数据；待完成 Viewport 测量后由 Start 统一创建并刷新单元格。
@@ -652,7 +649,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   /// </summary>
   public void Clear()
   {
-    _dataList.Clear();
+    _dataSource = null;
     _selectedIndex = -1;
 
     if (_isInitialized)
@@ -826,7 +823,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   private void UpdateContentLayout()
   {
     // compute content size based on grid columns/rows
-    int totalItems = _dataList.Count;
+    int totalItems = Count;
     int totalRows = Mathf.CeilToInt((float)totalItems / _columns);
     int totalCols = Mathf.CeilToInt((float)totalItems / _rows);
 
@@ -903,7 +900,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
       var item = _visibleItems[i];
       if (item == null) continue;
 
-      if (dataIndex >= _dataList.Count)
+      if (dataIndex >= Count)
       {
         item.gameObject.SetActive(false);
         continue;
@@ -934,7 +931,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     if (!force && newStartIndex == _startIndex) return;
     _startIndex = newStartIndex;
 
-    bool previewEmpty = _dataList.Count == 0;
+    bool previewEmpty = Count == 0;
 
     for (int i = 0; i < _previewItems.Count; i++)
     {
@@ -942,7 +939,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
       var item = _previewItems[i];
       if (item == null) continue;
 
-      if (dataIndex >= _dataList.Count)
+      if (dataIndex >= Count)
       {
         if (previewEmpty)
         {
@@ -973,7 +970,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
 
     // 复用缓存的实例，避免重复new
     _cachedRenderInfo.index = dataIndex;
-    _cachedRenderInfo.data = _dataList[dataIndex];
+    _cachedRenderInfo.data = _dataSource[dataIndex];
     _cachedRenderInfo.selectedIndex = _selectedIndex;
     _cachedRenderInfo.itemTransform = item;
     _renderHandler?.Invoke(_cachedRenderInfo);
@@ -1033,7 +1030,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     if (content == null)
       return;
 
-    if (_dataList.Count == 0)
+    if (Count == 0)
       return;
 
     // 检查是否是滑动操作而不是点击
@@ -1057,14 +1054,14 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     // 根据滚动方向计算点击的item索引
     int clickedIndex = GetItemIndexFromClickPosition(localPoint);
 
-    if (clickedIndex >= 0 && clickedIndex < _dataList.Count)
+    if (clickedIndex >= 0 && clickedIndex < Count)
     {
       // 更新选中索引
       _selectedIndex = clickedIndex;
 
       // 复用缓存的实例，避免重复new
       _cachedRenderInfo.index = clickedIndex;
-      _cachedRenderInfo.data = _dataList[clickedIndex];
+      _cachedRenderInfo.data = _dataSource[clickedIndex];
       _cachedRenderInfo.selectedIndex = _selectedIndex;
       _cachedRenderInfo.itemTransform = null;
       _itemClickHandler?.Invoke(_cachedRenderInfo);
@@ -1166,7 +1163,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   public void ScrollToIndex(int index, bool smooth = false, VirtualListScrollAlignment alignment = VirtualListScrollAlignment.Nearest)
   {
     if (content == null || itemTemplate == null) return;
-    if (_dataList == null || index < 0 || index >= _dataList.Count) return;
+    if (_dataSource == null || index < 0 || index >= Count) return;
     if (!ValidateLayoutMetrics()) return;
 
     StopSmoothScroll();
