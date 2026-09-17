@@ -6,7 +6,7 @@ public sealed class MiscModule : BaseModule
   protected override void OnInit()
   {
     RegPresenter<AlertTipsPanelPresenter>(MiscViewType.AlertTips);
-    RegCmd<OpenAlertTipsCmd>(UIEventDefine.MISC_OPEN_ALERT);
+    RegCmd<OpenAlertTipsCmd>(EventDefine.MISC_OPEN_ALERT);
   }
 
   public AlertTipsPanelPresenter OpenAlert(AlertTipsPanelArgs args)

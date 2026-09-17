@@ -113,7 +113,7 @@ public class LoadingBehaviour : MonoBehaviour
 
   public void OnOpenAlert()
   {
-    EventBus.Emit(UIEventDefine.MISC_OPEN_ALERT, new AlertTipsPanelArgs("警告标题", "警告信息！不允许随便修改！", null));
+    EventBus.Emit(EventDefine.MISC_OPEN_ALERT, new AlertTipsPanelArgs("警告标题", "警告信息！不允许随便修改！", null));
   }
 
   public async void OnSendLogin()
@@ -133,7 +133,7 @@ public class LoadingBehaviour : MonoBehaviour
 
   public void OnClickBtnCmd()
   {
-    EventBus.Emit("login_cmd", "你好");
+    EventBus.Emit(EventDefine.TEST_LOGIN_COMMAND, "你好");
   }
 
   /// <summary>

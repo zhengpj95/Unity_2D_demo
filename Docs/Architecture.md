@@ -169,6 +169,7 @@ Command 不自行成为长期事件中心，不应承担持久化数据容器，
 ### EventBus 使用约定（团队统一规则）
 
 - 统一使用 `EventBus.On(eventName, listener, owner)` / `EventBus.Off(eventName, listener, owner)`。
+- 事件名必须在 `Assets/Scripts/Define/EventDefine.cs` 中集中声明，并按业务域使用对应常量；禁止在业务代码中直接传入事件字符串。
 - `owner` 表示订阅归属对象，通常是 `this`、Presenter、Module 或 UI 实例；它不是可选参数。
 - 同一事件名允许多个 `owner` 同时监听；同一 `owner + listener` 仅允许注册一次，避免重复订阅。
 - 发生销毁、关闭或场景切换时，必须按 owner 做清理，例如 `EventBus.Off(..., this)` 或 `EventBus.OffAll(this)`。
@@ -180,8 +181,8 @@ Command 不自行成为长期事件中心，不应承担持久化数据容器，
 
 ```csharp
 // 正确：按 owner 归属注册
-EventBus.On("UPDATE_HP", OnUpdateHp, this);
-EventBus.Off("UPDATE_HP", OnUpdateHp, this);
+EventBus.On(EventDefine.FROG_HEALTH_CHANGED, OnUpdateHp, this);
+EventBus.Off(EventDefine.FROG_HEALTH_CHANGED, OnUpdateHp, this);
 
 void OnUpdateHp(EventContext context)
 {
@@ -195,8 +196,8 @@ void OnUpdateHp(EventContext context)
 }
 
 // 正确：一个事件可被多个界面同时监听
-EventBus.On("UPDATE_HP", RefreshUIA, panelA);
-EventBus.On("UPDATE_HP", RefreshUIB, panelB);
+EventBus.On(EventDefine.FROG_HEALTH_CHANGED, RefreshUIA, panelA);
+EventBus.On(EventDefine.FROG_HEALTH_CHANGED, RefreshUIB, panelB);
 
 // 错误：不要再写回无 owner 版本
 // EventBus.On("UPDATE_HP", RefreshHp);

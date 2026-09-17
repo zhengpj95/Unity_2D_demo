@@ -11,12 +11,12 @@ namespace Rpg
 
     void Start()
     {
-      EventBus.On("Event_GameOver", UpdateActive, this);
+      EventBus.On(EventDefine.RPG_GAME_OVER, UpdateActive, this);
     }
 
     void OnDestroy()
     {
-      EventBus.Off("Event_GameOver", UpdateActive, this);
+      EventBus.Off(EventDefine.RPG_GAME_OVER, UpdateActive, this);
     }
 
     void UpdateActive(EventContext context)

@@ -16,13 +16,13 @@ namespace FrogAdventure {
     public void ChangeScore(int scoreValue)
     {
       Score += scoreValue;
-      EventBus.Emit("update_score");
+      EventBus.Emit(EventDefine.FROG_SCORE_CHANGED);
     }
 
     public void ResetScore()
     {
       Score = 0;
-      EventBus.Emit("update_score");
+      EventBus.Emit(EventDefine.FROG_SCORE_CHANGED);
     }
   }
 }

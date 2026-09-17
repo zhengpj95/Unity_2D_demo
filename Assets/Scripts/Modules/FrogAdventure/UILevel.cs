@@ -12,8 +12,8 @@ namespace FrogAdventure
     private void Start()
     {
       RefreshLevelText();
-      EventBus.On("UPDATE_LEVEL", SetLevelText, this);
-      EventBus.On("UPDATE_HP", SetHeart, this);
+      EventBus.On(EventDefine.FROG_LEVEL_CHANGED, SetLevelText, this);
+      EventBus.On(EventDefine.FROG_HEALTH_CHANGED, SetHeart, this);
     }
 
     private void SetLevelText(EventContext context)

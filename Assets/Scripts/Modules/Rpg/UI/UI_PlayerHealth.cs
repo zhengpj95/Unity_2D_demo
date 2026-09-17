@@ -12,12 +12,12 @@ namespace Rpg
 
     private void Start()
     {
-      EventBus.On("Event_UpdatePlayerHealth", OnUpdatePlayerHealth, this);
+      EventBus.On(EventDefine.RPG_PLAYER_HEALTH_CHANGED, OnUpdatePlayerHealth, this);
     }
 
     void OnDestroy()
     {
-      EventBus.Off("Event_UpdatePlayerHealth", OnUpdatePlayerHealth, this);
+      EventBus.Off(EventDefine.RPG_PLAYER_HEALTH_CHANGED, OnUpdatePlayerHealth, this);
     }
 
     /// <summary>响应玩家生命值事件；事件本身不需要额外数据。</summary>

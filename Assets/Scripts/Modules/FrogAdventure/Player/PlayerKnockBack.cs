@@ -55,7 +55,7 @@ namespace FrogAdventure {
       Debug.Log("Death");
       GameController.Instance.ResetHp();
       GameController.Instance.IsKnockBack = false;
-      EventBus.Emit("PLAYER_REVIVE");
+      EventBus.Emit(EventDefine.FROG_PLAYER_REVIVE);
       Destroy(gameObject);
     }
   }
