@@ -957,19 +957,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     if (!ValidateLayoutMetrics())
       return;
 
-    int newStartIndex = 0;
-    if (IsVertical)
-    {
-      int startRow = Mathf.FloorToInt(Mathf.Abs(content.anchoredPosition.y) / (_itemHeight + spaceY));
-      startRow = Mathf.Max(0, startRow);
-      newStartIndex = startRow * _columns;
-    }
-    else
-    {
-      int startCol = Mathf.FloorToInt(Mathf.Abs(content.anchoredPosition.x) / (_itemWidth + spaceX));
-      startCol = Mathf.Max(0, startCol);
-      newStartIndex = startCol * _rows;
-    }
+    int newStartIndex = GetStartIndexFromScrollOffset();
 
     if (!force && newStartIndex == _startIndex) return;
     _startIndex = newStartIndex;
@@ -994,19 +982,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   // Editor-only preview refresh (uses _previewItems and shows layout when no data)
   private void Editor_RefreshVisible(bool force)
   {
-    int newStartIndex = 0;
-    if (IsVertical)
-    {
-      int startRow = Mathf.FloorToInt(Mathf.Abs(content.anchoredPosition.y) / (_itemHeight + spaceY));
-      startRow = Mathf.Max(0, startRow);
-      newStartIndex = startRow * _columns;
-    }
-    else
-    {
-      int startCol = Mathf.FloorToInt(Mathf.Abs(content.anchoredPosition.x) / (_itemWidth + spaceX));
-      startCol = Mathf.Max(0, startCol);
-      newStartIndex = startCol * _rows;
-    }
+    int newStartIndex = GetStartIndexFromScrollOffset();
 
     if (!force && newStartIndex == _startIndex) return;
     _startIndex = newStartIndex;
@@ -1039,6 +1015,26 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     }
   }
 #endif
+
+  /// <summary>
+  /// 根据主轴有效滚动偏移计算首个可见数据索引。
+  /// Elastic 回弹或 Unrestricted 越界时，必须夹紧偏移，不能使用绝对值将反向越界误判为正向滚动。
+  /// </summary>
+  private int GetStartIndexFromScrollOffset()
+  {
+    if (IsVertical)
+    {
+      float maxOffset = Mathf.Max(0f, content.rect.height - _viewportHeight);
+      float offset = Mathf.Clamp(content.anchoredPosition.y, 0f, maxOffset);
+      int startRow = Mathf.FloorToInt(offset / (_itemHeight + spaceY));
+      return startRow * _columns;
+    }
+
+    float maxHorizontalOffset = Mathf.Max(0f, content.rect.width - _viewportWidth);
+    float horizontalOffset = Mathf.Clamp(-content.anchoredPosition.x, 0f, maxHorizontalOffset);
+    int startCol = Mathf.FloorToInt(horizontalOffset / (_itemWidth + spaceX));
+    return startCol * _rows;
+  }
 
   private void RefreshItem(RectTransform item, int dataIndex)
   {
