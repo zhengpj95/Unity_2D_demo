@@ -8,44 +8,44 @@ public abstract class BaseEmitter
 {
   private sealed class EventSubscription
   {
-    public string EventName;
+    public int EventId;
     public Action<EventContext> Listener;
   }
 
   private readonly List<EventSubscription> _subscriptions = new();
 
   /// <summary>监听事件；所有监听器统一接收 EventContext。</summary>
-  protected void On(string eventName, Action<EventContext> listener)
+  protected void On(int eventId, Action<EventContext> listener)
   {
-    ValidateEventName(eventName);
+    ValidateEventId(eventId);
     if (listener == null) throw new ArgumentNullException(nameof(listener));
 
     foreach (EventSubscription subscription in _subscriptions)
     {
-      if (subscription.EventName == eventName && Equals(subscription.Listener, listener))
+      if (subscription.EventId == eventId && Equals(subscription.Listener, listener))
         return;
     }
 
-    EventBus.On(eventName, listener, this);
+    EventBus.On(eventId, listener, this);
     _subscriptions.Add(new EventSubscription
     {
-      EventName = eventName,
+      EventId = eventId,
       Listener = listener
     });
   }
 
   /// <summary>发出不携带数据的事件。</summary>
-  protected void Emit(string eventName)
+  protected void Emit(int eventId)
   {
-    ValidateEventName(eventName);
-    EventBus.Emit(eventName);
+    ValidateEventId(eventId);
+    EventBus.Emit(eventId);
   }
 
   /// <summary>发出携带数据的事件。</summary>
-  protected void Emit<T>(string eventName, T data)
+  protected void Emit<T>(int eventId, T data)
   {
-    ValidateEventName(eventName);
-    EventBus.Emit(eventName, data);
+    ValidateEventId(eventId);
+    EventBus.Emit(eventId, data);
   }
 
   /// <summary>解除当前对象通过 On 创建的全部事件订阅；可重复调用。</summary>
@@ -54,16 +54,16 @@ public abstract class BaseEmitter
     for (int i = _subscriptions.Count - 1; i >= 0; i--)
     {
       EventSubscription subscription = _subscriptions[i];
-      EventBus.Off(subscription.EventName, subscription.Listener, this);
+      EventBus.Off(subscription.EventId, subscription.Listener, this);
     }
 
     _subscriptions.Clear();
     EventBus.OffAll(this);
   }
 
-  protected static void ValidateEventName(string eventName)
+  protected static void ValidateEventId(int eventId)
   {
-    if (string.IsNullOrWhiteSpace(eventName))
-      throw new ArgumentException("Event name cannot be null or empty.", nameof(eventName));
+    if (eventId <= 0)
+      throw new ArgumentOutOfRangeException(nameof(eventId), eventId, "Event ID must be greater than zero.");
   }
 }

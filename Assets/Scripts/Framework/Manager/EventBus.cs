@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 
 /// <summary>
-/// 统一事件消息。所有 EventBus 监听器都会收到该结构，EventType 表示事件类型，Data 保存可选数据。
+/// 统一事件消息。所有 EventBus 监听器都会收到该结构，EventId 表示事件类型，Data 保存可选数据。
 /// </summary>
 public readonly struct EventContext
 {
-  /// <summary>事件类型，同时也是 EventBus 的路由键。</summary>
-  public string EventType { get; }
+  /// <summary>事件 ID，同时也是 EventBus 的路由键。</summary>
+  public int EventId { get; }
 
   /// <summary>事件携带的数据；无参事件时为 null。</summary>
   public object Data { get; }
@@ -15,9 +15,9 @@ public readonly struct EventContext
   /// <summary>事件是否携带非 null 数据。</summary>
   public bool HasData => Data != null;
 
-  internal EventContext(string eventType, object data)
+  internal EventContext(int eventId, object data)
   {
-    EventType = eventType;
+    EventId = eventId;
     Data = data;
   }
 
@@ -45,7 +45,7 @@ public readonly struct EventContext
 
     string actualType = Data == null ? "null" : Data.GetType().Name;
     throw new InvalidCastException(
-      $"Event '{EventType}' data type mismatch. Expected: {typeof(T).Name}, Actual: {actualType}.");
+      $"Event '{EventId}' data type mismatch. Expected: {typeof(T).Name}, Actual: {actualType}.");
   }
 }
 
@@ -60,21 +60,21 @@ public static class EventBus
     public Action<EventContext> Handler;
   }
 
-  private static readonly Dictionary<string, List<EventSubscription>> EventTable = new();
+  private static readonly Dictionary<int, List<EventSubscription>> EventTable = new();
 
   /// <summary>
-  /// 监听指定事件。监听器统一接收包含 EventType、Data 和 HasData 的 EventContext。
+  /// 监听指定事件。监听器统一接收包含 EventId、Data 和 HasData 的 EventContext。
   /// </summary>
-  public static void On(string eventName, Action<EventContext> listener, object owner)
+  public static void On(int eventId, Action<EventContext> listener, object owner)
   {
-    ValidateEventName(eventName);
+    ValidateEventId(eventId);
     ValidateOwner(owner);
     if (listener == null) throw new ArgumentNullException(nameof(listener));
 
-    if (!EventTable.TryGetValue(eventName, out List<EventSubscription> subscriptions))
+    if (!EventTable.TryGetValue(eventId, out List<EventSubscription> subscriptions))
     {
       subscriptions = new List<EventSubscription>();
-      EventTable.Add(eventName, subscriptions);
+      EventTable.Add(eventId, subscriptions);
     }
 
     foreach (EventSubscription subscription in subscriptions)
@@ -91,10 +91,11 @@ public static class EventBus
   }
 
   /// <summary>取消指定 owner 的事件监听。</summary>
-  public static void Off(string eventName, Action<EventContext> listener, object owner)
+  public static void Off(int eventId, Action<EventContext> listener, object owner)
   {
+    ValidateEventId(eventId);
     ValidateOwner(owner);
-    if (!EventTable.TryGetValue(eventName, out List<EventSubscription> subscriptions)) return;
+    if (!EventTable.TryGetValue(eventId, out List<EventSubscription> subscriptions)) return;
 
     for (int i = subscriptions.Count - 1; i >= 0; i--)
     {
@@ -103,19 +104,19 @@ public static class EventBus
         subscriptions.RemoveAt(i);
     }
 
-    if (subscriptions.Count == 0) EventTable.Remove(eventName);
+    if (subscriptions.Count == 0) EventTable.Remove(eventId);
   }
 
   /// <summary>发出不携带数据的事件。</summary>
-  public static void Emit(string eventName)
+  public static void Emit(int eventId)
   {
-    Dispatch(new EventContext(eventName, null));
+    Dispatch(new EventContext(eventId, null));
   }
 
   /// <summary>发出携带数据的事件，数据会保存在 EventContext.Data 中。</summary>
-  public static void Emit<T>(string eventName, T data)
+  public static void Emit<T>(int eventId, T data)
   {
-    Dispatch(new EventContext(eventName, data));
+    Dispatch(new EventContext(eventId, data));
   }
 
   /// <summary>清空所有事件监听。</summary>
@@ -129,34 +130,34 @@ public static class EventBus
   {
     ValidateOwner(owner);
 
-    List<string> emptyEvents = null;
-    foreach (KeyValuePair<string, List<EventSubscription>> pair in EventTable)
+    List<int> emptyEventIds = null;
+    foreach (KeyValuePair<int, List<EventSubscription>> pair in EventTable)
     {
       pair.Value.RemoveAll(item => ReferenceEquals(item.Owner, owner));
       if (pair.Value.Count != 0) continue;
 
-      emptyEvents ??= new List<string>();
-      emptyEvents.Add(pair.Key);
+      emptyEventIds ??= new List<int>();
+      emptyEventIds.Add(pair.Key);
     }
 
-    if (emptyEvents == null) return;
-    foreach (string eventName in emptyEvents) EventTable.Remove(eventName);
+    if (emptyEventIds == null) return;
+    foreach (int eventId in emptyEventIds) EventTable.Remove(eventId);
   }
 
   private static void Dispatch(EventContext message)
   {
-    ValidateEventName(message.EventType);
-    if (!EventTable.TryGetValue(message.EventType, out List<EventSubscription> subscriptions)) return;
+    ValidateEventId(message.EventId);
+    if (!EventTable.TryGetValue(message.EventId, out List<EventSubscription> subscriptions)) return;
 
     EventSubscription[] snapshot = subscriptions.ToArray();
     foreach (EventSubscription subscription in snapshot)
       subscription.Handler.Invoke(message);
   }
 
-  private static void ValidateEventName(string eventName)
+  private static void ValidateEventId(int eventId)
   {
-    if (string.IsNullOrWhiteSpace(eventName))
-      throw new ArgumentException("Event name cannot be null or empty.", nameof(eventName));
+    if (eventId <= 0)
+      throw new ArgumentOutOfRangeException(nameof(eventId), eventId, "Event ID must be greater than zero.");
   }
 
   private static void ValidateOwner(object owner)

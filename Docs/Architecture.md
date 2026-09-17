@@ -168,14 +168,14 @@ Command 不自行成为长期事件中心，不应承担持久化数据容器，
 
 ### EventBus 使用约定（团队统一规则）
 
-- 统一使用 `EventBus.On(eventName, listener, owner)` / `EventBus.Off(eventName, listener, owner)`。
-- 事件名必须在 `Assets/Scripts/Define/EventDefine.cs` 中集中声明，并按业务域使用对应常量；禁止在业务代码中直接传入事件字符串。
+- 统一使用 `EventBus.On(eventId, listener, owner)` / `EventBus.Off(eventId, listener, owner)`。
+- 事件 ID 必须在 `Assets/Scripts/Define/EventDefine.cs` 中集中声明；该文件从 1000 起自动分配递增 ID，业务代码禁止直接传入数字。
 - `owner` 表示订阅归属对象，通常是 `this`、Presenter、Module 或 UI 实例；它不是可选参数。
 - 同一事件名允许多个 `owner` 同时监听；同一 `owner + listener` 仅允许注册一次，避免重复订阅。
 - 发生销毁、关闭或场景切换时，必须按 owner 做清理，例如 `EventBus.Off(..., this)` 或 `EventBus.OffAll(this)`。
-- 不再使用无 owner 的旧写法：`EventBus.On(eventName, listener)`、`EventBus.Off(eventName, listener)`。
-- 所有监听器统一使用 `Action<EventContext>`；`EventContext.EventType` 保存事件名，`Data` 保存可选数据，`HasData` 直接根据 `Data != null` 判断是否存在数据，因此无参派发与显式传入 `null` 都视为无数据。
-- `Emit(eventName)` 与 `Emit(eventName, data)` 可以用于同一事件名，监听方通过 `HasData` 判断是否携带数据，并通过 `TryGetData<T>` 或 `GetData<T>` 读取具体类型。
+- 不再使用无 owner 的旧写法：`EventBus.On(eventId, listener)`、`EventBus.Off(eventId, listener)`。
+- 所有监听器统一使用 `Action<EventContext>`；`EventContext.EventId` 保存事件 ID，`Data` 保存可选数据，`HasData` 直接根据 `Data != null` 判断是否存在数据，因此无参派发与显式传入 `null` 都视为无数据。
+- `Emit(eventId)` 与 `Emit(eventId, data)` 可以用于同一事件 ID，监听方通过 `HasData` 判断是否携带数据，并通过 `TryGetData<T>` 或 `GetData<T>` 读取具体类型。
 - 统一消息结构以一次 `object` 装箱换取相同事件名下的有参/无参派发能力；高频且类型固定的对象内部通知仍优先使用直接调用或强类型 C# 事件。
 - `owner` 不可为 `null`；传入 `null` 会抛出 `ArgumentNullException`，避免产生无法通过 `OffAll(owner)` 清理的订阅。
 
@@ -200,7 +200,7 @@ EventBus.On(EventDefine.FROG_HEALTH_CHANGED, RefreshUIA, panelA);
 EventBus.On(EventDefine.FROG_HEALTH_CHANGED, RefreshUIB, panelB);
 
 // 错误：不要再写回无 owner 版本
-// EventBus.On("UPDATE_HP", RefreshHp);
+// EventBus.On(EventDefine.FROG_HEALTH_CHANGED, RefreshHp);
 ```
 
 ### Presenter / View

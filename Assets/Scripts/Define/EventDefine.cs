@@ -1,30 +1,38 @@
 /// <summary>
 /// 项目 EventBus 事件名集中定义。
-/// 常量名称和事件键均使用“业务前缀 + 事件语义”的大写格式；调用方必须使用此处常量，避免散落的字符串在重构时失配。
+/// 常量名称使用“业务前缀 + 事件语义”的大写格式，并通过自增数字生成运行期唯一事件 ID。
 /// </summary>
 public static class EventDefine
 {
+  // EventBus 事件仅在当前进程内使用；从 1000 起按声明顺序自动分配，新增事件必须追加在末尾以保持当前编号顺序。
+  private static int _nextId = 1000;
+
+  private static int NextId()
+  {
+    return _nextId++;
+  }
+
   /// <summary>请求打开通用提示弹窗，数据类型为 AlertTipsPanelArgs。</summary>
-  public const string MISC_OPEN_ALERT = "MISC_OPEN_ALERT";
+  public static readonly int MISC_OPEN_ALERT = NextId();
 
   /// <summary>水果分数发生变化。</summary>
-  public const string FROG_SCORE_CHANGED = "FROG_SCORE_CHANGED";
+  public static readonly int FROG_SCORE_CHANGED = NextId();
 
   /// <summary>当前关卡发生变化。</summary>
-  public const string FROG_LEVEL_CHANGED = "FROG_LEVEL_CHANGED";
+  public static readonly int FROG_LEVEL_CHANGED = NextId();
 
   /// <summary>玩家生命值发生变化。</summary>
-  public const string FROG_HEALTH_CHANGED = "FROG_HEALTH_CHANGED";
+  public static readonly int FROG_HEALTH_CHANGED = NextId();
 
   /// <summary>请求复活玩家。</summary>
-  public const string FROG_PLAYER_REVIVE = "FROG_PLAYER_REVIVE";
+  public static readonly int FROG_PLAYER_REVIVE = NextId();
 
   /// <summary>玩家生命值显示需要刷新。</summary>
-  public const string RPG_PLAYER_HEALTH_CHANGED = "RPG_PLAYER_HEALTH_CHANGED";
+  public static readonly int RPG_PLAYER_HEALTH_CHANGED = NextId();
 
   /// <summary>玩家死亡，数据类型为 bool，表示 GameOver 面板是否显示。</summary>
-  public const string RPG_GAME_OVER = "RPG_GAME_OVER";
+  public static readonly int RPG_GAME_OVER = NextId();
 
   /// <summary>登录 Command 的测试事件，数据类型为 string。</summary>
-  public const string TEST_LOGIN_COMMAND = "TEST_LOGIN_COMMAND";
+  public static readonly int TEST_LOGIN_COMMAND = NextId();
 }
