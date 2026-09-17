@@ -38,6 +38,15 @@ public enum VirtualListScrollAlignment
 
 /**
  * 虚拟列表，支持 vertical, horizontal, grid。
+ * 已实现功能：
+ * 1. 支持垂直、水平及固定行列数的网格虚拟列表布局。
+ * 2. 按 Viewport 可见范围创建并复用单元格，降低大数据量列表的实例数量。
+ * 3. 支持数据源刷新、清空、可见项强制刷新与数据数量查询。
+ * 4. 支持单一渲染、点击和滚动位置回调处理者，并提供显式清理入口。
+ * 5. 支持点击选中、防滑动误触、按稳定键恢复重排后的选中项。
+ * 6. 支持滚动到指定索引，并提供最近、起始、居中和末尾对齐方式及平滑滚动。
+ * 7. 支持运行时模板或布局参数变更后的池重建、尺寸变化合并重建及参数有效性校验。
+ * 8. 支持编辑器预览、自动查找 Viewport / Content / 模板引用。
  * 布局约束：运行时会将 Content 固定为左上锚点与 Pivot；ItemTemplate 必须使用固定尺寸及左上锚点与 Pivot。
  * 当前实现不支持右到左、底部起始或反向滚动布局。
  * 
@@ -154,6 +163,10 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   /// 当前选中的item索引，-1表示未选中
   /// </summary>
   private int _selectedIndex = -1;
+  // 可选稳定键：配置后数据重排时按键恢复选中项，而不是沿用旧索引。
+  private Func<object, object> _selectionKeySelector;
+  private object _selectedKey;
+  private bool _hasSelectedKey;
 
   /// <summary>
   /// 获取当前选中的索引
@@ -163,10 +176,9 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     get => _selectedIndex;
     set
     {
-      if (_selectedIndex == value)
+      if (!SetSelectedIndex(value))
         return;
 
-      _selectedIndex = value;
       // 选中状态改变时，重新刷新可见区域
       RefreshVisible(true);
     }
@@ -176,6 +188,16 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   /// 获取当前数据数量。
   /// </summary>
   public int Count => _dataSource?.Count ?? 0;
+
+  /// <summary>
+  /// 设置用于识别同一业务项的稳定键选择器。配置后 RefreshData 会在数据重排、插入或删除后恢复选中项。
+  /// </summary>
+  /// <param name="selectionKeySelector">根据数据返回非 null 且稳定唯一的键；传入 null 时退回按索引保存选中状态。</param>
+  public void SetSelectionKeySelector(Func<object, object> selectionKeySelector)
+  {
+    _selectionKeySelector = selectionKeySelector;
+    CacheSelectedKey();
+  }
 
   /// <summary>
   /// 统一设置当前列表的唯一回调处理者。重复调用会整体替换此前设置的全部回调。
@@ -635,9 +657,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   {
     _dataSource = datas;
 
-    // 数据缩短或清空后，旧的选中索引不再有效时必须清除。
-    if (_selectedIndex >= Count)
-      _selectedIndex = -1;
+    RestoreSelectedIndex();
 
     // Start 前允许缓存数据；待完成 Viewport 测量后由 Start 统一创建并刷新单元格。
     if (_isInitialized)
@@ -650,7 +670,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   public void Clear()
   {
     _dataSource = null;
-    _selectedIndex = -1;
+    SetSelectedIndex(-1);
 
     if (_isInitialized)
       RebuildLayoutAndRefresh();
@@ -663,6 +683,66 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   {
     if (_isInitialized)
       RefreshVisible(true);
+  }
+
+  /// <summary>
+  /// 设置选中索引并同步稳定键。无效索引会清除选中状态。
+  /// </summary>
+  private bool SetSelectedIndex(int index)
+  {
+    int validIndex = index >= 0 && index < Count ? index : -1;
+    if (_selectedIndex == validIndex)
+      return false;
+
+    _selectedIndex = validIndex;
+    CacheSelectedKey();
+    return true;
+  }
+
+  /// <summary>
+  /// 从当前选中项缓存稳定键；未配置选择器、无选中项或键为 null 时不保留键。
+  /// </summary>
+  private void CacheSelectedKey()
+  {
+    _selectedKey = null;
+    _hasSelectedKey = false;
+
+    if (_selectionKeySelector == null || _dataSource == null || _selectedIndex < 0 || _selectedIndex >= Count)
+      return;
+
+    object key = _selectionKeySelector(_dataSource[_selectedIndex]);
+    if (key == null)
+      return;
+
+    _selectedKey = key;
+    _hasSelectedKey = true;
+  }
+
+  /// <summary>
+  /// 刷新数据源后优先按稳定键查找选中项；未启用稳定键时保持原有按索引行为。
+  /// </summary>
+  private void RestoreSelectedIndex()
+  {
+    if (_selectionKeySelector != null && _hasSelectedKey)
+    {
+      for (int i = 0; i < Count; i++)
+      {
+        object key = _selectionKeySelector(_dataSource[i]);
+        if (Equals(_selectedKey, key))
+        {
+          _selectedIndex = i;
+          return;
+        }
+      }
+
+      _selectedIndex = -1;
+      _selectedKey = null;
+      _hasSelectedKey = false;
+      return;
+    }
+
+    if (_selectedIndex >= Count)
+      SetSelectedIndex(-1);
   }
 
   /// <summary>
@@ -1056,8 +1136,8 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
 
     if (clickedIndex >= 0 && clickedIndex < Count)
     {
-      // 更新选中索引
-      _selectedIndex = clickedIndex;
+      // 更新选中索引及其稳定键。
+      SetSelectedIndex(clickedIndex);
 
       // 复用缓存的实例，避免重复new
       _cachedRenderInfo.index = clickedIndex;

@@ -5,6 +5,7 @@ using TMPro;
 
 public class RankData
 {
+  public int Id;
   public string Name;
 
   public int Score;
@@ -25,6 +26,7 @@ public class VirtualListTest : MonoBehaviour
     {
       datas.Add(new RankData
       {
+        Id = i,
         Name = $"玩家{i}",
         Score = i * 100
       });
@@ -34,6 +36,9 @@ public class VirtualListTest : MonoBehaviour
     list.SetHandlers(OnRenderItem, OnListItemClick);
     list2.SetHandlers(OnRenderItem, OnListItemClick);
     list3.SetHandlers(OnRenderItem, OnListItemClick);
+    list.SetSelectionKeySelector(data => ((RankData)data).Id);
+    list2.SetSelectionKeySelector(data => ((RankData)data).Id);
+    list3.SetSelectionKeySelector(data => ((RankData)data).Id);
 
     list.RefreshData(datas);
     list2.RefreshData(datas);
