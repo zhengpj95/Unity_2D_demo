@@ -390,7 +390,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   {
     base.OnRectTransformDimensionsChange();
 
-    if (Application.isPlaying && _isInitialized)
+    if (Application.isPlaying && _isInitialized && isActiveAndEnabled)
       ScheduleLayoutRebuild();
   }
 
@@ -771,6 +771,10 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   /// </summary>
   private void ScheduleLayoutRebuild()
   {
+    // CanvasScaler 在退出 Play Mode 的禁用阶段仍可能触发尺寸回调；非激活对象无法启动协程。
+    if (!isActiveAndEnabled)
+      return;
+
     if (_deferredLayoutRebuildCoroutine != null)
       return;
 
@@ -1235,8 +1239,8 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   /// </summary>
   /// <param name="index">目标项索引。</param>
   /// <param name="smooth">是否平滑滚动。</param>
-  /// <param name="alignment">垂直列表对应顶部、居中、底部；水平列表对应左侧、居中、右侧。</param>
-  public void ScrollToIndex(int index, bool smooth = false, VirtualListScrollAlignment alignment = VirtualListScrollAlignment.Nearest)
+  /// <param name="alignment">对齐方式，默认 Start；垂直列表对应顶部、居中、底部，水平列表对应左侧、居中、右侧。</param>
+  public void ScrollToIndex(int index, bool smooth = false, VirtualListScrollAlignment alignment = VirtualListScrollAlignment.Start)
   {
     if (content == null || itemTemplate == null) return;
     if (_dataSource == null || index < 0 || index >= Count) return;
