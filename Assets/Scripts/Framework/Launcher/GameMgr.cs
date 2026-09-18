@@ -9,7 +9,7 @@ public sealed class GameMgr : MonoBehaviour
   private bool _isDuplicate;
 
   // 开发阶段可关闭 Socket，使未启动本地服务端时也能完整运行客户端流程。
-  private static readonly bool EnableSocketConnection = false;
+  private static readonly bool EnableSocketConnection = true;
   private const string ServerUrl = "ws://localhost:3000";
 
   private void Awake()

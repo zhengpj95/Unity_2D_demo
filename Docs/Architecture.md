@@ -290,7 +290,7 @@ Presenter / UI
 - 协议处理优先落到 Proxy/业务层；
 - `cmd` 类型在整个协议链路保持统一；
 - Proto 映射/注册优先自动化，避免业务协议越来越多后维护大量手写注册代码。
-- `NetworkMgr` 通过 `ConnectionState` / `ConnectionStateChanged` 向业务层暴露连接流程；首次连接失败与已连接后的断线都会进入基础重连流程。`GameMgr.EnableSocketConnection` 是开发期代码开关，关闭时客户端不主动建立 Socket。
+- `NetworkMgr` 通过 `ConnectionState` / `ConnectionStateChanged` 向业务层暴露连接流程；首次连接失败与已连接后的断线都会进入指数退避重连流程，等待时间受上限和随机抖动控制，`Close()` / `Dispose()` 会取消等待中的重连。`GameMgr.EnableSocketConnection` 是开发期代码开关，关闭时客户端不主动建立 Socket。
 - `NetworkMgr` 的 `Send` 返回传输结果；`Request` 支持按 responseCmd 等待响应并超时。`MessageId` 是请求/响应的业务协议类型，同一 responseCmd 由唯一职责方处理，不支持并发等待。网络层通过 `ConnectionFailed` 上报重连耗尽，由 `MiscModule` 决定通用提示与场景重载，不再直接依赖 UI 或场景 API。
 
 Network 的已知限制、优化优先级与后续规划统一记录在 `Assets/Scripts/Framework/Network/README.md`；新增网络能力时应同步更新该文档。

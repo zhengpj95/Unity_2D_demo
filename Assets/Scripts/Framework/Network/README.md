@@ -2,7 +2,7 @@
 
 ## 0. 当前状态、已知限制与后续规划
 
-当前已实现连接状态 `ConnectionState` / `ConnectionStateChanged`、基础固定间隔重连，以及首次连接失败后的重连。`GameMgr.EnableSocketConnection` 是开发期代码开关，默认关闭时不会主动建立 Socket，本地服务端未启动也可运行客户端流程。
+当前已实现连接状态 `ConnectionState` / `ConnectionStateChanged`、首次连接失败后的重连，以及带上限和随机抖动的指数退避。`GameMgr.EnableSocketConnection` 是开发期代码开关，默认关闭时不会主动建立 Socket，本地服务端未启动也可运行客户端流程。
 
 以下内容按优先级记录，尚未实现：
 
@@ -10,7 +10,7 @@
 2. **连接任务取消与地址切换策略（P1）**：同一地址的并发 `Connect` 已合并，旧 Socket 会先关闭再释放；当前地址切换要求先 `Close()`，后续可按业务需要补充取消令牌或受控切换策略。
 3. **发送结果与请求超时（已实现基础版本）**：`Send` 返回 `NetworkSendResult`；`Request` 可等待指定 responseCmd 并超时。`MessageId` 表示请求/响应的业务协议类型，同一响应协议应由唯一职责方处理，因此同一 responseCmd 仅允许一个等待请求。
 4. **框架与业务解耦（已处理）**：`NetworkMgr` 仅上报 `ConnectionFailed`，通用提示与重载场景逻辑已迁移到 `MiscModule`。
-5. **重连策略完善（P2）**：当前为固定间隔重试；后续可增加指数退避、随机抖动和取消令牌，避免大量客户端同时重连。
+5. **重连策略完善（已处理）**：重连等待按 `ReconnectDelaySeconds * 2^(尝试次数 - 1)` 增长，受 `MaxReconnectDelaySeconds` 限制，并按 `ReconnectJitterRatio` 增减随机抖动；`Close()` 与 `Dispose()` 会取消等待中的重连任务，避免无效重试和大量客户端同时重连。
 6. **心跳与平台验证（P2）**：需要加入心跳/超时检测，并按目标平台验证 NativeWebSocket 的消息队列驱动与主线程回调要求。
 7. **可观测性与测试（P2）**：当前连接、重连、收发原始字节、协议编解码、分发、关闭与异常均已输出 `[SocketMgr]` / `[NetworkMgr]` 调试日志（记录 URL、状态、cmd、消息类型和字节长度，不输出完整协议内容）。后续补充连接次数、重连次数、收发包量、失败原因统计，以及 PacketCodec、ProtoMgr、Dispatcher 和重连状态机的自动化测试。
 

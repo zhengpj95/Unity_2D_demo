@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Google.Protobuf;
 using System.Collections.Generic;
@@ -83,9 +84,12 @@ public class NetworkMgr : Singleton<NetworkMgr>
   private readonly List<Action> _pendingRegistrations = new();
   private readonly Dictionary<uint, int> _commandVersions = new();
   private readonly Dictionary<uint, PendingRequest> _pendingRequests = new();
+  private readonly System.Random _reconnectRandom = new();
+  private readonly object _reconnectRandomLock = new();
   private string _url;
   private Task<bool> _connectTask;
   private Task _reconnectTask;
+  private CancellationTokenSource _reconnectCancellation;
   private bool _manualClose;
   private bool _hasEstablishedConnection;
   private string _lastConnectionError;
@@ -101,6 +105,12 @@ public class NetworkMgr : Singleton<NetworkMgr>
 
   /// <summary>两次重连尝试之间的间隔（秒）。</summary>
   public float ReconnectDelaySeconds { get; set; } = 2f;
+
+  /// <summary>重连退避的最大等待秒数；小于等于零表示不限制上限。</summary>
+  public float MaxReconnectDelaySeconds { get; set; } = 30f;
+
+  /// <summary>重连等待时间的随机抖动比例，取值会被限制在 0 到 1 之间。</summary>
+  public float ReconnectJitterRatio { get; set; } = 0.2f;
 
   public event Action Connected;
   public event Action Disconnected;
@@ -198,8 +208,10 @@ public class NetworkMgr : Singleton<NetworkMgr>
     return _connectTask;
   }
 
-  private async Task<bool> ConnectSocketAsync()
+  private async Task<bool> ConnectSocketAsync(CancellationToken cancellationToken = default)
   {
+    cancellationToken.ThrowIfCancellationRequested();
+
     if (IsConnected)
     {
       Debug.Log($"{LogTag} Socket creation skipped because it is already connected. Url={_url}");
@@ -212,6 +224,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
     FlushPendingRegistrations();
 
     await CloseAndDisposeCurrentSocketAsync();
+    cancellationToken.ThrowIfCancellationRequested();
     if (_manualClose || string.IsNullOrWhiteSpace(_url))
     {
       Debug.LogWarning($"{LogTag} Socket creation cancelled. ManualClose={_manualClose}, Url={_url}");
@@ -227,6 +240,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
 
     Debug.Log($"{LogTag} Socket created and callbacks registered. Url={_url}");
     await socket.Connect(_url);
+    cancellationToken.ThrowIfCancellationRequested();
     bool connected = ReferenceEquals(socket, _socketMgr) && socket.IsConnected;
     Debug.Log($"{LogTag} Socket connection attempt finished. Url={_url}, Connected={connected}, SocketState={socket.State}");
     return connected;
@@ -281,30 +295,52 @@ public class NetworkMgr : Singleton<NetworkMgr>
       return;
     }
 
-    Debug.Log($"{LogTag} Reconnect scheduled. Url={_url}, DelaySeconds={ReconnectDelaySeconds}, MaxAttempts={MaxReconnectAttempts}");
+    Debug.Log($"{LogTag} Reconnect scheduled. Url={_url}, BaseDelaySeconds={ReconnectDelaySeconds}, MaxDelaySeconds={MaxReconnectDelaySeconds}, JitterRatio={ReconnectJitterRatio}, MaxAttempts={MaxReconnectAttempts}");
     SetConnectionState(NetworkConnectionState.Reconnecting);
-    _reconnectTask = ReconnectLoopAsync();
+    CancellationTokenSource reconnectCancellation = new();
+    _reconnectCancellation = reconnectCancellation;
+    _reconnectTask = ReconnectLoopAsync(reconnectCancellation);
   }
 
-  private async Task ReconnectLoopAsync()
+  /// <summary>按指数退避和随机抖动执行重连；关闭或释放时可通过取消令牌立刻停止等待。</summary>
+  private async Task ReconnectLoopAsync(CancellationTokenSource reconnectCancellation)
   {
     int attempt = 0;
-    while (!_manualClose && !IsConnected && (MaxReconnectAttempts < 0 || attempt < MaxReconnectAttempts))
+    CancellationToken cancellationToken = reconnectCancellation.Token;
+    try
     {
-      attempt++;
-      int delayMilliseconds = Mathf.Max(0, Mathf.RoundToInt(ReconnectDelaySeconds * 1000f));
-      if (delayMilliseconds > 0) await Task.Delay(delayMilliseconds);
-      if (_manualClose || IsConnected) break;
+      while (!_manualClose && !IsConnected && (MaxReconnectAttempts < 0 || attempt < MaxReconnectAttempts))
+      {
+        attempt++;
+        float delaySeconds = CalculateReconnectDelaySeconds(attempt);
+        Debug.Log($"{LogTag} Reconnect waiting. Url={_url}, Attempt={attempt}, DelaySeconds={delaySeconds:F2}, MaxAttempts={MaxReconnectAttempts}");
+        if (delaySeconds > 0f)
+          await Task.Delay(TimeSpan.FromSeconds(delaySeconds), cancellationToken);
 
-      Debug.Log($"{LogTag} Reconnecting. Url={_url}, Attempt={attempt}, MaxAttempts={MaxReconnectAttempts}");
-      if (await ConnectSocketAsync()) return;
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_manualClose || IsConnected) break;
+
+        Debug.Log($"{LogTag} Reconnecting. Url={_url}, Attempt={attempt}, MaxAttempts={MaxReconnectAttempts}");
+        if (await ConnectSocketAsync(cancellationToken)) return;
+      }
+
+      if (!IsConnected && !_manualClose)
+      {
+        Debug.LogError($"{LogTag} Reconnect attempts exhausted. Url={_url}, AttemptCount={attempt}, LastError={_lastConnectionError}");
+        SetConnectionState(NetworkConnectionState.Failed);
+        ConnectionFailed?.Invoke(new NetworkConnectionFailure(_lastConnectionError, attempt));
+      }
     }
-
-    if (!IsConnected && !_manualClose)
+    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
     {
-      Debug.LogError($"{LogTag} Reconnect attempts exhausted. Url={_url}, AttemptCount={attempt}, LastError={_lastConnectionError}");
-      SetConnectionState(NetworkConnectionState.Failed);
-      ConnectionFailed?.Invoke(new NetworkConnectionFailure(_lastConnectionError, attempt));
+      Debug.Log($"{LogTag} Reconnect cancelled. Url={_url}, AttemptCount={attempt}");
+    }
+    finally
+    {
+      if (ReferenceEquals(_reconnectCancellation, reconnectCancellation))
+        _reconnectCancellation = null;
+
+      reconnectCancellation.Dispose();
     }
   }
 
@@ -434,6 +470,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
   {
     Debug.Log($"{LogTag} Manual close requested. Url={_url}, State={ConnectionState}");
     _manualClose = true;
+    CancelReconnect();
     _url = null;
     _hasEstablishedConnection = false;
     SetConnectionState(NetworkConnectionState.Closing);
@@ -447,6 +484,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
   {
     Debug.Log($"{LogTag} Disposing network manager. Url={_url}, State={ConnectionState}");
     _manualClose = true;
+    CancelReconnect();
     _url = null;
     _hasEstablishedConnection = false;
     CancelPendingRequests();
@@ -455,6 +493,35 @@ public class NetworkMgr : Singleton<NetworkMgr>
     _connectTask = null;
     _reconnectTask = null;
     SetConnectionState(NetworkConnectionState.Disconnected);
+  }
+
+  /// <summary>计算本次重连前的等待时间：基础间隔按 2 的幂增长，达到上限后保持，并叠加随机抖动。</summary>
+  private float CalculateReconnectDelaySeconds(int attempt)
+  {
+    float baseDelay = Mathf.Max(0f, ReconnectDelaySeconds);
+    int exponent = Mathf.Clamp(attempt - 1, 0, 30);
+    float exponentialDelay = baseDelay * Mathf.Pow(2f, exponent);
+    float maxDelay = Mathf.Max(0f, MaxReconnectDelaySeconds);
+    float cappedDelay = maxDelay > 0f ? Mathf.Min(exponentialDelay, maxDelay) : exponentialDelay;
+    float jitterRange = cappedDelay * Mathf.Clamp01(ReconnectJitterRatio);
+    if (jitterRange <= 0f)
+      return cappedDelay;
+
+    double randomValue;
+    lock (_reconnectRandomLock)
+      randomValue = _reconnectRandom.NextDouble() * 2d - 1d;
+
+    return Mathf.Max(0f, cappedDelay + (float)(randomValue * jitterRange));
+  }
+
+  /// <summary>取消正在等待的重连循环；不会影响已经建立的连接。</summary>
+  private void CancelReconnect()
+  {
+    if (_reconnectCancellation == null || _reconnectCancellation.IsCancellationRequested)
+      return;
+
+    Debug.Log($"{LogTag} Cancelling reconnect task. Url={_url}");
+    _reconnectCancellation.Cancel();
   }
 
   private int GetNextCommandVersion(uint cmd)
