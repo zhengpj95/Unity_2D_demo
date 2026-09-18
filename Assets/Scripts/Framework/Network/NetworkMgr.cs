@@ -6,6 +6,19 @@ using Google.Protobuf;
 using System.Collections.Generic;
 
 /// <summary>
+/// 网络连接状态。状态只描述客户端连接流程，不承载具体业务登录或鉴权状态。
+/// </summary>
+public enum NetworkConnectionState
+{
+  Disconnected,
+  Connecting,
+  Connected,
+  Reconnecting,
+  Failed,
+  Closing
+}
+
+/// <summary>
 /// 网络连接与消息分发管理器。
 /// Dispatcher 在整个 NetworkMgr 生命周期内复用，断线重连只替换 Socket，不会丢失协议回调。
 /// </summary>
@@ -24,6 +37,9 @@ public class NetworkMgr : Singleton<NetworkMgr>
   /// <summary>是否已连接。</summary>
   public bool IsConnected => _socketMgr != null && _socketMgr.IsConnected;
 
+  /// <summary>当前网络连接状态，供业务层决定加载、提示或降级策略。</summary>
+  public NetworkConnectionState ConnectionState { get; private set; } = NetworkConnectionState.Disconnected;
+
   /// <summary>自动重连最大尝试次数；小于 0 表示持续重连。</summary>
   public int MaxReconnectAttempts { get; set; } = 3;
 
@@ -32,6 +48,8 @@ public class NetworkMgr : Singleton<NetworkMgr>
 
   public event Action Connected;
   public event Action Disconnected;
+  /// <summary>连接状态变化通知。首次连接失败、重连与重连耗尽都会触发。</summary>
+  public event Action<NetworkConnectionState> ConnectionStateChanged;
 
   private void FlushPendingRegistrations()
   {
@@ -85,9 +103,11 @@ public class NetworkMgr : Singleton<NetworkMgr>
     _connectionFailurePromptShown = false;
     if (IsConnected)
     {
+      SetConnectionState(NetworkConnectionState.Connected);
       return Task.CompletedTask;
     }
 
+    SetConnectionState(NetworkConnectionState.Connecting);
     return ConnectSocketAsync();
   }
 
@@ -123,6 +143,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
     Debug.Log("[NetworkMgr] Connected.");
     _hasEstablishedConnection = true;
     _connectionFailurePromptShown = false;
+    SetConnectionState(NetworkConnectionState.Connected);
     Connected?.Invoke();
   }
 
@@ -130,9 +151,15 @@ public class NetworkMgr : Singleton<NetworkMgr>
   {
     if (!ReferenceEquals(socket, _socketMgr)) return;
     Debug.LogWarning($"[NetworkMgr] Connection closed: {code}");
-    if (!_hasEstablishedConnection) return;
 
-    Disconnected?.Invoke();
+    if (_manualClose)
+    {
+      SetConnectionState(NetworkConnectionState.Disconnected);
+      return;
+    }
+
+    if (_hasEstablishedConnection)
+      Disconnected?.Invoke();
     ScheduleReconnect();
   }
 
@@ -140,8 +167,6 @@ public class NetworkMgr : Singleton<NetworkMgr>
   {
     if (!ReferenceEquals(socket, _socketMgr)) return;
     Debug.LogWarning($"[NetworkMgr] Socket error: {error}");
-    if (!_hasEstablishedConnection) return;
-
     ScheduleReconnect();
   }
 
@@ -150,6 +175,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
     if (_manualClose || string.IsNullOrWhiteSpace(_url) || IsConnected) return;
     if (_reconnectTask != null && !_reconnectTask.IsCompleted) return;
 
+    SetConnectionState(NetworkConnectionState.Reconnecting);
     _reconnectTask = ReconnectLoopAsync();
   }
 
@@ -170,6 +196,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
     if (!IsConnected && !_manualClose)
     {
       Debug.LogError("[NetworkMgr] Reconnect attempts exhausted.");
+      SetConnectionState(NetworkConnectionState.Failed);
       if (!_connectionFailurePromptShown)
       {
         _connectionFailurePromptShown = true;
@@ -218,7 +245,9 @@ public class NetworkMgr : Singleton<NetworkMgr>
     _manualClose = true;
     _url = null;
     _hasEstablishedConnection = false;
+    SetConnectionState(NetworkConnectionState.Closing);
     if (_socketMgr != null) await _socketMgr.Close();
+    SetConnectionState(NetworkConnectionState.Disconnected);
   }
 
   public void Dispose()
@@ -229,6 +258,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
     _socketMgr?.Dispose();
     _socketMgr = null;
     _reconnectTask = null;
+    SetConnectionState(NetworkConnectionState.Disconnected);
   }
 
   private int GetNextCommandVersion(uint cmd)
@@ -241,5 +271,17 @@ public class NetworkMgr : Singleton<NetworkMgr>
   private bool IsCurrentCommandVersion(uint cmd, int version)
   {
     return _commandVersions.TryGetValue(cmd, out int currentVersion) && currentVersion == version;
+  }
+
+  /// <summary>
+  /// 更新连接状态；相同状态不重复通知，避免 Socket 的错误与关闭回调产生重复 UI 刷新。
+  /// </summary>
+  private void SetConnectionState(NetworkConnectionState state)
+  {
+    if (ConnectionState == state)
+      return;
+
+    ConnectionState = state;
+    ConnectionStateChanged?.Invoke(state);
   }
 }

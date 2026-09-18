@@ -8,6 +8,8 @@ public sealed class GameMgr : MonoBehaviour
   private static GameMgr _instance;
   private bool _isDuplicate;
 
+  // 开发阶段可关闭 Socket，使未启动本地服务端时也能完整运行客户端流程。
+  private static readonly bool EnableSocketConnection = false;
   private const string ServerUrl = "ws://localhost:3000";
 
   private void Awake()
@@ -28,6 +30,12 @@ public sealed class GameMgr : MonoBehaviour
   private async void Start()
   {
     if (_isDuplicate) return;
+
+    if (!EnableSocketConnection)
+    {
+      Debug.Log("[GameMgr] Socket connection is disabled for development.");
+      return;
+    }
 
     await NetworkMgr.Instance.Connect(ServerUrl);
   }

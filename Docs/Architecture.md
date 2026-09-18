@@ -290,6 +290,9 @@ Presenter / UI
 - 协议处理优先落到 Proxy/业务层；
 - `cmd` 类型在整个协议链路保持统一；
 - Proto 映射/注册优先自动化，避免业务协议越来越多后维护大量手写注册代码。
+- `NetworkMgr` 通过 `ConnectionState` / `ConnectionStateChanged` 向业务层暴露连接流程；首次连接失败与已连接后的断线都会进入基础重连流程。`GameMgr.EnableSocketConnection` 是开发期代码开关，关闭时客户端不主动建立 Socket。
+
+Network 的已知限制、优化优先级与后续规划统一记录在 `Assets/Scripts/Framework/Network/README.md`；新增网络能力时应同步更新该文档。
 
 ## 8. 通用基础设施
 
