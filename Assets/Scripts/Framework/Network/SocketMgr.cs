@@ -115,21 +115,26 @@ public sealed class SocketMgr : IDisposable
     OnClosed?.Invoke(code);
   }
 
-  public async Task Send(byte[] data)
+  /// <summary>
+  /// 发送原始数据并返回传输层结果；true 仅表示数据已交给底层 WebSocket，不表示服务端已处理。
+  /// </summary>
+  public async Task<bool> Send(byte[] data)
   {
     if (!IsConnected)
     {
       OnError?.Invoke("WebSocket is not connected.");
-      return;
+      return false;
     }
 
     try
     {
       await _socket.Send(data);
+      return true;
     }
     catch (Exception e)
     {
       OnError?.Invoke(e.Message);
+      return false;
     }
   }
 

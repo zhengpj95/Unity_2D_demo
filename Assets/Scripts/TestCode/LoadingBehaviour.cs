@@ -122,7 +122,9 @@ public class LoadingBehaviour : MonoBehaviour
     {
       AccountId = 1001,
     };
-    await NetworkMgr.Instance.Send<c2s_user_login>(MessageId.C2S_USER_LOGIN, message);
+    NetworkSendResult sendResult = await NetworkMgr.Instance.Send(MessageId.C2S_USER_LOGIN, message);
+    if (sendResult != NetworkSendResult.Sent)
+      Debug.LogWarning($"[LoadingBehaviour] Login message was not sent. Result: {sendResult}", this);
   }
 
   // 测试 Protobuf 序列化和反序列化

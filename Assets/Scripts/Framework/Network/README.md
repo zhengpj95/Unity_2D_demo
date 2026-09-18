@@ -7,9 +7,9 @@
 以下内容按优先级记录，尚未实现：
 
 1. **收包边界保护（P0）**：`ReceiveMessage` 尚未隔离 Packet、Proto 解析和业务 Handler 异常；需要增加最大包体限制、异常日志（cmd、包长）与单包失败后的继续收包策略。
-2. **并发连接与关闭语义（P0）**：`Connect` 尚未合并并发请求，替换旧 Socket 时也需要先完成关闭；后续应维护唯一的连接任务并支持取消。
-3. **发送结果与请求超时（P1）**：断线期间 `Send` 当前会直接返回，调用方不能区分未发送、发送失败与等待响应。关键协议应提供明确结果、请求 ID 和超时处理。
-4. **框架与业务解耦（P1）**：`NetworkMgr` 当前仍会派发具体 UI 提示并重载场景。后续应仅上报连接状态和失败原因，由 Module 或业务层决定提示和重试策略。
+2. **连接任务取消与地址切换策略（P1）**：同一地址的并发 `Connect` 已合并，旧 Socket 会先关闭再释放；当前地址切换要求先 `Close()`，后续可按业务需要补充取消令牌或受控切换策略。
+3. **发送结果与请求超时（已实现基础版本）**：`Send` 返回 `NetworkSendResult`；`Request` 可等待指定 responseCmd 并超时。`MessageId` 表示请求/响应的业务协议类型，同一响应协议应由唯一职责方处理，因此同一 responseCmd 仅允许一个等待请求。
+4. **框架与业务解耦（已处理）**：`NetworkMgr` 仅上报 `ConnectionFailed`，通用提示与重载场景逻辑已迁移到 `MiscModule`。
 5. **重连策略完善（P2）**：当前为固定间隔重试；后续可增加指数退避、随机抖动和取消令牌，避免大量客户端同时重连。
 6. **心跳与平台验证（P2）**：需要加入心跳/超时检测，并按目标平台验证 NativeWebSocket 的消息队列驱动与主线程回调要求。
 7. **可观测性与测试（P2）**：补充连接次数、重连次数、收发包量、失败原因统计，以及 PacketCodec、ProtoMgr、Dispatcher 和重连状态机的自动化测试。
@@ -64,7 +64,8 @@
 
 - 连接服务器：`Connect(string url)`
 - 连接状态：`ConnectionState` 与 `ConnectionStateChanged`
-- 发送 protobuf 消息：`Send<T>(uint cmd, T message)`
+- 发送 protobuf 消息：`Send<T>(uint cmd, T message)`，返回 `NetworkSendResult`
+- 请求响应：`Request<TRequest, TResponse>(...)`，按 responseCmd 等待一次响应并支持超时
 - 接收消息并解包：`ReceiveMessage(byte[] data)`
 - 关闭连接：`Close()`
 - 释放资源：`Dispose()`
@@ -169,7 +170,6 @@
 
 - 心跳机制
 - 指数退避的重连策略
-- 超时处理
 - 业务层基于 `ConnectionStateChanged` 的断线重连交互
 - 更完善的错误日志、指标与自动化测试
 

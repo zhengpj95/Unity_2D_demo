@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using System;
 using System.Threading.Tasks;
 using Google.Protobuf;
@@ -18,21 +17,76 @@ public enum NetworkConnectionState
   Closing
 }
 
+/// <summary>一次消息发送到传输层后的结果；Sent 仅表示已交给 WebSocket，不表示服务端已处理或响应。</summary>
+public enum NetworkSendResult
+{
+  Sent,
+  NotConnected,
+  Reconnecting,
+  EncodeFailed,
+  TransportFailed
+}
+
+/// <summary>请求响应 API 的完成状态。</summary>
+public enum NetworkRequestStatus
+{
+  Succeeded,
+  SendFailed,
+  TimedOut,
+  Cancelled,
+  ResponseTypeMismatch
+}
+
+/// <summary>连接重试耗尽时提供给业务层的失败信息。</summary>
+public readonly struct NetworkConnectionFailure
+{
+  public string Reason { get; }
+  public int AttemptCount { get; }
+
+  internal NetworkConnectionFailure(string reason, int attemptCount)
+  {
+    Reason = reason;
+    AttemptCount = attemptCount;
+  }
+}
+
+/// <summary>一次带超时的请求结果。</summary>
+public readonly struct NetworkRequestResult<TResponse> where TResponse : IMessage
+{
+  public NetworkRequestStatus Status { get; }
+  public NetworkSendResult SendResult { get; }
+  public TResponse Response { get; }
+
+  internal NetworkRequestResult(NetworkRequestStatus status, NetworkSendResult sendResult, TResponse response = default)
+  {
+    Status = status;
+    SendResult = sendResult;
+    Response = response;
+  }
+}
+
 /// <summary>
 /// 网络连接与消息分发管理器。
 /// Dispatcher 在整个 NetworkMgr 生命周期内复用，断线重连只替换 Socket，不会丢失协议回调。
 /// </summary>
 public class NetworkMgr : Singleton<NetworkMgr>
 {
+  private sealed class PendingRequest
+  {
+    public readonly TaskCompletionSource<IMessage> Completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+  }
+
   private SocketMgr _socketMgr;
   private MessageDispatcher _dispatcher;
   private readonly List<Action> _pendingRegistrations = new();
   private readonly Dictionary<uint, int> _commandVersions = new();
+  private readonly Dictionary<uint, PendingRequest> _pendingRequests = new();
   private string _url;
+  private Task<bool> _connectTask;
   private Task _reconnectTask;
   private bool _manualClose;
   private bool _hasEstablishedConnection;
-  private bool _connectionFailurePromptShown;
+  private string _lastConnectionError;
 
   /// <summary>是否已连接。</summary>
   public bool IsConnected => _socketMgr != null && _socketMgr.IsConnected;
@@ -50,6 +104,8 @@ public class NetworkMgr : Singleton<NetworkMgr>
   public event Action Disconnected;
   /// <summary>连接状态变化通知。首次连接失败、重连与重连耗尽都会触发。</summary>
   public event Action<NetworkConnectionState> ConnectionStateChanged;
+  /// <summary>重连耗尽通知；由业务层决定提示内容、场景跳转或离线降级。</summary>
+  public event Action<NetworkConnectionFailure> ConnectionFailed;
 
   private void FlushPendingRegistrations()
   {
@@ -92,6 +148,25 @@ public class NetworkMgr : Singleton<NetworkMgr>
       throw new ArgumentException("URL cannot be empty.", nameof(url));
     }
 
+    if (_connectTask != null && !_connectTask.IsCompleted)
+    {
+      if (!string.Equals(_url, url, StringComparison.Ordinal))
+        throw new InvalidOperationException("Cannot change the server URL while a connection is in progress. Close the current connection first.");
+
+      return _connectTask;
+    }
+
+    if (_reconnectTask != null && !_reconnectTask.IsCompleted)
+    {
+      if (!string.Equals(_url, url, StringComparison.Ordinal))
+        throw new InvalidOperationException("Cannot change the server URL while reconnecting. Close the current connection first.");
+
+      return _reconnectTask;
+    }
+
+    if (IsConnected && !string.Equals(_url, url, StringComparison.Ordinal))
+      throw new InvalidOperationException("Cannot change the server URL while connected. Close the current connection first.");
+
     bool isNewConnection = !string.Equals(_url, url, StringComparison.Ordinal) || _manualClose;
     if (isNewConnection)
     {
@@ -100,7 +175,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
 
     _url = url;
     _manualClose = false;
-    _connectionFailurePromptShown = false;
+    _lastConnectionError = null;
     if (IsConnected)
     {
       SetConnectionState(NetworkConnectionState.Connected);
@@ -108,7 +183,8 @@ public class NetworkMgr : Singleton<NetworkMgr>
     }
 
     SetConnectionState(NetworkConnectionState.Connecting);
-    return ConnectSocketAsync();
+    _connectTask = ConnectSocketAsync();
+    return _connectTask;
   }
 
   private async Task<bool> ConnectSocketAsync()
@@ -119,11 +195,9 @@ public class NetworkMgr : Singleton<NetworkMgr>
     _dispatcher ??= new MessageDispatcher();
     FlushPendingRegistrations();
 
-    SocketMgr oldSocket = _socketMgr;
-    if (oldSocket != null)
-    {
-      oldSocket.Dispose();
-    }
+    await CloseAndDisposeCurrentSocketAsync();
+    if (_manualClose || string.IsNullOrWhiteSpace(_url))
+      return false;
 
     SocketMgr socket = new SocketMgr();
     _socketMgr = socket;
@@ -142,7 +216,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
     if (!ReferenceEquals(socket, _socketMgr)) return;
     Debug.Log("[NetworkMgr] Connected.");
     _hasEstablishedConnection = true;
-    _connectionFailurePromptShown = false;
+    _lastConnectionError = null;
     SetConnectionState(NetworkConnectionState.Connected);
     Connected?.Invoke();
   }
@@ -158,6 +232,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
       return;
     }
 
+    _lastConnectionError = $"Socket closed: {code}";
     if (_hasEstablishedConnection)
       Disconnected?.Invoke();
     ScheduleReconnect();
@@ -167,6 +242,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
   {
     if (!ReferenceEquals(socket, _socketMgr)) return;
     Debug.LogWarning($"[NetworkMgr] Socket error: {error}");
+    _lastConnectionError = error;
     ScheduleReconnect();
   }
 
@@ -197,37 +273,96 @@ public class NetworkMgr : Singleton<NetworkMgr>
     {
       Debug.LogError("[NetworkMgr] Reconnect attempts exhausted.");
       SetConnectionState(NetworkConnectionState.Failed);
-      if (!_connectionFailurePromptShown)
-      {
-        _connectionFailurePromptShown = true;
-        EventBus.Emit(EventDefine.MISC_OPEN_ALERT, new AlertTipsPanelArgs("连接失败", "网络连接失败，请刷新游戏后重试。", ReloadCurrentScene));
-      }
+      ConnectionFailed?.Invoke(new NetworkConnectionFailure(_lastConnectionError, attempt));
     }
   }
 
   /// <summary>
-  /// 重连耗尽后只显示一次提示。确认按钮会重新加载当前场景，重新建立游戏状态。
+  /// 发送 protobuf 消息并返回传输结果。Sent 不表示服务端已处理；需要响应与超时控制时使用 Request。
   /// </summary>
-  private static void ReloadCurrentScene()
-  {
-    UnityEngine.SceneManagement.Scene activeScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
-    if (activeScene.buildIndex >= 0) UnityEngine.SceneManagement.SceneManager.LoadScene(activeScene.buildIndex);
-  }
-
-  public async Task Send<T>(uint cmd, T message) where T : IMessage
+  public async Task<NetworkSendResult> Send<T>(uint cmd, T message) where T : IMessage
   {
     if (!IsConnected)
     {
-      if (!_hasEstablishedConnection) return;
+      if (!_manualClose && !string.IsNullOrWhiteSpace(_url))
+        ScheduleReconnect();
 
-      ScheduleReconnect();
-      return;
+      return ConnectionState == NetworkConnectionState.Reconnecting
+        ? NetworkSendResult.Reconnecting
+        : NetworkSendResult.NotConnected;
     }
 
-    byte[] body = ProtoMgr.Encode(message);
-    byte[] packet = PacketCodec.Encode(cmd, body);
-    Debug.Log($"[发送协议] Cmd={cmd}, message: {message}");
-    await _socketMgr.Send(packet);
+    try
+    {
+      byte[] body = ProtoMgr.Encode(message);
+      byte[] packet = PacketCodec.Encode(cmd, body);
+      SocketMgr socket = _socketMgr;
+      if (socket == null)
+        return NetworkSendResult.NotConnected;
+
+      Debug.Log($"[发送协议] Cmd={cmd}, message: {message}");
+      return await socket.Send(packet) ? NetworkSendResult.Sent : NetworkSendResult.TransportFailed;
+    }
+    catch (Exception exception)
+    {
+      Debug.LogError($"[NetworkMgr] Encode or send failed. Cmd={cmd}, Error={exception}");
+      return NetworkSendResult.EncodeFailed;
+    }
+  }
+
+  /// <summary>
+  /// 发送请求并等待指定响应 cmd。同一响应协议由唯一业务职责方处理，因此同一 responseCmd 同时只允许一个等待中的请求。
+  /// </summary>
+  /// <typeparam name="TRequest">请求 protobuf 类型。</typeparam>
+  /// <typeparam name="TResponse">响应 protobuf 类型。</typeparam>
+  /// <param name="requestCmd">请求协议号。</param>
+  /// <param name="request">请求内容。</param>
+  /// <param name="responseCmd">预期响应协议号。</param>
+  /// <param name="timeoutSeconds">等待响应的超时秒数，必须大于零。</param>
+  public async Task<NetworkRequestResult<TResponse>> Request<TRequest, TResponse>(
+    uint requestCmd,
+    TRequest request,
+    uint responseCmd,
+    float timeoutSeconds)
+    where TRequest : IMessage
+    where TResponse : IMessage
+  {
+    if (timeoutSeconds <= 0f)
+      throw new ArgumentOutOfRangeException(nameof(timeoutSeconds), timeoutSeconds, "Timeout must be greater than zero.");
+
+    if (_pendingRequests.ContainsKey(responseCmd))
+      throw new InvalidOperationException($"A request is already waiting for response cmd: {responseCmd}");
+
+    PendingRequest pendingRequest = new();
+    _pendingRequests.Add(responseCmd, pendingRequest);
+
+    NetworkSendResult sendResult = await Send(requestCmd, request);
+    if (sendResult != NetworkSendResult.Sent)
+    {
+      RemovePendingRequest(responseCmd, pendingRequest);
+      return new NetworkRequestResult<TResponse>(NetworkRequestStatus.SendFailed, sendResult);
+    }
+
+    Task timeoutTask = Task.Delay(TimeSpan.FromSeconds(timeoutSeconds));
+    Task completedTask = await Task.WhenAny(pendingRequest.Completion.Task, timeoutTask);
+    if (completedTask == timeoutTask)
+    {
+      RemovePendingRequest(responseCmd, pendingRequest);
+      return new NetworkRequestResult<TResponse>(NetworkRequestStatus.TimedOut, sendResult);
+    }
+
+    try
+    {
+      IMessage response = await pendingRequest.Completion.Task;
+      if (response is TResponse typedResponse)
+        return new NetworkRequestResult<TResponse>(NetworkRequestStatus.Succeeded, sendResult, typedResponse);
+
+      return new NetworkRequestResult<TResponse>(NetworkRequestStatus.ResponseTypeMismatch, sendResult);
+    }
+    catch (TaskCanceledException)
+    {
+      return new NetworkRequestResult<TResponse>(NetworkRequestStatus.Cancelled, sendResult);
+    }
   }
 
   public void ReceiveMessage(byte[] data)
@@ -237,6 +372,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
     Packet packet = PacketCodec.Decode(data);
     IMessage message = ProtoMgr.Decode(packet.Cmd, packet.Body);
     Debug.Log($"[接收协议] Cmd={packet.Cmd}, message: {message}");
+    CompletePendingRequest(packet.Cmd, message);
     _dispatcher.Dispatch(packet.Cmd, message);
   }
 
@@ -246,7 +382,8 @@ public class NetworkMgr : Singleton<NetworkMgr>
     _url = null;
     _hasEstablishedConnection = false;
     SetConnectionState(NetworkConnectionState.Closing);
-    if (_socketMgr != null) await _socketMgr.Close();
+    CancelPendingRequests();
+    await CloseAndDisposeCurrentSocketAsync();
     SetConnectionState(NetworkConnectionState.Disconnected);
   }
 
@@ -255,8 +392,10 @@ public class NetworkMgr : Singleton<NetworkMgr>
     _manualClose = true;
     _url = null;
     _hasEstablishedConnection = false;
+    CancelPendingRequests();
     _socketMgr?.Dispose();
     _socketMgr = null;
+    _connectTask = null;
     _reconnectTask = null;
     SetConnectionState(NetworkConnectionState.Disconnected);
   }
@@ -271,6 +410,53 @@ public class NetworkMgr : Singleton<NetworkMgr>
   private bool IsCurrentCommandVersion(uint cmd, int version)
   {
     return _commandVersions.TryGetValue(cmd, out int currentVersion) && currentVersion == version;
+  }
+
+  /// <summary>收到响应后完成对应的等待请求；响应仍会继续分发给正常业务 Handler。</summary>
+  private void CompletePendingRequest(uint responseCmd, IMessage response)
+  {
+    if (!_pendingRequests.TryGetValue(responseCmd, out PendingRequest pendingRequest))
+      return;
+
+    _pendingRequests.Remove(responseCmd);
+    pendingRequest.Completion.TrySetResult(response);
+  }
+
+  /// <summary>仅当字典中仍是同一请求时移除，避免旧请求超时误删后续新请求。</summary>
+  private void RemovePendingRequest(uint responseCmd, PendingRequest pendingRequest)
+  {
+    if (_pendingRequests.TryGetValue(responseCmd, out PendingRequest current)
+        && ReferenceEquals(current, pendingRequest))
+      _pendingRequests.Remove(responseCmd);
+  }
+
+  /// <summary>关闭或释放网络时取消所有等待中的请求，避免调用方永久等待已不可能到达的响应。</summary>
+  private void CancelPendingRequests()
+  {
+    foreach (PendingRequest pendingRequest in _pendingRequests.Values)
+      pendingRequest.Completion.TrySetCanceled();
+
+    _pendingRequests.Clear();
+  }
+
+  /// <summary>
+  /// 关闭并释放当前 Socket。先断开旧实例与管理器的引用，使关闭回调不会触发新的重连，再等待关闭完成后释放事件引用。
+  /// </summary>
+  private async Task CloseAndDisposeCurrentSocketAsync()
+  {
+    SocketMgr socket = _socketMgr;
+    if (socket == null)
+      return;
+
+    _socketMgr = null;
+    try
+    {
+      await socket.Close();
+    }
+    finally
+    {
+      socket.Dispose();
+    }
   }
 
   /// <summary>
