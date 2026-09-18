@@ -71,6 +71,8 @@ public readonly struct NetworkRequestResult<TResponse> where TResponse : IMessag
 /// </summary>
 public class NetworkMgr : Singleton<NetworkMgr>
 {
+  private const string LogTag = "[NetworkMgr]";
+
   private sealed class PendingRequest
   {
     public readonly TaskCompletionSource<IMessage> Completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -122,6 +124,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
     int commandVersion = GetNextCommandVersion(cmd);
     if (_dispatcher == null)
     {
+      Debug.Log($"{LogTag} Handler registration queued. Cmd={cmd}, Type={typeof(T).Name}");
       _pendingRegistrations.Add(() =>
       {
         if (IsCurrentCommandVersion(cmd, commandVersion)) _dispatcher.Register(cmd, handler);
@@ -130,12 +133,15 @@ public class NetworkMgr : Singleton<NetworkMgr>
     }
 
     _dispatcher.Register(cmd, handler);
+    Debug.Log($"{LogTag} Handler registered. Cmd={cmd}, Type={typeof(T).Name}");
   }
 
   public bool UnregisterHandler(uint cmd)
   {
     GetNextCommandVersion(cmd);
-    return _dispatcher != null && _dispatcher.Unregister(cmd);
+    bool result = _dispatcher != null && _dispatcher.Unregister(cmd);
+    Debug.Log($"{LogTag} Handler unregistered. Cmd={cmd}, Result={result}");
+    return result;
   }
 
   /// <summary>
@@ -148,11 +154,14 @@ public class NetworkMgr : Singleton<NetworkMgr>
       throw new ArgumentException("URL cannot be empty.", nameof(url));
     }
 
+    Debug.Log($"{LogTag} Connect requested. Url={url}, State={ConnectionState}, IsConnected={IsConnected}");
+
     if (_connectTask != null && !_connectTask.IsCompleted)
     {
       if (!string.Equals(_url, url, StringComparison.Ordinal))
         throw new InvalidOperationException("Cannot change the server URL while a connection is in progress. Close the current connection first.");
 
+      Debug.Log($"{LogTag} Returning the existing connect task. Url={url}");
       return _connectTask;
     }
 
@@ -161,6 +170,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
       if (!string.Equals(_url, url, StringComparison.Ordinal))
         throw new InvalidOperationException("Cannot change the server URL while reconnecting. Close the current connection first.");
 
+      Debug.Log($"{LogTag} Returning the existing reconnect task. Url={url}");
       return _reconnectTask;
     }
 
@@ -178,6 +188,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
     _lastConnectionError = null;
     if (IsConnected)
     {
+      Debug.Log($"{LogTag} Connect completed immediately because the socket is already connected. Url={url}");
       SetConnectionState(NetworkConnectionState.Connected);
       return Task.CompletedTask;
     }
@@ -189,15 +200,23 @@ public class NetworkMgr : Singleton<NetworkMgr>
 
   private async Task<bool> ConnectSocketAsync()
   {
-    if (IsConnected) return true;
+    if (IsConnected)
+    {
+      Debug.Log($"{LogTag} Socket creation skipped because it is already connected. Url={_url}");
+      return true;
+    }
 
+    Debug.Log($"{LogTag} Preparing socket connection. Url={_url}");
     ProtoRegister.RegisterAll();
     _dispatcher ??= new MessageDispatcher();
     FlushPendingRegistrations();
 
     await CloseAndDisposeCurrentSocketAsync();
     if (_manualClose || string.IsNullOrWhiteSpace(_url))
+    {
+      Debug.LogWarning($"{LogTag} Socket creation cancelled. ManualClose={_manualClose}, Url={_url}");
       return false;
+    }
 
     SocketMgr socket = new SocketMgr();
     _socketMgr = socket;
@@ -206,15 +225,17 @@ public class NetworkMgr : Singleton<NetworkMgr>
     socket.OnClosed += code => HandleSocketClosed(socket, code);
     socket.OnError += error => HandleSocketError(socket, error);
 
+    Debug.Log($"{LogTag} Socket created and callbacks registered. Url={_url}");
     await socket.Connect(_url);
     bool connected = ReferenceEquals(socket, _socketMgr) && socket.IsConnected;
+    Debug.Log($"{LogTag} Socket connection attempt finished. Url={_url}, Connected={connected}, SocketState={socket.State}");
     return connected;
   }
 
   private void HandleSocketConnected(SocketMgr socket)
   {
     if (!ReferenceEquals(socket, _socketMgr)) return;
-    Debug.Log("[NetworkMgr] Connected.");
+    Debug.Log($"{LogTag} Connected. Url={_url}");
     _hasEstablishedConnection = true;
     _lastConnectionError = null;
     SetConnectionState(NetworkConnectionState.Connected);
@@ -224,7 +245,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
   private void HandleSocketClosed(SocketMgr socket, NativeWebSocket.WebSocketCloseCode code)
   {
     if (!ReferenceEquals(socket, _socketMgr)) return;
-    Debug.LogWarning($"[NetworkMgr] Connection closed: {code}");
+    Debug.LogWarning($"{LogTag} Connection closed. Url={_url}, Code={code}, ManualClose={_manualClose}");
 
     if (_manualClose)
     {
@@ -241,16 +262,26 @@ public class NetworkMgr : Singleton<NetworkMgr>
   private void HandleSocketError(SocketMgr socket, string error)
   {
     if (!ReferenceEquals(socket, _socketMgr)) return;
-    Debug.LogWarning($"[NetworkMgr] Socket error: {error}");
+    Debug.LogWarning($"{LogTag} Socket error received. Url={_url}, Error={error}");
     _lastConnectionError = error;
     ScheduleReconnect();
   }
 
   private void ScheduleReconnect()
   {
-    if (_manualClose || string.IsNullOrWhiteSpace(_url) || IsConnected) return;
-    if (_reconnectTask != null && !_reconnectTask.IsCompleted) return;
+    if (_manualClose || string.IsNullOrWhiteSpace(_url) || IsConnected)
+    {
+      Debug.Log($"{LogTag} Reconnect skipped. ManualClose={_manualClose}, Url={_url}, IsConnected={IsConnected}");
+      return;
+    }
 
+    if (_reconnectTask != null && !_reconnectTask.IsCompleted)
+    {
+      Debug.Log($"{LogTag} Reconnect is already scheduled. Url={_url}");
+      return;
+    }
+
+    Debug.Log($"{LogTag} Reconnect scheduled. Url={_url}, DelaySeconds={ReconnectDelaySeconds}, MaxAttempts={MaxReconnectAttempts}");
     SetConnectionState(NetworkConnectionState.Reconnecting);
     _reconnectTask = ReconnectLoopAsync();
   }
@@ -265,13 +296,13 @@ public class NetworkMgr : Singleton<NetworkMgr>
       if (delayMilliseconds > 0) await Task.Delay(delayMilliseconds);
       if (_manualClose || IsConnected) break;
 
-      Debug.Log($"[NetworkMgr] Reconnecting ({attempt}/{MaxReconnectAttempts})...");
+      Debug.Log($"{LogTag} Reconnecting. Url={_url}, Attempt={attempt}, MaxAttempts={MaxReconnectAttempts}");
       if (await ConnectSocketAsync()) return;
     }
 
     if (!IsConnected && !_manualClose)
     {
-      Debug.LogError("[NetworkMgr] Reconnect attempts exhausted.");
+      Debug.LogError($"{LogTag} Reconnect attempts exhausted. Url={_url}, AttemptCount={attempt}, LastError={_lastConnectionError}");
       SetConnectionState(NetworkConnectionState.Failed);
       ConnectionFailed?.Invoke(new NetworkConnectionFailure(_lastConnectionError, attempt));
     }
@@ -287,9 +318,11 @@ public class NetworkMgr : Singleton<NetworkMgr>
       if (!_manualClose && !string.IsNullOrWhiteSpace(_url))
         ScheduleReconnect();
 
-      return ConnectionState == NetworkConnectionState.Reconnecting
+      NetworkSendResult unavailableResult = ConnectionState == NetworkConnectionState.Reconnecting
         ? NetworkSendResult.Reconnecting
         : NetworkSendResult.NotConnected;
+      Debug.LogWarning($"{LogTag} Send rejected. Cmd={cmd}, Result={unavailableResult}, State={ConnectionState}");
+      return unavailableResult;
     }
 
     try
@@ -298,14 +331,19 @@ public class NetworkMgr : Singleton<NetworkMgr>
       byte[] packet = PacketCodec.Encode(cmd, body);
       SocketMgr socket = _socketMgr;
       if (socket == null)
+      {
+        Debug.LogWarning($"{LogTag} Send rejected because the socket manager is unavailable. Cmd={cmd}");
         return NetworkSendResult.NotConnected;
+      }
 
-      Debug.Log($"[发送协议] Cmd={cmd}, message: {message}");
-      return await socket.Send(packet) ? NetworkSendResult.Sent : NetworkSendResult.TransportFailed;
+      Debug.Log($"{LogTag} Protocol encoded. Cmd={cmd}, BodyBytes={body.Length}, PacketBytes={packet.Length}");
+      NetworkSendResult result = await socket.Send(packet) ? NetworkSendResult.Sent : NetworkSendResult.TransportFailed;
+      Debug.Log($"{LogTag} Protocol send completed. Cmd={cmd}, Result={result}");
+      return result;
     }
     catch (Exception exception)
     {
-      Debug.LogError($"[NetworkMgr] Encode or send failed. Cmd={cmd}, Error={exception}");
+      Debug.LogError($"{LogTag} Protocol encode or send failed. Cmd={cmd}, Error={exception}");
       return NetworkSendResult.EncodeFailed;
     }
   }
@@ -335,11 +373,13 @@ public class NetworkMgr : Singleton<NetworkMgr>
 
     PendingRequest pendingRequest = new();
     _pendingRequests.Add(responseCmd, pendingRequest);
+    Debug.Log($"{LogTag} Request started. RequestCmd={requestCmd}, ResponseCmd={responseCmd}, TimeoutSeconds={timeoutSeconds}");
 
     NetworkSendResult sendResult = await Send(requestCmd, request);
     if (sendResult != NetworkSendResult.Sent)
     {
       RemovePendingRequest(responseCmd, pendingRequest);
+      Debug.LogWarning($"{LogTag} Request ended because sending failed. RequestCmd={requestCmd}, ResponseCmd={responseCmd}, SendResult={sendResult}");
       return new NetworkRequestResult<TResponse>(NetworkRequestStatus.SendFailed, sendResult);
     }
 
@@ -348,6 +388,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
     if (completedTask == timeoutTask)
     {
       RemovePendingRequest(responseCmd, pendingRequest);
+      Debug.LogWarning($"{LogTag} Request timed out. RequestCmd={requestCmd}, ResponseCmd={responseCmd}, TimeoutSeconds={timeoutSeconds}");
       return new NetworkRequestResult<TResponse>(NetworkRequestStatus.TimedOut, sendResult);
     }
 
@@ -355,29 +396,43 @@ public class NetworkMgr : Singleton<NetworkMgr>
     {
       IMessage response = await pendingRequest.Completion.Task;
       if (response is TResponse typedResponse)
+      {
+        Debug.Log($"{LogTag} Request completed. RequestCmd={requestCmd}, ResponseCmd={responseCmd}, ResponseType={response.GetType().Name}");
         return new NetworkRequestResult<TResponse>(NetworkRequestStatus.Succeeded, sendResult, typedResponse);
+      }
 
+      Debug.LogError($"{LogTag} Request response type mismatch. RequestCmd={requestCmd}, ResponseCmd={responseCmd}, ActualType={response?.GetType().Name}, ExpectedType={typeof(TResponse).Name}");
       return new NetworkRequestResult<TResponse>(NetworkRequestStatus.ResponseTypeMismatch, sendResult);
     }
     catch (TaskCanceledException)
     {
+      Debug.LogWarning($"{LogTag} Request cancelled. RequestCmd={requestCmd}, ResponseCmd={responseCmd}");
       return new NetworkRequestResult<TResponse>(NetworkRequestStatus.Cancelled, sendResult);
     }
   }
 
   public void ReceiveMessage(byte[] data)
   {
-    if (_dispatcher == null) return;
+    if (_dispatcher == null)
+    {
+      Debug.LogWarning($"{LogTag} Received data ignored because dispatcher is unavailable. Bytes={data?.Length ?? 0}");
+      return;
+    }
 
+    Debug.Log($"{LogTag} Decoding received packet. PacketBytes={data?.Length ?? 0}");
     Packet packet = PacketCodec.Decode(data);
+    Debug.Log($"{LogTag} Packet decoded. Cmd={packet.Cmd}, BodyBytes={packet.Body?.Length ?? 0}");
     IMessage message = ProtoMgr.Decode(packet.Cmd, packet.Body);
-    Debug.Log($"[接收协议] Cmd={packet.Cmd}, message: {message}");
+    Debug.Log($"{LogTag} Protocol decoded. Cmd={packet.Cmd}, MessageType={message?.GetType().Name}");
     CompletePendingRequest(packet.Cmd, message);
+    Debug.Log($"{LogTag} Dispatching protocol. Cmd={packet.Cmd}, MessageType={message?.GetType().Name}");
     _dispatcher.Dispatch(packet.Cmd, message);
+    Debug.Log($"{LogTag} Protocol dispatch completed. Cmd={packet.Cmd}");
   }
 
   public async Task Close()
   {
+    Debug.Log($"{LogTag} Manual close requested. Url={_url}, State={ConnectionState}");
     _manualClose = true;
     _url = null;
     _hasEstablishedConnection = false;
@@ -385,10 +440,12 @@ public class NetworkMgr : Singleton<NetworkMgr>
     CancelPendingRequests();
     await CloseAndDisposeCurrentSocketAsync();
     SetConnectionState(NetworkConnectionState.Disconnected);
+    Debug.Log($"{LogTag} Manual close completed. State={ConnectionState}");
   }
 
   public void Dispose()
   {
+    Debug.Log($"{LogTag} Disposing network manager. Url={_url}, State={ConnectionState}");
     _manualClose = true;
     _url = null;
     _hasEstablishedConnection = false;
@@ -416,9 +473,13 @@ public class NetworkMgr : Singleton<NetworkMgr>
   private void CompletePendingRequest(uint responseCmd, IMessage response)
   {
     if (!_pendingRequests.TryGetValue(responseCmd, out PendingRequest pendingRequest))
+    {
+      Debug.Log($"{LogTag} No pending request matches the received protocol. ResponseCmd={responseCmd}");
       return;
+    }
 
     _pendingRequests.Remove(responseCmd);
+    Debug.Log($"{LogTag} Completing pending request. ResponseCmd={responseCmd}, ResponseType={response?.GetType().Name}");
     pendingRequest.Completion.TrySetResult(response);
   }
 
@@ -433,6 +494,9 @@ public class NetworkMgr : Singleton<NetworkMgr>
   /// <summary>关闭或释放网络时取消所有等待中的请求，避免调用方永久等待已不可能到达的响应。</summary>
   private void CancelPendingRequests()
   {
+    if (_pendingRequests.Count > 0)
+      Debug.LogWarning($"{LogTag} Cancelling pending requests. Count={_pendingRequests.Count}");
+
     foreach (PendingRequest pendingRequest in _pendingRequests.Values)
       pendingRequest.Completion.TrySetCanceled();
 
@@ -446,8 +510,12 @@ public class NetworkMgr : Singleton<NetworkMgr>
   {
     SocketMgr socket = _socketMgr;
     if (socket == null)
+    {
+      Debug.Log($"{LogTag} No active socket needs to be closed.");
       return;
+    }
 
+    Debug.Log($"{LogTag} Closing and disposing the current socket. Url={_url}, SocketState={socket.State}");
     _socketMgr = null;
     try
     {
@@ -456,6 +524,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
     finally
     {
       socket.Dispose();
+      Debug.Log($"{LogTag} Current socket disposed. Url={_url}");
     }
   }
 
@@ -467,7 +536,9 @@ public class NetworkMgr : Singleton<NetworkMgr>
     if (ConnectionState == state)
       return;
 
+    NetworkConnectionState previousState = ConnectionState;
     ConnectionState = state;
+    Debug.Log($"{LogTag} Connection state changed. {previousState} -> {state}, Url={_url}");
     ConnectionStateChanged?.Invoke(state);
   }
 }
