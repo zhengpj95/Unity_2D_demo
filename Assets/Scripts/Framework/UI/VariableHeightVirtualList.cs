@@ -21,8 +21,10 @@ using UnityEngine.UI;
 public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
 {
   [Header("引用")]
-  [Tooltip("异高 Item 模板。锚点与 Pivot 必须位于左上角。")]
+  [Tooltip("默认异高 Item 模板。锚点与 Pivot 必须位于左上角。")]
   [SerializeField] private RectTransform itemTemplate;
+  [Tooltip("可选的额外 Item 模板。通过 SetItemTemplateSelector 按数据选择模板。")]
+  [SerializeField] private List<RectTransform> itemTemplates = new();
 
   [Header("布局")]
   [Min(0f)]
@@ -39,7 +41,8 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
   [SerializeField] private float scrollSpeed = 1000f;
 
   private IList _dataSource;
-  private readonly Queue<RectTransform> _pool = new();
+  private readonly Dictionary<RectTransform, Queue<RectTransform>> _pools = new();
+  private readonly Dictionary<RectTransform, RectTransform> _itemTemplateByInstance = new();
   private readonly List<RectTransform> _activeItems = new();
   private readonly List<float> _heights = new();
   private readonly List<float> _tops = new();
@@ -50,6 +53,7 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
   private Action<VirtualListRenderInfo> _itemClickHandler;
   private Action<Vector2> _scrollChangedHandler;
   private Func<object, object> _selectionKeySelector;
+  private Func<object, int, RectTransform> _itemTemplateSelector;
 
   private int _selectedIndex = -1;
   private object _selectedKey;
@@ -185,6 +189,16 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
     _renderHandler = null;
     _itemClickHandler = null;
     _scrollChangedHandler = null;
+  }
+
+  /// <summary>
+  /// 设置按数据选择 Item 模板的回调。返回 null 时会回退到默认 ItemTemplate。
+  /// 支持不同模板各自独立对象池，例如普通文本、奖励卡和系统提示。
+  /// </summary>
+  public void SetItemTemplateSelector(Func<object, int, RectTransform> itemTemplateSelector)
+  {
+    _itemTemplateSelector = itemTemplateSelector;
+    RefreshVisible(true);
   }
 
   /// <summary>
@@ -359,7 +373,14 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
       return;
 
     if (Application.isPlaying)
+    {
       itemTemplate.gameObject.SetActive(false);
+      foreach (RectTransform template in itemTemplates)
+      {
+        if (template != null)
+          template.gameObject.SetActive(false);
+      }
+    }
 
     if (_isInitialized)
       RebuildLayoutAndRefresh();
@@ -456,7 +477,7 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
       {
         GetVisibleRange(out int startIndex, out int endIndex);
         int requiredCount = Mathf.Max(0, endIndex - startIndex + 1);
-        EnsureActiveItemCount(requiredCount);
+        EnsureActiveItemCount(startIndex, requiredCount);
 
         int firstHeightChangedIndex = -1;
         for (int i = 0; i < requiredCount; i++)
@@ -501,16 +522,23 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
     endIndex = index - 1;
   }
 
-  private void EnsureActiveItemCount(int count)
+  private void EnsureActiveItemCount(int startIndex, int count)
   {
     while (_activeItems.Count < count)
-    {
-      RectTransform item = GetPooledItem();
-      if (item == null)
-        break;
+      _activeItems.Add(null);
 
-      item.gameObject.SetActive(false);
-      _activeItems.Add(item);
+    for (int i = 0; i < count; i++)
+    {
+      int dataIndex = startIndex + i;
+      RectTransform expectedTemplate = GetItemTemplate(_dataSource[dataIndex], dataIndex);
+      RectTransform item = _activeItems[i];
+
+      if (item != null && _itemTemplateByInstance.TryGetValue(item, out RectTransform currentTemplate) &&
+          currentTemplate == expectedTemplate)
+        continue;
+
+      ReleaseItem(item);
+      _activeItems[i] = GetPooledItem(expectedTemplate);
     }
 
     while (_activeItems.Count > count)
@@ -521,19 +549,33 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
     }
   }
 
-  private RectTransform GetPooledItem()
+  private RectTransform GetItemTemplate(object data, int index)
   {
-    while (_pool.Count > 0)
-    {
-      RectTransform pooled = _pool.Dequeue();
-      if (pooled == null)
-        continue;
+    RectTransform selectedTemplate = _itemTemplateSelector?.Invoke(data, index);
+    return selectedTemplate != null ? selectedTemplate : itemTemplate;
+  }
 
-      pooled.SetParent(content, false);
-      return pooled;
+  private RectTransform GetPooledItem(RectTransform template)
+  {
+    if (template == null)
+      return null;
+
+    if (_pools.TryGetValue(template, out Queue<RectTransform> pool))
+    {
+      while (pool.Count > 0)
+      {
+        RectTransform pooled = pool.Dequeue();
+        if (pooled == null)
+          continue;
+
+        pooled.SetParent(content, false);
+        return pooled;
+      }
     }
 
-    return Instantiate(itemTemplate, content, false);
+    RectTransform item = Instantiate(template, content, false);
+    _itemTemplateByInstance[item] = template;
+    return item;
   }
 
   private void ReleaseItem(RectTransform item)
@@ -543,7 +585,17 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
 
     item.gameObject.SetActive(false);
     item.SetParent(content, false);
-    _pool.Enqueue(item);
+
+    if (!_itemTemplateByInstance.TryGetValue(item, out RectTransform template) || template == null)
+      return;
+
+    if (!_pools.TryGetValue(template, out Queue<RectTransform> pool))
+    {
+      pool = new Queue<RectTransform>();
+      _pools.Add(template, pool);
+    }
+
+    pool.Enqueue(item);
   }
 
   private bool RenderItem(RectTransform item, int dataIndex)
