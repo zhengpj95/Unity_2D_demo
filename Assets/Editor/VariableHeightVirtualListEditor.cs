@@ -7,6 +7,7 @@ namespace EditorTools
   public class VariableHeightVirtualListEditor : ScrollRectEditor
   {
     private SerializedProperty itemTemplate;
+    private SerializedProperty itemTemplates;
     private SerializedProperty spacing;
     private SerializedProperty estimatedItemHeight;
     private SerializedProperty bufferHeight;
@@ -17,6 +18,7 @@ namespace EditorTools
     {
       base.OnEnable();
       itemTemplate = serializedObject.FindProperty("itemTemplate");
+      itemTemplates = serializedObject.FindProperty("itemTemplates");
       spacing = serializedObject.FindProperty("spacing");
       estimatedItemHeight = serializedObject.FindProperty("estimatedItemHeight");
       bufferHeight = serializedObject.FindProperty("bufferHeight");
@@ -29,6 +31,7 @@ namespace EditorTools
       serializedObject.Update();
 
       EditorGUILayout.PropertyField(itemTemplate);
+      EditorGUILayout.PropertyField(itemTemplates, true);
       EditorGUILayout.Space();
       EditorGUILayout.PropertyField(spacing);
       EditorGUILayout.PropertyField(estimatedItemHeight);
