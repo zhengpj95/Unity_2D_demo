@@ -1,5 +1,7 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using Msg;
 using TMPro;
 
@@ -10,9 +12,13 @@ public class LoadingBehaviour : MonoBehaviour
   /// <summary>登录按钮的缩放与点击组件；通过 Clicked 事件提交登录请求。</summary>
   public UIButton btnLogin;
   public TMP_Text tMP_Text;
+  /// <summary>Launcher 场景中的异高虚拟列表；用于验证不同 Item 高度、选中状态和点击回调。</summary>
+  public VariableHeightVirtualList virtualList;
   private Coroutine _outlineTestCoroutine;
   private Coroutine _loadingCoroutine;
   private bool _isEnteringGame;
+  private readonly List<VariableHeightListTestData> _variableHeightListTestDatas = new();
+  private RectTransform _variableHeightAlternateTemplate;
 
   /// <summary>初始化进度条引用，优先保留 Inspector 绑定，兼容尚未激活的子节点。</summary>
   private void Awake()
@@ -31,6 +37,8 @@ public class LoadingBehaviour : MonoBehaviour
       btnLogin.Clicked += OnLogin;
     else
       Debug.LogError("[LoadingBehaviour] 未绑定 btnLogin UIButton。", this);
+
+    InitializeVariableHeightVirtualListTest();
   }
 
   /// <summary>按钮和进度条互斥显示；失败重试时回到登录按钮。</summary>
@@ -139,6 +147,95 @@ public class LoadingBehaviour : MonoBehaviour
   }
 
   /// <summary>
+  /// 初始化异高虚拟列表测试数据。
+  /// 每项在渲染时写入不同 preferredHeight，用于验证布局测量、对象池复用、选中与点击回调。
+  /// </summary>
+  private void InitializeVariableHeightVirtualListTest()
+  {
+    if (virtualList == null)
+      return;
+
+    _variableHeightListTestDatas.Clear();
+    for (int i = 0; i < 40; i++)
+    {
+      float height = 56f + i % 4 * 32f;
+      _variableHeightListTestDatas.Add(new VariableHeightListTestData(
+        i,
+        $"异高测试项 {i + 1}（高度 {height:0}）\n滚动、点击并观察对象池复用。",
+        height));
+    }
+
+    // LoadingBehaviour 是该测试列表回调的唯一持有者；重复启用时整体替换旧回调。
+    virtualList.SetHandlers(OnRenderVariableHeightListItem, OnClickVariableHeightListItem);
+    _variableHeightAlternateTemplate = GetVariableHeightAlternateTemplate();
+    virtualList.SetItemTemplateSelector(SelectVariableHeightListItemTemplate);
+    virtualList.SetSelectionKeySelector(data => ((VariableHeightListTestData)data).Id);
+    virtualList.RefreshData(_variableHeightListTestDatas);
+  }
+
+  /// <summary>
+  /// 获取 Inspector 中配置的第一个有效备用模板。
+  /// Launcher 的测试配置中该模板为 render2；未配置时列表会自动回退到默认 render1。
+  /// </summary>
+  private RectTransform GetVariableHeightAlternateTemplate()
+  {
+    foreach (RectTransform template in virtualList.ItemTemplates)
+    {
+      if (template != null)
+        return template;
+    }
+
+    return null;
+  }
+
+  /// <summary>
+  /// 按 3 个默认模板、1 个备用模板的节奏选择异高测试项模板。
+  /// </summary>
+  /// <param name="data">当前数据项；本测试不依赖其内容选择模板。</param>
+  /// <param name="index">当前数据项索引。</param>
+  /// <returns>索引为 3、7、11 等时返回 render2，其余返回 null 以使用默认 render1。</returns>
+  private RectTransform SelectVariableHeightListItemTemplate(object data, int index)
+  {
+    return index % 4 == 3 ? _variableHeightAlternateTemplate : null;
+  }
+
+  /// <summary>
+  /// 渲染异高测试项，并通过 LayoutElement 提供可测量的目标高度。
+  /// LayoutElement 添加在运行时实例上，不会修改场景中的模板资源。
+  /// </summary>
+  /// <param name="info">虚拟列表提供的当前数据、索引、选中状态与 Item 实例。</param>
+  private void OnRenderVariableHeightListItem(VirtualListRenderInfo info)
+  {
+    if (info.itemTransform == null || info.data is not VariableHeightListTestData data)
+      return;
+
+    LayoutElement layoutElement = info.itemTransform.GetComponent<LayoutElement>();
+    if (layoutElement == null)
+      layoutElement = info.itemTransform.gameObject.AddComponent<LayoutElement>();
+    layoutElement.preferredHeight = data.Height;
+
+    TMP_Text itemText = info.itemTransform.GetComponentInChildren<TMP_Text>(true);
+    if (itemText != null)
+      itemText.text = data.Content;
+
+    Image background = info.itemTransform.GetComponent<Image>();
+    if (background != null)
+      background.color = info.selectedIndex == info.index
+        ? new Color(0.3f, 0.65f, 1f, 1f)
+        : Color.white;
+  }
+
+  /// <summary>
+  /// 输出异高测试项点击信息，确认点击索引与数据映射正确。
+  /// </summary>
+  /// <param name="info">虚拟列表提供的点击数据；点击回调中的 Item 实例固定为 null。</param>
+  private void OnClickVariableHeightListItem(VirtualListRenderInfo info)
+  {
+    if (info.data is VariableHeightListTestData data)
+      Debug.Log($"[LoadingBehaviour] 点击异高列表：索引={info.index}，Id={data.Id}，高度={data.Height:0}", this);
+  }
+
+  /// <summary>
   /// 2 秒后将指定 TMP_Text 的描边修改为绿色。
   /// </summary>
   public void OnTestTMPOutline()
@@ -185,6 +282,9 @@ public class LoadingBehaviour : MonoBehaviour
   {
     if (btnLogin != null)
       btnLogin.Clicked -= OnLogin;
+    // 列表可能被独立缓存，界面停用时先清除对当前 LoadingBehaviour 的回调引用。
+    if (virtualList != null)
+      virtualList.ClearHandlers();
     // 登录节点关闭或销毁时取消流程，避免延迟回调重新打开 Home；再次启用后允许重试。
     if (_loadingCoroutine != null)
     {
@@ -198,5 +298,28 @@ public class LoadingBehaviour : MonoBehaviour
 
     StopCoroutine(_outlineTestCoroutine);
     _outlineTestCoroutine = null;
+  }
+
+  /// <summary>
+  /// 异高虚拟列表的测试数据；Height 会在渲染时传给 LayoutElement 参与实际高度测量。
+  /// </summary>
+  private sealed class VariableHeightListTestData
+  {
+    public int Id { get; }
+    public string Content { get; }
+    public float Height { get; }
+
+    /// <summary>
+    /// 创建一条异高列表测试数据。
+    /// </summary>
+    /// <param name="id">用于选中状态恢复的稳定标识。</param>
+    /// <param name="content">Item 中显示的测试文本。</param>
+    /// <param name="height">Item 期望高度，单位为 UI 像素。</param>
+    public VariableHeightListTestData(int id, string content, float height)
+    {
+      Id = id;
+      Content = content;
+      Height = height;
+    }
   }
 }

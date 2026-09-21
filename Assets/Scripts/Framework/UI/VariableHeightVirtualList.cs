@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using TMPro;
 
 /// <summary>
 /// 垂直异高虚拟列表。
@@ -12,10 +13,20 @@ using UnityEngine.UI;
 /// 本组件只处理单列垂直布局，并在渲染后缓存每个 Item 的实际高度。
 /// </summary>
 /// <remarks>
-/// ItemTemplate 与 Content 都必须使用左上角锚点和 Pivot。
-/// Item 的实际高度由渲染回调设置内容后，通过 LayoutUtility.GetPreferredHeight 测得。
-/// 对包含 TMP 自动换行文本的 Item，根节点应配置 VerticalLayoutGroup + ContentSizeFitter
-/// （Vertical Fit = Preferred Size），或提供可用的 ILayoutElement。
+/// 使用方法：
+/// 1. 推荐从 Hierarchy 右键 GameObject/UI/Variable Height Virtual List 创建标准层级。
+/// 2. 列表根节点挂载本组件；若需要响应点击，根节点需有开启 Raycast Target 的 Graphic（通常使用透明 Image）。
+/// 3. Viewport 使用 RectMask2D 裁剪；Content 只保留 RectTransform，并使用左上角锚点与 Pivot。
+///    不要给 Content 添加 VerticalLayoutGroup、ContentSizeFitter 等布局组件，本组件会直接管理 Content 高度与 Item 位置。
+/// 4. ItemTemplate 使用左上角锚点与 Pivot，建议放在 Content 外并保持停用；运行时本组件会自动停用模板并创建对象池实例。
+/// 5. 简单的单 TMP Item：限制 TMP 宽度、开启自动换行且不要限制高度，本组件会读取当前宽度下的首选文本高度。
+/// 6. 包含多个控件的复杂 Item：推荐在 Item 根节点配置 VerticalLayoutGroup，让其首选高度汇总子节点；
+///    也可配置 LayoutElement，并在渲染回调中设置 preferredHeight。ContentSizeFitter 只能配置在 Item 上，不能配置在 Content 上。
+/// 7. 初始化顺序通常为 SetHandlers → 可选的 SetItemTemplateSelector/SetSelectionKeySelector → RefreshData。
+///    持有列表回调的对象关闭或销毁时应调用 ClearHandlers，避免列表继续持有外部对象。
+///
+/// 高度测量优先级：Item 根节点的布局首选高度 → 简单 TMP 在限宽下的首选高度 → Item 当前 RectTransform 高度。
+/// ItemTemplate 与所有备用模板都必须遵守相同的锚点、Pivot 和高度提供规则。
 /// </remarks>
 [RequireComponent(typeof(RectTransform))]
 public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
@@ -53,6 +64,8 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
   private readonly List<float> _tops = new();
   private readonly List<float> _bottoms = new();
   private readonly Dictionary<RectTransform, int> _itemNameIndices = new();
+  // 复用 TMP 收集缓冲，避免异高测量在滚动刷新时产生数组分配。
+  private readonly List<TMP_Text> _textMeasureBuffer = new();
 
   private Action<VirtualListRenderInfo> _renderHandler;
   private Action<VirtualListRenderInfo> _itemClickHandler;
@@ -87,6 +100,21 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
       itemTemplate = value;
       if (Application.isPlaying)
         InitializeTemplateAndRebuild();
+    }
+  }
+
+  /// <summary>
+  /// 获取 Inspector 配置的备用 Item 模板列表。
+  /// 列表仅供读取；实际使用哪个模板由 <see cref="SetItemTemplateSelector"/> 的选择器决定。
+  /// </summary>
+  public IReadOnlyList<RectTransform> ItemTemplates
+  {
+    get
+    {
+      if (itemTemplates != null)
+        return itemTemplates;
+
+      return Array.Empty<RectTransform>();
     }
   }
 
@@ -654,6 +682,8 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
   {
     item.gameObject.SetActive(true);
     item.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, viewport.rect.width);
+    // 先应用缓存高度，确保对象池复用的 Item 不会保留上一条数据的视觉高度。
+    item.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, _heights[dataIndex]);
     item.anchoredPosition = new Vector2(0f, -_tops[dataIndex]);
     SetItemName(item, dataIndex);
 
@@ -669,24 +699,68 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
       return false;
 
     _heights[dataIndex] = measuredHeight;
+    // LayoutElement 只提供首选高度，不会自行修改 RectTransform；这里同步视觉高度以匹配缓存位置。
+    item.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, measuredHeight);
     return true;
   }
 
-  private static float MeasureItemHeight(RectTransform item)
+  /// <summary>
+  /// 测量 Item 的实际高度。
+  /// 优先采用根节点布局组件的首选高度；纯 TMP 子节点未通过 LayoutGroup 上传高度时，
+  /// 回退到 TMP 在当前限宽下的首选高度，支持仅限制宽度的自动换行文本模板。
+  /// </summary>
+  private float MeasureItemHeight(RectTransform item)
   {
     float preferred = LayoutUtility.GetPreferredHeight(item);
     if (preferred > 0f)
       return preferred;
 
+    float textPreferred = MeasureTextPreferredHeight(item);
+    if (textPreferred > 0f)
+      return textPreferred;
+
     return Mathf.Max(1f, item.rect.height);
+  }
+
+  /// <summary>
+  /// 计算 Item 内所有 TMP 文本在当前宽度约束下所需的最大高度。
+  /// 根节点已配置 LayoutGroup、ContentSizeFitter 或 LayoutElement 时不会进入此分支。
+  /// </summary>
+  private float MeasureTextPreferredHeight(RectTransform item)
+  {
+    _textMeasureBuffer.Clear();
+    item.GetComponentsInChildren<TMP_Text>(true, _textMeasureBuffer);
+
+    float preferredHeight = 0f;
+    foreach (TMP_Text text in _textMeasureBuffer)
+    {
+      if (text == null)
+        continue;
+
+      float width = text.rectTransform.rect.width;
+      if (width <= 0f)
+        width = item.rect.width;
+      if (width <= 0f)
+        continue;
+
+      preferredHeight = Mathf.Max(preferredHeight, text.GetPreferredValues(width, 0f).y);
+    }
+
+    return preferredHeight;
   }
 
   private void SetItemName(RectTransform item, int index)
   {
-    if (_itemNameIndices.TryGetValue(item, out int previous) && previous == index)
+    string templateName = "UnknownTemplate";
+    if (_itemTemplateByInstance.TryGetValue(item, out RectTransform template) && template != null)
+      templateName = template.name;
+
+    // 在 Play Mode 的 Hierarchy 中同时显示数据索引与来源模板，便于检查多模板选择是否正确。
+    string itemName = $"item{index} [{templateName}]";
+    if (_itemNameIndices.TryGetValue(item, out int previous) && previous == index && item.name == itemName)
       return;
 
-    item.name = "item" + index;
+    item.name = itemName;
     _itemNameIndices[item] = index;
   }
 
