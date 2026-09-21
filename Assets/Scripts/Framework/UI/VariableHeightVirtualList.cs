@@ -28,16 +28,21 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
 
   [Header("布局")]
   [Min(0f)]
+  [Tooltip("相邻 Item 的垂直间距，单位为 UI 像素。运行时可通过 Spacing 属性修改。")]
   [SerializeField] private float spacing = 0f;
   [Min(1f)]
+  [Tooltip("尚未测量实际高度的 Item 所使用的初始高度，单位为 UI 像素。应接近常见 Item 高度以减少首次滚动时的布局跳动。")]
   [SerializeField] private float estimatedItemHeight = 80f;
   [Min(0f)]
+  [Tooltip("视口上下额外保留的渲染范围，单位为 UI 像素。较大值可减少快速滚动时的显隐切换，但会增加同时激活的 Item 数量。")]
   [SerializeField] private float bufferHeight = 200f;
 
   [Header("交互")]
   [Min(0f)]
+  [Tooltip("按下与抬起的屏幕距离不超过此值时，才认定为点击；超过则视为拖拽滚动，单位为像素。")]
   [SerializeField] private float clickThreshold = 10f;
   [Min(1f)]
+  [Tooltip("调用 ScrollToIndex 并启用平滑滚动时的滚动速度，单位为 UI 像素/秒。")]
   [SerializeField] private float scrollSpeed = 1000f;
 
   private IList _dataSource;
@@ -65,8 +70,12 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
   private Vector2 _lastViewportSize;
   private bool _hasViewportSize;
 
-  private readonly VirtualListRenderInfo _renderInfo = new();
+  private VirtualListRenderInfo _renderInfo = new();
 
+  /// <summary>
+  /// 获取或设置默认 Item 模板。
+  /// 运行时更换模板会停用模板并重建当前可见项；传入的模板需使用左上角锚点与 Pivot。
+  /// </summary>
   public RectTransform ItemTemplate
   {
     get => itemTemplate;
@@ -81,6 +90,10 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
     }
   }
 
+  /// <summary>
+  /// 获取或设置相邻 Item 之间的垂直间距。
+  /// 设置负值时会自动限制为 0，并在初始化完成后重建布局。
+  /// </summary>
   public float Spacing
   {
     get => spacing;
@@ -95,8 +108,15 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
     }
   }
 
+  /// <summary>
+  /// 当前数据源中的数据项数量；未设置数据源时为 0。
+  /// </summary>
   public int Count => _dataSource?.Count ?? 0;
 
+  /// <summary>
+  /// 获取或设置当前选中项的索引。
+  /// 无效索引会被视为未选中（-1）；设置成功后会刷新可见项以传递新的选中状态。
+  /// </summary>
   public int SelectedIndex
   {
     get => _selectedIndex;
@@ -174,6 +194,9 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
   /// <summary>
   /// 设置当前列表唯一的渲染、点击与滚动回调。重复调用会整体替换旧回调。
   /// </summary>
+  /// <param name="renderHandler">可见 Item 的渲染回调；参数中的 <c>itemTransform</c> 为当前实例。</param>
+  /// <param name="itemClickHandler">Item 点击回调；参数中的 <c>itemTransform</c> 为 null，避免暴露可能已复用的实例。</param>
+  /// <param name="scrollChangedHandler">滚动位置变化回调，参数与 <see cref="ScrollRect.onValueChanged"/> 一致。</param>
   public void SetHandlers(
     Action<VirtualListRenderInfo> renderHandler,
     Action<VirtualListRenderInfo> itemClickHandler = null,
@@ -184,6 +207,10 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
     _scrollChangedHandler = scrollChangedHandler;
   }
 
+  /// <summary>
+  /// 清除渲染、点击和滚动回调。
+  /// 适用于外部持有者释放或不再需要接收列表事件的场景。
+  /// </summary>
   public void ClearHandlers()
   {
     _renderHandler = null;
@@ -195,6 +222,7 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
   /// 设置按数据选择 Item 模板的回调。返回 null 时会回退到默认 ItemTemplate。
   /// 支持不同模板各自独立对象池，例如普通文本、奖励卡和系统提示。
   /// </summary>
+  /// <param name="itemTemplateSelector">接收数据和索引并返回模板的选择器；传入 null 可恢复仅使用默认模板。</param>
   public void SetItemTemplateSelector(Func<object, int, RectTransform> itemTemplateSelector)
   {
     _itemTemplateSelector = itemTemplateSelector;
@@ -204,6 +232,7 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
   /// <summary>
   /// 设置用于数据重排后恢复选中项的稳定键。
   /// </summary>
+  /// <param name="selectionKeySelector">从数据项提取稳定且可比较的键；传入 null 后仅按当前索引保留选中状态。</param>
   public void SetSelectionKeySelector(Func<object, object> selectionKeySelector)
   {
     _selectionKeySelector = selectionKeySelector;
@@ -213,6 +242,7 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
   /// <summary>
   /// 设置数据源。列表不复制数据，调用方修改数据后需再次调用本方法。
   /// </summary>
+  /// <param name="datas">数据源；可为 null，此时列表会显示为空。</param>
   public void RefreshData(IList datas)
   {
     _dataSource = datas;
@@ -222,6 +252,9 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
       RebuildLayoutAndRefresh();
   }
 
+  /// <summary>
+  /// 清空数据源与选中状态，并在运行时初始化完成后回收当前可见 Item。
+  /// </summary>
   public void Clear()
   {
     _dataSource = null;
@@ -243,6 +276,7 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
   /// <summary>
   /// 将某一项的高度缓存恢复为预估值；如果该项当前可见，会在本次刷新中重新测量。
   /// </summary>
+  /// <param name="index">要失效的项索引；无效索引会被忽略。</param>
   public void InvalidateItemHeight(int index)
   {
     if (index < 0 || index >= Count || index >= _heights.Count)
@@ -257,6 +291,8 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
   /// <summary>
   /// 直接更新某一项的已知高度，避免等待该项滚动到可见区域。
   /// </summary>
+  /// <param name="index">要更新的项索引；无效索引会被忽略。</param>
+  /// <param name="height">新的高度；小于 1 的值会被限制为 1。</param>
   public void SetItemHeight(int index, float height)
   {
     if (index < 0 || index >= Count || index >= _heights.Count)
@@ -272,6 +308,13 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
     RefreshVisible(true);
   }
 
+  /// <summary>
+  /// 将列表滚动到指定索引，并按给定方式对齐目标 Item。
+  /// 未初始化、索引无效或缺少必要 RectTransform 时会直接忽略本次调用。
+  /// </summary>
+  /// <param name="index">目标数据项索引。</param>
+  /// <param name="smooth">是否使用基于 <see cref="Time.unscaledDeltaTime"/> 的平滑滚动。</param>
+  /// <param name="alignment">目标 Item 在视口中的对齐方式。</param>
   public void ScrollToIndex(
     int index,
     bool smooth = false,
@@ -309,12 +352,21 @@ public class VariableHeightVirtualList : ScrollRect, IPointerClickHandler, IPoin
     RefreshVisible(true);
   }
 
+  /// <summary>
+  /// 记录按下位置，供 <see cref="OnPointerClick"/> 区分点击与拖拽滚动。
+  /// </summary>
+  /// <param name="eventData">Unity EventSystem 传入的指针事件数据。</param>
   public void OnPointerDown(PointerEventData eventData)
   {
     if (Application.isPlaying)
       _pointerDownPosition = eventData.position;
   }
 
+  /// <summary>
+  /// 处理列表区域点击：命中数据项后更新选中索引并触发点击回调。
+  /// 超过 <c>clickThreshold</c> 的移动会被视为滚动，不会触发点击。
+  /// </summary>
+  /// <param name="eventData">Unity EventSystem 传入的指针事件数据。</param>
   public void OnPointerClick(PointerEventData eventData)
   {
     if (!Application.isPlaying || Count == 0 || content == null)
