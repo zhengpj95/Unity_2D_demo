@@ -84,4 +84,53 @@ public class UICreateObjectMenu
     EditorUtility.SetDirty(list);
     EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
   }
+
+  /// <summary>
+  /// 从 GameObject/UI 右键菜单创建单列垂直异高虚拟列表。
+  /// 层级与普通 Virtual List 保持一致，模板置于根节点以避免参与 Content 的滚动布局。
+  /// </summary>
+  [MenuItem("GameObject/UI/Variable Height Virtual List", false, 1)]
+  private static void CreateVariableHeightVirtualList(MenuCommand menuCommand)
+  {
+    var parent = (menuCommand.context as GameObject)?.transform ?? Selection.activeTransform;
+
+    var root = CreateVirtualListUIObject("Variable Height List", parent, new Vector2(300f, 200f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+    var list = root.AddComponent<VariableHeightVirtualList>();
+    var image = root.AddComponent<Image>();
+    image.color = new Color(1f, 1f, 1f, 0f);
+
+    var viewportGo = CreateVirtualListUIObject("Viewport", root.transform, Vector2.zero, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f));
+    var viewportRect = viewportGo.GetComponent<RectTransform>();
+    viewportRect.offsetMin = Vector2.zero;
+    viewportRect.offsetMax = Vector2.zero;
+    viewportGo.AddComponent<RectMask2D>();
+
+    var contentGo = CreateVirtualListUIObject("Content", viewportGo.transform, Vector2.zero, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+    var contentRect = contentGo.GetComponent<RectTransform>();
+
+    var renderGo = CreateVirtualListUIObject("render", root.transform, new Vector2(300f, 80f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+    var renderRect = renderGo.GetComponent<RectTransform>();
+    renderGo.SetActive(false);
+
+    Undo.RecordObject(list, "Create Variable Height Virtual List");
+    list.viewport = viewportRect;
+    list.content = contentRect;
+    list.ItemTemplate = renderRect;
+
+    EditorApplication.delayCall += () =>
+    {
+      if (list == null)
+        return;
+
+      var serializedObject = new SerializedObject(list);
+      serializedObject.Update();
+      serializedObject.ApplyModifiedProperties();
+      EditorUtility.SetDirty(list);
+    };
+
+    Selection.activeGameObject = root;
+    EditorUtility.SetDirty(root);
+    EditorUtility.SetDirty(list);
+    EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+  }
 }
