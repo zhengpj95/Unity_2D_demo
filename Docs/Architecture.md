@@ -316,6 +316,8 @@ Presenter / UI
 - Proto 映射/注册优先自动化，避免业务协议越来越多后维护大量手写注册代码。
 - `NetworkMgr` 通过 `ConnectionState` / `ConnectionStateChanged` 向业务层暴露连接流程；首次连接失败与已连接后的断线都会进入指数退避重连流程，等待时间受上限和随机抖动控制，`Close()` / `Dispose()` 会取消等待中的重连。`GameMgr.EnableSocketConnection` 是开发期代码开关，当前为启用状态并连接本地 `ws://localhost:3000`；关闭该开关时客户端不主动建立 Socket。
 - `NetworkMgr` 的 `Send` 返回传输结果；`Request` 支持按 responseCmd 等待响应并超时。`MessageId` 是请求/响应的业务协议类型，同一 responseCmd 由唯一职责方处理，不支持并发等待。网络层通过 `ConnectionFailed` 上报重连耗尽，由 `MiscModule` 决定通用提示与场景重载，不再直接依赖 UI 或场景 API。
+- `MiscProxy` 注册并处理服务端通用 `S2C_ERROR` 协议，通过 `MISC_OPEN_ALERT` 事件进入现有通用弹窗链路；协议 Handler 随 Misc 模块生命周期自动注册和注销。
+- `NetworkMgr` 在解码前校验 WebSocket 二进制帧总长度，默认上限为 1 MiB；未知 cmd、Packet/Proto 解码异常和业务 Handler 异常按阶段隔离并丢弃当前帧，不输出协议正文，也不因此主动改变连接状态。
 
 Network 的已知限制、优化优先级与后续规划统一记录在 `Assets/Scripts/Framework/Network/README.md`；新增网络能力时应同步更新该文档。
 

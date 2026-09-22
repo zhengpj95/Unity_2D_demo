@@ -73,6 +73,7 @@ public readonly struct NetworkRequestResult<TResponse> where TResponse : IMessag
 public class NetworkMgr : Singleton<NetworkMgr>
 {
   private const string LogTag = "[NetworkMgr]";
+  private const int DefaultMaxIncomingPacketBytes = 1024 * 1024;
 
   private sealed class PendingRequest
   {
@@ -93,9 +94,31 @@ public class NetworkMgr : Singleton<NetworkMgr>
   private bool _manualClose;
   private bool _hasEstablishedConnection;
   private string _lastConnectionError;
+  private int _maxIncomingPacketBytes = DefaultMaxIncomingPacketBytes;
 
   /// <summary>是否已连接。</summary>
   public bool IsConnected => _socketMgr != null && _socketMgr.IsConnected;
+
+  /// <summary>
+  /// 单个入站 WebSocket 二进制帧允许的最大总字节数，包含 4 字节 cmd 包头。
+  /// 默认 1 MiB；限制异常大包可避免继续复制包体和执行 Protobuf 解析。
+  /// </summary>
+  public int MaxIncomingPacketBytes
+  {
+    get => _maxIncomingPacketBytes;
+    set
+    {
+      if (value < PacketCodec.HeaderSize)
+      {
+        throw new ArgumentOutOfRangeException(
+            nameof(value),
+            value,
+            $"Maximum incoming packet size must be at least {PacketCodec.HeaderSize} bytes.");
+      }
+
+      _maxIncomingPacketBytes = value;
+    }
+  }
 
   /// <summary>当前网络连接状态，供业务层决定加载、提示或降级策略。</summary>
   public NetworkConnectionState ConnectionState { get; private set; } = NetworkConnectionState.Disconnected;
@@ -357,7 +380,9 @@ public class NetworkMgr : Singleton<NetworkMgr>
       NetworkSendResult unavailableResult = ConnectionState == NetworkConnectionState.Reconnecting
         ? NetworkSendResult.Reconnecting
         : NetworkSendResult.NotConnected;
-      Debug.LogWarning($"{LogTag} Send rejected. Cmd={cmd}, Result={unavailableResult}, State={ConnectionState}");
+      Debug.LogWarning(
+          $"{LogTag} 发送协议失败：Cmd={cmd}, " +
+          $"MessageType={message?.GetType().Name ?? typeof(T).Name}, Result={unavailableResult}, State={ConnectionState}");
       return unavailableResult;
     }
 
@@ -368,18 +393,27 @@ public class NetworkMgr : Singleton<NetworkMgr>
       SocketMgr socket = _socketMgr;
       if (socket == null)
       {
-        Debug.LogWarning($"{LogTag} Send rejected because the socket manager is unavailable. Cmd={cmd}");
+        Debug.LogWarning(
+            $"{LogTag} 发送协议失败：Cmd={cmd}, " +
+            $"MessageType={message?.GetType().Name ?? typeof(T).Name}, BodyBytes={body.Length}, " +
+            $"PacketBytes={packet.Length}, Result={NetworkSendResult.NotConnected}, Reason=Socket manager is unavailable.");
         return NetworkSendResult.NotConnected;
       }
 
-      Debug.Log($"{LogTag} Protocol encoded. Cmd={cmd}, BodyBytes={body.Length}, PacketBytes={packet.Length}");
+      Debug.Log(
+          $"{LogTag} 发送协议：Cmd={cmd}, " +
+          $"MessageType={message.GetType().Name}, BodyBytes={body.Length}, PacketBytes={packet.Length}");
       NetworkSendResult result = await socket.Send(packet) ? NetworkSendResult.Sent : NetworkSendResult.TransportFailed;
-      Debug.Log($"{LogTag} Protocol send completed. Cmd={cmd}, Result={result}");
+      Debug.Log(
+          $"{LogTag} 发送协议完成：Cmd={cmd}, " +
+          $"MessageType={message.GetType().Name}, BodyBytes={body.Length}, PacketBytes={packet.Length}, Result={result}");
       return result;
     }
     catch (Exception exception)
     {
-      Debug.LogError($"{LogTag} Protocol encode or send failed. Cmd={cmd}, Error={exception}");
+      Debug.LogError(
+          $"{LogTag} 发送协议异常：Cmd={cmd}, " +
+          $"MessageType={message?.GetType().Name ?? typeof(T).Name}, Error={exception}");
       return NetworkSendResult.EncodeFailed;
     }
   }
@@ -449,21 +483,136 @@ public class NetworkMgr : Singleton<NetworkMgr>
 
   public void ReceiveMessage(byte[] data)
   {
-    if (_dispatcher == null)
+    int packetBytes = data?.Length ?? 0;
+
+    if (data == null)
     {
-      Debug.LogWarning($"{LogTag} Received data ignored because dispatcher is unavailable. Bytes={data?.Length ?? 0}");
+      LogReceiveFailure("LengthValidation", packetBytes, null, 0, "Packet is null.");
       return;
     }
 
-    Debug.Log($"{LogTag} Decoding received packet. PacketBytes={data?.Length ?? 0}");
-    Packet packet = PacketCodec.Decode(data);
-    Debug.Log($"{LogTag} Packet decoded. Cmd={packet.Cmd}, BodyBytes={packet.Body?.Length ?? 0}");
-    IMessage message = ProtoMgr.Decode(packet.Cmd, packet.Body);
-    Debug.Log($"{LogTag} Protocol decoded. Cmd={packet.Cmd}, MessageType={message?.GetType().Name}");
+    if (packetBytes < PacketCodec.HeaderSize)
+    {
+      LogReceiveFailure(
+          "LengthValidation",
+          packetBytes,
+          null,
+          0,
+          $"Packet is shorter than the {PacketCodec.HeaderSize}-byte header.");
+      return;
+    }
+
+    if (packetBytes > MaxIncomingPacketBytes)
+    {
+      LogReceiveFailure(
+          "LengthValidation",
+          packetBytes,
+          null,
+          packetBytes - PacketCodec.HeaderSize,
+          $"Packet exceeds the {MaxIncomingPacketBytes}-byte limit.");
+      return;
+    }
+
+    if (_dispatcher == null)
+    {
+      LogReceiveFailure(
+          "DispatcherAvailability",
+          packetBytes,
+          null,
+          packetBytes - PacketCodec.HeaderSize,
+          "Dispatcher is not initialized.");
+      return;
+    }
+
+    Packet packet;
+    try
+    {
+      packet = PacketCodec.Decode(data);
+    }
+    catch (Exception exception)
+    {
+      LogReceiveFailure(
+          "PacketDecode",
+          packetBytes,
+          null,
+          packetBytes - PacketCodec.HeaderSize,
+          "Packet header decode failed.",
+          exception);
+      return;
+    }
+
+    if (!ProtoMgr.Contains(packet.Cmd))
+    {
+      LogReceiveFailure(
+          "ProtocolLookup",
+          packetBytes,
+          packet.Cmd,
+          packet.Body.Length,
+          "Unknown command.");
+      return;
+    }
+
+    IMessage message;
+    try
+    {
+      message = ProtoMgr.Decode(packet.Cmd, packet.Body);
+    }
+    catch (Exception exception)
+    {
+      LogReceiveFailure(
+          "ProtoDecode",
+          packetBytes,
+          packet.Cmd,
+          packet.Body.Length,
+          "Protobuf decode failed.",
+          exception);
+      return;
+    }
+
+    Debug.Log(
+        $"{LogTag} 接收协议：Cmd={packet.Cmd}, " +
+        $"MessageType={message.GetType().Name}, BodyBytes={packet.Body.Length}, PacketBytes={packetBytes}");
     CompletePendingRequest(packet.Cmd, message);
-    Debug.Log($"{LogTag} Dispatching protocol. Cmd={packet.Cmd}, MessageType={message?.GetType().Name}");
-    _dispatcher.Dispatch(packet.Cmd, message);
-    Debug.Log($"{LogTag} Protocol dispatch completed. Cmd={packet.Cmd}");
+
+    try
+    {
+      _dispatcher.Dispatch(packet.Cmd, message);
+    }
+    catch (Exception exception)
+    {
+      LogReceiveFailure(
+          "HandlerDispatch",
+          packetBytes,
+          packet.Cmd,
+          packet.Body.Length,
+          "Message handler threw an exception.",
+          exception);
+      return;
+    }
+
+  }
+
+  /// <summary>统一记录收包失败上下文，不记录消息正文，避免异常包泄露业务敏感数据。</summary>
+  private static void LogReceiveFailure(
+      string stage,
+      int packetBytes,
+      uint? cmd,
+      int bodyBytes,
+      string reason,
+      Exception exception = null)
+  {
+    string commandText = cmd.HasValue ? cmd.Value.ToString() : "Unknown";
+    string log =
+        $"{LogTag} Incoming packet dropped. Stage={stage}, Cmd={commandText}, " +
+        $"PacketBytes={packetBytes}, BodyBytes={bodyBytes}, Reason={reason}";
+
+    if (exception == null)
+    {
+      Debug.LogWarning(log);
+      return;
+    }
+
+    Debug.LogError($"{log}, Exception={exception}");
   }
 
   public async Task Close()
@@ -540,10 +689,7 @@ public class NetworkMgr : Singleton<NetworkMgr>
   private void CompletePendingRequest(uint responseCmd, IMessage response)
   {
     if (!_pendingRequests.TryGetValue(responseCmd, out PendingRequest pendingRequest))
-    {
-      Debug.Log($"{LogTag} No pending request matches the received protocol. ResponseCmd={responseCmd}");
       return;
-    }
 
     _pendingRequests.Remove(responseCmd);
     Debug.Log($"{LogTag} Completing pending request. ResponseCmd={responseCmd}, ResponseType={response?.GetType().Name}");

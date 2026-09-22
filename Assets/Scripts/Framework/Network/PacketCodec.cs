@@ -17,7 +17,8 @@ public readonly struct Packet
 
 public static class PacketCodec
 {
-  private const int CmdSize = sizeof(uint);
+  /// <summary>包头长度：4 字节无符号命令字，采用小端序。</summary>
+  public const int HeaderSize = sizeof(uint);
 
   /// <summary>
   /// Cmd + Body -> byte[]
@@ -26,7 +27,7 @@ public static class PacketCodec
   {
     int bodyLength = body?.Length ?? 0;
 
-    byte[] data = new byte[CmdSize + bodyLength];
+    byte[] data = new byte[HeaderSize + bodyLength];
 
     // Cmd
     WriteUInt32LE(data, 0, cmd);
@@ -34,7 +35,7 @@ public static class PacketCodec
     // Body
     if (bodyLength > 0)
     {
-      Buffer.BlockCopy(body, 0, data, CmdSize, bodyLength);
+      Buffer.BlockCopy(body, 0, data, HeaderSize, bodyLength);
     }
 
     return data;
@@ -51,20 +52,20 @@ public static class PacketCodec
       throw new ArgumentNullException(nameof(data));
     }
 
-    if (data.Length < CmdSize)
+    if (data.Length < HeaderSize)
     {
       throw new ArgumentException($"Packet data too small. " + $"Length: {data.Length}");
     }
 
     uint cmd = ReadUInt32LE(data, 0);
 
-    int bodyLength = data.Length - CmdSize;
+    int bodyLength = data.Length - HeaderSize;
 
     byte[] body = new byte[bodyLength];
 
     if (bodyLength > 0)
     {
-      Buffer.BlockCopy(data, CmdSize, body, 0, bodyLength);
+      Buffer.BlockCopy(data, HeaderSize, body, 0, bodyLength);
     }
 
     return new Packet(cmd, body);

@@ -69,7 +69,8 @@ public class MessageDispatcher
 
     if (!_handlers.TryGetValue(cmd, out Action<IMessage> handler))
     {
-      UnityEngine.Debug.LogWarning($"Message handler not found. Cmd: {cmd}");
+      UnityEngine.Debug.LogWarning(
+          $"[NetworkMgr] 协议未注册处理逻辑：Cmd={cmd}, MessageType={message.GetType().Name}");
       return;
     }
 

@@ -10,6 +10,7 @@ public sealed class MiscModule : BaseModule
 
   protected override void OnInit()
   {
+    RegProxy<MiscProxy>();
     RegPresenter<AlertTipsPanelPresenter>(MiscViewType.AlertTips);
     RegCmd<OpenAlertTipsCmd>(EventDefine.MISC_OPEN_ALERT);
 

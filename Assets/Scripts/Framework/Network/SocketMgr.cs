@@ -107,7 +107,6 @@ public sealed class SocketMgr : IDisposable
 
   private void HandleMessage(byte[] data)
   {
-    Debug.Log($"{LogTag} Received raw data. Bytes={data?.Length ?? 0}, Url={_url}");
     OnMessage?.Invoke(data);
   }
 
@@ -139,9 +138,7 @@ public sealed class SocketMgr : IDisposable
 
     try
     {
-      Debug.Log($"{LogTag} Sending raw data. Bytes={data?.Length ?? 0}, Url={_url}");
       await _socket.Send(data);
-      Debug.Log($"{LogTag} Raw data submitted to WebSocket. Bytes={data?.Length ?? 0}, Url={_url}");
       return true;
     }
     catch (Exception e)
