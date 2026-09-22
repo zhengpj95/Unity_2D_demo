@@ -7,9 +7,10 @@ public sealed class GameMgr : MonoBehaviour
 {
   private static GameMgr _instance;
   private bool _isDuplicate;
+  private bool _isApplicationQuitting;
 
   // 开发阶段可关闭 Socket，使未启动本地服务端时也能完整运行客户端流程。
-  private static readonly bool EnableSocketConnection = false;
+  private static readonly bool EnableSocketConnection = true;
   private const string ServerUrl = "ws://localhost:3000";
 
   private void Awake()
@@ -57,7 +58,8 @@ public sealed class GameMgr : MonoBehaviour
 
     ModuleManager.Instance.ReleaseAll();
 
-    if (NetworkMgr.IsCreated)
+    // 正常销毁仍立即释放本地网络资源；退出 Player 时由 OnApplicationQuit 先完成关闭握手。
+    if (NetworkMgr.IsCreated && !_isApplicationQuitting)
       NetworkMgr.Instance.Dispose();
 
     // GameMgr 是跨场景资源加载的全局生命周期边界，退出时统一释放 Addressables 句柄。
@@ -65,6 +67,32 @@ public sealed class GameMgr : MonoBehaviour
       AssetLoader.Instance.ReleaseAll();
 
     _instance = null;
+  }
+
+  /// <summary>
+  /// 退出 Player 或停止 Editor Play Mode 时主动完成 WebSocket Close 握手，再释放本地引用。
+  /// Unity 不会等待普通 OnDestroy 中的异步任务，因此退出关闭必须在 OnApplicationQuit 发起。
+  /// </summary>
+  private async void OnApplicationQuit()
+  {
+    if (_instance != this || _isApplicationQuitting) return;
+
+    _isApplicationQuitting = true;
+    if (!NetworkMgr.IsCreated) return;
+
+    NetworkMgr networkManager = NetworkMgr.Instance;
+    try
+    {
+      await networkManager.Close();
+    }
+    catch (System.Exception exception)
+    {
+      Debug.LogError($"[GameMgr] Failed to close WebSocket while quitting. Error={exception}");
+    }
+    finally
+    {
+      networkManager.Dispose();
+    }
   }
 
   private static void InitializeModules()

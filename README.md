@@ -8,7 +8,7 @@
 - 语言：C#
 - 主要 UI：UGUI + TextMesh Pro
 - 资源：`AssetLoader` 统一入口，当前为 Resources 与本地 Addressables 并存的迁移状态
-- 网络：NativeWebSocket + Google.Protobuf，客户端 Socket 默认关闭
+- 网络：NativeWebSocket + Google.Protobuf，当前启动时连接本地 `ws://localhost:3000`
 
 推荐用指定 Unity 版本打开仓库，并从 `Assets/Scenes/Launcher.unity` 进入主流程。`Launcher` 会创建常驻 `GameMgr`/`UILauncher`，初始化业务模块并展示 Survivor Home；从这里进入 `SurvivorsDemo` 才能覆盖完整的模块、UI 和场景切换生命周期。
 

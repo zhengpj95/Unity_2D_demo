@@ -2,7 +2,7 @@
 
 本目录封装 Unity 客户端的 WebSocket 连接、Packet/Protobuf 编解码和消息分发。传输层不依赖 UI；业务协议由 Proxy/Module 接收后再更新状态或派发业务事件。
 
-`GameMgr.EnableSocketConnection` 当前为开发期代码开关且默认 `false`，因此客户端启动时不会主动连接本地服务端。默认地址仍为 `ws://localhost:3000`。
+`GameMgr.EnableSocketConnection` 当前为开发期代码开关且处于启用状态，客户端启动时会主动连接 `ws://localhost:3000`；本地服务端未启动时会进入既有的失败与重连流程。
 
 ## 数据流
 
@@ -43,7 +43,8 @@
 - `ConnectionState`：类型为 `NetworkConnectionState`。
 - `Connected`、`Disconnected`、`ConnectionStateChanged`：连接生命周期通知。
 - `ConnectionFailed`：重连次数耗尽后携带原因与尝试次数；当前由 `MiscModule` 决定通用提示和场景处理。
-- `Close()` / `Dispose()`：标记主动关闭并取消等待中的重连。
+- `Close()`：标记主动关闭、取消重连和等待请求，并等待底层 WebSocket Close 握手。
+- `Dispose()`：只解绑事件并释放本地引用，不自行等待网络关闭；正常退出应先 `Close()` 再 `Dispose()`。
 
 首次连接失败和已建立连接后的断线都会进入指数退避重连。等待时间为基础延迟的指数增长，并受 `MaxReconnectDelaySeconds` 和 `ReconnectJitterRatio` 限制；`MaxReconnectAttempts < 0` 表示不限次数。
 
@@ -83,6 +84,7 @@ NetworkMgr.Instance.UnregisterHandler(MessageId.S2C_USER_LOGIN);
 - 可检查的发送结果和按 responseCmd 等待的单次请求。
 - 带 URL、状态、cmd、消息类型和字节长度的调试日志；不输出完整协议内容。
 - Network 与 UI/Scene 解耦，连接失败交由业务层决定表现。
+- `GameMgr.OnApplicationQuit` 在停止 Editor Play Mode 或退出 Player 时等待 `Close()`，完成后再 `Dispose()`；强制终止进程时不保证握手完成。
 
 ## 已知限制与优先级
 
