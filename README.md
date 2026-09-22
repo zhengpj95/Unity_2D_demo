@@ -87,16 +87,24 @@ Docs/                             # 项目级架构、资源和模块文档
 
 ## Codex Skill
 
-项目内的 `unity-mvc-development` Skill 位于 `.codex/skills/` 并随 Git 提交。首次在新电脑克隆后，可在项目根目录执行：
+项目内的 `unity-mvc-development` Skill 位于 `.codex/skills/` 并随 Git 提交。现代 Codex 会直接发现仓库内 Skill，通常无需再复制到用户目录，也应避免同时维护项目和全局两个同名副本。
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\Install-CodexSkills.ps1
-```
-
-只预览安装行为：
+只有旧客户端或明确需要在仓库外复用时，才使用兼容安装脚本。先预览：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\Install-CodexSkills.ps1 -WhatIf
 ```
 
-该 Skill 只适用于 Module/Proxy/Command/Presenter 风格的业务开发，不应套用于纯场景布局、美术资源、Shader 或独立原型脚本。
+确认后安装或覆盖同名文件：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\Install-CodexSkills.ps1
+```
+
+若旧安装残留了嵌套目录或已删除文件，使用 `-Clean` 精确重建该 Skill 的全局副本；它不会清理其他 Skill：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\Install-CodexSkills.ps1 -Clean
+```
+
+`-DestinationRoot` 可指定测试或自定义 Skills 根目录。安装/更新全局副本后需重新打开 Codex 或新建会话。该 Skill 只适用于 Module/Proxy/Command/Presenter 风格的业务开发，不应套用于纯场景布局、美术资源、Shader 或独立原型脚本。

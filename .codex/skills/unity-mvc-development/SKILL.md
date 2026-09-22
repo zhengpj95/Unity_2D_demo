@@ -1,36 +1,35 @@
 ---
 name: unity-mvc-development
-description: Develop or refactor Unity C# business features using this project's Module/Proxy/Command MVC conventions, especially flows modeled after Assets/Scripts/TestCode/Login. Do not use for unrelated Unity art, scene-layout, or non-MVC tasks.
+description: Develop or refactor Unity C# business features that use this repository's Module, Proxy, Command, Presenter, and View conventions. Use for MVC business flows; do not use for standalone prototype scripts, scene layout, art, shaders, or other non-MVC work.
 ---
 
 # Unity MVC 业务开发
 
-用于本项目中新增或修改 MVC 风格业务模块。项目的实际参考实现位于 `Assets/Scripts/TestCode/Login`：`LoginModule` 注册 `LoginProxy` 与 `LoginCmd`，Proxy 负责协议处理，Command 负责业务动作。
+为本仓库已有的 Module/MVC 体系实现或重构业务功能。Skill 只补充 MVC 特有决策；通用工程规则以根目录 `AGENTS.md` 为准。
 
-## 开始前
+## 读取顺序
 
-- 先阅读仓库根目录 `AGENTS.md`，再阅读目标模块、`BaseModule`、`BaseProxy`、`BaseCommand` 及其调用方。
-- 明确业务入口、状态数据、网络消息和 UI 需求；不要把示例 Login 的占位日志当成完整业务规则。
-- 保持现有命名、目录和生命周期约定，优先扩展现有基类，不新增第三方依赖。
+1. 阅读 `AGENTS.md`。
+2. 阅读 `Docs/Architecture.md` 和 `Assets/Scripts/Framework/MVC/README.md`。
+3. 阅读目标 Module、相关 Proxy/Command/Presenter/View、MVC 基类及真实调用方。
+4. 修改 Survivor 时，再阅读 `Docs/Modules/Survivor.md` 与相关专题文档。
 
-## 分层职责
+`Assets/Scripts/TestCode/Login` 只提供最小注册示例，不代表完整业务规则；复杂流程优先参考目标模块的当前实现。
 
-- **Module**：模块装配与生命周期。在 `OnInit` 中注册 Proxy/Command，在 `OnRelease` 中释放资源；避免承载具体业务细节。
-- **Proxy**：模块数据和协议边界。集中注册消息处理器，校验解码结果后更新状态或发布事件；不要直接操作 UI。
-- **Command**：一次明确的业务动作。在 `Execute` 中编排校验、调用 Proxy/服务和结果事件；参数使用明确类型。
-- **Presenter/View**：涉及 UI 时遵循 `UIManager -> Presenter -> View`。Presenter 协调 Command、Proxy 和 UI 状态，View 只处理 Unity 组件显示。
+## 关键边界
 
-## 实现规则
+- **Module** 负责装配、公开业务入口和生命周期收口；在 `OnInit` 登记 Proxy、Command、Presenter，不隐藏初始化其他模块。
+- **Proxy** 持有模块数据或协议边界；协议 Handler 在 Proxy 生命周期内注册和注销，不直接操作 UI。
+- **Command** 通过 `Execute(EventContext)` 编排一次明确动作，不保存长期业务状态。
+- **Presenter/View** 遵循 `UIManager -> Presenter -> View`；Presenter 协调交互和展示，View 只处理 Unity 组件。
+- 事件 ID 来自 `EventDefine`，监听器使用 `EventContext`。MonoBehaviour 按启用状态订阅时使用 `OnEnable`/`OnDisable`；Module、Proxy、Command、Presenter 使用 `BaseEmitter` 和各自框架释放阶段。
+- Presenter 的 `PrefabPath` 是交给 `AssetLoader` 的资源键；不要在业务层新增直接的 Resources 或 Addressables 调用。
+- 跨模块协作使用明确入口、稳定接口或必要事件，不用 Singleton 查找隐藏循环依赖。
 
-1. 新模块先确定 `ModuleName`、注册的 Proxy/Command 和事件名，再实现业务代码。
-2. 网络请求通过现有 Network/Proto/Dispatcher 链路；网络回调不要直接改 UI。
-3. 事件订阅放在 `OnEnable`，解绑放在 `OnDisable`；异步回调在关闭/销毁时失效。
-4. 不在 `Update` 中创建临时对象、拼接字符串或使用 LINQ；缓存高频依赖。
-5. 修改序列化字段时保持场景/Prefab 兼容，必要时使用 `FormerlySerializedAs`。
-6. 不为了 MVC 形式强行拆分简单逻辑，也不把 Module 做成全局 God class。
+## 实施与验证
 
-## 验证与汇报
-
-- 检查 `git diff`，确认只改动任务相关文件。
-- 尽可能运行 Unity 2022.3.62f2c1 的现有 Build 或 C# 编译检查；无法运行 Editor 时明确说明。
-- 汇报修改的 Module、Proxy、Command、Presenter/View、协议和事件，以及验证结果和未覆盖风险。
+- 先确认 `ModuleName`、ViewType、事件、状态真源和调用方向，再做最小改动。
+- 不为套用 MVC 强拆简单原型，也不把场景瞬时状态全部塞入 Module/Model。
+- 修改后检查事件/协议解绑、Presenter 关闭、异步失效、序列化兼容和跨层反向依赖。
+- Unity 版本读取 `ProjectSettings/ProjectVersion.txt`。分别汇报静态检查、Unity 编译、Edit Mode、Play Mode 和 Build；未执行的项目明确说明。
+- 架构边界变化时同步 `Docs/Architecture.md`，模块业务规则变化时同步对应模块文档。
