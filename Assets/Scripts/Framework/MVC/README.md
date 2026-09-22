@@ -1,99 +1,119 @@
-# MVP 模块框架
+# Module / MVP 业务框架
 
-本目录提供按业务模块组织的 MVP 架构。`ModuleManager` 是唯一模块入口；每个 `BaseModule` 通过唯一的 `ModuleName` 持有自己的 Command、Proxy 与 Presenter。
+本目录提供按业务域组织的 Module + Presenter/View 框架。`ModuleManager` 是 Module 的唯一入口；每个 `BaseModule` 通过 `ModuleName` 聚合自己的 Proxy、Command 和 Presenter 定义。
 
-## 职责划分
+## 职责
 
-| 类型 | 职责 | 不应承担的职责 |
+| 类型 | 负责 | 不负责 |
 | --- | --- | --- |
-| `ModuleManager` | 模块注册、初始化、逐帧更新、释放 | 具体业务逻辑 |
-| `BaseModule` | 聚合本模块组件、注册事件并管理其生命周期 | 跨模块直接操作内部状态 |
-| `BaseCommand` | 执行事件对应的业务流程 | 自行订阅 EventBus、持久化数据、直接处理网络协议 |
-| `BaseProxy` | 数据状态、业务数据操作、协议注册/回调 | 界面显示和按钮逻辑 |
-| `BasePresenter` | View 生命周期、界面交互与展示 | 协议收发和跨业务决策 |
+| `ModuleManager` | 注册、初始化、Update 驱动和释放 Module | 具体业务规则 |
+| `BaseModule` | 模块装配、组件查询、业务入口和生命周期收口 | 隐式初始化其他模块、保存所有场景瞬时状态 |
+| `BaseProxy` | 模块数据、数据操作、协议 Handler 生命周期 | 直接操作 View |
+| `BaseCommand` | 响应一个 EventBus 事件并编排一次业务动作 | 持久化状态、直接处理底层协议 |
+| `BasePresenter` | View 创建后的生命周期、交互与展示 | 作为业务状态真源、直接处理协议 |
+| `UIView` | Unity 组件引用和显示状态 | 业务流程编排 |
+
+`BaseEmitter` 为 Module、Proxy、Command、Presenter 封装 EventBus 订阅。它记录当前对象通过 `On` 创建的监听，并在对应释放/关闭阶段由 `OffAll` 清理；没有第二套事件系统。
 
 ## 生命周期
 
 ```text
-PushModules / RegisterModule
-            ↓
-       InitializeAll
-            ↓
-Module.OnInit（注册 Proxy / Command）
-            ↓
-Proxy.OnInit（注册协议） → Command.Execute（由 Module 的事件监听触发）
-            ↓
-          Update
-            ↓
-ReleaseModule / ReleaseAll
-            ↓
-Command 取消事件 → Proxy 取消协议 → Presenter 销毁 → Module.OnRelease
+GameMgr.Awake
+  → PushModules<T>()
+  → ModuleManager.InitializeAll()
+      → Module.OnInit()：登记 Proxy / Command / Presenter
+      → Proxy.OnInit()：注册协议
+
+GameMgr.Update
+  → ModuleManager.Update()
+      → 运行中 Module.OnUpdate()
+
+GameMgr.OnDestroy
+  → ModuleManager.ReleaseAll()
+      → Module 先停止运行并解除自身事件
+      → Proxy 注销协议并释放
+      → 已实例化 Presenter 销毁
+      → Module.OnRelease()
+      → Command 释放
 ```
 
-`RegisterModule` 在 `ModuleManager.InitializeAll()` 之后调用时，会立即初始化新模块；`PushModules<T>()` 则始终延迟到下一次 `InitializeAll()` 创建。
+`RegisterModule` 在 Manager 已初始化后调用会立即初始化模块；`PushModules<T>()` 只登记类型，下一次 `InitializeAll()` 才创建。当前启动模块以 `GameMgr.InitializeModules()` 为准。
 
 ## 新建模块
 
-先为模块添加唯一枚举值：
+先在 `Assets/Scripts/Define/ModuleName.cs` 追加唯一枚举值；如有窗口，再在 `ViewType.cs` 增加模块自己的 ViewType。模块只在 `OnInit` 登记其拥有的对象。当前最小参考实现是：
 
 ```csharp
-public enum ModuleName
+public sealed class LoginModule : BaseModule
 {
-  None = 0,
-  Login = 1,
-  Bag = 3,
-  Shop = 4,
-}
-```
-
-然后实现模块，并只在 `OnInit` 中登记它拥有的对象：
-
-```csharp
-public sealed class ShopModule : BaseModule
-{
-  public override ModuleName ModuleName => ModuleName.Shop;
+  public override ModuleName ModuleName => ModuleName.Login;
 
   protected override void OnInit()
   {
-    RegProxy<ShopProxy>();
-    RegCmd<OpenShopCommand>("shop.open");
+    RegProxy<LoginProxy>();
+    RegCmd<LoginCmd>(EventDefine.TEST_LOGIN_COMMAND);
   }
 }
 ```
 
-启动时可延迟注册：
+需要 UI 时再登记 `RegPresenter<TPresenter>(viewType)`。新枚举值和事件 ID 应追加在末尾，避免改变已有序列化枚举值或运行期编号顺序。
+
+## Command 与 EventBus
+
+事件 ID 集中定义在 `Assets/Scripts/Define/EventDefine.cs`，类型为 `int`。所有监听器统一接收 `EventContext`；有参和无参事件可以使用同一 ID，监听方通过 `HasData`、`TryGetData<T>` 或 `GetData<T>` 读取数据。
 
 ```csharp
-ModuleManager.Instance.PushModules<LoginModule>();
-ModuleManager.Instance.PushModules<ShopModule>();
-ModuleManager.Instance.InitializeAll();
-```
-
-## 事件命令示例
-
-Module 通过统一的 `RegCmd<TCommand>(eventId)` 将事件和 Command 绑定，事件 ID 应来自 `EventDefine`；Command 实例由 BaseModule 内部创建，参数类型不需要在注册时声明，框架会在模块释放时自动取消订阅。Command 通常只在 `Execute` 中编排业务并使用 `Emit` 派发结果，不自行持有长期事件逻辑。
-
-`BaseEmitter` 是 Module、Command、Proxy 与 Presenter 的 EventBus 生命周期封装。使用 `On` 订阅、`Emit` 派发、`OffAll` 解绑；同一对象的重复订阅会被忽略。Presenter 在 `OnClose` 解绑，其他对象在各自的释放阶段解绑。
-
-```csharp
-public sealed class OpenShopCommand : BaseCommand
+public sealed class LoginCmd : BaseCommand
 {
-  public override void Execute(object args = null)
+  public override void Execute(EventContext context)
   {
-    // 打开界面或调用本模块 Proxy。
+    if (context.TryGetData(out string account))
+    {
+      // 使用参数执行一次业务动作。
+    }
   }
 }
 
-// 在 ShopModule.OnInit 中：
-RegCmd<OpenShopCommand>("shop.open");
-RegCmd<SelectShopItemCommand>("shop.select_item");
+// Module.OnInit
+RegCmd<LoginCmd>(EventDefine.TEST_LOGIN_COMMAND);
+
+// 调用方
+EventBus.Emit(EventDefine.TEST_LOGIN_COMMAND, account);
 ```
 
-对应派发：`EventBus.Emit("shop.open");` 或 `EventBus.Emit("shop.select_item", itemId);`。同一事件名的有参/无参版本不可混用，因为 EventBus 会按委托类型分发。
+直接使用 EventBus 时必须提供非空 owner：
 
-## Proxy 与 UI 约定
+```csharp
+EventBus.On(EventDefine.FROG_HEALTH_CHANGED, OnHealthChanged, this);
+EventBus.Off(EventDefine.FROG_HEALTH_CHANGED, OnHealthChanged, this);
+```
 
-- 在 `BaseProxy.OnInit` 内使用 `RegisterHandler` 注册协议；同一 Proxy 重复注册同一个协议号会抛出异常，模块释放时会自动注销。
-- `ModuleName` 与所有模块 ViewType 集中定义在 `Assets/Scripts/Define/`；ViewType 文件名为 `ViewType.cs`，枚举命名为 `模块名ViewType`。模块在 `OnInit` 中使用 `RegPresenter<T>(viewType)` 登记 ViewType 与 Presenter 的一一对应关系；调用 `OpenWindow<T>(viewType, args)` 时才实例化并缓存 Presenter，模块释放时自动销毁。Presenter 的 `Layer` 与 `PrefabPath` 属性分别决定 UI 层级和 Resources 路径，默认层级是 `Window`，特殊界面由具体 Presenter 重写。一个 Presenter 类型应只归属一个 Module，并只绑定一个 ViewType；`BaseModule` 负责模块内重复注册校验。`BaseModule` 与 `UIManager` 均以 `ModuleViewKey`（`ModuleName + ViewType`）为缓存键。
-- `GetProxy<T>()`、`GetCommand<T>()` 用于访问本模块组件；Presenter 必须通过 `GetPresenter(viewType)` 按 ViewType 获取，跨模块访问必须先经 `ModuleManager.GetModule<T>(ModuleName)`，避免隐式依赖。
-- 不要在 `OnRelease` 后缓存或继续使用 Command、Proxy、Presenter 引用。
+MonoBehaviour 通常在 `OnEnable`/`OnDisable` 成对订阅；继承 `BaseEmitter` 的纯 C# 对象优先使用受保护的 `On`/`Emit`，并遵循框架的关闭或释放阶段。不要使用数字字面量作为事件 ID。
+
+## Proxy 与协议
+
+Proxy 在 `OnInit` 中通过 `RegisterHandler<T>(uint command, Action<T> handler)` 注册协议。每个 Proxy 独立记录自己注册的 cmd；重复注册会抛异常，模块释放时自动注销。
+
+Proxy 可以更新本模块状态或派发业务事件，但不能直接访问 View。网络数据流与限制见 `../Network/README.md`。
+
+## Presenter / View
+
+模块用 `RegPresenter<TPresenter>(viewType)` 建立一一映射；第一次调用 `OpenWindow<TPresenter>(viewType, args)` 时，`UIManager` 才创建并缓存 Presenter/View。
+
+- Presenter 的 `Layer` 决定 `Main/Window/Model/Tip` 层级。
+- `PrefabPath` 是传给 `AssetLoader` 的稳定资源键，历史命名仍保留为 Path。
+- `ModuleViewKey(ModuleName, ViewType)` 是全局缓存身份。
+- `GetPresenter(viewType)` 只返回已经实例化的 Presenter，未打开时返回 `null`。
+- `UIManager.HidePresenter` 隐藏并保留缓存；`CloseWindow` 会关闭并销毁 Presenter。
+- `OnClose` 会解除 `BaseEmitter` 事件，`OnDestroy` 还会清理按钮监听和 View 实例。
+
+需要强类型参数时使用 `BasePresenter<TView, TArgs>`，其中 `TArgs` 必须为 `struct`。界面关闭、异步返回和场景切换时应重新检查目标对象是否仍有效。
+
+## 跨模块规则
+
+- 本模块内通过 `GetProxy<T>()`、`GetCommand<T>()`、`GetPresenter(viewType)` 查询。
+- 跨模块先通过 `ModuleManager.GetModule<T>(ModuleName)` 获取明确入口，或使用稳定接口/事件。
+- 不缓存已经释放的 Module、Proxy、Command 或 Presenter 引用。
+- 不用 Singleton/场景查找隐藏循环依赖，也不为简单的一对一调用滥用全局 EventBus。
+
+项目级关系、UIManager 资源语义和当前模块清单见 `Docs/Architecture.md`。

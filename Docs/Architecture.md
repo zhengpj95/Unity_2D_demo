@@ -30,19 +30,28 @@ AI 或开发者判断“项目现在是什么样”时，按以下顺序取证�
 
 ```text
 Assets/Scripts/
+├── Define/                    # Event、ModuleName、ViewType、协议等共享定义
 ├── Framework/                 # 通用框架与基础设施
+│   ├── Animation/             # SpriteRenderer / UI Image 序列帧播放
+│   ├── Core/                  # 纯 C# 与 MonoBehaviour 单例基类
 │   ├── Launcher/              # 游戏启动与全局生命周期编排
+│   ├── Manager/               # Audio、EventBus、Timer
 │   ├── MVC/                   # Module / Proxy / Command / Presenter / UIManager
-│   ├── Network/               # 网络、Packet、Proto、消息分发
-│   └── Resource/              # 统一资源加载抽象与具体后端
+│   ├── Network/               # WebSocket、Packet、Proto、消息分发
+│   ├── Player/                # Character 与学习型 FSM
+│   ├── Pool/                  # 普通 GameObject 池与 UI 池
+│   ├── Resource/              # 统一资源加载抽象与 Resources/Addressables 后端
+│   └── UI/                    # 通用 UI 组件与虚拟列表
 ├── Modules/                   # 具体玩法或业务模块
 │   ├── Misc/                  # 通用杂项业务/提示类功能
 │   ├── FrogAdventure/         # 青蛙冒险相关玩法
-│   └── Vampire Survivors-like/# 类幸存者玩法
+│   ├── Melee/                 # 轻量近战原型
+│   ├── Rpg/                   # RPG 学习原型，当前未接入 Module/MVC
+│   └── Vampire Survivors-like/# 当前主要演进的类幸存者玩法
 └── TestCode/                  # 测试、学习和验证代码
 ```
 
-目录是职责提示，不等于强制依赖边界。判断依赖时仍需查看具体调用关系。
+`Assets/Editor/` 还包含虚拟列表等组件的自定义 Inspector 与创建菜单。目录是职责提示，不等于强制依赖边界；FrogAdventure、RPG、Melee 和 TestCode 保留较多学习/原型式 MonoBehaviour，不应仅因位于 `Modules` 就假设它们已经使用统一 Module/MVC。
 
 ## 4. 启动与全局生命周期
 
@@ -145,7 +154,7 @@ ModuleManager
 - 禁止形成循环依赖。
 
 Presenter 采用定义于 `Assets/Scripts/Define/ViewType.cs` 的模块 ViewType 映射：模块在 `OnInit` 中通过
-`RegPresenter<TPresenter>(viewType)` 登记 ViewType 与 Presenter 的一一对应关系，调用 `OpenWindow<TPresenter>(viewType, args)` 时才实例化并缓存界面。Presenter 的 `Layer` 与 `PrefabPath` 属性分别决定 UI 层级和 Resources 路径，默认层级是 `Window`；特殊界面由具体 Presenter 重写，注册或打开接口不再传入层级和路径。一个 Presenter 类型应只归属一个 Module，并只绑定一个 ViewType；`BaseModule` 负责本模块内的重复注册校验。`BaseModule` 与 `UIManager` 统一以 `ModuleViewKey`（`ModuleName + ViewType`）作为 Presenter 缓存身份。ViewType 命名采用 `模块名ViewType`，例如 `SurvivorViewType` 与 `MiscViewType`。
+`RegPresenter<TPresenter>(viewType)` 登记 ViewType 与 Presenter 的一一对应关系，调用 `OpenWindow<TPresenter>(viewType, args)` 时才实例化并缓存界面。Presenter 的 `Layer` 与 `PrefabPath` 属性分别决定 UI 层级和传给 `AssetLoader` 的资源键，默认层级是 `Window`；特殊界面由具体 Presenter 重写，注册或打开接口不再传入层级和资源键。一个 Presenter 类型应只归属一个 Module，并只绑定一个 ViewType；`BaseModule` 负责本模块内的重复注册校验。`BaseModule` 与 `UIManager` 统一以 `ModuleViewKey`（`ModuleName + ViewType`）作为 Presenter 缓存身份。ViewType 命名采用 `模块名ViewType`，例如 `SurvivorViewType` 与 `MiscViewType`。
 已打开的 Presenter 仅可通过 `GetPresenter(viewType)` 按 ViewType 查询，不提供按 Presenter 类型查询的 Module API。
 
 ### Proxy
@@ -232,6 +241,14 @@ Assets/Scripts/Framework/MVC/UIManager.cs
 - GameObject 缓存；
 - Presenter 创建、缓存和生命周期调用；
 - Window 打开/关闭；
+
+`Framework/UI` 另提供与业务窗口框架相互独立的通用组件：
+
+- `VirtualList`：固定尺寸纵向、横向或网格虚拟列表，支持单一渲染/点击/滚动回调、稳定键选中恢复和索引定位；
+- `VariableHeightVirtualList`：纵向异高列表，支持多模板、业务高度计算/失效刷新、稳定键选中恢复和索引定位；
+- `UIProgressBar`、`UIImageFont`、`UISizeFitter`、`UIGray`、`TMPOutline` 等表现组件。
+
+两种虚拟列表都只创建可见范围附近的 Item，并要求绑定方在关闭或销毁时调用 `ClearHandlers()`。固定尺寸列表负责 horizontal/grid；异高列表只负责 vertical，不要把两套布局能力混写成一个组件。
 
 当前层级枚举为：
 
@@ -413,6 +430,7 @@ Survivor 内部的 `PlayerAttributeSystem` 统一定义 `PlayerStat`、固定/�
 - 检查序列化字段和 Prefab/Scene 兼容；
 - 检查是否误改 Unity `.meta`、场景或无关资源；
 - 架构边界若发生变化，同步更新本文。
+- 区分静态检查、Unity 编译、Play Mode 与 Build 的验证结果；仓库当前没有正式 Test Assembly，`TestCode` 不能作为自动化测试通过的证据。
 
 ---
 

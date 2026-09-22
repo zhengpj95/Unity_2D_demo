@@ -1,175 +1,95 @@
-# Network 模块说明
+# Network 模块
 
-## 0. 当前状态、已知限制与后续规划
+本目录封装 Unity 客户端的 WebSocket 连接、Packet/Protobuf 编解码和消息分发。传输层不依赖 UI；业务协议由 Proxy/Module 接收后再更新状态或派发业务事件。
 
-当前已实现连接状态 `ConnectionState` / `ConnectionStateChanged`、首次连接失败后的重连，以及带上限和随机抖动的指数退避。`GameMgr.EnableSocketConnection` 是开发期代码开关，默认关闭时不会主动建立 Socket，本地服务端未启动也可运行客户端流程。
+`GameMgr.EnableSocketConnection` 当前为开发期代码开关且默认 `false`，因此客户端启动时不会主动连接本地服务端。默认地址仍为 `ws://localhost:3000`。
 
-以下内容按优先级记录，尚未实现：
+## 数据流
 
-1. **收包边界保护（P0）**：`ReceiveMessage` 尚未隔离 Packet、Proto 解析和业务 Handler 异常；需要增加最大包体限制、异常日志（cmd、包长）与单包失败后的继续收包策略。
-2. **连接任务取消与地址切换策略（P1）**：同一地址的并发 `Connect` 已合并，旧 Socket 会先关闭再释放；当前地址切换要求先 `Close()`，后续可按业务需要补充取消令牌或受控切换策略。
-3. **发送结果与请求超时（已实现基础版本）**：`Send` 返回 `NetworkSendResult`；`Request` 可等待指定 responseCmd 并超时。`MessageId` 表示请求/响应的业务协议类型，同一响应协议应由唯一职责方处理，因此同一 responseCmd 仅允许一个等待请求。
-4. **框架与业务解耦（已处理）**：`NetworkMgr` 仅上报 `ConnectionFailed`，通用提示与重载场景逻辑已迁移到 `MiscModule`。
-5. **重连策略完善（已处理）**：重连等待按 `ReconnectDelaySeconds * 2^(尝试次数 - 1)` 增长，受 `MaxReconnectDelaySeconds` 限制，并按 `ReconnectJitterRatio` 增减随机抖动；`Close()` 与 `Dispose()` 会取消等待中的重连任务，避免无效重试和大量客户端同时重连。
-6. **心跳与平台验证（P2）**：需要加入心跳/超时检测，并按目标平台验证 NativeWebSocket 的消息队列驱动与主线程回调要求。
-7. **可观测性与测试（P2）**：当前连接、重连、收发原始字节、协议编解码、分发、关闭与异常均已输出 `[SocketMgr]` / `[NetworkMgr]` 调试日志（记录 URL、状态、cmd、消息类型和字节长度，不输出完整协议内容）。后续补充连接次数、重连次数、收发包量、失败原因统计，以及 PacketCodec、ProtoMgr、Dispatcher 和重连状态机的自动化测试。
-
-服务端地址当前处于本地测试阶段，保留 `ws://localhost:3000`。暂不引入多环境配置；准备联调或发布时，再将地址抽取为明确的环境配置即可。
-
-这个模块主要负责 Unity 客户端与服务端之间的网络连接、消息发送与接收，以及 protobuf 协议包的编解码与分发。
-
-## 1. 模块职责
-
-当前的 Network 目录中，核心逻辑主要分为两层：
-
-- 底层 Socket 层：负责 WebSocket 连接、状态管理和原始数据收发。
-- 上层协议层：负责打包/解包、消息分发和业务处理。
-
-## 2. 关键文件
-
-### 2.1 SocketMgr.cs
-
-`SocketMgr` 是底层 WebSocket 管理器，基于 `NativeWebSocket` 实现。
-
-主要功能：
-
-- 建立连接：`Connect(string url)`
-- 发送数据：`Send(byte[] data)`
-- 关闭连接：`Close()`
-- 状态管理：`SocketState`
-- 事件通知：`OnConnected`、`OnMessage`、`OnError`、`OnClosed`
-
-状态枚举：
-
-- `None`
-- `Connecting`
-- `Connected`
-- `Closing`
-- `Closed`
-- `Error`
-
-实现特点：
-
-- 使用事件回调处理 WebSocket 的 open / message / error / close。
-- `IsConnected` 会判断 `_socket.State == WebSocketState.Open`。
-- `Dispose()` 会清理事件绑定和状态，避免连接对象残留。
-
-这是整个网络层的基础设施，负责把底层 socket 的生命周期封装起来，便于上层直接调用。
-
-### 2.2 NetworkMgr.cs
-
-`NetworkMgr` 是业务网络入口，继承自 `Singleton<NetworkMgr>`，作为全局网络管理器使用。
-
-主要功能：
-
-- 连接服务器：`Connect(string url)`
-- 连接状态：`ConnectionState` 与 `ConnectionStateChanged`
-- 发送 protobuf 消息：`Send<T>(uint cmd, T message)`，返回 `NetworkSendResult`
-- 请求响应：`Request<TRequest, TResponse>(...)`，按 responseCmd 等待一次响应并支持超时
-- 接收消息并解包：`ReceiveMessage(byte[] data)`
-- 关闭连接：`Close()`
-- 释放资源：`Dispose()`
-
-其流程大致为：
-
-1. 调用 `ProtoRegister.RegisterAll()` 注册协议类型。
-2. 创建 `SocketMgr` 和 `MessageDispatcher`。
-3. 注册消息处理器：`_dispatcher.Register<s2c_user_login>(Cmd.S2C_USER_LOGIN, s2cUserLogin)`。
-4. 监听 `_socketMgr.OnMessage`，收到消息后调用 `ReceiveMessage()`。
-5. `ReceiveMessage()` 调用 `PacketCodec.Decode(data)` 解析数据包。
-6. 使用 `ProtoMgr.Decode(packet.Cmd, packet.Body)` 反序列化消息体。
-7. 通过 `_dispatcher.Dispatch(packet.Cmd, message)` 分发给对应业务处理函数。
-
-## 3. 业务处理链路
-
-当前代码的典型处理链路如下：
-
-- 客户端调用 `NetworkMgr.Send(cmd, message)`
-- `message` 先经过 `ProtoMgr.Encode()` 编码
-- 再经过 `PacketCodec.Encode(cmd, body)` 组装成完整 packet
-- 通过 `SocketMgr.Send(packet)` 发送到服务器
-- 服务器返回数据后，`SocketMgr` 触发 `OnMessage`
-- `NetworkMgr.ReceiveMessage()` 解包并分发给消息处理器
-
-```shell
-                Server
-                  │
-                  │ WebSocket
-                  ▼
-            SocketMgr
-                  │
-                byte[]
-                  │
-                  ▼
-             PacketCodec
-                  │
-              ┌───┴───┐
-              │       │
-             Cmd     Body
-              │       │
-              └───┬───┘
-                  ▼
-               ProtoMgr
-                  │
-                  ▼
-            IMessage
-                  │
-                  ▼
-        MessageDispatcher
-                  │
-          ┌───────┼────────┐
-          ▼       ▼        ▼
-      LoginHandler UserHandler BagHandler
+```text
+业务 Module / Proxy
+       │ Send / Request / RegisterHandler
+       ▼
+   NetworkMgr
+       ├─ ProtoMgr：IMessage ↔ byte[]
+       ├─ PacketCodec：uint cmd + body ↔ packet
+       └─ MessageDispatcher：cmd → 强类型 Handler
+       ▼
+    SocketMgr
+       ▼
+ NativeWebSocket / Server
 ```
 
-## 4. 当前实现的特点
+收到消息时按相反方向执行：`SocketMgr.OnMessage → PacketCodec.Decode → ProtoMgr.Decode → 完成等待中的 Request → MessageDispatcher.Dispatch`。
 
-- 采用 `WebSocket` 作为传输协议，适合实时游戏通信。
-- 采用 `protobuf` 作为消息序列化格式，利于体积较小、解析效率较高。
-- 通过 `cmd` 号作为消息路由标识，支持不同业务消息分发。
-- 使用 `MessageDispatcher` 统一管理消息回调，减少业务代码耦合。
+## 文件职责
 
-## 5. 现状与注意事项
+| 文件 | 当前职责 |
+| --- | --- |
+| `SocketMgr.cs` | 包装 NativeWebSocket 的连接、发送、关闭、状态与底层事件；`Dispose` 解绑事件并释放 Socket |
+| `NetworkMgr.cs` | 对外连接入口、重连状态机、Proto 消息收发、Request 超时、Handler 注册与业务连接事件 |
+| `PacketCodec.cs` | 以小端序编码/解码 `4 字节 uint cmd + body` |
+| `ProtoMgr.cs` | 保存 `cmd → MessageParser` 映射并编解码 `IMessage` |
+| `ProtoRegister.cs` | 当前协议 Parser 的集中注册入口 |
+| `MessageDispatcher.cs` | 保存每个 cmd 的唯一强类型业务 Handler 并执行分发 |
 
-当前代码中使用了这几个重要组件：
+协议源文件是 `Assets/Configs/message.proto`，生成代码是 `Assets/Scripts/Define/Proto/Message.cs`，协议号位于 `MessageID.cs`。修改 `.proto` 后必须重新生成代码，并检查命令号与 `ProtoRegister` 一致；不要手工修改生成代码来替代协议源变更。
 
-- `PacketCodec`：负责封包/拆包
-- `ProtoMgr`：负责 protobuf 编解码
-- `MessageDispatcher`：负责消息分发
-- `Cmd`：协议命令枚举/常量
+## 对外能力
 
-代码结构比较清晰，适合继续扩展更多网络消息类型。当前的示例逻辑里，`s2c_user_login` 已经接入了分发处理，说明该网络层具备较好的扩展基础。
+### 连接
 
-### 协议源文件与生成代码
+- `Connect(string url)`：合并同地址的并发连接任务；切换地址前应先 `Close()`。
+- `ConnectionState`：类型为 `NetworkConnectionState`。
+- `Connected`、`Disconnected`、`ConnectionStateChanged`：连接生命周期通知。
+- `ConnectionFailed`：重连次数耗尽后携带原因与尝试次数；当前由 `MiscModule` 决定通用提示和场景处理。
+- `Close()` / `Dispose()`：标记主动关闭并取消等待中的重连。
 
-- 协议源文件位于 `Assets/Configs/message.proto`，它是登录、注册与配置消息的定义来源。
-- 运行时不读取 `.proto` 文件；客户端实际编译和注册的是由 `protoc` 生成的 `Assets/Scripts/Define/Proto/Message.cs`。
-- 修改 `message.proto` 后，必须重新生成 `Message.cs`，再同步检查 `MessageID.cs` 与 `ProtoRegister.cs` 的命令号和 Parser 注册是否一致。
-- 移动协议源文件时必须同时移动其 `.meta`，以保留 Unity GUID；不要复制已有 `.meta` 创建新协议文件。
+首次连接失败和已建立连接后的断线都会进入指数退避重连。等待时间为基础延迟的指数增长，并受 `MaxReconnectDelaySeconds` 和 `ReconnectJitterRatio` 限制；`MaxReconnectAttempts < 0` 表示不限次数。
 
-## 6. 典型用法
+### 发送与请求
 
-在实际业务中，通常是这样使用：
+```csharp
+NetworkSendResult result = await NetworkMgr.Instance.Send(cmd, message);
 
-- 先调用 `NetworkMgr.Instance.Connect(url)` 建立连接
-- 注册消息监听器
-- 调用 `NetworkMgr.Instance.Send(cmd, protoMessage)` 发送消息
-- 在对应回调中处理服务端返回
+NetworkRequestResult<TResponse> response = await NetworkMgr.Instance.Request<TRequest, TResponse>(
+  requestCmd,
+  request,
+  responseCmd,
+  timeoutSeconds);
+```
 
-## 7. 总结
+- `Send` 不用异常表示常规连接状态，调用方应检查 `NetworkSendResult`。
+- `Request` 按 `responseCmd` 等待一次响应并支持超时/取消结果。
+- 同一个 `responseCmd` 只允许一个等待请求；项目约定一个响应协议由唯一职责方处理，不支持用相同响应号并发关联多请求。
 
-这个网络模块已经具备：
+### Handler
 
-- 连接管理
-- 消息发送
-- 消息接收
-- 协议解码
-- 消息分发
+业务 Proxy 优先通过 `BaseProxy.RegisterHandler<T>` 注册，以便模块释放时自动注销。直接调用 NetworkMgr 时使用：
 
-的基础能力，是一个适合游戏客户端扩展的标准网络层骨架。后续如果继续开发，可在此基础上增加：
+```csharp
+NetworkMgr.Instance.RegisterHandler<s2c_user_login>(MessageId.S2C_USER_LOGIN, OnLogin);
+NetworkMgr.Instance.UnregisterHandler(MessageId.S2C_USER_LOGIN);
+```
 
-- 心跳机制
-- 指数退避的重连策略
-- 业务层基于 `ConnectionStateChanged` 的断线重连交互
-- 更完善的错误日志、指标与自动化测试
+每个 cmd 只能有一个业务 Handler。网络回调不得直接操作 UI，应先更新 Proxy/Module 状态或派发事件。
 
+## 当前已实现
+
+- NativeWebSocket 连接、关闭与状态转换。
+- 首次失败/断线后的指数退避重连、上限、抖动与主动取消。
+- `uint` cmd 的 Packet 编解码。
+- Protobuf Parser 集中注册、编解码与强类型消息分发。
+- 可检查的发送结果和按 responseCmd 等待的单次请求。
+- 带 URL、状态、cmd、消息类型和字节长度的调试日志；不输出完整协议内容。
+- Network 与 UI/Scene 解耦，连接失败交由业务层决定表现。
+
+## 已知限制与优先级
+
+1. **P0：收包边界保护。** `ReceiveMessage` 当前没有隔离 Packet、Proto 和业务 Handler 异常，也没有最大包体限制。非法包或 Handler 异常可能中断本次回调；应增加分阶段错误日志，并保证后续合法包仍可处理。
+2. **P1：连接取消与地址切换。** 同地址并发连接已合并，主动关闭可取消重连；连接中的取消令牌和受控地址切换仍未提供。
+3. **P2：心跳与平台验证。** 尚无应用层心跳/超时检测；需要按目标平台验证 NativeWebSocket 消息队列与主线程要求。
+4. **P2：可观测性和自动化测试。** 尚无连接/重连/收发量指标，也没有 PacketCodec、ProtoMgr、Dispatcher 或重连状态机的正式测试程序集。
+5. **发布配置。** 服务地址仍写在 `GameMgr`，尚无开发/测试/正式环境配置。
+
+新增网络能力时同步检查 `Docs/Architecture.md`；改变协议时同步源 `.proto`、生成代码、命令号和注册表。

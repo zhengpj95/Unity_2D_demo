@@ -19,6 +19,20 @@
 
 不要把计划中的类、目录或架构当作现有实现。文档和代码冲突时，以代码为准，并在架构发生实质变化时同步更新 `Docs/Architecture.md`。
 
+### 按任务读取
+
+不要求每次把所有文档全部读完；根据任务先读取最接近的事实源，再沿真实调用链补充：
+
+| 任务 | 必读内容 |
+| --- | --- |
+| 启动、全局生命周期、Module、跨模块依赖 | `Docs/Architecture.md`、`GameMgr.cs`、目标 Module 与基类 |
+| UI、Presenter、窗口层级 | `Docs/Architecture.md`、`Framework/MVC/README.md`、`UIManager.cs`、目标 Presenter/View/Prefab |
+| 资源、Addressables、对象池协作 | `Docs/ResourceManagement.md`、`Framework/Resource/`、`PoolManager.cs`、真实调用方 |
+| Network/Protobuf | `Framework/Network/README.md`、Network 代码、协议定义与目标 Proxy |
+| Survivor | 本文“Survivor 模块开发”列出的文档与代码 |
+| 独立原型（FrogAdventure/RPG/Melee） | 目标场景、组件和调用方；不要默认其已接入 Module/MVC |
+| 第三方资源或包 | `Docs/ThirdPartyAssets.md`、`Packages/manifest.json`、本地许可证文件 |
+
 ## 基本原则
 
 - 优先保持现有代码风格、目录结构、命名和生命周期约定。
@@ -26,13 +40,14 @@
 - 只修改完成任务所需的文件，不要改动无关代码、场景、Prefab 或配置。
 - 不要凭空创建第三方依赖；新增依赖前说明原因和替代方案。
 - 修改完成后检查 diff，并尽可能运行相关编译、测试或静态检查。
+- 开始前先检查 `git status --short`；用户已有修改默认不可覆盖、回退或顺手格式化。
 - 不确定业务规则时先从调用方、已有实现和文档取证；只有仓库无法消除关键歧义时才向用户提问。
 - 新增通用 Manager、Service、Bus 或基础设施前，先搜索是否已有同职责实现，避免重复系统。
 
 ## Unity 约定
 
 - 目标 Unity 版本以项目的 `ProjectSettings/ProjectVersion.txt` 为准。
-- Unity 生命周期必须明确：`Awake` 负责引用和基础初始化，`OnEnable`/`OnDisable` 负责事件订阅，`OnDestroy` 负责释放资源。
+- Unity 生命周期必须明确：`Awake` 负责引用和一次性基础初始化；需要随启用状态生效的 MonoBehaviour 订阅放在 `OnEnable`/`OnDisable`；只与对象存亡绑定的资源在 `OnDestroy` 释放。纯 C# Module/Proxy/Command/Presenter 使用各自框架生命周期，不要机械添加 Unity 回调。
 - 避免在 `Update` 中创建临时对象、字符串拼接或 LINQ；高频路径优先考虑缓存和对象复用。
 - 不要在运行时随意修改 Prefab 资源本身；运行时实例和编辑器资源要区分处理。
 - UI 对象的层级、Canvas、粒子特效和排序问题，应从渲染顺序与父子节点关系分析，不要用随机加大的 sorting order 修补。
@@ -49,7 +64,7 @@
 - 一个类只承担清晰的职责；避免 God class、静态全局状态和隐藏依赖。
 - 能使用接口表达依赖时，不直接依赖具体实现；避免模块之间互相持有具体类型造成循环依赖。
 - 优先使用明确的类型和不可变数据；不要为了“灵活”滥用 `object`、反射或字符串查找。
-- 公共 API 写清楚参数、返回值、生命周期和异常/失败行为。
+- 新增或实质修改的公共 API 写清楚参数、返回值、生命周期和异常/失败行为；不要求为未触及的历史 API 进行大范围补注释。
 - 新增或修改代码必须补充中文备注：类/组件说明职责，公共 API 说明用途与参数，关键分支、对象层级、状态转换和生命周期处理说明原因；不能只写实现而省略备注。
 - 不要捕获异常后静默忽略；日志要包含模块、操作和关键标识。
 - 不要为了省几行代码使用难以阅读的表达式或过度泛型化。
@@ -82,7 +97,7 @@
 3. `.codex/skills/unity-mvc-development/SKILL.md`
 4. 目标 Module、`BaseModule`、`BaseProxy` 与真实调用方
 
-Survivor 的运行时数据必须由 `SurvivorModel` 保存、由 `SurvivorProxy` 持有和修改。Presenter / View 只负责展示和交互；技能选择等 UI 通过回调交给 `SurvivorGameplayController` 编排，不直接调用武器逻辑或修改 `Time.timeScale`。
+Survivor 的跨场景局内状态（生命、经验、等级、击杀、货币、待升级次数和永久玩家属性修正）由 `SurvivorModel` 保存、由 `SurvivorProxy` 持有和修改。场景实体的瞬时状态仍由对应组件负责，例如武器运行时等级位于 `WeaponController`，Wave 计时位于 `EnemyDirector`；不要为了“统一”把所有瞬时数据塞进 Model。Presenter / View 只负责展示和交互；技能选择等 UI 通过回调交给 `SurvivorGameplayController` 编排，不直接调用武器逻辑或修改 `Time.timeScale`。
 
 ## 网络与 Protobuf
 
@@ -121,6 +136,24 @@ Survivor 的运行时数据必须由 `SurvivorModel` 保存、由 `SurvivorProxy
 5. 检查编译错误、生命周期问题、序列化兼容性和事件泄漏。
 6. 查看 `git diff`，确认没有无关修改，并判断是否需要同步更新架构文档。
 7. 总结修改内容、验证结果和仍需人工在 Unity Editor 中确认的事项。
+
+### 验证口径
+
+- `Assets/Scripts/TestCode` 是学习和手工演示代码，不等同于自动化测试。
+- 仓库当前没有正式的 Edit Mode / Play Mode Test Assembly；除非本次新增并实际执行，否则不要声称“自动化测试通过”。
+- 文档-only 修改至少检查 Markdown 链接、文件路径、术语/API 与代码是否一致，并查看 `git diff --check`。
+- 代码修改优先执行可用的编译或测试；涉及 Scene、Prefab、序列化引用、动画事件、物理或 UI 布局时仍需 Unity Editor 验证。
+- 汇报时分别说明：静态检查、Unity 编译、Edit Mode、Play Mode、Build；未执行的项目明确标注未执行。
+
+## 文档维护
+
+- 根 `README.md` 负责新读者入口、环境、模块成熟度和文档导航，不承载模块级实现细节。
+- `Docs/Architecture.md` 只记录跨目录结构、主要调用关系和项目级约束。
+- `Assets/Scripts/Framework/**/README.md` 记录对应框架 API、生命周期、限制和最小示例。
+- `Docs/Modules/*.md` 记录 Survivor 等具体业务规则、Inspector 配置和验收。
+- `BACKLOG.md` 只管理未完成工作与完成定义；已完成事项压缩为证据索引，避免把历史实现与当前待办混排。
+- 文档引用代码时使用仓库真实类型名、事件 ID 和签名；示例应能与当前 API 对应。计划能力必须明确标注为“未实现/规划”。
+- 只改措辞、链接或文档结构且没有改变代码架构时，不需要机械更新所有文档的日期。
 
 ## 禁止事项
 
