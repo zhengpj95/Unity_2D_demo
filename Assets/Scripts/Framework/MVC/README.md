@@ -98,13 +98,14 @@ Proxy 可以更新本模块状态或派发业务事件，但不能直接访问 V
 
 ## Presenter / View
 
-模块用 `RegPresenter<TPresenter>(viewType)` 建立一一映射；第一次调用 `OpenWindow<TPresenter>(viewType, args)` 时，`UIManager` 才创建并缓存 Presenter/View。
+模块用 `RegPresenter<TPresenter>(viewType)` 建立一一映射；第一次调用 `OpenWindow(viewType, args)` 或 `OpenWindow<TPresenter>(viewType, args)` 时，`UIManager` 才创建并缓存 Presenter/View。非泛型入口返回 `BasePresenter`，需要强类型结果时使用泛型入口。
 
 - Presenter 的 `Layer` 决定 `Main/Window/Model/Tip` 层级。
 - `PrefabPath` 是传给 `AssetLoader` 的稳定资源键，历史命名仍保留为 Path。
 - `ModuleViewKey(ModuleName, ViewType)` 是全局缓存身份。
 - `GetPresenter(viewType)` 只返回已经实例化的 Presenter，未打开时返回 `null`。
 - `UIManager.HidePresenter` 隐藏并保留缓存；`CloseWindow` 会关闭并销毁 Presenter。
+- `UIManager.ShowUI` / `HideUI` 是为 FrogAdventure 原型保留的旧式路径接口，已标记 `[Obsolete]`；新界面应登记 Presenter 并通过 Module 打开。
 - `OnClose` 会解除 `BaseEmitter` 事件，`OnDestroy` 还会清理按钮监听和 View 实例。
 
 需要强类型参数时使用 `BasePresenter<TView, TArgs>`，其中 `TArgs` 必须为 `struct`。界面关闭、异步返回和场景切换时应重新检查目标对象是否仍有效。

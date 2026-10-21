@@ -14,8 +14,6 @@ public class UIManagerConfig
   public Transform modelLayer;
   public Transform tipLayer;
 
-  public UIManagerConfig() { }
-
   public UIManagerConfig(Transform main, Transform window, Transform model, Transform tip)
   {
     mainLayer = main;
@@ -90,30 +88,6 @@ public class UIManager : Singleton<UIManager>
   }
 
   /// <summary>
-  /// 初始化UI管理器（便捷方法）
-  /// </summary>
-  public void Initialize(Transform main, Transform window, Transform model, Transform tip)
-  {
-    Initialize(new UIManagerConfig(main, window, model, tip));
-  }
-
-  /// <summary>
-  /// 更新配置（用于场景切换）
-  /// </summary>
-  /// <param name="config">新配置</param>
-  public void UpdateConfig(UIManagerConfig config)
-  {
-    if (config == null || !config.IsValid())
-    {
-      Debug.LogError("[UIManager] Invalid config");
-      return;
-    }
-
-    _config = config;
-    Debug.Log("[UIManager] Config updated");
-  }
-
-  /// <summary>
   /// 释放资源
   /// </summary>
   public void Release()
@@ -138,6 +112,7 @@ public class UIManager : Singleton<UIManager>
   /// </summary>
   /// <param name="prefabPath">由 AssetLoader 解析的 Prefab 资源键。</param>
   /// <param name="layer">UI层级</param>
+  [Obsolete("ShowUI 使用旧式 Prefab 路径缓存；新界面请通过 Module 的 OpenWindow 接口打开 Presenter。")]
   public void ShowUI(string prefabPath, UILayerIndex layer)
   {
     if (!CheckInitialized()) return;
@@ -166,6 +141,7 @@ public class UIManager : Singleton<UIManager>
   /// </summary>
   /// <param name="prefabPath">Prefab路径</param>
   /// <param name="isDestroy">是否销毁GameObject</param>
+  [Obsolete("HideUI 使用旧式 Prefab 路径缓存；Presenter 界面请使用 HidePresenter 或 CloseWindow。")]
   public void HideUI(string prefabPath, bool isDestroy = false)
   {
     if (!CheckInitialized()) return;
@@ -186,54 +162,8 @@ public class UIManager : Singleton<UIManager>
 
   #endregion
 
-  #region UI查询与管理
-
-  /// <summary>
-  /// 获取UI GameObject实例
-  /// </summary>
-  /// <param name="prefabPath">Prefab路径</param>
-  /// <returns>GameObject实例，不存在返回null</returns>
-  public GameObject GetUIObject(string prefabPath)
-  {
-    _uiCache.TryGetValue(prefabPath, out GameObject uiObj);
-    return uiObj;
-  }
-
-  /// <summary>
-  /// 获取UI上的组件
-  /// </summary>
-  /// <typeparam name="T">组件类型</typeparam>
-  /// <param name="prefabPath">Prefab路径</param>
-  /// <returns>组件实例</returns>
-  public T GetUIComponent<T>(string prefabPath) where T : Component
-  {
-    var go = GetUIObject(prefabPath);
-    return go?.GetComponent<T>();
-  }
-
-  /// <summary>
-  /// 检查UI是否存在
-  /// </summary>
-  /// <param name="prefabPath">Prefab路径</param>
-  /// <returns>是否存在</returns>
-  public bool HasUI(string prefabPath)
-  {
-    return _uiCache.ContainsKey(prefabPath);
-  }
-
-  /// <summary>
-  /// 销毁指定UI
-  /// </summary>
-  /// <param name="prefabPath">Prefab路径</param>
-  public void DestroyUI(string prefabPath)
-  {
-    HideUI(prefabPath, true);
-  }
-
-  /// <summary>
-  /// 销毁所有UI
-  /// </summary>
-  public void DestroyAllUI()
+  /// <summary>销毁所有旧式路径缓存 UI；仅在 UIManager 释放时调用。</summary>
+  private void DestroyAllUI()
   {
     foreach (var kvp in _uiCache)
     {
@@ -244,22 +174,6 @@ public class UIManager : Singleton<UIManager>
     }
     _uiCache.Clear();
   }
-
-  /// <summary>
-  /// 获取所有缓存的UI
-  /// </summary>
-  /// <returns>UI路径集合</returns>
-  public IEnumerable<string> GetAllCachedUI()
-  {
-    return _uiCache.Keys;
-  }
-
-  /// <summary>
-  /// 获取缓存UI数量
-  /// </summary>
-  public int CachedUICount => _uiCache.Count;
-
-  #endregion
 
   #region 辅助方法
 
@@ -300,16 +214,32 @@ public class UIManager : Singleton<UIManager>
   private readonly Dictionary<BasePresenter, ModuleViewKey> _presenterKeys = new Dictionary<BasePresenter, ModuleViewKey>();
 
   /// <summary>
-  /// 打开界面
+  /// 按具体 Presenter 类型打开界面，并保留强类型返回值。
   /// </summary>
-  public T OpenWindow<T>(ModuleViewKey viewKey, object args = null) where T : BasePresenter, new()
+  internal T OpenWindow<T>(ModuleViewKey viewKey, object args = null) where T : BasePresenter, new()
   {
+    BasePresenter presenter = OpenWindowInternal(viewKey, () => new T(), args, typeof(T));
+    return presenter as T;
+  }
+
+  /// <summary>使用模块登记的 Presenter 工厂打开界面；调用方无需在此处再次指定 Presenter 泛型类型。</summary>
+  internal BasePresenter OpenWindow(ModuleViewKey viewKey, Func<BasePresenter> presenterFactory, object args = null)
+  {
+    return OpenWindowInternal(viewKey, presenterFactory, args, null);
+  }
+
+  private BasePresenter OpenWindowInternal(ModuleViewKey viewKey, Func<BasePresenter> presenterFactory, object args, Type expectedPresenterType)
+  {
+    if (presenterFactory == null) throw new ArgumentNullException(nameof(presenterFactory));
+
     if (!_presenterCache.TryGetValue(viewKey, out BasePresenter presenter))
     {
-      presenter = new T();
+      presenter = presenterFactory();
+      if (presenter == null)
+        throw new InvalidOperationException($"[UIManager] Presenter factory returned null for view key {viewKey}.");
       if (string.IsNullOrWhiteSpace(presenter.PrefabPath))
       {
-        Debug.LogError($"[UIManager] Presenter {typeof(T).Name} must define a valid PrefabPath.");
+        Debug.LogError($"[UIManager] Presenter {presenter.GetType().Name} must define a valid PrefabPath.");
         return null;
       }
 
@@ -331,14 +261,13 @@ public class UIManager : Singleton<UIManager>
       _presenterCache.Add(viewKey, presenter);
       _presenterKeys.Add(presenter, viewKey);
     }
-    else if (presenter is not T)
+    else if (expectedPresenterType != null && !expectedPresenterType.IsInstanceOfType(presenter))
     {
-      throw new InvalidOperationException($"[UIManager] View key {viewKey} is bound to {presenter.GetType().Name}, not {typeof(T).Name}.");
+      throw new InvalidOperationException($"[UIManager] View key {viewKey} is bound to {presenter.GetType().Name}, not {expectedPresenterType.Name}.");
     }
-
     // 3. 调用 Open 生命周期。
     presenter.OnOpen(args);
-    return (T)presenter;
+    return presenter;
   }
 
   /// <summary>
@@ -357,7 +286,7 @@ public class UIManager : Singleton<UIManager>
   /// <summary>
   /// 销毁指定 Presenter，无论当前是否可见。
   /// </summary>
-  public void DestroyWindow(BasePresenter presenter)
+  internal void DestroyWindow(BasePresenter presenter)
   {
     if (presenter == null)
     {

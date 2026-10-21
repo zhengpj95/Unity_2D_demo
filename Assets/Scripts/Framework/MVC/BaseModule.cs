@@ -6,9 +6,14 @@ using System.Collections.Generic;
 /// </summary>
 public abstract class BaseModule : BaseEmitter
 {
+  // 保存模块中 ViewType 与 Presenter 类型的登记信息；这里只记录类型，不保存 Presenter 实例。
+  // 语法：private 表示仅本类可访问，sealed 表示不可被继承，class 表示声明一个引用类型。
   private sealed class PresenterDefinition
   {
+    // Type 表示 .NET 类型信息；这里通常保存 typeof(T) 的结果，例如 typeof(MainMenuPresenter)。
     public Type PresenterType;
+    // 保存已通过泛型约束校验的构造工厂，非泛型打开接口无需反射创建 Presenter。
+    public Func<BasePresenter> Factory;
   }
 
   private readonly Dictionary<Enum, PresenterDefinition> _presenterDefinitions = new();
@@ -77,8 +82,29 @@ public abstract class BaseModule : BaseEmitter
 
     _presenterDefinitions.Add(viewType, new PresenterDefinition
     {
-      PresenterType = typeof(T)
+      PresenterType = typeof(T),
+      Factory = () => new T()
     });
+  }
+
+  /// <summary>按模块 ViewType 打开已登记界面；返回基类以适用于不需要具体 Presenter 类型的调用方。</summary>
+  protected BasePresenter OpenWindow(Enum viewType, object args = null)
+  {
+    if (viewType == null) throw new ArgumentNullException(nameof(viewType));
+    if (!_presenterDefinitions.TryGetValue(viewType, out PresenterDefinition definition))
+      throw new InvalidOperationException($"[{GetType().Name}] ViewType is not registered: {viewType}");
+
+    ModuleViewKey viewKey = new(ModuleName, viewType);
+    BasePresenter cached = UIManager.Instance.GetPresenter(viewKey);
+    if (cached != null)
+    {
+      if (cached.GetType() != definition.PresenterType)
+        throw new InvalidOperationException($"ViewType {viewType} is bound to {definition.PresenterType.Name}, but cached {cached.GetType().Name}.");
+      UIManager.Instance.ShowPresenter(cached, args);
+      return cached;
+    }
+
+    return UIManager.Instance.OpenWindow(viewKey, definition.Factory, args);
   }
 
   /// <summary>按模块 ViewType 打开界面；首次打开时根据 RegPresenter 映射实例化。</summary>

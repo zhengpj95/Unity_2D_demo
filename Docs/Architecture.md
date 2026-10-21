@@ -245,9 +245,9 @@ Assets/Scripts/Framework/MVC/UIManager.cs
 
 - UI 层级配置；
 - 通过 `AssetLoader` 加载 Prefab；
-- GameObject 缓存；
 - Presenter 创建、缓存和生命周期调用；
 - Window 打开/关闭；
+- 为兼容 FrogAdventure 原型而暂留的旧式 `ShowUI` / `HideUI` 路径缓存接口（已标记弃用）；
 
 `Framework/UI` 另提供与业务窗口框架相互独立的通用组件：
 

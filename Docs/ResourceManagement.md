@@ -66,7 +66,7 @@ GameObject prefab = await AssetLoader.Instance.LoadAsync<GameObject>("Prefabs/Su
 
 | 调用方                 | 当前方式 | 用途                                |
 | ---------------------- | -------- | ----------------------------------- |
-| `UIManager.ShowUI`     | 同步     | 加载普通 UI Prefab。                |
+| `UIManager.ShowUI`     | 同步     | 加载普通 UI Prefab（旧式路径接口，已弃用）。 |
 | `UIManager.OpenWindow` | 同步     | 加载 Presenter 对应的 View Prefab。 |
 | `AudioManager.PlayBGM` | 同步     | 加载背景音乐。                      |
 | `AudioManager.PlaySfx` | 同步     | 加载音效。                          |
