@@ -252,6 +252,7 @@ Assets/Scripts/Framework/MVC/UIManager.cs
 `Framework/UI` 另提供与业务窗口框架相互独立的通用组件：
 
 - `VirtualList`：固定尺寸纵向、横向或网格虚拟列表，支持单一渲染/点击/滚动回调、稳定键选中恢复和索引定位；
+- `ListTab`：基于 `VirtualList` 显示页签，通过 `ModuleName + ViewType` 打开目标 Presenter，并在切换成功后隐藏上一个 Presenter；
 - `VariableHeightVirtualList`：纵向异高列表，支持多模板、业务高度计算/失效刷新、稳定键选中恢复和索引定位；
 - `UIProgressBar`、`UIImageFont`、`UISizeFitter`、`UIGray`、`TMPOutline` 等表现组件。
 

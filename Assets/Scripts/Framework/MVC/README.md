@@ -103,6 +103,7 @@ Proxy 可以更新本模块状态或派发业务事件，但不能直接访问 V
 - Presenter 的 `Layer` 决定 `Main/Window/Model/Tip` 层级。
 - `PrefabPath` 是传给 `AssetLoader` 的稳定资源键，历史命名仍保留为 Path。
 - `ModuleViewKey(ModuleName, ViewType)` 是全局缓存身份。
+- `BaseModule.OpenWindow(viewType, args)` 可由通用 UI 组件按本模块登记的 ViewType 打开 Presenter；跨模块导航先通过 `ModuleManager` 找到目标模块。
 - `GetPresenter(viewType)` 只返回已经实例化的 Presenter，未打开时返回 `null`。
 - `UIManager.HidePresenter` 隐藏并保留缓存；`CloseWindow` 会关闭并销毁 Presenter。
 - `UIManager.ShowUI` / `HideUI` 是为 FrogAdventure 原型保留的旧式路径接口，已标记 `[Obsolete]`；新界面应登记 Presenter 并通过 Module 打开。

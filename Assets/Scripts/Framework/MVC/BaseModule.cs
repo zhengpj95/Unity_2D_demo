@@ -87,8 +87,11 @@ public abstract class BaseModule : BaseEmitter
     });
   }
 
-  /// <summary>按模块 ViewType 打开已登记界面；返回基类以适用于不需要具体 Presenter 类型的调用方。</summary>
-  protected BasePresenter OpenWindow(Enum viewType, object args = null)
+  /// <summary>按本模块已登记的 ViewType 打开界面；未登记时抛出异常，资源加载失败时返回 null。</summary>
+  /// <param name="viewType">本模块注册的界面类型。</param>
+  /// <param name="args">传入 Presenter.OnOpen 的运行时参数，可为 null。</param>
+  /// <returns>打开或显示后的 Presenter；Prefab 加载失败时返回 null。</returns>
+  public BasePresenter OpenWindow(Enum viewType, object args = null)
   {
     if (viewType == null) throw new ArgumentNullException(nameof(viewType));
     if (!_presenterDefinitions.TryGetValue(viewType, out PresenterDefinition definition))
