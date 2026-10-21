@@ -218,17 +218,35 @@ public class UIManager : Singleton<UIManager>
   /// </summary>
   internal T OpenWindow<T>(ModuleViewKey viewKey, object args = null) where T : BasePresenter, new()
   {
-    BasePresenter presenter = OpenWindowInternal(viewKey, () => new T(), args, typeof(T));
+    BasePresenter presenter = OpenWindowInternal(viewKey, () => new T(), args, typeof(T), null, false);
     return presenter as T;
   }
 
   /// <summary>使用模块登记的 Presenter 工厂打开界面；调用方无需在此处再次指定 Presenter 泛型类型。</summary>
   internal BasePresenter OpenWindow(ModuleViewKey viewKey, Func<BasePresenter> presenterFactory, object args = null)
   {
-    return OpenWindowInternal(viewKey, presenterFactory, args, null);
+    return OpenWindowInternal(viewKey, presenterFactory, args, null, null, false);
   }
 
-  private BasePresenter OpenWindowInternal(ModuleViewKey viewKey, Func<BasePresenter> presenterFactory, object args, Type expectedPresenterType)
+  /// <summary>在指定的局部父节点下创建或显示 Presenter，供 ListTab 等复合界面使用。</summary>
+  /// <param name="viewKey">Presenter 的模块和 ViewType 缓存键。</param>
+  /// <param name="presenterFactory">创建 Presenter 的模块注册工厂。</param>
+  /// <param name="parent">Presenter View 的局部挂载节点。</param>
+  /// <param name="args">传递给 Presenter.OnOpen 的参数。</param>
+  /// <returns>打开后的 Presenter；资源加载失败时返回 null。</returns>
+  internal BasePresenter OpenWindowIn(ModuleViewKey viewKey, Func<BasePresenter> presenterFactory, Transform parent, object args = null)
+  {
+    if (parent == null) throw new ArgumentNullException(nameof(parent));
+    return OpenWindowInternal(viewKey, presenterFactory, args, null, parent, true);
+  }
+
+  private BasePresenter OpenWindowInternal(
+    ModuleViewKey viewKey,
+    Func<BasePresenter> presenterFactory,
+    object args,
+    Type expectedPresenterType,
+    Transform parentOverride,
+    bool showCachedOnlyWhenHidden)
   {
     if (presenterFactory == null) throw new ArgumentNullException(nameof(presenterFactory));
 
@@ -251,7 +269,8 @@ public class UIManager : Singleton<UIManager>
         return null;
       }
 
-      Transform parent = GetLayerParent(presenter.Layer);
+      // 局部容器优先于全局 Layer；普通窗口仍沿用 Presenter.Layer 对应的根节点。
+      Transform parent = parentOverride != null ? parentOverride : GetLayerParent(presenter.Layer);
       GameObject go = UnityEngine.Object.Instantiate(prefab, parent);
 
       UIView view = go.GetComponent<UIView>();
@@ -265,8 +284,14 @@ public class UIManager : Singleton<UIManager>
     {
       throw new InvalidOperationException($"[UIManager] View key {viewKey} is bound to {presenter.GetType().Name}, not {expectedPresenterType.Name}.");
     }
-    // 3. 调用 Open 生命周期。
-    presenter.OnOpen(args);
+
+    // 缓存 Presenter 可能来自全局 Layer 或另一个局部容器；按当前调用方要求重新挂载后再执行 OnOpen。
+    if (parentOverride != null && presenter.View != null && presenter.View.transform.parent != parentOverride)
+      presenter.View.transform.SetParent(parentOverride, false);
+
+    // Module 缓存语义是仅从隐藏状态恢复时调用 OnOpen；直接 UIManager 打开时保留每次调用都触发 OnOpen 的旧行为。
+    if (!showCachedOnlyWhenHidden || !presenter.IsVisible)
+      presenter.OnOpen(args);
     return presenter;
   }
 

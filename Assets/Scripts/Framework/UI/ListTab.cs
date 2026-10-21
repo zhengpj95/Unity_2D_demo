@@ -8,12 +8,25 @@ public sealed class ListTab : MonoBehaviour
 {
   [SerializeField, Tooltip("负责页签虚拟化和点击检测的 VirtualList。")]
   private VirtualList virtualList;
+  [SerializeField, Tooltip("所有页签 Presenter 的共同父节点；必须位于 ListTab 宿主层级内。")]
+  private Transform contentRoot;
+  [SerializeField, Min(0f), Tooltip("页签切走后等待多久销毁其 Presenter；0 表示立即销毁。")]
+  private float inactivePresenterDestroyDelay = 5f;
+
+  private sealed class HostedPresenter
+  {
+    public BasePresenter Presenter;
+    public uint DestroyTimerId;
+    public ModuleName ModuleName;
+    public Enum ViewType;
+  }
 
   private List<ListTabItemData> _tabs;
   private BasePresenter _activePresenter;
   private int? _selectedTabId;
   private bool _reportedMissingItemView;
   private readonly Dictionary<string, Sprite> _iconCache = new Dictionary<string, Sprite>();
+  private readonly Dictionary<int, HostedPresenter> _hostedPresenters = new Dictionary<int, HostedPresenter>();
 
   /// <summary>页签成功切换后触发；订阅方应在自身关闭时解除订阅。</summary>
   public event Action<ListTabItemData> TabSelected;
@@ -45,12 +58,14 @@ public sealed class ListTab : MonoBehaviour
   private void OnDisable()
   {
     if (virtualList != null) virtualList.ClearHandlers();
-    HideActivePresenter(false);
+    HideActivePresenter();
   }
 
   /// <summary>组件销毁时清除外部事件订阅，避免事件引用延长订阅方生命周期。</summary>
   private void OnDestroy()
   {
+    // 宿主 View 即将销毁；先清理子 Presenter 缓存和计时器，避免 UIManager 留有失效 View。
+    CloseAllHostedPresenters();
     TabSelected = null;
   }
 
@@ -61,12 +76,13 @@ public sealed class ListTab : MonoBehaviour
   {
     ValidateTabs(tabs);
     _tabs = tabs == null ? null : new List<ListTabItemData>(tabs);
+    PruneHostedPresenters();
 
     if (_tabs == null || _tabs.Count == 0)
     {
       _selectedTabId = null;
       if (virtualList != null) virtualList.Clear();
-      HideActivePresenter(true);
+      CloseAllHostedPresenters();
       return;
     }
 
@@ -136,6 +152,12 @@ public sealed class ListTab : MonoBehaviour
   /// <returns>目标 Presenter 成功打开时返回 true；模块缺失或打开失败时返回 false。</returns>
   private bool OpenTab(ListTabItemData data)
   {
+    if (contentRoot == null)
+    {
+      Debug.LogError("[ListTab] Content root is missing; child Presenters must be mounted under the host.", this);
+      return false;
+    }
+
     if (!ModuleManager.IsCreated)
     {
       Debug.LogError($"[ListTab] ModuleManager is not initialized; cannot open {data.ModuleName}.{data.ViewType}.", this);
@@ -148,24 +170,42 @@ public sealed class ListTab : MonoBehaviour
       return false;
     }
 
+    _hostedPresenters.TryGetValue(data.Id, out HostedPresenter cachedEntry);
+    if (cachedEntry != null) CancelDestroy(cachedEntry);
+
     // 先打开目标界面；成功后再隐藏旧界面，避免目标资源加载失败时留下空白内容区。
     BasePresenter nextPresenter;
     try
     {
-      nextPresenter = module.OpenWindow(data.ViewType, data.ExtraData);
+      nextPresenter = module.OpenWindowIn(data.ViewType, contentRoot, data.ExtraData);
     }
     catch (Exception exception)
     {
       Debug.LogError($"[ListTab] Failed to open {data.ModuleName}.{data.ViewType}: {exception}", this);
+      if (cachedEntry != null) ScheduleDestroy(cachedEntry.Presenter);
       return false;
     }
 
-    if (nextPresenter == null) return false;
-    if (_activePresenter != null && !ReferenceEquals(_activePresenter, nextPresenter))
-      UIManager.Instance.HidePresenter(_activePresenter);
+    if (nextPresenter == null)
+    {
+      if (cachedEntry != null) ScheduleDestroy(cachedEntry.Presenter);
+      return false;
+    }
 
+    _hostedPresenters[data.Id] = cachedEntry ?? new HostedPresenter();
+    _hostedPresenters[data.Id].Presenter = nextPresenter;
+    _hostedPresenters[data.Id].ModuleName = data.ModuleName;
+    _hostedPresenters[data.Id].ViewType = data.ViewType;
+
+    BasePresenter previousPresenter = _activePresenter;
     _activePresenter = nextPresenter;
     _selectedTabId = data.Id;
+    if (previousPresenter != null && !ReferenceEquals(previousPresenter, nextPresenter))
+    {
+      UIManager.Instance.HidePresenter(previousPresenter);
+      ScheduleDestroy(previousPresenter);
+    }
+
     TabSelected?.Invoke(data);
     return true;
   }
@@ -182,13 +222,140 @@ public sealed class ListTab : MonoBehaviour
     OpenTab(_tabs[index]);
   }
 
-  /// <summary>隐藏当前页签 Presenter，并按调用场景决定是否清除其引用。</summary>
-  /// <param name="clearReference">清空数据或替换页签集时传 true；临时禁用时传 false 以便恢复。</param>
-  private void HideActivePresenter(bool clearReference)
+  /// <summary>宿主暂时禁用时隐藏当前子 Presenter，但保留缓存和当前页签记录。</summary>
+  private void HideActivePresenter()
   {
     if (_activePresenter != null && UIManager.IsCreated)
       UIManager.Instance.HidePresenter(_activePresenter);
-    if (clearReference) _activePresenter = null;
+  }
+
+  /// <summary>为已隐藏的子 Presenter 启动延迟销毁；找不到宿主记录时立即关闭以避免缓存泄漏。</summary>
+  /// <param name="presenter">刚切离的 Presenter。</param>
+  private void ScheduleDestroy(BasePresenter presenter)
+  {
+    int tabId = -1;
+    HostedPresenter matchedEntry = null;
+    foreach (KeyValuePair<int, HostedPresenter> pair in _hostedPresenters)
+    {
+      if (!ReferenceEquals(pair.Value.Presenter, presenter)) continue;
+      tabId = pair.Key;
+      matchedEntry = pair.Value;
+      break;
+    }
+
+    if (matchedEntry == null)
+    {
+      presenter.Close();
+      return;
+    }
+
+    CancelDestroy(matchedEntry);
+    if (inactivePresenterDestroyDelay <= 0f)
+    {
+      CloseHostedPresenter(tabId, presenter);
+      return;
+    }
+
+    matchedEntry.DestroyTimerId = TimerManager.Instance.AddTimer(
+      inactivePresenterDestroyDelay,
+      () => DestroyInactivePresenter(tabId, presenter));
+  }
+
+  /// <summary>延迟时间到达时销毁仍处于非活动状态的 Presenter。</summary>
+  /// <param name="tabId">Presenter 所属的页签 ID。</param>
+  /// <param name="presenter">启动计时的 Presenter，用于确认缓存记录未被替换。</param>
+  private void DestroyInactivePresenter(int tabId, BasePresenter presenter)
+  {
+    if (!_hostedPresenters.TryGetValue(tabId, out HostedPresenter entry)
+        || !ReferenceEquals(entry.Presenter, presenter))
+      return;
+
+    entry.DestroyTimerId = 0;
+    if (ReferenceEquals(_activePresenter, presenter)) return;
+    CloseHostedPresenter(tabId, presenter);
+  }
+
+  /// <summary>取消指定子 Presenter 尚未到期的销毁计时。</summary>
+  /// <param name="entry">保存 Presenter 与计时器 ID 的宿主记录。</param>
+  private static void CancelDestroy(HostedPresenter entry)
+  {
+    if (entry.DestroyTimerId == 0) return;
+    if (TimerManager.IsCreated) TimerManager.Instance.Cancel(entry.DestroyTimerId);
+    entry.DestroyTimerId = 0;
+  }
+
+  /// <summary>关闭并移除一个由当前 ListTab 创建或复用的子 Presenter。</summary>
+  /// <param name="tabId">子 Presenter 所属页签 ID。</param>
+  /// <param name="presenter">要关闭的 Presenter。</param>
+  private void CloseHostedPresenter(int tabId, BasePresenter presenter)
+  {
+    if (_hostedPresenters.TryGetValue(tabId, out HostedPresenter entry)
+        && ReferenceEquals(entry.Presenter, presenter))
+    {
+      CancelDestroy(entry);
+      _hostedPresenters.Remove(tabId);
+    }
+
+    if (ReferenceEquals(_activePresenter, presenter))
+    {
+      _activePresenter = null;
+      _selectedTabId = null;
+    }
+
+    if (presenter != null) presenter.Close();
+  }
+
+  /// <summary>关闭当前页签集合中已移除或目标已变更的 Presenter。</summary>
+  private void PruneHostedPresenters()
+  {
+    if (_hostedPresenters.Count == 0) return;
+
+    List<int> removedTabIds = new List<int>();
+    foreach (KeyValuePair<int, HostedPresenter> pair in _hostedPresenters)
+    {
+      ListTabItemData tab = FindTab(pair.Key);
+      if (tab == null
+          || tab.ModuleName != pair.Value.ModuleName
+          || !Equals(tab.ViewType, pair.Value.ViewType))
+        removedTabIds.Add(pair.Key);
+    }
+
+    for (int i = 0; i < removedTabIds.Count; i++)
+    {
+      int tabId = removedTabIds[i];
+      if (_hostedPresenters.TryGetValue(tabId, out HostedPresenter entry))
+        CloseHostedPresenter(tabId, entry.Presenter);
+    }
+  }
+
+  /// <summary>关闭所有子 Presenter 并取消延迟销毁计时，供数据清空和宿主销毁时调用。</summary>
+  private void CloseAllHostedPresenters()
+  {
+    if (_hostedPresenters.Count == 0)
+    {
+      _activePresenter = null;
+      _selectedTabId = null;
+      return;
+    }
+
+    List<KeyValuePair<int, HostedPresenter>> entries = new List<KeyValuePair<int, HostedPresenter>>(_hostedPresenters);
+    for (int i = 0; i < entries.Count; i++)
+      CloseHostedPresenter(entries[i].Key, entries[i].Value.Presenter);
+
+    _hostedPresenters.Clear();
+    _activePresenter = null;
+    _selectedTabId = null;
+  }
+
+  /// <summary>根据稳定页签 ID 查找新数据集中的页签定义。</summary>
+  /// <param name="tabId">待查找的页签 ID。</param>
+  /// <returns>找到时返回页签数据；不存在时返回 null。</returns>
+  private ListTabItemData FindTab(int tabId)
+  {
+    if (_tabs == null) return null;
+    for (int i = 0; i < _tabs.Count; i++)
+      if (_tabs[i].Id == tabId) return _tabs[i];
+    return null;
   }
 
   /// <summary>将虚拟列表选中索引恢复到当前已成功打开的页签。</summary>
@@ -233,11 +400,14 @@ public sealed class ListTab : MonoBehaviour
     if (tabs == null) return;
 
     HashSet<int> ids = new HashSet<int>();
+    HashSet<ModuleViewKey> viewKeys = new HashSet<ModuleViewKey>();
     for (int i = 0; i < tabs.Count; i++)
     {
       ListTabItemData tab = tabs[i];
       if (tab == null) throw new ArgumentException($"Tab data at index {i} is null.", nameof(tabs));
       if (!ids.Add(tab.Id)) throw new ArgumentException($"Duplicate tab id: {tab.Id}.", nameof(tabs));
+      if (!viewKeys.Add(new ModuleViewKey(tab.ModuleName, tab.ViewType)))
+        throw new ArgumentException($"Presenter target is assigned to more than one tab: {tab.ModuleName}.{tab.ViewType}.", nameof(tabs));
     }
   }
 }

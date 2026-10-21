@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 /// <summary>
 /// 业务模块根节点，统一持有本模块的 Command、Proxy、Presenter 与事件订阅。
@@ -108,6 +109,25 @@ public abstract class BaseModule : BaseEmitter
     }
 
     return UIManager.Instance.OpenWindow(viewKey, definition.Factory, args);
+  }
+
+  /// <summary>在指定局部容器中打开本模块已登记的界面，用于复合界面的子 Presenter。</summary>
+  /// <param name="viewType">本模块注册的界面类型。</param>
+  /// <param name="parent">Presenter View 的挂载节点，不能为 null。</param>
+  /// <param name="args">传入 Presenter.OnOpen 的运行时参数，可为 null。</param>
+  /// <returns>打开或显示后的 Presenter；Prefab 加载失败时返回 null。</returns>
+  public BasePresenter OpenWindowIn(Enum viewType, Transform parent, object args = null)
+  {
+    if (viewType == null) throw new ArgumentNullException(nameof(viewType));
+    if (parent == null) throw new ArgumentNullException(nameof(parent));
+    if (!_presenterDefinitions.TryGetValue(viewType, out PresenterDefinition definition))
+      throw new InvalidOperationException($"[{GetType().Name}] ViewType is not registered: {viewType}");
+
+    ModuleViewKey viewKey = new(ModuleName, viewType);
+    BasePresenter presenter = UIManager.Instance.OpenWindowIn(viewKey, definition.Factory, parent, args);
+    if (presenter != null && presenter.GetType() != definition.PresenterType)
+      throw new InvalidOperationException($"ViewType {viewType} is bound to {definition.PresenterType.Name}, but UIManager returned {presenter.GetType().Name}.");
+    return presenter;
   }
 
   /// <summary>按模块 ViewType 打开界面；首次打开时根据 RegPresenter 映射实例化。</summary>

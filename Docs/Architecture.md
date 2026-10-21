@@ -245,14 +245,14 @@ Assets/Scripts/Framework/MVC/UIManager.cs
 
 - UI 层级配置；
 - 通过 `AssetLoader` 加载 Prefab；
-- Presenter 创建、缓存和生命周期调用；
+- Presenter 创建、缓存和生命周期调用；默认按 `Presenter.Layer` 挂到全局层级，也支持复合界面显式指定局部父节点；
 - Window 打开/关闭；
 - 为兼容 FrogAdventure 原型而暂留的旧式 `ShowUI` / `HideUI` 路径缓存接口（已标记弃用）；
 
 `Framework/UI` 另提供与业务窗口框架相互独立的通用组件：
 
 - `VirtualList`：固定尺寸纵向、横向或网格虚拟列表，支持单一渲染/点击/滚动回调、稳定键选中恢复和索引定位；
-- `ListTab`：基于 `VirtualList` 显示页签，通过 `ModuleName + ViewType` 打开目标 Presenter，并在切换成功后隐藏上一个 Presenter；
+- `ListTab`：基于 `VirtualList` 显示页签，通过 `ModuleName + ViewType` 在宿主 `content` 下打开目标 Presenter；切走的 Presenter 隐藏后延迟销毁，宿主销毁时立即清理所有子 Presenter；
 - `VariableHeightVirtualList`：纵向异高列表，支持多模板、业务高度计算/失效刷新、稳定键选中恢复和索引定位；
 - `UIProgressBar`、`UIImageFont`、`UISizeFitter`、`UIGray`、`TMPOutline` 等表现组件。
 

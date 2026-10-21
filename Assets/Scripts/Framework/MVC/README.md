@@ -101,6 +101,8 @@ Proxy 可以更新本模块状态或派发业务事件，但不能直接访问 V
 模块用 `RegPresenter<TPresenter>(viewType)` 建立一一映射；第一次调用 `OpenWindow(viewType, args)` 或 `OpenWindow<TPresenter>(viewType, args)` 时，`UIManager` 才创建并缓存 Presenter/View。非泛型入口返回 `BasePresenter`，需要强类型结果时使用泛型入口。
 
 - Presenter 的 `Layer` 决定 `Main/Window/Model/Tip` 层级。
+- `BaseModule.OpenWindowIn(viewType, parent, args)` 可把 Presenter View 挂到复合界面的局部容器；指定父节点时优先于 `Layer`，普通 `OpenWindow` 仍使用全局层级。
+- `ListTab` 的非活动页签会先隐藏，并按 Inspector 配置的延迟销毁；销毁 ListTab 宿主时会立即关闭其创建或复用的全部子 Presenter。延迟由 `TimerManager` 驱动并使用缩放后的游戏时间。
 - `PrefabPath` 是传给 `AssetLoader` 的稳定资源键，历史命名仍保留为 Path。
 - `ModuleViewKey(ModuleName, ViewType)` 是全局缓存身份。
 - `BaseModule.OpenWindow(viewType, args)` 可由通用 UI 组件按本模块登记的 ViewType 打开 Presenter；跨模块导航先通过 `ModuleManager` 找到目标模块。
