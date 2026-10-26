@@ -111,7 +111,7 @@ Proxy 可以更新本模块状态或派发业务事件，但不能直接访问 V
 - `UIManager.ShowUI` / `HideUI` 是为 FrogAdventure 原型保留的旧式路径接口，已标记 `[Obsolete]`；新界面应登记 Presenter 并通过 Module 打开。
 - `OnClose` 会解除 `BaseEmitter` 事件，`OnDestroy` 还会清理按钮监听和 View 实例。
 
-需要强类型参数时使用 `BasePresenter<TView, TArgs>`，其中 `TArgs` 必须为 `struct`。界面关闭、异步返回和场景切换时应重新检查目标对象是否仍有效。
+需要强类型参数时使用 `BasePresenter<TView, TArgs>`，其中 `TArgs` 必须为 `struct`，每次打开都必须传入准确类型的参数；缺失或类型错误会抛出 `ArgumentException`，不再以默认值继续打开。`BasePresenter<TView>` 初始化时要求 View 存在且类型匹配，否则立即抛出异常。Presenter 销毁后不可再次初始化或打开；按钮监听随 View 销毁清理，隐藏缓存时保留以供复用。界面关闭、异步返回和场景切换时应重新检查目标对象是否仍有效。
 
 ## 跨模块规则
 

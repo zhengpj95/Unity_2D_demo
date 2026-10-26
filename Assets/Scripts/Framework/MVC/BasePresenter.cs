@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,6 +18,7 @@ public abstract class BasePresenter : BaseEmitter
 {
   public UIView View { get; private set; }
   public bool IsVisible { get; private set; }
+  private bool _isDestroyed;
 
   /// <summary>界面所属 UI 层级；默认窗口层，特殊界面由具体 Presenter 重写。</summary>
   public virtual UILayerIndex Layer => UILayerIndex.Window;
@@ -26,7 +28,7 @@ public abstract class BasePresenter : BaseEmitter
   // 是否需要每帧更新
   public bool NeedUpdate { get; protected set; }
 
-  // 缓存的按钮回调（用于自动清理）
+  // 按钮回调跟随 View 存亡；隐藏时仍需保留，以便缓存界面再次显示后继续响应。
   private readonly Dictionary<Button, UnityAction> _buttonCallbacks = new();
 
   #region 生命周期方法
@@ -34,20 +36,30 @@ public abstract class BasePresenter : BaseEmitter
   // 初始化（加载 Prefab 后调用一次）
   public virtual void OnInit(UIView view)
   {
+    if (_isDestroyed)
+      throw new InvalidOperationException($"[{GetType().Name}] Destroyed Presenter cannot be initialized again.");
+    if (view == null)
+      throw new ArgumentNullException(nameof(view), $"[{GetType().Name}] View component is required.");
+    if (View != null)
+      throw new InvalidOperationException($"[{GetType().Name}] Presenter has already been initialized.");
+
     View = view;
   }
 
   // 打开界面
   public virtual void OnOpen(object args = null)
   {
+    EnsureInitialized();
     IsVisible = true;
-    if (View != null) View.gameObject.SetActive(true);
+    View.gameObject.SetActive(true);
     OnShow();
   }
 
   // 关闭界面
   public virtual void OnClose()
   {
+    if (_isDestroyed || !IsVisible) return;
+
     OffAll();
     OnHide();
     IsVisible = false;
@@ -57,8 +69,11 @@ public abstract class BasePresenter : BaseEmitter
   // 销毁界面
   public virtual void OnDestroy()
   {
+    if (_isDestroyed) return;
+
+    if (IsVisible)
+      OnClose();
     OffAll();
-    // 清理所有按钮监听器
     ClearAllListeners();
 
     if (View != null)
@@ -66,6 +81,9 @@ public abstract class BasePresenter : BaseEmitter
       UnityEngine.Object.Destroy(View.gameObject);
       View = null;
     }
+
+    IsVisible = false;
+    _isDestroyed = true;
   }
 
   // 每次从隐藏到显示时调用（例如从缓存恢复）
@@ -76,6 +94,13 @@ public abstract class BasePresenter : BaseEmitter
 
   // 每帧更新（需要设置 NeedUpdate = true）
   public virtual void Update() { }
+
+  /// <summary>检查 Presenter 是否已绑定有效 View，避免生命周期错误延迟成空引用异常。</summary>
+  protected void EnsureInitialized()
+  {
+    if (_isDestroyed || View == null)
+      throw new InvalidOperationException($"[{GetType().Name}] Presenter must be initialized and alive before use.");
+  }
 
   #endregion
 
@@ -101,10 +126,9 @@ public abstract class BasePresenter : BaseEmitter
     }
 
     // 如果按钮已注册，先移除旧的
-    if (_buttonCallbacks.ContainsKey(button))
+    if (_buttonCallbacks.TryGetValue(button, out UnityAction oldCallback))
     {
-      button.onClick.RemoveListener(_buttonCallbacks[button]);
-      _buttonCallbacks.Remove(button);
+      button.onClick.RemoveListener(oldCallback);
     }
 
     _buttonCallbacks[button] = callback;
@@ -148,6 +172,7 @@ public abstract class BasePresenter : BaseEmitter
   /// </summary>
   public void Close()
   {
+    if (_isDestroyed) return;
     UIManager.Instance.CloseWindow(this);
   }
 
@@ -165,16 +190,22 @@ public abstract class BasePresenter<TView> : BasePresenter where TView : UIView
   /// <summary>
   /// 强类型视图引用
   /// </summary>
-  protected TView ViewT => View as TView;
+  protected TView ViewT
+  {
+    get
+    {
+      EnsureInitialized();
+      if (View is TView typedView) return typedView;
+      throw new InvalidOperationException($"[{GetType().Name}] Bound View must be {typeof(TView).Name}, got {View.GetType().Name}.");
+    }
+  }
 
   public override void OnInit(UIView view)
   {
-    base.OnInit(view);
-
     if (view is not TView)
-    {
-      Debug.LogError($"[{GetType().Name}] View type mismatch: expected {typeof(TView)}, got {view?.GetType()}");
-    }
+      throw new InvalidOperationException($"[{GetType().Name}] View type mismatch: expected {typeof(TView)}, got {view?.GetType().Name ?? "null"}.");
+
+    base.OnInit(view);
   }
 }
 
@@ -195,15 +226,12 @@ public abstract class BasePresenter<TView, TArgs> : BasePresenter<TView>
     if (args is TArgs typedArgs)
     {
       OnOpen(typedArgs);
+      return;
     }
-    else
-    {
-      if (args != null)
-      {
-        Debug.LogError($"[{GetType().Name}] Invalid args type: expected {typeof(TArgs)}, got {args.GetType()}");
-      }
-      OnOpen(default);
-    }
+
+    throw new ArgumentException(
+      $"[{GetType().Name}] Open arguments must be {typeof(TArgs).Name}; got {args?.GetType().Name ?? "null"}.",
+      nameof(args));
   }
 
   /// <summary>
@@ -212,6 +240,7 @@ public abstract class BasePresenter<TView, TArgs> : BasePresenter<TView>
   /// <param name="args">类型安全的参数</param>
   public virtual void OnOpen(TArgs args)
   {
+    EnsureInitialized();
     base.OnOpen(null);
   }
 }

@@ -276,7 +276,16 @@ public class UIManager : Singleton<UIManager>
       UIView view = go.GetComponent<UIView>();
 
       // 2. 实例化 Presenter 并初始化
-      presenter.OnInit(view);
+      try
+      {
+        presenter.OnInit(view);
+      }
+      catch
+      {
+        // 初始化校验失败时回收刚创建的 Prefab，避免无 Presenter 管理的 UI 留在场景中。
+        UnityEngine.Object.Destroy(go);
+        throw;
+      }
       _presenterCache.Add(viewKey, presenter);
       _presenterKeys.Add(presenter, viewKey);
     }
