@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 namespace VampireSurvivorsLike
@@ -6,7 +5,7 @@ namespace VampireSurvivorsLike
   /// <summary>提供品质颜色和显示名称相关的通用转换。</summary>
   public static class ColorUtils
   {
-    /// <summary>返回品质对应的颜色；无效值抛出 ArgumentOutOfRangeException。</summary>
+    /// <summary>返回品质对应的颜色；无效值记录警告并返回洋红色占位。</summary>
     public static Color32 GetQualityColor(this VampireQuality quality)
     {
       switch (quality)
@@ -20,11 +19,13 @@ namespace VampireSurvivorsLike
         case VampireQuality.Red: return QualityColor.Red;
         case VampireQuality.DarkRed: return QualityColor.DarkRed;
         case VampireQuality.PaleGold: return QualityColor.PaleGold;
-        default: throw new ArgumentOutOfRangeException(nameof(quality), quality, "未知的品质颜色。");
+        default:
+          LogInvalidQuality(quality);
+          return Color.magenta;
       }
     }
 
-    /// <summary>返回品质的中文颜色名称；无效值抛出 ArgumentOutOfRangeException。</summary>
+    /// <summary>返回品质的中文颜色名称；无效值记录警告并返回占位名称。</summary>
     public static string GetQualityName(this VampireQuality quality)
     {
       switch (quality)
@@ -38,8 +39,16 @@ namespace VampireSurvivorsLike
         case VampireQuality.Red: return "亮红";
         case VampireQuality.DarkRed: return "黑红";
         case VampireQuality.PaleGold: return "白金";
-        default: throw new ArgumentOutOfRangeException(nameof(quality), quality, "未知的品质颜色。");
+        default:
+          LogInvalidQuality(quality);
+          return "未知品质";
       }
+    }
+
+    /// <summary>输出未知品质配置，帮助定位过期的序列化数据或未补齐的枚举映射。</summary>
+    private static void LogInvalidQuality(VampireQuality quality)
+    {
+      Debug.LogWarning($"[ColorUtils] 未支持的品质值：{quality}，已使用显示占位值。");
     }
   }
 }

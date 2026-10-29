@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 using VampireSurvivorsLike;
 
 /// <summary>
@@ -145,7 +146,9 @@ public sealed class SurvivorProxy : BaseProxy
         Model.CoinCount += count;
         break;
       default:
-        throw new ArgumentOutOfRangeException(nameof(dropItemType), dropItemType, null);
+        // 掉落类型来自场景序列化配置；未知值仅跳过本次计数，避免中断整局流程。
+        Debug.LogWarning($"[SurvivorProxy] 未支持的掉落物类型：{dropItemType}，已忽略本次掉落计数。");
+        return;
     }
   }
 
