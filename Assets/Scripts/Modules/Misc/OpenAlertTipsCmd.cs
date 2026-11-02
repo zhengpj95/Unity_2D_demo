@@ -3,7 +3,7 @@ using UnityEngine;
 
 public sealed class OpenAlertTipsCmd : BaseCommand
 {
-  public override void Execute(EventContext context)
+  public override async void Execute(EventContext context)
   {
     if (!context.TryGetData(out AlertTipsPanelArgs alertArgs))
     {
@@ -12,6 +12,15 @@ public sealed class OpenAlertTipsCmd : BaseCommand
     }
 
     if (Module is MiscModule miscModule)
-      miscModule.OpenAlert(alertArgs);
+    {
+      try
+      {
+        await miscModule.OpenAlert(alertArgs);
+      }
+      catch (System.Exception exception)
+      {
+        Debug.LogError($"[OpenAlertTipsCmd] Failed to open alert UI: {exception}");
+      }
+    }
   }
 }

@@ -31,6 +31,7 @@ public class LoadingBehaviour : MonoBehaviour
   private Coroutine _loadingCoroutine;
   // 防止登录流程尚未完成时被重复点击启动。
   private bool _isEnteringGame;
+  private int _homeOpenGeneration;
   // 展开状态的持有者是这批数据，而不是滚动时会被复用的 Item；每次启用测试界面重新生成。
   private readonly List<VariableHeightListTestData> _variableHeightListTestDatas = new();
   // Inspector 第一个非空备用模板；只用于选择来源，不在此修改模板本身。
@@ -48,6 +49,8 @@ public class LoadingBehaviour : MonoBehaviour
   /// <summary>每次启用恢复登录状态，并注册本组件拥有的按钮回调。</summary>
   private void OnEnable()
   {
+    _isEnteringGame = false;
+    _loadingCoroutine = null;
     SetLoadingVisible(false);
     if (btnLogin != null)
       btnLogin.Clicked += OnLogin;
@@ -112,7 +115,7 @@ public class LoadingBehaviour : MonoBehaviour
   }
 
   /// <summary>进度完成后打开 Home；失败时保留登录界面并允许重新点击。</summary>
-  private void OpenSurvivorHome()
+  private async void OpenSurvivorHome()
   {
     SurvivorModule survivorModule = ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor);
     if (survivorModule == null)
@@ -123,17 +126,35 @@ public class LoadingBehaviour : MonoBehaviour
       return;
     }
 
-    SurvivorHomePresenter homePresenter = survivorModule.OpenSurvivorHome();
-    if (homePresenter == null)
+    int generation = ++_homeOpenGeneration;
+    try
     {
-      _isEnteringGame = false;
-      Debug.LogError("[Login] SurvivorHome 打开失败，请检查资源键 Prefabs/Survivor/View/SurvivorHome。", this);
-      SetLoadingVisible(false);
-      return;
-    }
+      SurvivorHomePresenter homePresenter = await survivorModule.OpenSurvivorHome();
+      if (this == null || generation != _homeOpenGeneration || !isActiveAndEnabled)
+      {
+        survivorModule.CancelPendingOpen(SurvivorViewType.Home);
+        return;
+      }
 
-    // Loading 是持久化 UIRoot 下的登录内容；隐藏后返回 Launcher 时不会再次遮挡 Home。
-    gameObject.SetActive(false);
+      if (homePresenter == null)
+      {
+        _isEnteringGame = false;
+        Debug.LogError("[Login] SurvivorHome 打开失败，请检查资源键 Prefabs/Survivor/View/SurvivorHome。", this);
+        SetLoadingVisible(false);
+        return;
+      }
+
+      // Loading 是持久化 UIRoot 下的登录内容；隐藏后返回 Launcher 时不会再次遮挡 Home。
+      gameObject.SetActive(false);
+    }
+    catch (System.Exception exception)
+    {
+      if (this == null || generation != _homeOpenGeneration) return;
+
+      _isEnteringGame = false;
+      Debug.LogError($"[Login] 异步打开 SurvivorHome 失败：{exception}", this);
+      SetLoadingVisible(false);
+    }
   }
 
   /// <summary>按钮测试入口：发送打开通用提示窗的业务事件，由 Misc 模块处理显示。</summary>
@@ -340,6 +361,7 @@ public class LoadingBehaviour : MonoBehaviour
   {
     if (btnLogin != null)
       btnLogin.Clicked -= OnLogin;
+    _homeOpenGeneration++;
     // 列表可能被独立缓存，界面停用时先清除对当前 LoadingBehaviour 的回调引用。
     if (virtualList != null)
     {
@@ -352,6 +374,11 @@ public class LoadingBehaviour : MonoBehaviour
     {
       StopCoroutine(_loadingCoroutine);
       _loadingCoroutine = null;
+    }
+    if (ModuleManager.IsCreated)
+    {
+      SurvivorModule module = ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor);
+      module?.CancelPendingOpen(SurvivorViewType.Home);
     }
     _isEnteringGame = false;
 

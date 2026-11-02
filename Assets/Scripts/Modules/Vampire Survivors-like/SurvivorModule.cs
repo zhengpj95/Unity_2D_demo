@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using UnityEngine;
 using VampireSurvivorsLike;
 
@@ -20,18 +21,18 @@ public class SurvivorModule : BaseModule
     RegPresenter<SurvivorGameOverPresenter>(SurvivorViewType.GameOver);
   }
 
-  /// <summary>打开 Launcher 场景中的 Survivor 局外主界面。</summary>
-  public SurvivorHomePresenter OpenSurvivorHome()
+  /// <summary>统一打开 Launcher 场景中的 Survivor 局外主界面。</summary>
+  public Task<SurvivorHomePresenter> OpenSurvivorHome()
   {
     return OpenWindow<SurvivorHomePresenter>(
       SurvivorViewType.Home,
       new SurvivorHomeArgs(_gameplayController.StartBattle));
   }
 
-  /// <summary>打开幸存者主界面，并按当前 Model 快照刷新显示。</summary>
-  public SurvivorMainPresenter OpenSurvivorMain()
+  /// <summary>统一打开幸存者主界面，并按当前 Model 快照刷新显示。</summary>
+  public async Task<SurvivorMainPresenter> OpenSurvivorMain()
   {
-    SurvivorMainPresenter presenter = OpenWindow<SurvivorMainPresenter>(SurvivorViewType.Main);
+    SurvivorMainPresenter presenter = await OpenWindow<SurvivorMainPresenter>(SurvivorViewType.Main);
     RefreshMainPresenter(presenter);
     return presenter;
   }
@@ -108,13 +109,13 @@ public class SurvivorModule : BaseModule
     RefreshMainView();
   }
 
-  public SurvivorSkillSelectPanelPresenter OpenSkillSelectPanel(SurvivorSkillSelectArgs args)
+  public Task<SurvivorSkillSelectPanelPresenter> OpenSkillSelectPanel(SurvivorSkillSelectArgs args)
   {
     return OpenWindow<SurvivorSkillSelectPanelPresenter>(SurvivorViewType.SkillSelect, args);
   }
 
   /// <summary>打开本局结束结算窗口，重开和返回主页操作都由 Presenter 回调给 GameplayController。</summary>
-  public SurvivorGameOverPresenter OpenGameOverPanel(SurvivorGameOverArgs args)
+  public Task<SurvivorGameOverPresenter> OpenGameOverPanel(SurvivorGameOverArgs args)
   {
     return OpenWindow<SurvivorGameOverPresenter>(SurvivorViewType.GameOver, args);
   }

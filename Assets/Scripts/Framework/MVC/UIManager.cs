@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
@@ -42,6 +43,12 @@ public class UIManagerConfig
 /// </summary>
 public class UIManager : Singleton<UIManager>
 {
+  private sealed class PendingPresenterOpen
+  {
+    public bool IsCancelled;
+    public Task<BasePresenter> Task;
+  }
+
   /// <summary>
   /// UI层级配置
   /// </summary>
@@ -51,6 +58,8 @@ public class UIManager : Singleton<UIManager>
   /// UI缓存
   /// </summary>
   private readonly Dictionary<string, GameObject> _uiCache = new Dictionary<string, GameObject>();
+  private readonly Dictionary<string, AssetHandle<GameObject>> _uiAssetHandles =
+    new Dictionary<string, AssetHandle<GameObject>>();
 
   /// <summary>
   /// 是否已初始化
@@ -92,7 +101,10 @@ public class UIManager : Singleton<UIManager>
   /// </summary>
   public void Release()
   {
-    if (!IsInitialized) return;
+    if (!IsInitialized && _pendingPresenterOpens.Count == 0) return;
+
+    foreach (ModuleViewKey viewKey in _pendingPresenterOpens.Keys.ToArray())
+      CancelPendingOpen(viewKey);
 
     foreach (BasePresenter presenter in _presenterCache.Values.ToArray())
       DestroyWindow(presenter);
@@ -119,17 +131,32 @@ public class UIManager : Singleton<UIManager>
 
     if (!_uiCache.TryGetValue(prefabPath, out GameObject uiObj) || uiObj == null)
     {
-      GameObject prefab = AssetLoader.Instance.Load<GameObject>(prefabPath);
-      if (prefab == null)
+      if (_uiCache.ContainsKey(prefabPath))
+      {
+        _uiCache.Remove(prefabPath);
+        ReleaseLegacyUIHandle(prefabPath);
+      }
+
+      AssetHandle<GameObject> prefabHandle = AssetLoader.Instance.LoadHandle<GameObject>(prefabPath);
+      if (prefabHandle == null)
       {
         Debug.LogError($"[UIManager] Prefab not found: {prefabPath}");
         return;
       }
 
-      var parent = GetLayerParent(layer);
-      uiObj = UnityEngine.Object.Instantiate(prefab, parent);
-      _uiCache[prefabPath] = uiObj;
-      Debug.Log($"[UIManager] Created UI: {prefabPath}");
+      try
+      {
+        var parent = GetLayerParent(layer);
+        uiObj = UnityEngine.Object.Instantiate(prefabHandle.Asset, parent);
+        _uiCache[prefabPath] = uiObj;
+        _uiAssetHandles[prefabPath] = prefabHandle;
+        Debug.Log($"[UIManager] Created UI: {prefabPath}");
+      }
+      catch
+      {
+        prefabHandle.Dispose();
+        throw;
+      }
     }
 
     uiObj.SetActive(true);
@@ -152,6 +179,7 @@ public class UIManager : Singleton<UIManager>
       {
         UnityEngine.Object.Destroy(ui);
         _uiCache.Remove(prefabPath);
+        ReleaseLegacyUIHandle(prefabPath);
       }
       else
       {
@@ -173,6 +201,18 @@ public class UIManager : Singleton<UIManager>
       }
     }
     _uiCache.Clear();
+    foreach (AssetHandle<GameObject> handle in _uiAssetHandles.Values)
+      handle.Dispose();
+    _uiAssetHandles.Clear();
+  }
+
+  private void ReleaseLegacyUIHandle(string prefabPath)
+  {
+    if (!_uiAssetHandles.TryGetValue(prefabPath, out AssetHandle<GameObject> handle))
+      return;
+
+    _uiAssetHandles.Remove(prefabPath);
+    handle.Dispose();
   }
 
   #region 辅助方法
@@ -212,96 +252,174 @@ public class UIManager : Singleton<UIManager>
   private readonly Dictionary<ModuleViewKey, BasePresenter> _presenterCache = new Dictionary<ModuleViewKey, BasePresenter>();
   // 供 Presenter 自身关闭或模块释放时反查其全局身份。
   private readonly Dictionary<BasePresenter, ModuleViewKey> _presenterKeys = new Dictionary<BasePresenter, ModuleViewKey>();
+  private readonly Dictionary<BasePresenter, AssetHandle<GameObject>> _presenterAssetHandles =
+    new Dictionary<BasePresenter, AssetHandle<GameObject>>();
+  private readonly Dictionary<ModuleViewKey, PendingPresenterOpen> _pendingPresenterOpens =
+    new Dictionary<ModuleViewKey, PendingPresenterOpen>();
 
-  /// <summary>
-  /// 按具体 Presenter 类型打开界面，并保留强类型返回值。
-  /// </summary>
-  internal T OpenWindow<T>(ModuleViewKey viewKey, object args = null) where T : BasePresenter, new()
+  /// <summary>统一打开模块 Presenter；内部复用缓存或异步加载 Prefab。</summary>
+  /// <param name="viewKey">Presenter 的模块和 ViewType 缓存键。</param>
+  /// <param name="presenterFactory">创建 Presenter 的模块注册工厂。</param>
+  /// <param name="args">传递给 Presenter.OnOpen 的参数。</param>
+  /// <returns>打开后的 Presenter；资源加载失败时返回 null。</returns>
+  internal Task<BasePresenter> OpenWindow(
+    ModuleViewKey viewKey,
+    Func<BasePresenter> presenterFactory,
+    Type expectedPresenterType,
+    object args = null)
   {
-    BasePresenter presenter = OpenWindowInternal(viewKey, () => new T(), args, typeof(T), null, false);
-    return presenter as T;
+    return OpenWindowInternal(viewKey, presenterFactory, expectedPresenterType, args, null);
   }
 
-  /// <summary>使用模块登记的 Presenter 工厂打开界面；调用方无需在此处再次指定 Presenter 泛型类型。</summary>
-  internal BasePresenter OpenWindow(ModuleViewKey viewKey, Func<BasePresenter> presenterFactory, object args = null)
-  {
-    return OpenWindowInternal(viewKey, presenterFactory, args, null, null, false);
-  }
-
-  /// <summary>在指定的局部父节点下创建或显示 Presenter，供 ListTab 等复合界面使用。</summary>
+  /// <summary>在指定的局部父节点下统一打开 Presenter，供 ListTab 等复合界面使用。</summary>
   /// <param name="viewKey">Presenter 的模块和 ViewType 缓存键。</param>
   /// <param name="presenterFactory">创建 Presenter 的模块注册工厂。</param>
   /// <param name="parent">Presenter View 的局部挂载节点。</param>
   /// <param name="args">传递给 Presenter.OnOpen 的参数。</param>
   /// <returns>打开后的 Presenter；资源加载失败时返回 null。</returns>
-  internal BasePresenter OpenWindowIn(ModuleViewKey viewKey, Func<BasePresenter> presenterFactory, Transform parent, object args = null)
-  {
-    if (parent == null) throw new ArgumentNullException(nameof(parent));
-    return OpenWindowInternal(viewKey, presenterFactory, args, null, parent, true);
-  }
-
-  private BasePresenter OpenWindowInternal(
+  internal Task<BasePresenter> OpenWindowIn(
     ModuleViewKey viewKey,
     Func<BasePresenter> presenterFactory,
-    object args,
     Type expectedPresenterType,
-    Transform parentOverride,
-    bool showCachedOnlyWhenHidden)
+    Transform parent,
+    object args = null)
+  {
+    if (parent == null) throw new ArgumentNullException(nameof(parent));
+    return OpenWindowInternal(viewKey, presenterFactory, expectedPresenterType, args, parent);
+  }
+
+  /// <summary>取消指定界面尚未完成的打开请求；资源加载完成后会释放句柄且不创建 View。</summary>
+  internal void CancelPendingOpen(ModuleViewKey viewKey)
+  {
+    if (!_pendingPresenterOpens.TryGetValue(viewKey, out PendingPresenterOpen pending))
+      return;
+
+    pending.IsCancelled = true;
+    _pendingPresenterOpens.Remove(viewKey);
+  }
+
+  private Task<BasePresenter> OpenWindowInternal(
+    ModuleViewKey viewKey,
+    Func<BasePresenter> presenterFactory,
+    Type expectedPresenterType,
+    object args,
+    Transform parentOverride)
   {
     if (presenterFactory == null) throw new ArgumentNullException(nameof(presenterFactory));
+    bool hasParentOverride = parentOverride != null;
 
-    if (!_presenterCache.TryGetValue(viewKey, out BasePresenter presenter))
+    if (_presenterCache.TryGetValue(viewKey, out BasePresenter cachedPresenter))
+    {
+      if (!expectedPresenterType.IsInstanceOfType(cachedPresenter))
+        throw new InvalidOperationException($"[UIManager] View key {viewKey} is bound to {cachedPresenter.GetType().Name}, not {expectedPresenterType.Name}.");
+      if (parentOverride != null && cachedPresenter.View != null && cachedPresenter.View.transform.parent != parentOverride)
+        cachedPresenter.View.transform.SetParent(parentOverride, false);
+      if (!cachedPresenter.IsVisible)
+        cachedPresenter.OnOpen(args);
+      return Task.FromResult(cachedPresenter);
+    }
+
+    if (_pendingPresenterOpens.TryGetValue(viewKey, out PendingPresenterOpen pending))
+      return pending.Task;
+
+    pending = new PendingPresenterOpen();
+    _pendingPresenterOpens.Add(viewKey, pending);
+    pending.Task = CreatePresenterAsync(
+      viewKey,
+      presenterFactory,
+      expectedPresenterType,
+      args,
+      parentOverride,
+      hasParentOverride,
+      pending);
+    return pending.Task;
+  }
+
+  private async Task<BasePresenter> CreatePresenterAsync(
+    ModuleViewKey viewKey,
+    Func<BasePresenter> presenterFactory,
+    Type expectedPresenterType,
+    object args,
+    Transform parentOverride,
+    bool hasParentOverride,
+    PendingPresenterOpen pending)
+  {
+    AssetHandle<GameObject> prefabHandle = null;
+    BasePresenter presenter = null;
+    GameObject viewObject = null;
+    bool isCached = false;
+    try
     {
       presenter = presenterFactory();
       if (presenter == null)
         throw new InvalidOperationException($"[UIManager] Presenter factory returned null for view key {viewKey}.");
+      if (!expectedPresenterType.IsInstanceOfType(presenter))
+        throw new InvalidOperationException($"[UIManager] Presenter factory for {viewKey} returned {presenter.GetType().Name}, not {expectedPresenterType.Name}.");
       if (string.IsNullOrWhiteSpace(presenter.PrefabPath))
       {
         Debug.LogError($"[UIManager] Presenter {presenter.GetType().Name} must define a valid PrefabPath.");
         return null;
       }
 
-      // 1. 通过统一资源入口加载 Prefab；后续切换资源后端不修改 UIManager 或 Presenter。
-      GameObject prefab = AssetLoader.Instance.Load<GameObject>(presenter.PrefabPath);
-      if (prefab == null)
+      prefabHandle = await AssetLoader.Instance.LoadHandleAsync<GameObject>(presenter.PrefabPath);
+      if (pending.IsCancelled || !IsInitialized)
+        return null;
+      if (hasParentOverride && parentOverride == null)
+        return null;
+      if (prefabHandle == null)
       {
         Debug.LogError($"[UIManager] Prefab not found: {presenter.PrefabPath}");
         return null;
       }
 
-      // 局部容器优先于全局 Layer；普通窗口仍沿用 Presenter.Layer 对应的根节点。
+      if (_presenterCache.TryGetValue(viewKey, out BasePresenter existingPresenter))
+      {
+        prefabHandle.Dispose();
+        prefabHandle = null;
+        if (!expectedPresenterType.IsInstanceOfType(existingPresenter))
+          throw new InvalidOperationException($"[UIManager] View key {viewKey} is bound to {existingPresenter.GetType().Name}, not {expectedPresenterType.Name}.");
+        if (parentOverride != null && existingPresenter.View != null && existingPresenter.View.transform.parent != parentOverride)
+          existingPresenter.View.transform.SetParent(parentOverride, false);
+        if (!existingPresenter.IsVisible)
+          existingPresenter.OnOpen(args);
+        return existingPresenter;
+      }
+
       Transform parent = parentOverride != null ? parentOverride : GetLayerParent(presenter.Layer);
-      GameObject go = UnityEngine.Object.Instantiate(prefab, parent);
+      viewObject = UnityEngine.Object.Instantiate(prefabHandle.Asset, parent);
+      presenter.OnInit(viewObject.GetComponent<UIView>());
 
-      UIView view = go.GetComponent<UIView>();
-
-      // 2. 实例化 Presenter 并初始化
-      try
-      {
-        presenter.OnInit(view);
-      }
-      catch
-      {
-        // 初始化校验失败时回收刚创建的 Prefab，避免无 Presenter 管理的 UI 留在场景中。
-        UnityEngine.Object.Destroy(go);
-        throw;
-      }
       _presenterCache.Add(viewKey, presenter);
       _presenterKeys.Add(presenter, viewKey);
+      _presenterAssetHandles.Add(presenter, prefabHandle);
+      prefabHandle = null;
+      isCached = true;
+
+      if (!presenter.IsVisible)
+        presenter.OnOpen(args);
+      return presenter;
     }
-    else if (expectedPresenterType != null && !expectedPresenterType.IsInstanceOfType(presenter))
+    catch
     {
-      throw new InvalidOperationException($"[UIManager] View key {viewKey} is bound to {presenter.GetType().Name}, not {expectedPresenterType.Name}.");
+      if (isCached && presenter != null)
+      {
+        if (presenter.IsVisible) presenter.OnClose();
+        presenter.OnDestroy();
+        RemovePresenter(viewKey, presenter);
+      }
+      else if (viewObject != null)
+      {
+        UnityEngine.Object.Destroy(viewObject);
+      }
+      throw;
     }
-
-    // 缓存 Presenter 可能来自全局 Layer 或另一个局部容器；按当前调用方要求重新挂载后再执行 OnOpen。
-    if (parentOverride != null && presenter.View != null && presenter.View.transform.parent != parentOverride)
-      presenter.View.transform.SetParent(parentOverride, false);
-
-    // Module 缓存语义是仅从隐藏状态恢复时调用 OnOpen；直接 UIManager 打开时保留每次调用都触发 OnOpen 的旧行为。
-    if (!showCachedOnlyWhenHidden || !presenter.IsVisible)
-      presenter.OnOpen(args);
-    return presenter;
+    finally
+    {
+      prefabHandle?.Dispose();
+      if (_pendingPresenterOpens.TryGetValue(viewKey, out PendingPresenterOpen current)
+          && ReferenceEquals(current, pending))
+        _pendingPresenterOpens.Remove(viewKey);
+    }
   }
 
   /// <summary>
@@ -362,6 +480,11 @@ public class UIManager : Singleton<UIManager>
   {
     _presenterCache.Remove(viewKey);
     _presenterKeys.Remove(presenter);
+    if (_presenterAssetHandles.TryGetValue(presenter, out AssetHandle<GameObject> handle))
+    {
+      _presenterAssetHandles.Remove(presenter);
+      handle.Dispose();
+    }
   }
 
   #endregion

@@ -2,7 +2,7 @@
 
 ## 1. 文档目标
 
-本文记录项目资源管理的当前实现、下一阶段改造顺序和长期演进方向。判断某项能力是否已经落地时，以当前分支代码为准；本文中“后续情况”和“未来情况”均是规划，不代表已经实现。
+本文记录项目资源管理的当前实现、剩余工作和长期演进方向。判断某项能力是否已经落地时，以当前分支代码为准；“后续工作”和“未来情况”均是规划，不代表已经实现。
 
 资源系统的目标是让业务代码只依赖稳定的资源键和统一接口，不直接依赖 `Resources`、Addressables 或 AssetBundle 的具体 API。
 
@@ -14,11 +14,15 @@
 
 ```text
 Assets/Scripts/Framework/Resource/
+├── README.md                  # 类型职责与调用方式
 ├── IAssetLoader.cs            # 同步、异步加载契约
 ├── AssetLoader.cs             # 项目统一访问入口与迁移期回退顺序
+├── AssetHandle.cs             # 资源租约句柄与后端加载结果
 ├── ResourcesAssetLoader.cs    # 未迁移资源的 Resources 后端
 └── AddressablesAssetLoader.cs # 已迁移资源的 Addressables 后端
 ```
+
+Resource 目录内各类型的职责、示例和句柄释放规则详见 [Resource README](../Assets/Scripts/Framework/Resource/README.md)。
 
 当前调用关系：
 
@@ -42,16 +46,28 @@ UIManager / AudioManager / 后续业务调用方
 
 ### 2.2 已实现 API
 
-同步加载：
+同步加载的兼容入口会把资源持有到 `AssetLoader.ReleaseAll()`；新代码应优先使用显式句柄：
 
 ```csharp
-GameObject prefab = AssetLoader.Instance.Load<GameObject>("Prefabs/Survivor/View/SurvivorHome");
+using AssetHandle<GameObject> prefabHandle =
+  AssetLoader.Instance.LoadHandle<GameObject>("Prefabs/Survivor/View/SurvivorHome");
+GameObject prefab = prefabHandle?.Asset;
 ```
 
-异步加载：
+异步加载使用同样的显式所有权。不同调用方通过 `Retain()` 为各自的生命周期增加独立引用：
 
 ```csharp
-GameObject prefab = await AssetLoader.Instance.LoadAsync<GameObject>("Prefabs/Survivor/View/SurvivorHome");
+AssetHandle<GameObject> prefabHandle =
+  await AssetLoader.Instance.LoadHandleAsync<GameObject>("Prefabs/Survivor/View/SurvivorHome");
+try
+{
+  GameObject prefab = prefabHandle?.Asset;
+  // 在句柄存活期间实例化或使用资源。
+}
+finally
+{
+  prefabHandle?.Dispose();
+}
 ```
 
 接口行为：
@@ -60,18 +76,24 @@ GameObject prefab = await AssetLoader.Instance.LoadAsync<GameObject>("Prefabs/Su
 - 找不到资源或资源类型不匹配时返回 `null`。
 - 泛型类型必须继承 `UnityEngine.Object`。
 - 异步加载必须从 Unity 主线程发起；迁移期间先使用 `Resources.LoadAsync<T>`，未命中时使用 `Addressables.LoadAssetAsync<T>`。
-- 当前异步接口不支持取消、进度回调、超时或加载优先级。
+- 同一资源键和类型的并发异步请求共用一个后端加载；请求完成后只保留各调用方的句柄引用，不做跨调用的常驻资源缓存。
+- `AssetHandle<T>.Dispose()` 可重复调用；最后一个句柄释放时执行后端释放回调。Addressables 后端调用 `Addressables.Release`；Resources 后端无单资源句柄，释放租约后由 Unity 按对象可达性管理内存。
+- 旧 `Load<T>` / `LoadAsync<T>` 为兼容保留，返回裸资源并持有句柄到全局 `ReleaseAll()`；新代码不得用它们替代按生命周期释放的句柄 API。
+- 当前没有加载取消、超时、进度回调、优先级或加载失败分类。
 
 ### 2.3 已接入调用方
 
-| 调用方                 | 当前方式 | 用途                                |
-| ---------------------- | -------- | ----------------------------------- |
-| `UIManager.ShowUI`     | 同步     | 加载普通 UI Prefab（旧式路径接口，已弃用）。 |
-| `UIManager.OpenWindow` | 同步     | 加载 Presenter 对应的 View Prefab。 |
-| `AudioManager.PlayBGM` | 同步     | 加载背景音乐。                      |
-| `AudioManager.PlaySfx` | 同步     | 加载音效。                          |
+| 调用方 | 当前方式 | 句柄释放时机 |
+| --- | --- | --- |
+| `BaseModule.OpenWindow` | 统一 Task 接口；内部处理缓存或首次异步加载 | Presenter 销毁；隐藏缓存时保留 |
+| 旧式 `UIManager.ShowUI` | 同步兼容接口 | UI 销毁时释放；隐藏缓存时保留 |
+| `BaseModule.OpenWindowIn` | Task 接口；用于局部容器挂载 | Presenter 销毁；取消或模块释放时不创建 UI 并释放迟到句柄 |
+| Launcher 登录后的 Survivor Home | 统一 Presenter 打开接口 | Presenter 销毁；登录宿主关闭时取消待打开请求 |
+| `AudioManager.PlayBGMAsync` / `PlaySfxAsync` | 异步句柄 | BGM 停止/替换；SFX 播放结束/停止 |
+| `ListTab` 图标 | 同步句柄 | ListTab 宿主销毁 |
+| `PoolManager.PreloadAsync` | 异步句柄 | 清池且所有活跃实例归还或被检测销毁 |
 
-资源层已经支持异步加载，但现有 UI 和音频调用链尚未迁移为异步。保留同步接口是为了避免在这一阶段将 `BaseModule.OpenWindow`、Presenter 创建和既有按钮回调整体改成异步流程。
+界面打开对调用方只提供一个 Task 接口；无论界面命中缓存还是需要首次加载，调用方都使用同一方法并等待结果。底层资源加载仍有同步兼容 API，但不影响 Presenter 界面的打开方式。
 
 ### 2.4 当前资源键规则
 
@@ -98,9 +120,10 @@ Presenter 的 `PrefabPath` 当前实际表示“资源键”。该属性名暂�
 
 当前各层职责如下：
 
-- `AssetLoader`：加载资源对象，目前不额外缓存，也不实例化 Prefab。
-- `UIManager`：缓存已经实例化的 UI GameObject 和 Presenter。
-- `PoolManager`：接收外部提供的 Prefab，缓存并复用实例；它不通过资源键加载 Prefab。
+- `AssetLoader`：协调后端加载、合并同键同类型并发异步请求，并通过句柄引用计数释放底层资源；不实例化 Prefab，不缓存已完成的资源。
+- `UIManager`：缓存已经实例化的 UI GameObject、Presenter 及其 Prefab 句柄；隐藏时保留，销毁时释放。
+- `PoolManager`：复用实例；通过 `Preload(AssetHandle<GameObject>, count)` 或 `PreloadAsync(assetKey, count)` 时独立保留 Prefab 句柄。
+- `AudioManager`、`ListTab`：分别按音频播放周期、宿主组件周期持有资源句柄。
 - 场景和 MonoBehaviour：可以通过 Inspector 持有固定资源引用，这类引用不需要经过 `AssetLoader`。
 
 对象池与资源加载保持分离：
@@ -113,7 +136,9 @@ Presenter 的 `PrefabPath` 当前实际表示“资源键”。该属性名暂�
              PoolManager.Free
 ```
 
-当前 Resources 后端没有显式资源句柄。`AddressablesAssetLoader` 会持有成功加载的句柄，并在 `GameMgr.OnDestroy` 中统一释放；这满足当前 Survivor UI 的迁移验证，但还没有实现按单个 UI、音频或对象池生命周期释放。`PoolManager.ClearPool` 只清理池中未使用实例，不能证明该 Prefab 已没有活跃实例。
+`AssetHandle<T>` 是调用方的所有权令牌，不暴露 Addressables 操作句柄。Addressables 后端只在所有租约释放后调用 `Addressables.Release`；Resources 后端没有单项释放 API，租约释放表示调用方已不再持有，不会强行卸载仍被 Unity 对象引用的资源。`GameMgr.OnDestroy` 先释放 UI 和普通池的缓存，再用 `AssetLoader.ReleaseAll()` 兜底清理未正确归还的租约。
+
+池化资源句柄只在池不再接受对象后释放：`ClearPool` / `ClearAll` 销毁池内缓存并将池标记为退役；仍在场的活跃对象归还时会销毁，活跃对象被外部销毁时由定期清理发现，最后一个活跃实例消失后释放 Prefab 句柄。原有 `Preload(GameObject, count)` 不取得资源所有权，只有句柄重载或 `PreloadAsync` 能建立此关系。
 
 `PoolManager.Preload(prefab, count)` 中的 `count` 表示该 Prefab 池期望的最少可用缓存数量。重复进入场景时会复用已有缓存，只创建 `count - 当前缓存数` 的缺口，避免预加载在每次场景进入时固定追加对象。
 
@@ -123,68 +148,37 @@ Presenter 的 `PrefabPath` 当前实际表示“资源键”。该属性名暂�
 
 当前尚未实现：
 
-- 资源加载结果句柄和显式释放 API；
-- 相同资源的异步请求合并；
-- 加载缓存、引用计数和依赖资源统计；
-- 异步取消、超时、进度回调和失败原因分类；
+- 已完成资源的跨调用缓存、依赖资源统计和详细租约诊断；
+- 后端加载过程的取消、超时、进度回调、优先级和失败原因分类；
 - 远端 Addressables Group、远端 Catalog、下载和内容更新；
 - 资源键常量、强类型资源引用或自动生成注册表；
 - 编辑器资源键重复检查和构建前校验；
 - 资源加载耗时、命中率和内存占用诊断。
 
-## 3. 后续情况
+## 3. 当前实现边界与后续事项
 
-下一阶段应在保持 `AssetLoader` 统一入口的前提下，按以下顺序推进。
+保持 `AssetLoader` 为唯一入口；剩余能力按实际产品需求推进。
 
-### 3.1 完善异步调用链
+### 3.1 异步调用与生命周期
 
-优先为 UI 增加独立的异步入口，例如 `OpenWindowAsync`，保留现有同步接口用于启动期的小型常驻资源。异步流程需要保证：
+当前 `BaseModule.OpenWindow` 与 `OpenWindowIn` 统一返回 Task；UIManager 内部直接返回缓存 Presenter 的已完成 Task，或异步加载 Prefab 后创建界面。同一 ViewKey 的并发请求共享一个 UI 创建任务；Module 释放或 `CancelPendingOpen` 会阻止迟到加载创建界面，并在资源完成后释放句柄。后端加载本身不取消，调用方仍需处理 Task 异常和资源缺失结果。
 
-1. 同一个界面重复打开时只产生一次加载请求；
-2. Presenter 或 Module 已关闭、释放后，完成回调不再创建界面；
-3. 加载失败时返回明确结果并恢复按钮或 Loading 状态；
-4. Unity 对象的实例化、父子节点设置和界面生命周期仍在主线程执行；
-5. 不使用难以追踪异常的 `async void`，Unity 生命周期和按钮入口除外且必须自行捕获异常。
+`LoadingBehaviour` 使用统一打开流程打开 Survivor Home，并在宿主关闭时取消待打开请求。所有 Presenter 调用方均使用同一 Task API，不需要根据缓存命中或首次加载选择不同方法。
 
-音频是否异步加载应按使用场景区分：短促的即时反馈音效适合提前加载或缓存；体积较大的 BGM 可以异步加载并在完成后淡入。
+### 3.2 对象池和资源释放
 
-### 3.2 定义资源所有权与释放
-
-在引入 Addressables 前，应先设计调用方能够遵守的所有权模型。建议加载结果不只返回裸资源，而是返回可释放句柄，句柄至少保存：
-
-- 资源键；
-- 实际资源；
-- 后端句柄或内部标识；
-- 加载状态；
-- 释放入口。
-
-UI、音频和对象池需要分别明确释放时机：
-
-| 使用方        | 建议释放时机                               |
-| ------------- | ------------------------------------------ |
-| 临时窗口      | Presenter 销毁且无缓存需求后。             |
-| 常驻 Home/HUD | UIManager 释放或模块明确清理缓存后。       |
-| BGM/音效      | 停止播放且音频缓存不再需要后。             |
-| 池化 Prefab   | 该 Prefab 的池内实例和活跃实例全部清理后。 |
-| 场景资源      | 场景退出且相关异步回调全部失效后。         |
-
-### 3.3 补齐对象池协作
-
-若 Prefab 由可释放后端加载，对象池需要按资源或 Prefab 统计活跃实例。只有满足以下条件时才允许资源层释放原始 Prefab：
-
+带资源句柄的池满足以下条件后才释放 Prefab：
 ```text
 池内闲置实例数量 = 0
 并且
 活跃实例数量 = 0
-并且
-没有进行中的预加载或创建请求
 ```
 
-对象池仍不负责决定资源来自 Resources 还是 Addressables；它只需要提供池清理完成状态，让上层资源所有者安全释放句柄。
+对象池不判断资源来自 Resources 还是 Addressables。`PreloadAsync` 会持有独立句柄；`ClearAll` 会使尚未完成的预热请求失效，防止请求在全局清理后重建池。清池会销毁闲置实例，活跃实例归还时销毁并更新计数。外部直接销毁的活跃对象会在池更新扫描中清理记录。原有基于 Inspector Prefab 的池调用维持原行为，但不代表 AssetLoader 所有权。
 
-### 3.4 加入诊断和校验
+### 3.3 后续诊断和校验
 
-建议逐步加入：
+后续可逐步加入：
 
 - 加载失败日志包含资源键、期望类型、后端名称和调用模块；
 - 开发环境检测同一资源键对应多个资源；
@@ -208,9 +202,9 @@ UI、音频和对象池需要分别明确释放时机：
 
 **当前决策：后续资源后端优先选择 Addressables。**
 
-原因是本项目目前资源量和业务形态仍处于小型单工程阶段，当前需求是把 `Resources` 调用收敛到 `AssetLoader` 并补齐异步、所有权和对象池协作；仓库中没有已经落地的 CDN、热更新、分包、原生文件或多 Package 需求。Addressables 能在不改变调用方资源键的前提下完成渐进迁移，并由 Unity 官方包维护。
+原因是本项目目前资源量和业务形态仍处于小型单工程阶段，当前需求是把 `Resources` 调用收敛到 `AssetLoader` 并逐步迁移资源；仓库中没有已经落地的 CDN、热更新、分包、原生文件或多 Package 需求。Addressables 能在不改变调用方资源键的前提下完成渐进迁移，并由 Unity 官方包维护。
 
-安装 Addressables 和迁移当前 Survivor UI 不等于已完成资源系统迁移。后续仍需完成第 3 章中的异步 UI 调用链、按资源释放语义、并发请求合并和对象池活跃实例统计，并保持 `IAssetLoader` 作为业务层唯一入口。
+安装 Addressables 和迁移当前 Survivor UI 不等于已完成资源系统迁移。剩余工作包括远端内容管线、异步取消/进度、租约诊断和构建前校验；业务层继续只依赖 `AssetLoader`。
 
 出现以下任一明确需求时，重新评估并可改选 YooAsset：
 
@@ -299,15 +293,17 @@ AudioMusic      # 可独立下载或切换的音乐
 
 - 具体 Resources 与 Addressables API 只出现在各自后端中。
 - `SurvivorHome`、`SurvivorMain`、`SurvivorGameOver` 和 `SurvivorSkillSelectPanel` 通过本地 `SurvivorUI` Group 加载；`AlertTipsPanel` 通过本地 `CommonView` Group 加载；公共音频 Clip 通过本地 `Audio` Group 加载，其余未迁移资源仍通过 Resources 加载。
-- `LoadAsync<T>` 能在主线程异步返回资源或 `null`。
+- `LoadHandleAsync<T>` 能在主线程异步返回句柄或 `null`，相同资源键和类型的并发请求共享一次加载。
+- UI、Audio、ListTab 图标和通过资源句柄预热的对象池按各自生命周期释放资源。
+- Launcher 登录后的 Home 通过异步 Presenter 打开；模块关闭、宿主关闭或资源加载失败时不会创建悬空 UI。
+- `Load<T>` / `LoadAsync<T>` 兼容入口仍可用，但只在 `ReleaseAll()` 时释放其资源。
 - 空资源键能得到一致的参数异常。
 
-### 下一阶段
+### 后续工作
 
-- 至少一条正式 UI 流程使用异步加载并正确处理重复请求、关闭和失败。
-- 相同资源的并发请求能够合并。
-- 资源句柄能够定位未释放资源。
-- 对象池能报告指定 Prefab 是否仍有活跃实例。
+- 增加异步加载取消、进度、优先级及更细的失败原因分类。
+- 按实际需要迁移其他同步 UI 流程；保留小型启动期资源的同步接口。
+- 增加租约泄漏诊断、加载耗时/命中统计、资源键常量和构建前校验。
 
 ### Addressables 阶段
 

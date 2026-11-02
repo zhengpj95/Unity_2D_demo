@@ -83,6 +83,8 @@ Update
 
 OnDestroy
   ├─ ModuleManager.ReleaseAll()
+  ├─ UIManager.Release()
+  ├─ PoolManager.ClearAll()
   ├─ 非退出流程：NetworkMgr.Dispose()
   └─ AssetLoader.ReleaseAll()
 
@@ -161,7 +163,7 @@ ModuleManager
 - 禁止形成循环依赖。
 
 Presenter 采用定义于 `Assets/Scripts/Define/ViewType.cs` 的模块 ViewType 映射：模块在 `OnInit` 中通过
-`RegPresenter<TPresenter>(viewType)` 登记 ViewType 与 Presenter 的一一对应关系，调用 `OpenWindow<TPresenter>(viewType, args)` 时才实例化并缓存界面。Presenter 的 `Layer` 与 `PrefabPath` 属性分别决定 UI 层级和传给 `AssetLoader` 的资源键，默认层级是 `Window`；特殊界面由具体 Presenter 重写，注册或打开接口不再传入层级和资源键。一个 Presenter 类型应只归属一个 Module，并只绑定一个 ViewType；`BaseModule` 负责本模块内的重复注册校验。`BaseModule` 与 `UIManager` 统一以 `ModuleViewKey`（`ModuleName + ViewType`）作为 Presenter 缓存身份。ViewType 命名采用 `模块名ViewType`，例如 `SurvivorViewType` 与 `MiscViewType`。
+`RegPresenter<TPresenter>(viewType)` 登记 ViewType 与 Presenter 的一一对应关系，调用方统一 `await OpenWindow<TPresenter>(viewType, args)` 打开界面。该方法始终返回 Task；`UIManager` 内部决定复用缓存或异步加载 Prefab，调用方不需要选择同步/异步接口。Presenter 的 `Layer` 与 `PrefabPath` 属性分别决定 UI 层级和传给 `AssetLoader` 的资源键，默认层级是 `Window`；特殊界面由具体 Presenter 重写，注册或打开接口不再传入层级和资源键。一个 Presenter 类型应只归属一个 Module，并只绑定一个 ViewType；`BaseModule` 负责本模块内的重复注册校验。`BaseModule` 与 `UIManager` 统一以 `ModuleViewKey`（`ModuleName + ViewType`）作为 Presenter 缓存身份。ViewType 命名采用 `模块名ViewType`，例如 `SurvivorViewType` 与 `MiscViewType`。
 已打开的 Presenter 仅可通过 `GetPresenter(viewType)` 按 ViewType 查询，不提供按 Presenter 类型查询的 Module API。
 
 ### Proxy
@@ -245,6 +247,7 @@ Assets/Scripts/Framework/MVC/UIManager.cs
 
 - UI 层级配置；
 - 通过 `AssetLoader` 加载 Prefab；
+- 统一的 Task Presenter 打开接口；缓存复用与首次异步加载由 UIManager 内部处理，相同 ViewKey 的并发打开共享任务，Module 释放时阻止迟到加载创建界面；
 - Presenter 创建、缓存和生命周期调用；默认按 `Presenter.Layer` 挂到全局层级，也支持复合界面显式指定局部父节点；
 - Window 打开/关闭；
 - 为兼容 FrogAdventure 原型而暂留的旧式 `ShowUI` / `HideUI` 路径缓存接口（已标记弃用）；
@@ -269,7 +272,7 @@ Tip
 
 需要注意：
 
-1. `AssetLoader` 是项目资源加载的唯一入口，提供同步 `Load<T>` 和异步 `LoadAsync<T>`；`UIManager`、`AudioManager` 等调用方不得直接使用 `Resources.Load` 或 Addressables API。迁移期间先查询 `ResourcesAssetLoader`，未命中时再查询 `AddressablesAssetLoader`，因此未迁移资源仍保持原行为。四个 Survivor UI Prefab 已统一迁移到本地 `SurvivorUI` Group，通用弹窗 `AlertTipsPanel` 位于本地 `CommonView` Group，公共音频 Clip 位于本地 `Audio` Group；资源地址保持调用方使用的稳定资源键。成功加载的 Addressables 句柄由后端持有，并在 `GameMgr.OnDestroy` 中统一释放。具体边界见 `ResourceManagement.md`。
+1. `AssetLoader` 是项目资源加载的唯一入口，提供兼容同步/异步加载与显式 `AssetHandle<T>` 租约接口；`UIManager`、`AudioManager` 等调用方不得直接使用 `Resources.Load` 或 Addressables API。异步同键同类型的并发请求共享一次后端加载。UI Presenter 销毁、音频停止/播放结束、对象池清空且活跃实例归还时分别释放句柄；全局退出时 `GameMgr` 先释放 UI 与池缓存，再调用 `AssetLoader.ReleaseAll()` 兜底。迁移期间先查询 `ResourcesAssetLoader`，未命中时再查询 `AddressablesAssetLoader`，资源键保持稳定。四个 Survivor UI Prefab 已迁移到本地 `SurvivorUI` Group，通用弹窗 `AlertTipsPanel` 位于本地 `CommonView` Group，公共音频 Clip 位于本地 `Audio` Group。具体边界见 `ResourceManagement.md`。
 2. `CloseWindow` 会关闭并销毁 Presenter；`HidePresenter` 只关闭显示状态并保留缓存。`Model` 仅表示 UI 渲染层级，不参与弹窗栈管理。
 3. 修改 UI 层级、粒子、红点等渲染顺序时，优先遵循现有 Canvas/父子层级模型，而不是无限放大 `sortingOrder`。
 
@@ -331,7 +334,7 @@ Network 的已知限制、优化优先级与后续规划统一记录在 `Assets/
 - `ModuleManager`
 - `NetworkMgr`
 
-`PoolManager` 的普通 GameObject 池按 Prefab 分组复用实例，并通过最低保留量、最大隐藏缓存量和空闲超时进行分批缩容；这些限制只作用于 `[PoolRoot]` 中已归还的对象，不限制场上活跃对象。UI 池保持独立生命周期。
+`PoolManager` 的普通 GameObject 池按 Prefab 分组复用实例，并通过最低保留量、最大隐藏缓存量和空闲超时进行分批缩容；这些限制只作用于 `[PoolRoot]` 中已归还的对象，不限制场上活跃对象。用资源句柄预热的池会保留 Prefab，清池后仍等待活跃实例归还或被检测销毁才释放句柄。UI 池保持独立生命周期。
 
 `Framework/Animation` 提供不依赖 Animator Controller 的通用序列帧能力：`AnimFrameBase` 负责播放状态和生命周期，`AnimSprite` 驱动场景中的 `SpriteRenderer`，`AnimUI` 驱动 UI `Image`，动画数据直接由组件内的 `AnimFrameData` 保存。池对象或界面被禁用时会停止播放并清理完成回调，重新启用时可按配置自动播放。
 

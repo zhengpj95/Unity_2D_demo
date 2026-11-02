@@ -6,18 +6,18 @@ using System.Threading.Tasks;
 public interface IAssetLoader
 {
   /// <summary>
-  /// 按资源键加载指定类型的资源。
+  /// 按资源键加载指定类型的资源，并返回后端释放回调。
   /// </summary>
   /// <typeparam name="T">期望的 Unity 资源类型。</typeparam>
   /// <param name="assetKey">资源系统约定的资源键。</param>
-  /// <returns>加载到的资源；找不到或类型不匹配时返回 null。</returns>
-  T Load<T>(string assetKey) where T : UnityEngine.Object;
+  /// <returns>加载结果；找不到或类型不匹配时 Asset 为 null。</returns>
+  AssetLoadResult<T> Load<T>(string assetKey) where T : UnityEngine.Object;
 
   /// <summary>
-  /// 按资源键异步加载指定类型的资源。
+  /// 按资源键异步加载指定类型的资源，并返回后端释放回调。
   /// </summary>
   /// <typeparam name="T">期望的 Unity 资源类型。</typeparam>
   /// <param name="assetKey">资源系统约定的资源键。</param>
-  /// <returns>表示加载过程的任务；找不到或类型不匹配时结果为 null。</returns>
-  Task<T> LoadAsync<T>(string assetKey) where T : UnityEngine.Object;
+  /// <returns>表示加载过程的任务；找不到或类型不匹配时 Asset 为 null。</returns>
+  Task<AssetLoadResult<T>> LoadAsync<T>(string assetKey) where T : UnityEngine.Object;
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>使用 VirtualList 展示页签，并在选中时切换到对应的 Module Presenter。</summary>
@@ -24,8 +25,11 @@ public sealed class ListTab : MonoBehaviour
   private List<ListTabItemData> _tabs;
   private BasePresenter _activePresenter;
   private int? _selectedTabId;
+  private int _openRequestGeneration;
   private bool _reportedMissingItemView;
   private readonly Dictionary<string, Sprite> _iconCache = new Dictionary<string, Sprite>();
+  private readonly Dictionary<string, AssetHandle<Sprite>> _iconHandles =
+    new Dictionary<string, AssetHandle<Sprite>>();
   private readonly Dictionary<int, HostedPresenter> _hostedPresenters = new Dictionary<int, HostedPresenter>();
 
   /// <summary>页签成功切换后触发；订阅方应在自身关闭时解除订阅。</summary>
@@ -57,6 +61,7 @@ public sealed class ListTab : MonoBehaviour
   /// <summary>组件禁用时解除列表回调并隐藏当前 Presenter；保留引用以便重新启用时恢复。</summary>
   private void OnDisable()
   {
+    _openRequestGeneration++;
     if (virtualList != null) virtualList.ClearHandlers();
     HideActivePresenter();
   }
@@ -66,6 +71,10 @@ public sealed class ListTab : MonoBehaviour
   {
     // 宿主 View 即将销毁；先清理子 Presenter 缓存和计时器，避免 UIManager 留有失效 View。
     CloseAllHostedPresenters();
+    foreach (AssetHandle<Sprite> handle in _iconHandles.Values)
+      handle.Dispose();
+    _iconHandles.Clear();
+    _iconCache.Clear();
     TabSelected = null;
   }
 
@@ -74,6 +83,7 @@ public sealed class ListTab : MonoBehaviour
   /// <param name="initialSelectedId">可选初始页签 ID；必须存在于数据源中。</param>
   public void SetTabs(IList<ListTabItemData> tabs, int? initialSelectedId = null)
   {
+    _openRequestGeneration++;
     ValidateTabs(tabs);
     _tabs = tabs == null ? null : new List<ListTabItemData>(tabs);
     PruneHostedPresenters();
@@ -95,13 +105,13 @@ public sealed class ListTab : MonoBehaviour
 
     virtualList.RefreshData(_tabs);
     virtualList.SelectedIndex = selectedIndex;
-    if (isActiveAndEnabled) OpenTab(_tabs[selectedIndex]);
+    if (isActiveAndEnabled) OpenTabFromLifecycle(_tabs[selectedIndex]);
   }
 
-  /// <summary>按稳定 ID 选择并打开页签；页签不存在时返回 false。</summary>
+  /// <summary>按稳定 ID 选择并打开页签；页签不存在或打开失败时返回 false。</summary>
   /// <param name="tabId">目标页签 ID。</param>
-  /// <returns>目标页签存在且 Presenter 打开成功时返回 true。</returns>
-  public bool SelectTab(int tabId)
+  /// <returns>可等待的切换结果；目标 Presenter 打开成功时为 true。</returns>
+  public async Task<bool> SelectTab(int tabId)
   {
     int index = FindIndex(tabId);
     if (index < 0) return false;
@@ -112,8 +122,11 @@ public sealed class ListTab : MonoBehaviour
       _selectedTabId = tabId;
       return true;
     }
-    bool opened = OpenTab(_tabs[index]);
-    if (!opened) RestoreVisualSelection();
+    Task<bool> openTask = OpenTab(_tabs[index]);
+    int requestGeneration = _openRequestGeneration;
+    bool opened = await openTask;
+    if (!opened && requestGeneration == _openRequestGeneration)
+      RestoreVisualSelection();
     return opened;
   }
 
@@ -139,19 +152,33 @@ public sealed class ListTab : MonoBehaviour
 
   /// <summary>响应 VirtualList 的页签点击；切换失败时恢复此前成功打开的页签选中态。</summary>
   /// <param name="info">被点击单元格的虚拟列表回调信息。</param>
-  private void OnTabClicked(VirtualListRenderInfo info)
+  private async void OnTabClicked(VirtualListRenderInfo info)
   {
     if (info.data is ListTabItemData data)
     {
-      if (!OpenTab(data)) RestoreVisualSelection();
+      Task<bool> openTask = OpenTab(data);
+      int requestGeneration = _openRequestGeneration;
+      try
+      {
+        bool opened = await openTask;
+        if (!opened && requestGeneration == _openRequestGeneration)
+          RestoreVisualSelection();
+      }
+      catch (Exception exception)
+      {
+        Debug.LogError($"[ListTab] Failed to open tab {data.Id}: {exception}", this);
+        if (requestGeneration == _openRequestGeneration)
+          RestoreVisualSelection();
+      }
     }
   }
 
-  /// <summary>打开页签对应模块中的 Presenter；打开成功后再隐藏上一个 Presenter。</summary>
+  /// <summary>统一打开页签对应模块中的 Presenter；成功后再隐藏上一个 Presenter。</summary>
   /// <param name="data">目标页签数据及其模块、ViewType 和启动参数。</param>
   /// <returns>目标 Presenter 成功打开时返回 true；模块缺失或打开失败时返回 false。</returns>
-  private bool OpenTab(ListTabItemData data)
+  private async Task<bool> OpenTab(ListTabItemData data)
   {
+    int requestGeneration = ++_openRequestGeneration;
     if (contentRoot == null)
     {
       Debug.LogError("[ListTab] Content root is missing; child Presenters must be mounted under the host.", this);
@@ -177,14 +204,19 @@ public sealed class ListTab : MonoBehaviour
     BasePresenter nextPresenter;
     try
     {
-      nextPresenter = module.OpenWindowIn(data.ViewType, contentRoot, data.ExtraData);
+      nextPresenter = await module.OpenWindowIn(data.ViewType, contentRoot, data.ExtraData);
     }
     catch (Exception exception)
     {
       Debug.LogError($"[ListTab] Failed to open {data.ModuleName}.{data.ViewType}: {exception}", this);
-      if (cachedEntry != null) ScheduleDestroy(cachedEntry.Presenter);
+      if (requestGeneration == _openRequestGeneration && cachedEntry != null)
+        ScheduleDestroy(cachedEntry.Presenter);
       return false;
     }
+
+    // 资源加载期间可能发生再次切页或宿主关闭；过期请求不得覆盖最新选中状态。
+    if (requestGeneration != _openRequestGeneration || !isActiveAndEnabled)
+      return false;
 
     if (nextPresenter == null)
     {
@@ -219,7 +251,24 @@ public sealed class ListTab : MonoBehaviour
     if (index < 0) index = 0;
     _selectedTabId = _tabs[index].Id;
     virtualList.SelectedIndex = index;
-    OpenTab(_tabs[index]);
+    OpenTabFromLifecycle(_tabs[index]);
+  }
+
+  private async void OpenTabFromLifecycle(ListTabItemData data)
+  {
+    Task<bool> openTask = OpenTab(data);
+    int requestGeneration = _openRequestGeneration;
+    try
+    {
+      if (!await openTask && requestGeneration == _openRequestGeneration)
+        RestoreVisualSelection();
+    }
+    catch (Exception exception)
+    {
+      Debug.LogError($"[ListTab] Failed to restore tab {data.Id}: {exception}", this);
+      if (requestGeneration == _openRequestGeneration)
+        RestoreVisualSelection();
+    }
   }
 
   /// <summary>宿主暂时禁用时隐藏当前子 Presenter，但保留缓存和当前页签记录。</summary>
@@ -374,8 +423,11 @@ public sealed class ListTab : MonoBehaviour
     if (string.IsNullOrWhiteSpace(iconPath)) return null;
     if (_iconCache.TryGetValue(iconPath, out Sprite cachedIcon)) return cachedIcon;
 
-    Sprite icon = AssetLoader.Instance.Load<Sprite>(iconPath);
+    AssetHandle<Sprite> handle = AssetLoader.Instance.LoadHandle<Sprite>(iconPath);
+    Sprite icon = handle != null ? handle.Asset : null;
     _iconCache.Add(iconPath, icon);
+    if (handle != null)
+      _iconHandles.Add(iconPath, handle);
     if (icon == null)
       Debug.LogWarning($"[ListTab] Icon resource was not found: {iconPath}.", this);
     return icon;

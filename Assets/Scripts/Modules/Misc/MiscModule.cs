@@ -1,4 +1,5 @@
 
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -27,7 +28,7 @@ public sealed class MiscModule : BaseModule
     _networkMgr = null;
   }
 
-  public AlertTipsPanelPresenter OpenAlert(AlertTipsPanelArgs args)
+  public Task<AlertTipsPanelPresenter> OpenAlert(AlertTipsPanelArgs args)
   {
     return OpenWindow<AlertTipsPanelPresenter>(MiscViewType.AlertTips, args);
   }

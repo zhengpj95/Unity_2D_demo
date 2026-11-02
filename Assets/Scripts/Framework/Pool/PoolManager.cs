@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
@@ -27,13 +28,17 @@ public class PoolManager : Singleton<PoolManager>
     public int MinRetained;
     public int MaxCachedCount = DefaultMaxCachedCount;
     public float IdleLifetime = DefaultIdleLifetime;
+    public int ActiveCount;
+    public bool IsRetired;
+    public AssetHandle<GameObject> PrefabHandle;
   }
 
   // 存储所有普通对象池，Key 为 Prefab 的 InstanceID。
   private readonly Dictionary<int, PoolEntry> _poolDict = new Dictionary<int, PoolEntry>();
 
-  // 存储正在运行的对象与其所属 Prefab InstanceID 的映射，用于回收
-  private readonly Dictionary<int, int> _instanceToPrefabId = new Dictionary<int, int>();
+  // 存储实例与其原始池条目的映射；退役池的活跃对象仍需找到所属资源句柄。
+  private readonly Dictionary<int, PoolEntry> _instanceToPool = new Dictionary<int, PoolEntry>();
+  private readonly Dictionary<int, GameObject> _activeInstances = new Dictionary<int, GameObject>();
 
   // 防止同一实例被重复压入缓存集合，避免一次实例被连续分配给多个调用方。
   private readonly HashSet<int> _inactiveInstanceIds = new HashSet<int>();
@@ -55,6 +60,7 @@ public class PoolManager : Singleton<PoolManager>
 
   // 使用非缩放时间按固定间隔缩容，暂停和 GameOver 状态下也能释放长期空闲缓存。
   private float _trimElapsed;
+  private int _preloadGeneration;
 
   /// <summary>
   /// 私有构造函数（由 Singleton 基类通过反射调用）
@@ -108,8 +114,62 @@ public class PoolManager : Singleton<PoolManager>
       GameObject obj = Object.Instantiate(prefab, _poolRoot.transform);
       obj.SetActive(false);
       int instanceId = obj.GetInstanceID();
-      _instanceToPrefabId[instanceId] = prefabId;
+      _instanceToPool[instanceId] = pool;
       AddCachedItem(pool, obj, instanceId);
+    }
+  }
+
+  /// <summary>
+  /// 预热并由对象池保留 Prefab 资源，直至池清空且所有活跃实例归还。
+  /// </summary>
+  /// <param name="prefabHandle">Prefab 资源句柄；对象池会创建独立引用，不接管调用方句柄。</param>
+  /// <param name="count">期望的最少可用缓存数量。</param>
+  public void Preload(AssetHandle<GameObject> prefabHandle, int count)
+  {
+    if (prefabHandle == null || count <= 0) return;
+
+    GameObject prefab = prefabHandle.Asset;
+    if (prefab == null) return;
+
+    int prefabId = prefab.GetInstanceID();
+    PoolEntry pool = GetOrCreatePool(prefabId);
+    if (pool.PrefabHandle != null)
+      pool.PrefabHandle.Dispose();
+    pool.PrefabHandle = prefabHandle.Retain();
+    Preload(prefab, count);
+  }
+
+  /// <summary>按资源键异步加载 Prefab 并预热；资源句柄由对象池按实例生命周期持有。</summary>
+  /// <param name="assetKey">Prefab 的稳定资源键。</param>
+  /// <param name="count">期望的最少可用缓存数量，必须大于零。</param>
+  /// <returns>预热成功时返回 true；资源未找到或清池后请求失效时返回 false。</returns>
+  public async Task<bool> PreloadAsync(string assetKey, int count)
+  {
+    if (count <= 0)
+      throw new System.ArgumentOutOfRangeException(nameof(count), count, "预热数量必须大于零。");
+
+    int generation = _preloadGeneration;
+    AssetHandle<GameObject> handle = await AssetLoader.Instance.LoadHandleAsync<GameObject>(assetKey);
+    if (generation != _preloadGeneration)
+    {
+      handle?.Dispose();
+      return false;
+    }
+
+    if (handle == null)
+    {
+      Debug.LogError($"[PoolManager] 无法预热 Prefab，资源未找到：{assetKey}");
+      return false;
+    }
+
+    try
+    {
+      Preload(handle, count);
+      return true;
+    }
+    finally
+    {
+      handle.Dispose();
     }
   }
 
@@ -160,15 +220,17 @@ public class PoolManager : Singleton<PoolManager>
 
       obj = item.Instance;
       if (obj == null)
-        _instanceToPrefabId.Remove(item.InstanceId);
+        _instanceToPool.Remove(item.InstanceId);
     }
 
     if (obj == null)
     {
       obj = Object.Instantiate(prefab);
-      _instanceToPrefabId[obj.GetInstanceID()] = prefabId;
+      _instanceToPool[obj.GetInstanceID()] = pool;
     }
 
+    pool.ActiveCount++;
+    _activeInstances[obj.GetInstanceID()] = obj;
     obj.SetActive(true);
     obj.transform.SetParent(null);
 
@@ -223,7 +285,7 @@ public class PoolManager : Singleton<PoolManager>
     if (obj == null) return;
 
     int instanceId = obj.GetInstanceID();
-    if (_instanceToPrefabId.TryGetValue(instanceId, out int prefabId))
+    if (_instanceToPool.TryGetValue(instanceId, out PoolEntry pool))
     {
       if (_inactiveInstanceIds.Contains(instanceId))
       {
@@ -242,7 +304,10 @@ public class PoolManager : Singleton<PoolManager>
       // 此时不能再访问 Transform 或压入池栈，否则会触发 MissingReferenceException。
       if (obj == null || _poolRoot == null)
       {
-        _instanceToPrefabId.Remove(instanceId);
+        pool.ActiveCount = Mathf.Max(0, pool.ActiveCount - 1);
+        _activeInstances.Remove(instanceId);
+        _instanceToPool.Remove(instanceId);
+        ReleaseRetiredPoolIfUnused(pool);
         return;
       }
 
@@ -251,23 +316,30 @@ public class PoolManager : Singleton<PoolManager>
       // SetActive 的生命周期回调也可能销毁对象，因此设父节点前再次确认有效性。
       if (obj == null || _poolRoot == null)
       {
-        _instanceToPrefabId.Remove(instanceId);
+        pool.ActiveCount = Mathf.Max(0, pool.ActiveCount - 1);
+        _activeInstances.Remove(instanceId);
+        _instanceToPool.Remove(instanceId);
+        ReleaseRetiredPoolIfUnused(pool);
         return;
       }
 
-      // ClearPool/ClearAll 后仍在场上的对象可以完成 OnFree，但不再重建已释放的池。
-      if (!_poolDict.TryGetValue(prefabId, out PoolEntry pool))
+      pool.ActiveCount = Mathf.Max(0, pool.ActiveCount - 1);
+      _activeInstances.Remove(instanceId);
+      // 清池后不再接收新实例；已有活跃对象归还时销毁，再释放该池的 Prefab 资源。
+      if (pool.IsRetired)
       {
-        _instanceToPrefabId.Remove(instanceId);
+        _instanceToPool.Remove(instanceId);
         Object.Destroy(obj);
+        ReleaseRetiredPoolIfUnused(pool);
         return;
       }
 
       // 缓存达到上限时销毁多余实例；MaxCachedCount 不会影响仍在场上的活跃对象。
       if (pool.CachedItems.Count >= pool.MaxCachedCount)
       {
-        _instanceToPrefabId.Remove(instanceId);
+        _instanceToPool.Remove(instanceId);
         Object.Destroy(obj);
+        ReleaseRetiredPoolIfUnused(pool);
         return;
       }
 
@@ -297,6 +369,7 @@ public class PoolManager : Singleton<PoolManager>
         pool.CachedItems.RemoveFirst();
       }
       _poolDict.Remove(prefabId);
+      RetirePool(pool);
     }
   }
 
@@ -305,16 +378,18 @@ public class PoolManager : Singleton<PoolManager>
   /// </summary>
   public void ClearAll()
   {
-    foreach (PoolEntry pool in _poolDict.Values)
+    // 使正在等待资源加载的预热请求失效，避免清理完成后又创建新池。
+    _preloadGeneration++;
+    foreach (PoolEntry pool in new List<PoolEntry>(_poolDict.Values))
     {
       while (pool.CachedItems.Count > 0)
       {
         DestroyCachedItem(pool.CachedItems.First.Value);
         pool.CachedItems.RemoveFirst();
       }
+      RetirePool(pool);
     }
     _poolDict.Clear();
-    _inactiveInstanceIds.Clear();
   }
 
   /// <summary>
@@ -327,6 +402,7 @@ public class PoolManager : Singleton<PoolManager>
       return;
 
     _trimElapsed = 0f;
+    PruneDestroyedActiveInstances();
     float now = Time.realtimeSinceStartup;
     int remainingBudget = TrimBudgetPerInterval;
 
@@ -402,9 +478,46 @@ public class PoolManager : Singleton<PoolManager>
   private void DestroyCachedItem(PooledItem item)
   {
     _inactiveInstanceIds.Remove(item.InstanceId);
-    _instanceToPrefabId.Remove(item.InstanceId);
+    _instanceToPool.Remove(item.InstanceId);
     if (item.Instance != null)
       Object.Destroy(item.Instance);
+  }
+
+  private void PruneDestroyedActiveInstances()
+  {
+    List<int> destroyedIds = null;
+    foreach (KeyValuePair<int, GameObject> pair in _activeInstances)
+    {
+      if (pair.Value != null) continue;
+
+      destroyedIds ??= new List<int>();
+      destroyedIds.Add(pair.Key);
+    }
+
+    if (destroyedIds == null) return;
+    foreach (int instanceId in destroyedIds)
+    {
+      _activeInstances.Remove(instanceId);
+      if (!_instanceToPool.TryGetValue(instanceId, out PoolEntry pool)) continue;
+
+      _instanceToPool.Remove(instanceId);
+      pool.ActiveCount = Mathf.Max(0, pool.ActiveCount - 1);
+      ReleaseRetiredPoolIfUnused(pool);
+    }
+  }
+
+  private void RetirePool(PoolEntry pool)
+  {
+    pool.IsRetired = true;
+    ReleaseRetiredPoolIfUnused(pool);
+  }
+
+  private static void ReleaseRetiredPoolIfUnused(PoolEntry pool)
+  {
+    if (!pool.IsRetired || pool.ActiveCount > 0) return;
+
+    pool.PrefabHandle?.Dispose();
+    pool.PrefabHandle = null;
   }
 
 

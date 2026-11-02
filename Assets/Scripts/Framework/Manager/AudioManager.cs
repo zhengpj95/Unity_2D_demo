@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public static class SoundType
@@ -28,9 +30,15 @@ public class AudioManager : MonoBehaviour
 
   // 背景音乐
   private AudioSource _bgm;
+  private AssetHandle<AudioClip> _bgmAssetHandle;
+  private Coroutine _bgmCoroutine;
+  private int _bgmRequestGeneration;
 
   // 正在播放的音效，包含循环音效
   private readonly List<AudioSource> _sfxList = new();
+  private readonly Dictionary<AudioSource, AssetHandle<AudioClip>> _sfxAssetHandles = new();
+  private int _sfxRequestGeneration;
+  private readonly Dictionary<string, int> _sfxTypeRequestGenerations = new();
 
   // 正在播放的循环音效
   private readonly Dictionary<string, AudioSource> _loopSfxList = new();
@@ -89,7 +97,32 @@ public class AudioManager : MonoBehaviour
       }
       _volumeCache[1] = sfxVolume;
     }
-}
+  }
+
+  private void OnDestroy()
+  {
+    StopAllCoroutines();
+    _bgmCoroutine = null;
+    _bgmRequestGeneration++;
+    _sfxRequestGeneration++;
+    if (_bgm != null)
+    {
+      _bgm.Stop();
+      _bgm.clip = null;
+    }
+
+    _bgmAssetHandle?.Dispose();
+    _bgmAssetHandle = null;
+    foreach (AssetHandle<AudioClip> handle in _sfxAssetHandles.Values)
+      handle.Dispose();
+    _sfxAssetHandles.Clear();
+    _sfxList.Clear();
+    _loopSfxList.Clear();
+    _sfxPool.Clear();
+
+    if (Instance == this)
+      Instance = null;
+  }
 
   // 暂停背景音乐和所有音效
   public void Stop()
@@ -102,23 +135,65 @@ public class AudioManager : MonoBehaviour
 
   public void PlayBGM(string soundType)
   {
-    AudioClip clip = AssetLoader.Instance.Load<AudioClip>("Audio/" + soundType);
-    PlayBGM(clip);
+    AssetHandle<AudioClip> handle = AssetLoader.Instance.LoadHandle<AudioClip>("Audio/" + soundType);
+    if (handle == null)
+    {
+      Debug.LogWarning($"[AudioManager] BGM resource was not found: {soundType}", this);
+      return;
+    }
+
+    PlayBGM(handle.Asset, handle);
   }
 
-  private void PlayBGM(AudioClip clip)
+  /// <summary>异步加载并播放背景音乐；被替换或停止后释放其资源句柄。</summary>
+  /// <param name="soundType">Audio 资源目录下的音频键。</param>
+  public async Task PlayBGMAsync(string soundType)
   {
-    if (clip == null) return;
-    if (_bgm.clip == clip && _bgm.isPlaying) return;
+    int requestGeneration = ++_bgmRequestGeneration;
+    AssetHandle<AudioClip> handle = await AssetLoader.Instance.LoadHandleAsync<AudioClip>("Audio/" + soundType);
+    if (requestGeneration != _bgmRequestGeneration || this == null)
+    {
+      handle?.Dispose();
+      return;
+    }
 
-    StopAllCoroutines();
-    StartCoroutine(FadeInBGM(clip));
+    if (handle == null)
+    {
+      Debug.LogWarning($"[AudioManager] BGM resource was not found: {soundType}", this);
+      return;
+    }
+
+    PlayBGM(handle.Asset, handle);
+  }
+
+  private void PlayBGM(AudioClip clip, AssetHandle<AudioClip> newHandle = null)
+  {
+    _bgmRequestGeneration++;
+    if (clip == null)
+    {
+      newHandle?.Dispose();
+      return;
+    }
+    if (_bgm.clip == clip && _bgm.isPlaying)
+    {
+      newHandle?.Dispose();
+      return;
+    }
+
+    if (_bgmCoroutine != null)
+      StopCoroutine(_bgmCoroutine);
+    _bgm.clip = clip;
+    _bgmAssetHandle?.Dispose();
+    _bgmAssetHandle = newHandle;
+    _bgmCoroutine = StartCoroutine(FadeInBGM(clip));
   }
 
   private void StopBGM(float fadeTime = 1f)
   {
-    StopAllCoroutines();
-    StartCoroutine(FadeOutBGM(fadeTime));
+    _bgmRequestGeneration++;
+    if (_bgmCoroutine != null)
+      StopCoroutine(_bgmCoroutine);
+    _bgmCoroutine = StartCoroutine(FadeOutBGM(fadeTime));
   }
 
   private IEnumerator FadeInBGM(AudioClip clip, float fadeTime = 1f)
@@ -136,6 +211,7 @@ public class AudioManager : MonoBehaviour
     }
 
     _bgm.volume = bgmVolume;
+    _bgmCoroutine = null;
   }
 
   private IEnumerator FadeOutBGM(float fadeTime = 1f)
@@ -152,6 +228,9 @@ public class AudioManager : MonoBehaviour
     _bgm.Stop();
     _bgm.clip = null;
     _bgm.volume = bgmVolume;
+    _bgmAssetHandle?.Dispose();
+    _bgmAssetHandle = null;
+    _bgmCoroutine = null;
   }
 
   #endregion =====================
@@ -160,13 +239,45 @@ public class AudioManager : MonoBehaviour
 
   public void PlaySfx(string soundType, bool loop = false)
   {
-    AudioClip clip = AssetLoader.Instance.Load<AudioClip>("Audio/" + soundType);
-    PlaySfx(clip, soundType, loop);
+    AssetHandle<AudioClip> handle = AssetLoader.Instance.LoadHandle<AudioClip>("Audio/" + soundType);
+    if (handle == null)
+    {
+      Debug.LogWarning($"[AudioManager] SFX resource was not found: {soundType}", this);
+      return;
+    }
+
+    PlaySfx(handle.Asset, soundType, loop, handle);
+  }
+
+  /// <summary>异步加载并播放音效；音效结束、停止或被清理时释放其资源句柄。</summary>
+  /// <param name="soundType">Audio 资源目录下的音频键。</param>
+  /// <param name="loop">是否循环播放。</param>
+  public async Task PlaySfxAsync(string soundType, bool loop = false)
+  {
+    int globalRequestGeneration = _sfxRequestGeneration;
+    int typeRequestGeneration = GetSfxTypeRequestGeneration(soundType);
+    AssetHandle<AudioClip> handle = await AssetLoader.Instance.LoadHandleAsync<AudioClip>("Audio/" + soundType);
+    if (globalRequestGeneration != _sfxRequestGeneration
+        || typeRequestGeneration != GetSfxTypeRequestGeneration(soundType)
+        || this == null)
+    {
+      handle?.Dispose();
+      return;
+    }
+
+    if (handle == null)
+    {
+      Debug.LogWarning($"[AudioManager] SFX resource was not found: {soundType}", this);
+      return;
+    }
+
+    PlaySfx(handle.Asset, soundType, loop, handle);
   }
 
   // 停止播放循环音效
   public void StopSfx(string soundType)
   {
+    _sfxTypeRequestGenerations[soundType] = GetSfxTypeRequestGeneration(soundType) + 1;
     if (_loopSfxList.TryGetValue(soundType, out AudioSource src))
     {
       src.Stop();
@@ -200,14 +311,31 @@ public class AudioManager : MonoBehaviour
     src.clip = null;
     src.loop = false;
     src.volume = sfxVolume;
+    if (_sfxAssetHandles.TryGetValue(src, out AssetHandle<AudioClip> handle))
+    {
+      _sfxAssetHandles.Remove(src);
+      handle.Dispose();
+    }
     _sfxPool.Enqueue(src);
   }
 
   // ReSharper disable Unity.PerformanceAnalysis
-  private void PlaySfx(AudioClip clip, string soundType, bool loop = false)
+  private void PlaySfx(
+    AudioClip clip,
+    string soundType,
+    bool loop = false,
+    AssetHandle<AudioClip> assetHandle = null)
   {
-    if (!clip) return;
-    if (loop && _loopSfxList.ContainsKey(soundType)) return; // 如果已经有同类型的循环音效在播放，直接返回
+    if (!clip)
+    {
+      assetHandle?.Dispose();
+      return;
+    }
+    if (loop && _loopSfxList.ContainsKey(soundType))
+    {
+      assetHandle?.Dispose();
+      return;
+    }
 
     var sfx = AllocSfxSource();
     sfx.clip = clip;
@@ -215,6 +343,8 @@ public class AudioManager : MonoBehaviour
     sfx.volume = sfxVolume;
     sfx.Play();
     _sfxList.Add(sfx); // 正在播放的音效
+    if (assetHandle != null)
+      _sfxAssetHandles.Add(sfx, assetHandle);
 
     // 如果不是循环音效，则自动销毁
     if (!loop)
@@ -230,15 +360,16 @@ public class AudioManager : MonoBehaviour
   private IEnumerator DestroyAfterPlay(AudioSource sfx)
   {
     yield return new WaitWhile(() => sfx.isPlaying);
-    _sfxList.Remove(sfx);
-    ReleaseSfxSource(sfx);
+    if (_sfxList.Remove(sfx))
+      ReleaseSfxSource(sfx);
   }
 
   // 停止播放全部音效
   private void StopAllSfx()
   {
+    _sfxRequestGeneration++;
     // 循环音效
-    foreach (var (key, src) in _loopSfxList)
+    foreach (var (key, src) in _loopSfxList.ToArray())
     {
       src.Stop();
       _loopSfxList.Remove(key);
@@ -258,6 +389,11 @@ public class AudioManager : MonoBehaviour
     }
 
     _sfxList.Clear();
+  }
+
+  private int GetSfxTypeRequestGeneration(string soundType)
+  {
+    return _sfxTypeRequestGenerations.TryGetValue(soundType, out int generation) ? generation : 0;
   }
 
   #endregion =====================

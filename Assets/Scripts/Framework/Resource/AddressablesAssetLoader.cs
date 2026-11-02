@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -11,10 +10,8 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 /// </summary>
 internal sealed class AddressablesAssetLoader : IAssetLoader
 {
-  private readonly List<AsyncOperationHandle> _handles = new List<AsyncOperationHandle>();
-
   /// <inheritdoc />
-  public T Load<T>(string assetKey) where T : UnityEngine.Object
+  public AssetLoadResult<T> Load<T>(string assetKey) where T : UnityEngine.Object
   {
     ValidateAssetKey(assetKey);
 
@@ -25,22 +22,22 @@ internal sealed class AddressablesAssetLoader : IAssetLoader
       if (asset == null)
       {
         Addressables.Release(handle);
-        return null;
+        return new AssetLoadResult<T>(null);
       }
 
-      _handles.Add(handle);
-      return asset;
+      return CreateResult(handle, asset);
     }
     catch (Exception exception)
     {
       Debug.LogWarning($"[AddressablesAssetLoader] 同步加载失败: {assetKey}, {exception.Message}");
-      Addressables.Release(handle);
-      return null;
+      if (handle.IsValid())
+        Addressables.Release(handle);
+      return new AssetLoadResult<T>(null);
     }
   }
 
   /// <inheritdoc />
-  public async Task<T> LoadAsync<T>(string assetKey) where T : UnityEngine.Object
+  public async Task<AssetLoadResult<T>> LoadAsync<T>(string assetKey) where T : UnityEngine.Object
   {
     ValidateAssetKey(assetKey);
 
@@ -51,34 +48,32 @@ internal sealed class AddressablesAssetLoader : IAssetLoader
       if (asset == null)
       {
         Addressables.Release(handle);
-        return null;
+        return new AssetLoadResult<T>(null);
       }
 
-      _handles.Add(handle);
-      return asset;
+      return CreateResult(handle, asset);
     }
     catch (Exception exception)
     {
       Debug.LogWarning($"[AddressablesAssetLoader] 异步加载失败: {assetKey}, {exception.Message}");
-      Addressables.Release(handle);
-      return null;
+      if (handle.IsValid())
+        Addressables.Release(handle);
+      return new AssetLoadResult<T>(null);
     }
   }
 
-  /// <summary>
-  /// 释放当前后端持有的全部成功加载句柄。
-  /// 仅在应用退出等确认不再使用所有加载资源的全局生命周期末尾调用。
-  /// </summary>
-  public void ReleaseAll()
+  private static AssetLoadResult<T> CreateResult<T>(
+    AsyncOperationHandle<T> handle,
+    T asset) where T : UnityEngine.Object
   {
-    for (int index = _handles.Count - 1; index >= 0; index--)
+    bool released = false;
+    return new AssetLoadResult<T>(asset, () =>
     {
-      AsyncOperationHandle handle = _handles[index];
+      if (released) return;
+      released = true;
       if (handle.IsValid())
         Addressables.Release(handle);
-    }
-
-    _handles.Clear();
+    });
   }
 
   /// <summary>校验 Addressables 与 Resources 后端共用的资源键输入。</summary>

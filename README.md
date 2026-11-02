@@ -47,7 +47,7 @@ Docs/                             # 项目级架构、资源和模块文档
 - UIManager 负责 UI 层级、Prefab 加载、Presenter 缓存和窗口生命周期。
 - `VirtualList` 支持固定尺寸的纵向、横向和网格虚拟列表；`VariableHeightVirtualList` 支持纵向异高、多模板、选择恢复和定位滚动。
 - `PoolManager` 提供普通 GameObject 池和独立 UI 池，并支持预热、缓存上限和空闲缩容。
-- `AssetLoader` 隔离 Resources/Addressables 后端；已迁移的 Survivor UI、通用弹窗和公共音频使用本地 Addressables Group。
+- `AssetLoader` 隔离 Resources/Addressables 后端，提供可释放句柄、同资源并发异步合并和按 UI/音频/对象池生命周期释放；已迁移的 Survivor UI、通用弹窗和公共音频使用本地 Addressables Group。
 - Network 提供 WebSocket 连接、Packet/Proto 编解码、消息分发、重连、发送结果和单响应等待。
 
 ### 玩法模块

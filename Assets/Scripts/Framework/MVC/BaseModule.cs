@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
@@ -55,7 +56,9 @@ public abstract class BaseModule : BaseEmitter
     foreach (BaseProxy proxy in _proxies.Values) proxy.Release();
     foreach (Enum viewType in _presenterDefinitions.Keys)
     {
-      BasePresenter presenter = UIManager.Instance.GetPresenter(new ModuleViewKey(ModuleName, viewType));
+      ModuleViewKey viewKey = new ModuleViewKey(ModuleName, viewType);
+      UIManager.Instance.CancelPendingOpen(viewKey);
+      BasePresenter presenter = UIManager.Instance.GetPresenter(viewKey);
       if (presenter != null) UIManager.Instance.DestroyWindow(presenter);
     }
 
@@ -88,35 +91,33 @@ public abstract class BaseModule : BaseEmitter
     });
   }
 
-  /// <summary>按本模块已登记的 ViewType 打开界面；未登记时抛出异常，资源加载失败时返回 null。</summary>
+  /// <summary>统一打开本模块已登记的界面；缓存复用与异步加载由 UIManager 内部处理。</summary>
   /// <param name="viewType">本模块注册的界面类型。</param>
   /// <param name="args">传入 Presenter.OnOpen 的运行时参数，可为 null。</param>
-  /// <returns>打开或显示后的 Presenter；Prefab 加载失败时返回 null。</returns>
-  public BasePresenter OpenWindow(Enum viewType, object args = null)
+  /// <returns>表示打开过程的任务；资源缺失或请求取消时结果为 null。</returns>
+  public async Task<BasePresenter> OpenWindow(Enum viewType, object args = null)
   {
     if (viewType == null) throw new ArgumentNullException(nameof(viewType));
     if (!_presenterDefinitions.TryGetValue(viewType, out PresenterDefinition definition))
       throw new InvalidOperationException($"[{GetType().Name}] ViewType is not registered: {viewType}");
 
     ModuleViewKey viewKey = new(ModuleName, viewType);
-    BasePresenter cached = UIManager.Instance.GetPresenter(viewKey);
-    if (cached != null)
-    {
-      if (cached.GetType() != definition.PresenterType)
-        throw new InvalidOperationException($"ViewType {viewType} is bound to {definition.PresenterType.Name}, but cached {cached.GetType().Name}.");
-      UIManager.Instance.ShowPresenter(cached, args);
-      return cached;
-    }
-
-    return UIManager.Instance.OpenWindow(viewKey, definition.Factory, args);
+    BasePresenter presenter = await UIManager.Instance.OpenWindow(
+      viewKey,
+      definition.Factory,
+      definition.PresenterType,
+      args);
+    if (presenter != null && presenter.GetType() != definition.PresenterType)
+      throw new InvalidOperationException($"ViewType {viewType} is bound to {definition.PresenterType.Name}, but UIManager returned {presenter.GetType().Name}.");
+    return presenter;
   }
 
-  /// <summary>在指定局部容器中打开本模块已登记的界面，用于复合界面的子 Presenter。</summary>
+  /// <summary>在指定局部容器中统一打开本模块界面，用于复合界面的子 Presenter。</summary>
   /// <param name="viewType">本模块注册的界面类型。</param>
   /// <param name="parent">Presenter View 的挂载节点，不能为 null。</param>
   /// <param name="args">传入 Presenter.OnOpen 的运行时参数，可为 null。</param>
-  /// <returns>打开或显示后的 Presenter；Prefab 加载失败时返回 null。</returns>
-  public BasePresenter OpenWindowIn(Enum viewType, Transform parent, object args = null)
+  /// <returns>表示打开过程的任务；资源缺失或请求取消时结果为 null。</returns>
+  public async Task<BasePresenter> OpenWindowIn(Enum viewType, Transform parent, object args = null)
   {
     if (viewType == null) throw new ArgumentNullException(nameof(viewType));
     if (parent == null) throw new ArgumentNullException(nameof(parent));
@@ -124,14 +125,27 @@ public abstract class BaseModule : BaseEmitter
       throw new InvalidOperationException($"[{GetType().Name}] ViewType is not registered: {viewType}");
 
     ModuleViewKey viewKey = new(ModuleName, viewType);
-    BasePresenter presenter = UIManager.Instance.OpenWindowIn(viewKey, definition.Factory, parent, args);
+    BasePresenter presenter = await UIManager.Instance.OpenWindowIn(
+      viewKey,
+      definition.Factory,
+      definition.PresenterType,
+      parent,
+      args);
     if (presenter != null && presenter.GetType() != definition.PresenterType)
       throw new InvalidOperationException($"ViewType {viewType} is bound to {definition.PresenterType.Name}, but UIManager returned {presenter.GetType().Name}.");
     return presenter;
   }
 
-  /// <summary>按模块 ViewType 打开界面；首次打开时根据 RegPresenter 映射实例化。</summary>
-  protected T OpenWindow<T>(Enum viewType, object args = null) where T : BasePresenter, new()
+  /// <summary>取消本模块指定界面尚未完成的打开请求。</summary>
+  /// <param name="viewType">本模块注册的界面类型。</param>
+  public void CancelPendingOpen(Enum viewType)
+  {
+    if (viewType == null) throw new ArgumentNullException(nameof(viewType));
+    UIManager.Instance.CancelPendingOpen(new ModuleViewKey(ModuleName, viewType));
+  }
+
+  /// <summary>按模块 ViewType 打开强类型界面；Presenter 类型必须与登记定义一致。</summary>
+  protected async Task<T> OpenWindow<T>(Enum viewType, object args = null) where T : BasePresenter, new()
   {
     if (viewType == null) throw new ArgumentNullException(nameof(viewType));
     if (!_presenterDefinitions.TryGetValue(viewType, out PresenterDefinition definition))
@@ -139,18 +153,14 @@ public abstract class BaseModule : BaseEmitter
     if (definition.PresenterType != typeof(T))
       throw new InvalidOperationException($"ViewType {viewType} is bound to {definition.PresenterType.Name}, not {typeof(T).Name}.");
 
-    ModuleViewKey viewKey = new(ModuleName, viewType);
-    BasePresenter cached = UIManager.Instance.GetPresenter(viewKey);
-    if (cached != null)
-    {
-      UIManager.Instance.ShowPresenter(cached, args);
-      if (cached is T cachedPresenter) return cachedPresenter;
-      throw new InvalidOperationException($"ViewType {viewType} is bound to {cached.GetType().Name}, not {typeof(T).Name}.");
-    }
-
-    T presenter = UIManager.Instance.OpenWindow<T>(viewKey, args);
+    BasePresenter presenter = await UIManager.Instance.OpenWindow(
+      new ModuleViewKey(ModuleName, viewType),
+      definition.Factory,
+      definition.PresenterType,
+      args);
     if (presenter == null) return null;
-    return presenter;
+    if (presenter is T typedPresenter) return typedPresenter;
+    throw new InvalidOperationException($"ViewType {viewType} is bound to {presenter.GetType().Name}, not {typeof(T).Name}.");
   }
 
   /// <summary>登记 Proxy；模块已运行时会立即初始化该 Proxy。</summary>

@@ -58,11 +58,17 @@ public sealed class GameMgr : MonoBehaviour
 
     ModuleManager.Instance.ReleaseAll();
 
+    // 先销毁 UI 与池缓存，再释放资源租约，避免实例仍引用 Addressables Prefab。
+    if (UIManager.IsCreated)
+      UIManager.Instance.Release();
+    if (PoolManager.IsCreated)
+      PoolManager.Instance.ClearAll();
+
     // 正常销毁仍立即释放本地网络资源；退出 Player 时由 OnApplicationQuit 先完成关闭握手。
     if (NetworkMgr.IsCreated && !_isApplicationQuitting)
       NetworkMgr.Instance.Dispose();
 
-    // GameMgr 是跨场景资源加载的全局生命周期边界，退出时统一释放 Addressables 句柄。
+    // GameMgr 是资源租约的全局兜底边界；正常调用方应先按自身生命周期释放句柄。
     if (AssetLoader.IsCreated)
       AssetLoader.Instance.ReleaseAll();
 

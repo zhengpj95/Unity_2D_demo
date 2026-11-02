@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using VampireSurvivorsLike;
@@ -46,17 +47,24 @@ public sealed class SurvivorGameplayController
 
     LoadSceneAsync(
       SurvivorsSceneName,
-      () =>
+      async () =>
       {
         Time.timeScale = 1f;
-        _module.OpenSurvivorMain();
+        SurvivorMainPresenter presenter = await _module.OpenSurvivorMain();
+        if (presenter == null)
+        {
+          Debug.LogError("[SurvivorGameplayController] Failed to open the battle HUD.");
+          return;
+        }
+
         // 场景已激活且 HUD 已打开，在同一回调内交接显示，不留下两者都隐藏的加载帧。
         _module.HideSurvivorHome();
       },
-      () =>
+      async () =>
       {
         Time.timeScale = 1f;
-        _module.OpenSurvivorHome();
+        if (await _module.OpenSurvivorHome() == null)
+          Debug.LogError("[SurvivorGameplayController] Failed to restore Survivor Home after scene load failure.");
       });
   }
 
@@ -107,19 +115,26 @@ public sealed class SurvivorGameplayController
   /// <summary>
   /// 处理玩家死亡：收起可能仍打开的升级面板，冻结局内时间并展示本局结算。
   /// </summary>
-  public void OnPlayerDied()
+  public async void OnPlayerDied()
   {
-    if (_proxy.Model.GameState == SurvivorGameState.GameOver)
-      return;
+    try
+    {
+      if (_proxy.Model.GameState == SurvivorGameState.GameOver)
+        return;
 
-    _module.HideSkillSelectPanel();
-    _proxy.SetGameState(SurvivorGameState.GameOver);
-    Time.timeScale = 0f;
-    _module.RefreshMainView();
+      _module.HideSkillSelectPanel();
+      _proxy.SetGameState(SurvivorGameState.GameOver);
+      Time.timeScale = 0f;
+      _module.RefreshMainView();
 
-    SurvivorGameOverPresenter panel = _module.OpenGameOverPanel(CreateGameOverArgs());
-    if (panel == null)
-      Debug.LogError("[SurvivorGameplayController] Failed to open game over panel.");
+      SurvivorGameOverPresenter panel = await _module.OpenGameOverPanel(CreateGameOverArgs());
+      if (panel == null)
+        Debug.LogError("[SurvivorGameplayController] Failed to open game over panel.");
+    }
+    catch (Exception exception)
+    {
+      Debug.LogError($"[SurvivorGameplayController] Failed to open game over panel: {exception}");
+    }
   }
 
   /// <summary>
@@ -139,44 +154,55 @@ public sealed class SurvivorGameplayController
 
     LoadSceneAsync(
       LauncherSceneName,
-      () =>
+      async () =>
       {
         _proxy.ResetRound();
         Time.timeScale = 1f;
-        _module.OpenSurvivorHome();
+        if (await _module.OpenSurvivorHome() == null)
+          Debug.LogError("[SurvivorGameplayController] Failed to open Survivor Home.");
       },
-      () =>
+      async () =>
       {
         // 加载失败时恢复 GameOver 界面，让玩家仍能重试或再次返回。
         Time.timeScale = 0f;
-        _module.OpenSurvivorMain();
-        _module.OpenGameOverPanel(CreateGameOverArgs());
+        if (await _module.OpenSurvivorMain() == null)
+          Debug.LogError("[SurvivorGameplayController] Failed to restore the battle HUD.");
+        if (await _module.OpenGameOverPanel(CreateGameOverArgs()) == null)
+          Debug.LogError("[SurvivorGameplayController] Failed to restore the game over panel.");
       });
   }
 
-  private void OpenNextLevelUp()
+  private async void OpenNextLevelUp()
   {
-    if (!_proxy.TryConsumePendingLevelUp())
-      return;
-
-    // 每次升级都基于最新的武器等级和槽位重新抽取候选。
-    UpgradeConfig[] options = UpgradeManager.Instance.GetUpgradeOptions(3, CreateUpgradeContext());
-    if (options.Length == 0)
+    try
     {
-      Debug.LogWarning("[SurvivorGameplayController] No available upgrades; resuming gameplay.");
-      ResumePlaying();
-      return;
+      if (!_proxy.TryConsumePendingLevelUp())
+        return;
+
+      // 每次升级都基于最新的武器等级和槽位重新抽取候选。
+      UpgradeConfig[] options = UpgradeManager.Instance.GetUpgradeOptions(3, CreateUpgradeContext());
+      if (options.Length == 0)
+      {
+        Debug.LogWarning("[SurvivorGameplayController] No available upgrades; resuming gameplay.");
+        ResumePlaying();
+        return;
+      }
+
+      _proxy.SetGameState(SurvivorGameState.LevelUp);
+      Time.timeScale = 0f;
+
+      SurvivorSkillSelectPanelPresenter panel = await _module.OpenSkillSelectPanel(
+        new SurvivorSkillSelectArgs(options, SelectLevelUpOption));
+
+      if (panel == null)
+      {
+        Debug.LogError("[SurvivorGameplayController] Failed to open skill select panel.");
+        ResumePlaying();
+      }
     }
-
-    _proxy.SetGameState(SurvivorGameState.LevelUp);
-    Time.timeScale = 0f;
-
-    SurvivorSkillSelectPanelPresenter panel = _module.OpenSkillSelectPanel(
-      new SurvivorSkillSelectArgs(options, SelectLevelUpOption));
-
-    if (panel == null)
+    catch (Exception exception)
     {
-      Debug.LogError("[SurvivorGameplayController] Failed to open skill select panel.");
+      Debug.LogError($"[SurvivorGameplayController] Failed to open skill select panel: {exception}");
       ResumePlaying();
     }
   }
@@ -245,34 +271,44 @@ public sealed class SurvivorGameplayController
   /// <param name="sceneName">Build Settings 中注册的目标场景名。</param>
   /// <param name="onLoaded">场景加载并激活后的主线程回调。</param>
   /// <param name="onFailed">无法创建加载操作时的恢复回调。</param>
-  private void LoadSceneAsync(string sceneName, Action onLoaded, Action onFailed)
+  private async void LoadSceneAsync(string sceneName, Func<Task> onLoaded, Func<Task> onFailed)
   {
-    AsyncOperation loadOperation;
+    bool sceneLoaded = false;
     try
     {
-      loadOperation = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
+      AsyncOperation loadOperation = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
+      if (loadOperation == null)
+        throw new InvalidOperationException($"无法创建场景加载操作：{sceneName}");
+
+      if (!loadOperation.isDone)
+      {
+        var completion = new TaskCompletionSource<bool>();
+        loadOperation.completed += _ => completion.TrySetResult(true);
+        await completion.Task;
+      }
+
+      sceneLoaded = true;
+      if (onLoaded != null) await onLoaded();
     }
     catch (Exception exception)
     {
-      _isSceneTransitioning = false;
-      Debug.LogError($"[SurvivorGameplayController] 加载场景 '{sceneName}' 时发生异常：{exception}");
-      onFailed?.Invoke();
-      return;
+      Debug.LogError($"[SurvivorGameplayController] 场景切换 '{sceneName}' 失败：{exception}");
+      if (!sceneLoaded && onFailed != null)
+      {
+        try
+        {
+          await onFailed();
+        }
+        catch (Exception recoveryException)
+        {
+          Debug.LogError($"[SurvivorGameplayController] 场景 '{sceneName}' 失败后的恢复流程也失败：{recoveryException}");
+        }
+      }
     }
-
-    if (loadOperation == null)
+    finally
     {
       _isSceneTransitioning = false;
-      Debug.LogError($"[SurvivorGameplayController] 无法创建场景加载操作：{sceneName}");
-      onFailed?.Invoke();
-      return;
     }
-
-    loadOperation.completed += _ =>
-    {
-      _isSceneTransitioning = false;
-      onLoaded?.Invoke();
-    };
   }
 
   private PlayerUpgradeContext CreateUpgradeContext()

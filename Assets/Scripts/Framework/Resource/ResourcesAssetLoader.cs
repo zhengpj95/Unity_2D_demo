@@ -9,24 +9,24 @@ using UnityEngine;
 internal sealed class ResourcesAssetLoader : IAssetLoader
 {
   /// <inheritdoc />
-  public T Load<T>(string assetKey) where T : UnityEngine.Object
+  public AssetLoadResult<T> Load<T>(string assetKey) where T : UnityEngine.Object
   {
     ValidateAssetKey(assetKey);
 
-    return Resources.Load<T>(assetKey);
+    return new AssetLoadResult<T>(Resources.Load<T>(assetKey));
   }
 
   /// <inheritdoc />
-  public Task<T> LoadAsync<T>(string assetKey) where T : UnityEngine.Object
+  public Task<AssetLoadResult<T>> LoadAsync<T>(string assetKey) where T : UnityEngine.Object
   {
     ValidateAssetKey(assetKey);
 
     ResourceRequest request = Resources.LoadAsync<T>(assetKey);
     if (request.isDone)
-      return Task.FromResult(request.asset as T);
+      return Task.FromResult(new AssetLoadResult<T>(request.asset as T));
 
-    var completionSource = new TaskCompletionSource<T>();
-    request.completed += _ => completionSource.TrySetResult(request.asset as T);
+    var completionSource = new TaskCompletionSource<AssetLoadResult<T>>();
+    request.completed += _ => completionSource.TrySetResult(new AssetLoadResult<T>(request.asset as T));
     return completionSource.Task;
   }
 
