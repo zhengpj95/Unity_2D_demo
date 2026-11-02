@@ -43,6 +43,45 @@ public class UIManagerConfig
 /// </summary>
 public class UIManager : Singleton<UIManager>
 {
+  /// <summary>UIManager 内部的 Presenter 缓存键，由模块身份和模块内 ViewType 组成。</summary>
+  private readonly struct PresenterKey : IEquatable<PresenterKey>
+  {
+    public readonly ModuleName ModuleName;
+    public readonly Enum ViewType;
+
+    public PresenterKey(ModuleName moduleName, Enum viewType)
+    {
+      if (moduleName == ModuleName.None)
+        throw new ArgumentException("ModuleName cannot be None.", nameof(moduleName));
+
+      ModuleName = moduleName;
+      ViewType = viewType ?? throw new ArgumentNullException(nameof(viewType));
+    }
+
+    public bool Equals(PresenterKey other)
+    {
+      return ModuleName == other.ModuleName && object.Equals(ViewType, other.ViewType);
+    }
+
+    public override bool Equals(object obj)
+    {
+      return obj is PresenterKey other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+      unchecked
+      {
+        return ((int)ModuleName * 397) ^ (ViewType?.GetHashCode() ?? 0);
+      }
+    }
+
+    public override string ToString()
+    {
+      return $"{ModuleName}.{ViewType}";
+    }
+  }
+
   private sealed class PendingPresenterOpen
   {
     public bool IsCancelled;
@@ -103,7 +142,7 @@ public class UIManager : Singleton<UIManager>
   {
     if (!IsInitialized && _pendingPresenterOpens.Count == 0) return;
 
-    foreach (ModuleViewKey viewKey in _pendingPresenterOpens.Keys.ToArray())
+    foreach (PresenterKey viewKey in _pendingPresenterOpens.Keys.ToArray())
       CancelPendingOpen(viewKey);
 
     foreach (BasePresenter presenter in _presenterCache.Values.ToArray())
@@ -249,47 +288,60 @@ public class UIManager : Singleton<UIManager>
 
   #region BasePresenter处理
   // Presenter 的全局身份由 ModuleName + ViewType 决定，不能仅按 Presenter 类型缓存。
-  private readonly Dictionary<ModuleViewKey, BasePresenter> _presenterCache = new Dictionary<ModuleViewKey, BasePresenter>();
+  private readonly Dictionary<PresenterKey, BasePresenter> _presenterCache = new Dictionary<PresenterKey, BasePresenter>();
   // 供 Presenter 自身关闭或模块释放时反查其全局身份。
-  private readonly Dictionary<BasePresenter, ModuleViewKey> _presenterKeys = new Dictionary<BasePresenter, ModuleViewKey>();
+  private readonly Dictionary<BasePresenter, PresenterKey> _presenterKeys = new Dictionary<BasePresenter, PresenterKey>();
   private readonly Dictionary<BasePresenter, AssetHandle<GameObject>> _presenterAssetHandles =
     new Dictionary<BasePresenter, AssetHandle<GameObject>>();
-  private readonly Dictionary<ModuleViewKey, PendingPresenterOpen> _pendingPresenterOpens =
-    new Dictionary<ModuleViewKey, PendingPresenterOpen>();
+  private readonly Dictionary<PresenterKey, PendingPresenterOpen> _pendingPresenterOpens =
+    new Dictionary<PresenterKey, PendingPresenterOpen>();
 
   /// <summary>统一打开模块 Presenter；内部复用缓存或异步加载 Prefab。</summary>
-  /// <param name="viewKey">Presenter 的模块和 ViewType 缓存键。</param>
+  /// <param name="moduleName">Presenter 所属模块。</param>
+  /// <param name="viewType">模块内的界面类型。</param>
   /// <param name="presenterFactory">创建 Presenter 的模块注册工厂。</param>
+  /// <param name="expectedPresenterType">该 ViewType 登记的 Presenter 类型。</param>
   /// <param name="args">传递给 Presenter.OnOpen 的参数。</param>
   /// <returns>打开后的 Presenter；资源加载失败时返回 null。</returns>
   internal Task<BasePresenter> OpenWindow(
-    ModuleViewKey viewKey,
+    ModuleName moduleName,
+    Enum viewType,
     Func<BasePresenter> presenterFactory,
     Type expectedPresenterType,
     object args = null)
   {
+    PresenterKey viewKey = new PresenterKey(moduleName, viewType);
     return OpenWindowInternal(viewKey, presenterFactory, expectedPresenterType, args, null);
   }
 
   /// <summary>在指定的局部父节点下统一打开 Presenter，供 ListTab 等复合界面使用。</summary>
-  /// <param name="viewKey">Presenter 的模块和 ViewType 缓存键。</param>
+  /// <param name="moduleName">Presenter 所属模块。</param>
+  /// <param name="viewType">模块内的界面类型。</param>
   /// <param name="presenterFactory">创建 Presenter 的模块注册工厂。</param>
+  /// <param name="expectedPresenterType">该 ViewType 登记的 Presenter 类型。</param>
   /// <param name="parent">Presenter View 的局部挂载节点。</param>
   /// <param name="args">传递给 Presenter.OnOpen 的参数。</param>
   /// <returns>打开后的 Presenter；资源加载失败时返回 null。</returns>
   internal Task<BasePresenter> OpenWindowIn(
-    ModuleViewKey viewKey,
+    ModuleName moduleName,
+    Enum viewType,
     Func<BasePresenter> presenterFactory,
     Type expectedPresenterType,
     Transform parent,
     object args = null)
   {
     if (parent == null) throw new ArgumentNullException(nameof(parent));
+    PresenterKey viewKey = new PresenterKey(moduleName, viewType);
     return OpenWindowInternal(viewKey, presenterFactory, expectedPresenterType, args, parent);
   }
 
   /// <summary>取消指定界面尚未完成的打开请求；资源加载完成后会释放句柄且不创建 View。</summary>
-  internal void CancelPendingOpen(ModuleViewKey viewKey)
+  internal void CancelPendingOpen(ModuleName moduleName, Enum viewType)
+  {
+    CancelPendingOpen(new PresenterKey(moduleName, viewType));
+  }
+
+  private void CancelPendingOpen(PresenterKey viewKey)
   {
     if (!_pendingPresenterOpens.TryGetValue(viewKey, out PendingPresenterOpen pending))
       return;
@@ -299,7 +351,7 @@ public class UIManager : Singleton<UIManager>
   }
 
   private Task<BasePresenter> OpenWindowInternal(
-    ModuleViewKey viewKey,
+    PresenterKey viewKey,
     Func<BasePresenter> presenterFactory,
     Type expectedPresenterType,
     object args,
@@ -336,7 +388,7 @@ public class UIManager : Singleton<UIManager>
   }
 
   private async Task<BasePresenter> CreatePresenterAsync(
-    ModuleViewKey viewKey,
+    PresenterKey viewKey,
     Func<BasePresenter> presenterFactory,
     Type expectedPresenterType,
     object args,
@@ -429,7 +481,7 @@ public class UIManager : Singleton<UIManager>
   /// <param name="presenter"></param>
   public void CloseWindow(BasePresenter presenter)
   {
-    if (presenter != null && _presenterKeys.TryGetValue(presenter, out ModuleViewKey viewKey))
+    if (presenter != null && _presenterKeys.TryGetValue(presenter, out PresenterKey viewKey))
     {
       CloseWindow(viewKey);
     }
@@ -445,7 +497,7 @@ public class UIManager : Singleton<UIManager>
       return;
     }
 
-    if (_presenterKeys.TryGetValue(presenter, out ModuleViewKey viewKey)
+    if (_presenterKeys.TryGetValue(presenter, out PresenterKey viewKey)
         && _presenterCache.TryGetValue(viewKey, out BasePresenter cachedPresenter)
         && ReferenceEquals(cachedPresenter, presenter))
     {
@@ -466,7 +518,7 @@ public class UIManager : Singleton<UIManager>
   /// 核心关闭逻辑
   /// </summary>
   /// <param name="viewKey"></param>
-  private void CloseWindow(ModuleViewKey viewKey)
+  private void CloseWindow(PresenterKey viewKey)
   {
     if (_presenterCache.TryGetValue(viewKey, out BasePresenter presenter))
     {
@@ -476,7 +528,7 @@ public class UIManager : Singleton<UIManager>
     }
   }
 
-  private void RemovePresenter(ModuleViewKey viewKey, BasePresenter presenter)
+  private void RemovePresenter(PresenterKey viewKey, BasePresenter presenter)
   {
     _presenterCache.Remove(viewKey);
     _presenterKeys.Remove(presenter);
@@ -530,14 +582,16 @@ public class UIManager : Singleton<UIManager>
   }
 
   /// <summary>供 BaseModule 按模块 ViewType 查询已创建的 Presenter。</summary>
-  internal BasePresenter GetPresenter(ModuleViewKey viewKey)
+  internal BasePresenter GetPresenter(ModuleName moduleName, Enum viewType)
   {
+    PresenterKey viewKey = new PresenterKey(moduleName, viewType);
     return _presenterCache.TryGetValue(viewKey, out BasePresenter presenter) ? presenter : null;
   }
 
   /// <summary>检查指定模块 ViewType 的 Presenter 是否存在。</summary>
-  public bool HasPresenter(ModuleViewKey viewKey)
+  internal bool HasPresenter(ModuleName moduleName, Enum viewType)
   {
+    PresenterKey viewKey = new PresenterKey(moduleName, viewType);
     return _presenterCache.ContainsKey(viewKey);
   }
 

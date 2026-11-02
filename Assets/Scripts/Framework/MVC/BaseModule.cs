@@ -56,9 +56,8 @@ public abstract class BaseModule : BaseEmitter
     foreach (BaseProxy proxy in _proxies.Values) proxy.Release();
     foreach (Enum viewType in _presenterDefinitions.Keys)
     {
-      ModuleViewKey viewKey = new ModuleViewKey(ModuleName, viewType);
-      UIManager.Instance.CancelPendingOpen(viewKey);
-      BasePresenter presenter = UIManager.Instance.GetPresenter(viewKey);
+      UIManager.Instance.CancelPendingOpen(ModuleName, viewType);
+      BasePresenter presenter = UIManager.Instance.GetPresenter(ModuleName, viewType);
       if (presenter != null) UIManager.Instance.DestroyWindow(presenter);
     }
 
@@ -101,9 +100,9 @@ public abstract class BaseModule : BaseEmitter
     if (!_presenterDefinitions.TryGetValue(viewType, out PresenterDefinition definition))
       throw new InvalidOperationException($"[{GetType().Name}] ViewType is not registered: {viewType}");
 
-    ModuleViewKey viewKey = new(ModuleName, viewType);
     BasePresenter presenter = await UIManager.Instance.OpenWindow(
-      viewKey,
+      ModuleName,
+      viewType,
       definition.Factory,
       definition.PresenterType,
       args);
@@ -124,9 +123,9 @@ public abstract class BaseModule : BaseEmitter
     if (!_presenterDefinitions.TryGetValue(viewType, out PresenterDefinition definition))
       throw new InvalidOperationException($"[{GetType().Name}] ViewType is not registered: {viewType}");
 
-    ModuleViewKey viewKey = new(ModuleName, viewType);
     BasePresenter presenter = await UIManager.Instance.OpenWindowIn(
-      viewKey,
+      ModuleName,
+      viewType,
       definition.Factory,
       definition.PresenterType,
       parent,
@@ -141,7 +140,7 @@ public abstract class BaseModule : BaseEmitter
   public void CancelPendingOpen(Enum viewType)
   {
     if (viewType == null) throw new ArgumentNullException(nameof(viewType));
-    UIManager.Instance.CancelPendingOpen(new ModuleViewKey(ModuleName, viewType));
+    UIManager.Instance.CancelPendingOpen(ModuleName, viewType);
   }
 
   /// <summary>按模块 ViewType 打开强类型界面；Presenter 类型必须与登记定义一致。</summary>
@@ -154,7 +153,8 @@ public abstract class BaseModule : BaseEmitter
       throw new InvalidOperationException($"ViewType {viewType} is bound to {definition.PresenterType.Name}, not {typeof(T).Name}.");
 
     BasePresenter presenter = await UIManager.Instance.OpenWindow(
-      new ModuleViewKey(ModuleName, viewType),
+      ModuleName,
+      viewType,
       definition.Factory,
       definition.PresenterType,
       args);
@@ -194,8 +194,7 @@ public abstract class BaseModule : BaseEmitter
   public BasePresenter GetPresenter(Enum viewType)
   {
     if (viewType == null) throw new ArgumentNullException(nameof(viewType));
-    ModuleViewKey viewKey = new(ModuleName, viewType);
-    return UIManager.Instance.GetPresenter(viewKey);
+    return UIManager.Instance.GetPresenter(ModuleName, viewType);
   }
 
   private bool HasPresenterType(Type presenterType)

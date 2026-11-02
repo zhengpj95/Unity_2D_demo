@@ -452,13 +452,26 @@ public sealed class ListTab : MonoBehaviour
     if (tabs == null) return;
 
     HashSet<int> ids = new HashSet<int>();
-    HashSet<ModuleViewKey> viewKeys = new HashSet<ModuleViewKey>();
+    // 页签局部去重，不让 UIManager 的私有缓存键泄漏到 UI 组件。
+    Dictionary<ModuleName, HashSet<Enum>> moduleViewTypes =
+      new Dictionary<ModuleName, HashSet<Enum>>();
     for (int i = 0; i < tabs.Count; i++)
     {
       ListTabItemData tab = tabs[i];
       if (tab == null) throw new ArgumentException($"Tab data at index {i} is null.", nameof(tabs));
       if (!ids.Add(tab.Id)) throw new ArgumentException($"Duplicate tab id: {tab.Id}.", nameof(tabs));
-      if (!viewKeys.Add(new ModuleViewKey(tab.ModuleName, tab.ViewType)))
+      if (tab.ModuleName == ModuleName.None)
+        throw new ArgumentException($"Tab at index {i} has no module.", nameof(tabs));
+      if (tab.ViewType == null)
+        throw new ArgumentException($"Tab at index {i} has no ViewType.", nameof(tabs));
+
+      if (!moduleViewTypes.TryGetValue(tab.ModuleName, out HashSet<Enum> viewTypes))
+      {
+        viewTypes = new HashSet<Enum>();
+        moduleViewTypes.Add(tab.ModuleName, viewTypes);
+      }
+
+      if (!viewTypes.Add(tab.ViewType))
         throw new ArgumentException($"Presenter target is assigned to more than one tab: {tab.ModuleName}.{tab.ViewType}.", nameof(tabs));
     }
   }

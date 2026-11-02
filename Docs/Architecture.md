@@ -163,7 +163,7 @@ ModuleManager
 - 禁止形成循环依赖。
 
 Presenter 采用定义于 `Assets/Scripts/Define/ViewType.cs` 的模块 ViewType 映射：模块在 `OnInit` 中通过
-`RegPresenter<TPresenter>(viewType)` 登记 ViewType 与 Presenter 的一一对应关系，调用方统一 `await OpenWindow<TPresenter>(viewType, args)` 打开界面。该方法始终返回 Task；`UIManager` 内部决定复用缓存或异步加载 Prefab，调用方不需要选择同步/异步接口。Presenter 的 `Layer` 与 `PrefabPath` 属性分别决定 UI 层级和传给 `AssetLoader` 的资源键，默认层级是 `Window`；特殊界面由具体 Presenter 重写，注册或打开接口不再传入层级和资源键。一个 Presenter 类型应只归属一个 Module，并只绑定一个 ViewType；`BaseModule` 负责本模块内的重复注册校验。`BaseModule` 与 `UIManager` 统一以 `ModuleViewKey`（`ModuleName + ViewType`）作为 Presenter 缓存身份。ViewType 命名采用 `模块名ViewType`，例如 `SurvivorViewType` 与 `MiscViewType`。
+`RegPresenter<TPresenter>(viewType)` 登记 ViewType 与 Presenter 的一一对应关系，调用方统一 `await OpenWindow<TPresenter>(viewType, args)` 打开界面。该方法始终返回 Task；`UIManager` 内部决定复用缓存或异步加载 Prefab，调用方不需要选择同步/异步接口。Presenter 的 `Layer` 与 `PrefabPath` 属性分别决定 UI 层级和传给 `AssetLoader` 的资源键，默认层级是 `Window`；特殊界面由具体 Presenter 重写，注册或打开接口不再传入层级和资源键。一个 Presenter 类型应只归属一个 Module，并只绑定一个 ViewType；`BaseModule` 负责本模块内的重复注册校验。Presenter 缓存身份由 `UIManager` 内部使用模块名与 ViewType 组合生成，组合键不属于共享 ViewType 定义或业务 API。ViewType 命名采用 `模块名ViewType`，例如 `SurvivorViewType` 与 `MiscViewType`。
 已打开的 Presenter 仅可通过 `GetPresenter(viewType)` 按 ViewType 查询，不提供按 Presenter 类型查询的 Module API。
 
 ### Proxy
