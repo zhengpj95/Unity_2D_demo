@@ -2,7 +2,7 @@
 
 本目录封装 Unity 客户端的 WebSocket 连接、Packet/Protobuf 编解码和消息分发。传输层不依赖 UI；业务协议由 Proxy/Module 接收后再更新状态或派发业务事件。
 
-`GameMgr.EnableSocketConnection` 当前为开发期代码开关且处于启用状态，客户端启动时会主动连接 `ws://localhost:3000`；本地服务端未启动时会进入既有的失败与重连流程。
+`GameMgr.EnableSocketConnection` 只控制 `GameMgr.Start` 是否自动连接 `ws://localhost:3000`；关闭时跳过启动自动连接。显式调用 `NetworkMgr.Connect`（例如 Launcher 场景的连接测试按钮）仍会发起连接。服务端不可用时会进入既有失败与重连流程。
 
 ## 数据流
 

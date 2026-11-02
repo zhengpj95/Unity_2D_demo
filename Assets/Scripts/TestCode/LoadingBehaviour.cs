@@ -178,6 +178,7 @@ public class LoadingBehaviour : MonoBehaviour
   /// <summary>按钮测试入口：连接本机 3000 端口的 WebSocket 服务，供协议收发测试使用。</summary>
   public async void OnConnectProtobuf()
   {
+    Debug.Log("[LoadingBehaviour] Manual WebSocket connection requested.", this);
     await NetworkMgr.Instance.Connect("ws://localhost:3000");
   }
 
