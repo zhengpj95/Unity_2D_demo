@@ -3,8 +3,63 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// 提供 Unity 创建菜单中的快捷对象和预制体操作。
+/// </summary>
 public class UICreateObjectMenu
 {
+  /// <summary>
+  /// 在 Project 窗口当前目录创建仅包含 RectTransform 的空 UI 根对象预制体。
+  /// </summary>
+  [MenuItem("Assets/Create/New Prefab %#p", false, 1)]
+  private static void CreatePrefabAsset(MenuCommand menuCommand)
+  {
+    var folderPath = GetSelectedAssetFolder(menuCommand);
+    if (string.IsNullOrEmpty(folderPath))
+    {
+      Debug.LogError("创建预制体失败：无法确定 Assets 下的有效目标文件夹。");
+      return;
+    }
+
+    var prefabPath = AssetDatabase.GenerateUniqueAssetPath($"{folderPath}/New Prefab.prefab");
+    var temporaryObject = new GameObject("New Prefab", typeof(RectTransform), typeof(CanvasRenderer));
+    temporaryObject.layer = LayerMask.NameToLayer("UI");
+    try
+    {
+      var prefab = PrefabUtility.SaveAsPrefabAsset(temporaryObject, prefabPath, out var success);
+      if (!success || prefab == null)
+      {
+        Debug.LogError($"创建预制体失败：无法将空 UI 根对象保存到“{prefabPath}”。");
+        return;
+      }
+
+      Selection.activeObject = prefab;
+      EditorGUIUtility.PingObject(prefab);
+    }
+    finally
+    {
+      Object.DestroyImmediate(temporaryObject);
+    }
+  }
+
+  private static string GetSelectedAssetFolder(MenuCommand menuCommand)
+  {
+    var selected = menuCommand.context as Object ?? Selection.activeObject;
+    var selectedPath = AssetDatabase.GetAssetPath(selected);
+    if (string.IsNullOrEmpty(selectedPath))
+      selectedPath = "Assets";
+
+    if (AssetDatabase.IsValidFolder(selectedPath))
+      return selectedPath.StartsWith("Assets") ? selectedPath : string.Empty;
+
+    var separatorIndex = selectedPath.LastIndexOf('/');
+    if (separatorIndex < 0)
+      return "Assets";
+
+    var folderPath = selectedPath.Substring(0, separatorIndex);
+    return folderPath.StartsWith("Assets") && AssetDatabase.IsValidFolder(folderPath) ? folderPath : string.Empty;
+  }
+
   private static void ResetRectTransform(RectTransform rect)
   {
     if (rect == null)
