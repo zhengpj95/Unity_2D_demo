@@ -8,4 +8,5 @@ public enum ModuleName
   Misc = 2,
   Bag = 3,
   Survivor = 4,
+  Guide = 5,
 }
