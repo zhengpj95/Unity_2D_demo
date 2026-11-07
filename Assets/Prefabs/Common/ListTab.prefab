@@ -44,9 +44,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8342479250533385608}
-  - component: {fileID: 2278004810962779311}
   - component: {fileID: 6525981645208050349}
   - component: {fileID: 7132263389982595839}
+  - component: {fileID: 2278004810962779311}
   - component: {fileID: 8690613669383274698}
   m_Layer: 5
   m_Name: ListTab
@@ -75,42 +75,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 660, y: 66}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &2278004810962779311
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5162895409220220375}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7611369610c6423419832306bf157afd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Content: {fileID: 5879225808145271711}
-  m_Horizontal: 1
-  m_Vertical: 0
-  m_MovementType: 1
-  m_Elasticity: 0.1
-  m_Inertia: 1
-  m_DecelerationRate: 0.135
-  m_ScrollSensitivity: 1
-  m_Viewport: {fileID: 5644936143747465564}
-  m_HorizontalScrollbar: {fileID: 0}
-  m_VerticalScrollbar: {fileID: 0}
-  m_HorizontalScrollbarVisibility: 0
-  m_VerticalScrollbarVisibility: 0
-  m_HorizontalScrollbarSpacing: 0
-  m_VerticalScrollbarSpacing: 0
-  m_OnValueChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  itemTemplate: {fileID: 1034747235169936122}
-  layoutType: 1
-  spaceX: 0
-  spaceY: 0
-  repeatX: 0
-  repeatY: 0
 --- !u!222 &6525981645208050349
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -149,6 +113,42 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &2278004810962779311
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5162895409220220375}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7611369610c6423419832306bf157afd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Content: {fileID: 5879225808145271711}
+  m_Horizontal: 1
+  m_Vertical: 0
+  m_MovementType: 1
+  m_Elasticity: 0.1
+  m_Inertia: 1
+  m_DecelerationRate: 0.135
+  m_ScrollSensitivity: 1
+  m_Viewport: {fileID: 5644936143747465564}
+  m_HorizontalScrollbar: {fileID: 0}
+  m_VerticalScrollbar: {fileID: 0}
+  m_HorizontalScrollbarVisibility: 0
+  m_VerticalScrollbarVisibility: 0
+  m_HorizontalScrollbarSpacing: 0
+  m_VerticalScrollbarSpacing: 0
+  m_OnValueChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  itemTemplate: {fileID: 1034747235169936122}
+  layoutType: 1
+  spaceX: 0
+  spaceY: 0
+  repeatX: 0
+  repeatY: 0
 --- !u!114 &8690613669383274698
 MonoBehaviour:
   m_ObjectHideFlags: 0
