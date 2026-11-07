@@ -14,6 +14,8 @@ public static class EventDefine
 
   /// <summary>请求打开通用提示弹窗，数据类型为 AlertTipsPanelArgs。</summary>
   public static readonly int MISC_OPEN_ALERT = NextId();
+  /// <summary>请求打开确认弹窗，数据类型为 ConfirmPanelArgs。</summary>
+  public static readonly int MISC_OPEN_CONFIRM = NextId();
 
   /// <summary>水果分数发生变化。</summary>
   public static readonly int FROG_SCORE_CHANGED = NextId();

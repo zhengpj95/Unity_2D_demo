@@ -15,14 +15,16 @@ public class ConfirmPanelView : UIView
   public Text txt_desc;
   public Button btn_cancel;
   public Button btn_confirm;
+  public UIButton btn_close;
 
   public override void InitView()
   {
     base.InitView();
-    img_bg = transform.Find("ConfirmPanel/img_bg")?.GetComponent<Image>();
-    txt_title = transform.Find("ConfirmPanel/Image/txt_title")?.GetComponent<Text>();
-    txt_desc = transform.Find("ConfirmPanel/txt_desc")?.GetComponent<Text>();
-    btn_cancel = transform.Find("ConfirmPanel/btn_cancel")?.GetComponent<Button>();
-    btn_confirm = transform.Find("ConfirmPanel/btn_confirm")?.GetComponent<Button>();
+    img_bg = transform.Find("img_bg")?.GetComponent<Image>();
+    txt_title = transform.Find("Image/txt_title")?.GetComponent<Text>();
+    txt_desc = transform.Find("txt_desc")?.GetComponent<Text>();
+    btn_cancel = transform.Find("btn_cancel")?.GetComponent<Button>();
+    btn_confirm = transform.Find("btn_confirm")?.GetComponent<Button>();
+    btn_close = transform.Find("btn_close")?.GetComponent<UIButton>();
   }
 }

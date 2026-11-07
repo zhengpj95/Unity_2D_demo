@@ -13,7 +13,9 @@ public sealed class MiscModule : BaseModule
   {
     RegProxy<MiscProxy>();
     RegPresenter<AlertTipsPanelPresenter>(MiscViewType.AlertTips);
+    RegPresenter<ConfirmPanelPresenter>(MiscViewType.Confirm);
     RegCmd<OpenAlertTipsCmd>(EventDefine.MISC_OPEN_ALERT);
+    RegCmd<OpenConfirmCmd>(EventDefine.MISC_OPEN_CONFIRM);
 
     // 网络层只报告失败状态；通用提示与重试入口属于 Misc 业务模块。
     _networkMgr = NetworkMgr.Instance;
@@ -31,6 +33,11 @@ public sealed class MiscModule : BaseModule
   public Task<AlertTipsPanelPresenter> OpenAlert(AlertTipsPanelArgs args)
   {
     return OpenWindow<AlertTipsPanelPresenter>(MiscViewType.AlertTips, args);
+  }
+
+  public Task<ConfirmPanelPresenter> OpenConfirm(ConfirmPanelArgs args)
+  {
+    return OpenWindow<ConfirmPanelPresenter>(MiscViewType.Confirm, args);
   }
 
   /// <summary>网络重试耗尽时显示通用提示；具体 UI 决策不放入 NetworkMgr。</summary>

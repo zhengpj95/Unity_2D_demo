@@ -161,6 +161,8 @@ public class LoadingBehaviour : MonoBehaviour
   public void OnOpenAlert()
   {
     EventBus.Emit(EventDefine.MISC_OPEN_ALERT, new AlertTipsPanelArgs("警告标题", "警告信息！不允许随便修改！", null));
+
+    // EventBus.Emit(EventDefine.MISC_OPEN_CONFIRM, new ConfirmPanelArgs { title = "确认标题", desc = "确认信息！" });
   }
 
   /// <summary>按钮测试入口：异步发送固定账号 1001 的登录消息；非 Sent 结果会输出日志。</summary>

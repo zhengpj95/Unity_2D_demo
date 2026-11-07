@@ -22,6 +22,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f96ac9c3fd2aa0e43aab76e4a7888ac1
+    m_Address: Prefabs/CommonView/ConfirmPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 8a054adbc01b7bc43ae8bb7c69ea80ae, type: 2}
   m_SchemaSet:

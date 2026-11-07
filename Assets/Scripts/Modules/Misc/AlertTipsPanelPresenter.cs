@@ -29,6 +29,7 @@ public class AlertTipsPanelPresenter : BasePresenter<AlertTipsPanelView, AlertTi
     if (ViewT != null)
     {
       AddClickListener(ViewT.btn_confirm, OnConfirmClicked);
+      ViewT.btn_close.Clicked += OnCloseClicked;
     }
   }
 
@@ -43,11 +44,20 @@ public class AlertTipsPanelPresenter : BasePresenter<AlertTipsPanelView, AlertTi
   public override void OnClose()
   {
     base.OnClose();
+    if (ViewT != null)
+    {
+      ViewT.btn_close.Clicked -= OnCloseClicked;
+    }
   }
 
   public void OnConfirmClicked()
   {
     _confirmCallback?.Invoke();
+    UIManager.Instance.CloseWindow(this);
+  }
+
+  private void OnCloseClicked()
+  {
     UIManager.Instance.CloseWindow(this);
   }
 

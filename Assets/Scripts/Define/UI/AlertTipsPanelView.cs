@@ -13,12 +13,14 @@ public class AlertTipsPanelView : UIView
   public Text txt_title;
   public Text txt_desc;
   public Button btn_confirm;
+  public UIButton btn_close;
 
   public override void InitView()
   {
     base.InitView();
-    txt_title = transform.Find("UITip/AlertTipsPanel/txt_title")?.GetComponent<Text>();
-    txt_desc = transform.Find("UITip/AlertTipsPanel/txt_desc")?.GetComponent<Text>();
-    btn_confirm = transform.Find("UITip/AlertTipsPanel/btn_confirm")?.GetComponent<Button>();
+    txt_title = transform.Find("AlertTipsPanel/txt_title")?.GetComponent<Text>();
+    txt_desc = transform.Find("AlertTipsPanel/txt_desc")?.GetComponent<Text>();
+    btn_confirm = transform.Find("AlertTipsPanel/btn_confirm")?.GetComponent<Button>();
+    btn_close = transform.Find("AlertTipsPanel/btn_close")?.GetComponent<UIButton>();
   }
 }

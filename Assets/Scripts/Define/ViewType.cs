@@ -1,7 +1,8 @@
 /// <summary>Misc 模块的界面类型。</summary>
 public enum MiscViewType
 {
-  AlertTips
+  AlertTips,
+  Confirm,
 }
 
 /// <summary>Survivor 模块的界面类型。</summary>
