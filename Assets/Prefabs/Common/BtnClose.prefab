@@ -92,4 +92,4 @@ MonoBehaviour:
   pressedScale: 0.95
   smoothTime: 0.02
   enableLongPress: 0
-  longPressDuration: 0.5
+  longPressDuration: 1

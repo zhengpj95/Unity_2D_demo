@@ -15,7 +15,7 @@ public class UIButton : MonoBehaviour,
   private const float ScaleSnapSqrDistance = 0.000001f;
 
   [SerializeField, Tooltip("执行缩放的目标；为空时使用当前节点。")]
-  private Transform target;
+  private RectTransform target;
 
   [SerializeField, Range(0.5f, 1f), Tooltip("按下状态相对于初始缩放的倍率。")]
   private float pressedScale = 0.95f;
@@ -32,8 +32,8 @@ public class UIButton : MonoBehaviour,
   [SerializeField, Tooltip("是否启用长按回调。")]
   private bool enableLongPress;
 
-  [SerializeField, Min(0.1f), Tooltip("持续按住多少秒后触发长按回调。")]
-  private float longPressDuration = 0.5f;
+  [SerializeField, Min(1f), Tooltip("持续按住多少秒后触发长按回调。Min=1f")]
+  private float longPressDuration = 1f;
 
   /// <summary>
   /// 启用长按且达到阈值时触发，无参数；每次按下最多一次，并取消本次短按。
@@ -53,7 +53,7 @@ public class UIButton : MonoBehaviour,
   {
     if (target == null)
     {
-      target = transform;
+      target = (RectTransform)transform;
     }
 
     _normalScale = target.localScale;
