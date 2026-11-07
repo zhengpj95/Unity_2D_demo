@@ -28,11 +28,17 @@ public class UIAutoBinder : Editor
     new PrefixBinding("scroll", typeof(ScrollRect)),
     new PrefixBinding("input_", typeof(InputField)),
     new PrefixBinding("input", typeof(InputField)),
-    new PrefixBinding("btn_", typeof(Button)),
-    new PrefixBinding("btn", typeof(Button)),
-    // 项目 UI 文本统一使用 TMP_Text，避免生成代码依赖具体 TMP 实现。
-    new PrefixBinding("txt_", typeof(TMPro.TMP_Text)),
-    new PrefixBinding("txt", typeof(TMPro.TMP_Text)),
+    new PrefixBinding("virtualList_", typeof(VirtualList)),
+    new PrefixBinding("virtualList", typeof(VirtualList)),
+    new PrefixBinding("list_", typeof(VirtualList)),
+    new PrefixBinding("listTab_", typeof(ListTab)),
+    new PrefixBinding("listTab", typeof(ListTab)),
+    new PrefixBinding("uiButton_", typeof(UIButton)),
+    new PrefixBinding("uiButton", typeof(UIButton)),
+    new PrefixBinding("btn_", typeof(Button), typeof(UIButton)),
+    new PrefixBinding("btn", typeof(Button), typeof(UIButton)),
+    new PrefixBinding("txt_", typeof(Text), typeof(TMPro.TMP_Text)),
+    new PrefixBinding("txt", typeof(Text), typeof(TMPro.TMP_Text)),
     new PrefixBinding("img_", typeof(Image)),
     new PrefixBinding("img", typeof(Image)),
     new PrefixBinding("obj_", typeof(GameObject)),
@@ -331,19 +337,33 @@ public class UIAutoBinder : Editor
     return path;
   }
 
-  /// <summary>
-  /// 根据节点前缀确定控件类别。
-  /// 项目 UI 文本统一使用 TMP_Text，因此 txt 与 tmp 前缀都会生成 TMP 字段。
-  /// </summary>
+  /// <summary>先按节点名前缀识别绑定目标，再从节点上选择实际挂载的组件类型。</summary>
   private static bool TryGetBindType(Transform target, out Type componentType)
   {
     foreach (PrefixBinding binding in PrefixBindings)
     {
-      if (target.name.StartsWith(binding.Prefix, StringComparison.Ordinal))
+      if (!target.name.StartsWith(binding.Prefix, StringComparison.OrdinalIgnoreCase))
+        continue;
+
+      if (binding.ComponentTypes.Length == 1 && binding.ComponentTypes[0] == typeof(GameObject))
       {
-        componentType = binding.ComponentType;
+        componentType = typeof(GameObject);
         return true;
       }
+
+      foreach (Type candidateType in binding.ComponentTypes)
+      {
+        if (target.GetComponent(candidateType) != null)
+        {
+          componentType = candidateType;
+          return true;
+        }
+      }
+
+      Debug.LogWarning(
+        $"[UI AutoBinder] 节点 '{GetRelativePath(target.root, target)}' 命中前缀 '{binding.Prefix}'，但未挂载可绑定组件（{string.Join(", ", Array.ConvertAll(binding.ComponentTypes, type => type.Name))}）。",
+        target);
+      break;
     }
 
     componentType = null;
@@ -389,12 +409,12 @@ public class UIAutoBinder : Editor
   private readonly struct PrefixBinding
   {
     public readonly string Prefix;
-    public readonly Type ComponentType;
+    public readonly Type[] ComponentTypes;
 
-    public PrefixBinding(string prefix, Type componentType)
+    public PrefixBinding(string prefix, params Type[] componentTypes)
     {
       Prefix = prefix;
-      ComponentType = componentType;
+      ComponentTypes = componentTypes;
     }
   }
 
