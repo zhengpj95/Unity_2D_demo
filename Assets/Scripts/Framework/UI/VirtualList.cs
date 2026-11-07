@@ -150,7 +150,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   private readonly Dictionary<RectTransform, int> _itemNameIndices = new();
 #if UNITY_EDITOR
   private readonly List<RectTransform> _previewItems = new();
-  private Transform _previewRoot;
+  private RectTransform _previewRoot;
   private bool _validateScheduled = false;
 #endif
 
@@ -586,14 +586,29 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
   {
     if (content == null) return;
     if (_previewRoot != null) return;
+    if (PrefabUtility.IsPartOfPrefabAsset(content)) return;
 
-    var root = content.Find("__PreviewVirtualListItems");
+    var existingRoot = content.Find("__PreviewVirtualListItems");
+    var root = existingRoot as RectTransform;
     if (root == null)
     {
-      var go = new GameObject("__PreviewVirtualListItems");
+      if (existingRoot != null)
+      {
+        if (Application.isPlaying)
+          Destroy(existingRoot.gameObject);
+        else
+          DestroyImmediate(existingRoot.gameObject);
+      }
+
+      var go = new GameObject("__PreviewVirtualListItems", typeof(RectTransform));
       go.hideFlags = HideFlags.DontSave;
       go.transform.SetParent(content, false);
-      _previewRoot = go.transform;
+      _previewRoot = go.GetComponent<RectTransform>();
+      _previewRoot.anchorMin = Vector2.zero;
+      _previewRoot.anchorMax = Vector2.one;
+      _previewRoot.pivot = new Vector2(0f, 1f);
+      _previewRoot.offsetMin = Vector2.zero;
+      _previewRoot.offsetMax = Vector2.zero;
     }
     else
     {
