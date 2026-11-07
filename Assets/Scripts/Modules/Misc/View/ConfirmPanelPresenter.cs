@@ -10,7 +10,7 @@ public struct ConfirmPanelArgs
 public class ConfirmPanelPresenter : BasePresenter<ConfirmPanelView, ConfirmPanelArgs>
 {
   public override UILayerIndex Layer => UILayerIndex.Model;
-  public override string PrefabPath => "Prefabs/CommonView/ConfirmPanel";
+  public override string PrefabPath => "Prefabs/Misc/ConfirmPanel";
 
   public override void OnInit(UIView view)
   {

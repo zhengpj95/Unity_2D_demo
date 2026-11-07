@@ -18,9 +18,9 @@ public class AlertTipsPanelView : UIView
   public override void InitView()
   {
     base.InitView();
-    txt_title = transform.Find("AlertTipsPanel/txt_title")?.GetComponent<Text>();
-    txt_desc = transform.Find("AlertTipsPanel/txt_desc")?.GetComponent<Text>();
-    btn_confirm = transform.Find("AlertTipsPanel/btn_confirm")?.GetComponent<Button>();
-    btn_close = transform.Find("AlertTipsPanel/btn_close")?.GetComponent<UIButton>();
+    txt_title = transform.Find("txt_title")?.GetComponent<Text>();
+    txt_desc = transform.Find("txt_desc")?.GetComponent<Text>();
+    btn_confirm = transform.Find("btn_confirm")?.GetComponent<Button>();
+    btn_close = transform.Find("btn_close")?.GetComponent<UIButton>();
   }
 }

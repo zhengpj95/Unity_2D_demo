@@ -10,20 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
-  m_Name: CommonView
+  m_Name: Misc
   m_EditorClassIdentifier: 
-  m_GroupName: CommonView
+  m_GroupName: Misc
   m_Data:
     m_SerializedData: []
   m_GUID: f0c43247d7614a928b54e298e8bfd7d7
   m_SerializeEntries:
   - m_GUID: 468c456db59fe13418f152b664362752
-    m_Address: Prefabs/AlertTipsPanel
+    m_Address: Prefabs/Misc/AlertTipsPanel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f96ac9c3fd2aa0e43aab76e4a7888ac1
-    m_Address: Prefabs/CommonView/ConfirmPanel
+    m_Address: Prefabs/Misc/ConfirmPanel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
