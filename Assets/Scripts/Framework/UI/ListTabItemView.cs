@@ -9,6 +9,10 @@ public sealed class ListTabItemView : MonoBehaviour
   private TMP_Text nameText;
   [SerializeField, Tooltip("可选页签图标。")]
   private Image iconImage;
+  [SerializeField, Tooltip("选中时使用的亮色图标；未配置时回退到页签数据图标。")]
+  private Sprite selectedIcon;
+  [SerializeField, Tooltip("未选中时使用的图标；未配置时回退到页签数据图标。")]
+  private Sprite unselectedIcon;
   [SerializeField, Tooltip("选中时显示的背景或装饰节点。")]
   private GameObject selectedIndicator;
 
@@ -23,8 +27,9 @@ public sealed class ListTabItemView : MonoBehaviour
     if (nameText != null) nameText.text = data.Name;
     if (iconImage != null)
     {
-      iconImage.sprite = icon;
-      iconImage.enabled = icon != null;
+      Sprite stateIcon = isSelected ? selectedIcon : unselectedIcon;
+      iconImage.sprite = stateIcon != null ? stateIcon : icon;
+      iconImage.enabled = iconImage.sprite != null;
     }
     if (selectedIndicator != null) selectedIndicator.SetActive(isSelected);
   }

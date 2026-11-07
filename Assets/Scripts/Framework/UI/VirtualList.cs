@@ -508,8 +508,19 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
 
   private void CreateItems()
   {
-    // adjust existing items to match the desired visible count
-    while (_visibleItems.Count < _visibleCount)
+    // 数据量不超过可视缓存时，不保留池中无数据绑定的隐藏克隆。
+    int desiredCount = Mathf.Min(_visibleCount, Count);
+    if (Count <= _visibleCount)
+    {
+      while (_pool.Count > 0)
+      {
+        RectTransform pooledItem = _pool.Dequeue();
+        if (pooledItem != null)
+          Destroy(pooledItem.gameObject);
+      }
+    }
+
+    while (_visibleItems.Count < desiredCount)
     {
       RectTransform item = GetPooledItem();
       if (item != null)
@@ -519,11 +530,15 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
       }
     }
 
-    while (_visibleItems.Count > _visibleCount)
+    while (_visibleItems.Count > desiredCount)
     {
-      var item = _visibleItems[_visibleItems.Count - 1];
+      RectTransform item = _visibleItems[_visibleItems.Count - 1];
       _visibleItems.RemoveAt(_visibleItems.Count - 1);
-      ReleaseItemToPool(item);
+      if (item != null)
+      {
+        _itemNameIndices.Remove(item);
+        Destroy(item.gameObject);
+      }
     }
   }
 
@@ -535,6 +550,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
       if (pooled != null)
       {
         pooled.transform.SetParent(content, false);
+        PrepareItemTransform(pooled);
         return pooled;
       }
     }
@@ -542,6 +558,7 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     var item = Instantiate(itemTemplate, content, false);
     if (item != null)
     {
+      PrepareItemTransform(item);
       item.gameObject.SetActive(false);
     }
 
@@ -621,17 +638,20 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
     EnsurePreviewRoot();
     if (_previewRoot == null) return;
 
-    while (_previewItems.Count < _visibleCount)
+    // 空数据时保留编辑器布局占位预览；有数据时只创建实际需要的预览项。
+    int desiredCount = Count == 0 ? _visibleCount : Mathf.Min(_visibleCount, Count);
+    while (_previewItems.Count < desiredCount)
     {
       RectTransform item = Instantiate(itemTemplate, _previewRoot, false);
       if (item != null)
       {
+        PrepareItemTransform(item);
         item.gameObject.SetActive(false);
         _previewItems.Add(item);
       }
     }
 
-    while (_previewItems.Count > _visibleCount)
+    while (_previewItems.Count > desiredCount)
     {
       var item = _previewItems[_previewItems.Count - 1];
       _previewItems.RemoveAt(_previewItems.Count - 1);
@@ -1094,19 +1114,28 @@ public class VirtualList : ScrollRect, IPointerClickHandler, IPointerDownHandler
       // row-major: row = index / columns, col = index % columns
       int row = dataIndex / _columns;
       int col = dataIndex % _columns;
-      x = col * (_itemWidth + spaceX);
-      y = -row * (_itemHeight + spaceY);
+      x = col * (_itemWidth + spaceX) + _itemWidth * itemTransform.pivot.x;
+      y = -row * (_itemHeight + spaceY) - _itemHeight * (1f - itemTransform.pivot.y);
     }
     else
     {
       // column-major: col = index / rows, row = index % rows
       int col = dataIndex / _rows;
       int row = dataIndex % _rows;
-      x = col * (_itemWidth + spaceX);
-      y = -row * (_itemHeight + spaceY);
+      x = col * (_itemWidth + spaceX) + _itemWidth * itemTransform.pivot.x;
+      y = -row * (_itemHeight + spaceY) - _itemHeight * (1f - itemTransform.pivot.y);
     }
 
     itemTransform.anchoredPosition = new Vector2(x, y);
+  }
+
+  /// <summary>统一 Item 的锚点基准为 Content 左上角，同时保留模板 Pivot。</summary>
+  /// <param name="itemTransform">运行时或编辑器预览中的单元格。</param>
+  private static void PrepareItemTransform(RectTransform itemTransform)
+  {
+    // 布局位置按 Content 左上角计算；模板居中锚点会令 anchoredPosition 相对 Content 中心偏移。
+    itemTransform.anchorMin = new Vector2(0f, 1f);
+    itemTransform.anchorMax = new Vector2(0f, 1f);
   }
 
   /// <summary>
