@@ -5,10 +5,17 @@ public struct ConfirmPanelArgs
 {
   public string title;
   public string desc;
+  /// <summary>可选的确定回调；为空时点击确定只关闭面板。</summary>
+  public Action confirmAction;
+  /// <summary>可选的取消回调；为空时点击取消只关闭面板。</summary>
+  public Action cancelAction;
 }
 
 public class ConfirmPanelPresenter : BasePresenter<ConfirmPanelView, ConfirmPanelArgs>
 {
+  private Action _confirmCallback;
+  private Action _cancelCallback;
+
   public override UILayerIndex Layer => UILayerIndex.Model;
   public override string PrefabPath => "Prefabs/Misc/ConfirmPanel";
 
@@ -37,6 +44,8 @@ public class ConfirmPanelPresenter : BasePresenter<ConfirmPanelView, ConfirmPane
 
     ViewT.txt_title.text = args.title ?? "";
     ViewT.txt_desc.text = args.desc ?? "";
+    _confirmCallback = args.confirmAction;
+    _cancelCallback = args.cancelAction;
   }
 
   public override void OnDestroy()
@@ -47,21 +56,50 @@ public class ConfirmPanelPresenter : BasePresenter<ConfirmPanelView, ConfirmPane
     base.OnDestroy();
   }
 
+  public override void OnClose()
+  {
+    _confirmCallback = null;
+    _cancelCallback = null;
+    base.OnClose();
+  }
+
   private void OnConfirmClicked()
   {
     Debug.Log("OnConfirmClicked Triggered!");
-    Close();
+    Action confirmCallback = _confirmCallback;
+    _confirmCallback = null;
+    _cancelCallback = null;
+    try
+    {
+      confirmCallback?.Invoke();
+    }
+    finally
+    {
+      Close();
+    }
   }
 
   private void OnCancelClicked()
   {
     Debug.Log("OnCancelClicked Triggered!");
-    Close();
+    Action cancelCallback = _cancelCallback;
+    _confirmCallback = null;
+    _cancelCallback = null;
+    try
+    {
+      cancelCallback?.Invoke();
+    }
+    finally
+    {
+      Close();
+    }
   }
 
   private void OnCloseClicked()
   {
     Debug.Log("OnCloseClicked Triggered!");
+    _confirmCallback = null;
+    _cancelCallback = null;
     Close();
   }
 }
