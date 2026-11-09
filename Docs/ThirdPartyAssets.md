@@ -41,6 +41,7 @@
 | 包名                         | 当前声明                                                              | 来源                                                              |
 | ---------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------- |
 | `com.endel.nativewebsocket`  | Git 分支 `upm-2`，锁定提交 `c612a4fef60f2ae57614b73202d2d261ba56aa3e` | [endel/NativeWebSocket](https://github.com/endel/NativeWebSocket) |
+| `com.ramenvr.autopilot`      | 仓库内本地 tarball `Packages/Autopilot-Unity2022.3-fixed-v3.tgz`，manifest 声明 `file:Autopilot-Unity2022.3-fixed-v3.tgz`（相对 `Packages/` 解析），lock 中 source 为 `local-tarball` | 获取渠道与许可证待确认（包作者 RamenVR） |
 | `com.unity.addressables`     | 1.21.21                                                               | Unity Registry                                                    |
 | `com.unity.cinemachine`      | 2.10.5                                                                | Unity Registry                                                    |
 | `com.unity.collab-proxy`     | 2.10.0                                                                | Unity Registry                                                    |
@@ -56,11 +57,22 @@
 
 Unity 内置模块和上述包的间接依赖由 `Packages/packages-lock.json` 完整记录，本清单不重复展开。
 
+### 本地 tarball 依赖：`com.ramenvr.autopilot`
+
+- **文件位置**：`Packages/Autopilot-Unity2022.3-fixed-v3.tgz`，随仓库提交，任何成员 clone 后即可解析，不依赖个人机器的下载目录。
+- **声明方式**：`Packages/manifest.json` 中写 `"com.ramenvr.autopilot": "file:Autopilot-Unity2022.3-fixed-v3.tgz"`。UPM 的 `file:` 相对路径以 `Packages/` 目录为基准，因此指向同目录下的 tarball；`packages-lock.json` 中对应记录为 `source: "local-tarball"`。
+- **用途**：Editor 侧工具（代码生成/编辑器集成），不参与运行时构建，不影响包体。
+- **间接依赖**：包自身声明 `com.unity.nuget.mono-cecil` 1.11.6、`com.unity.inputsystem` 1.7.0、`com.unity.ugui` 1.0.0、`com.unity.textmeshpro` 3.0.6；实际解析结果受 manifest 中更高版本约束（inputsystem 1.14.2、textmeshpro 3.0.7）。
+- **升级方式**：用新版本 tarball 替换文件（保持文件名一致）或新增带版本号的文件名，同步修改 `manifest.json` 与 `packages-lock.json`，并更新本节的版本、校验值和获取记录。
+- **SHA256**：待补充（执行 `Get-FileHash "Packages/Autopilot-Unity2022.3-fixed-v3.tgz" -Algorithm SHA256` 后记录，用于确认仓库中的 tgz 与验证过的 fixed-v3 是同一份文件）。
+- **包内元数据**：tarball 内 `package.json` 的版本号与 `LICENSE` 尚待确认；`fixed-v3` 是外部打过 Unity 2022.3 兼容补丁的构建，需保留原始获取记录以便追溯补丁内容。
+
 ## 当前需要补齐的来源
 
 1. 确认 Tiny Swords 的实际获取渠道并保存对应凭证。
 2. 为 xLua、Google.Protobuf 和 Unsafe DLL 补充与当前版本匹配的许可证及来源记录。
 3. 追溯 `TopDown_Shooter`、零散美术、音频、字体和 Shader 的来源。
 4. 根据 `Goblin/credits.txt` 与 `GreenPig/credits.txt` 整理最终发行所需的署名文本。
+5. 确认 `com.ramenvr.autopilot` 的原始获取渠道、包内版本号和许可证，记录 tarball 的 SHA256，并保存解压后的 `LICENSE`（如有）。
 
-最后核对日期：2026-09-13。
+最后核对日期：2026-11-09。

@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "com.endel.nativewebsocket": "https://github.com/endel/NativeWebSocket.git#upm-2",
+    "com.ramenvr.autopilot": "file:Autopilot-Unity2022.3-fixed-v3.tgz",
     "com.unity.addressables": "1.21.21",
     "com.unity.cinemachine": "2.10.5",
     "com.unity.collab-proxy": "2.10.0",

@@ -7,6 +7,17 @@
       "dependencies": {},
       "hash": "c612a4fef60f2ae57614b73202d2d261ba56aa3e"
     },
+    "com.ramenvr.autopilot": {
+      "version": "file:Autopilot-Unity2022.3-fixed-v3.tgz",
+      "depth": 0,
+      "source": "local-tarball",
+      "dependencies": {
+        "com.unity.nuget.mono-cecil": "1.11.6",
+        "com.unity.inputsystem": "1.7.0",
+        "com.unity.ugui": "1.0.0",
+        "com.unity.textmeshpro": "3.0.6"
+      }
+    },
     "com.unity.2d.animation": {
       "version": "9.2.0",
       "depth": 1,
@@ -205,6 +216,13 @@
     "com.unity.mathematics": {
       "version": "1.2.6",
       "depth": 2,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.cn"
+    },
+    "com.unity.nuget.mono-cecil": {
+      "version": "1.11.6",
+      "depth": 1,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.cn"
