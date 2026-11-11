@@ -12,5 +12,5 @@ public sealed class GuideConfig : ScriptableObject
   public string GuideName;
 
   /// <summary>按 Inspector 顺序执行的步骤列表。</summary>
-  public List<GuideStepData> Steps = new();
+  public List<GuideStepConfig> Steps = new();
 }

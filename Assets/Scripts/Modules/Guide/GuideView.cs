@@ -154,7 +154,7 @@ public sealed class GuideView : MonoBehaviour
     return false;
   }
 
-  private void OnStepChanged(GuideStepData step, int index, int total)
+  private void OnStepChanged(GuideStepConfig step, int index, int total)
   {
     if (step == null || index < 0 || total <= index)
     {
@@ -205,7 +205,7 @@ public sealed class GuideView : MonoBehaviour
     }
   }
 
-  private bool ShowTarget(GuideStepData step)
+  private bool ShowTarget(GuideStepConfig step)
   {
     if (_canvasRect == null)
     {
@@ -231,7 +231,7 @@ public sealed class GuideView : MonoBehaviour
     return ShowStepVisuals(step);
   }
 
-  private bool ShowStepVisuals(GuideStepData step)
+  private bool ShowStepVisuals(GuideStepConfig step)
   {
     _showMask = step.ShowMask;
     _showCursor = step.ShowCursor;

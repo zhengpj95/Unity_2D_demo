@@ -17,7 +17,7 @@ public sealed class GuideRunner
   public int CurrentIndex => _currentIndex;
 
   /// <summary>当前步骤；配置或索引无效时为 null。</summary>
-  public GuideStepData CurrentStep =>
+  public GuideStepConfig CurrentStep =>
     _config != null
     && _config.Steps != null
     && _currentIndex >= 0
@@ -26,7 +26,7 @@ public sealed class GuideRunner
       : null;
 
   /// <summary>步骤变化通知，参数依次为步骤数据、零起始索引和步骤总数。</summary>
-  public event Action<GuideStepData, int, int> OnStepChanged;
+  public event Action<GuideStepConfig, int, int> OnStepChanged;
 
   /// <summary>状态变化通知。</summary>
   public event Action<GuideState> OnStateChanged;
@@ -97,7 +97,7 @@ public sealed class GuideRunner
       return false;
 
     HashSet<int> stepIds = new HashSet<int>();
-    foreach (GuideStepData step in config.Steps)
+    foreach (GuideStepConfig step in config.Steps)
     {
       if (step == null
           || !stepIds.Add(step.StepId)
