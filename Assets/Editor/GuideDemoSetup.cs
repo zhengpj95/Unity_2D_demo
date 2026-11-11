@@ -11,6 +11,7 @@ using UnityEngine.UI;
 public static class GuideDemoSetup
 {
   private const string ConfigPath = "Assets/Configs/Guide/Guide_001.asset";
+  private const string CursorPrefabPath = "Assets/Prefabs/Common/GuideCursor.prefab";
   private const string ScenePath = "Assets/Scenes/GuideDemo.unity";
 
   [MenuItem("Tools/Guide/Create Guide Demo Scene")]
@@ -23,6 +24,13 @@ public static class GuideDemoSetup
       return;
     }
 
+    GameObject cursorPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(CursorPrefabPath);
+    if (cursorPrefab == null)
+    {
+      Debug.LogError($"[GuideDemoSetup] GuideCursor gesture Prefab is missing: {CursorPrefabPath}");
+      return;
+    }
+
     TMP_FontAsset font = TMP_Settings.defaultFontAsset;
     if (font == null)
       throw new InvalidOperationException("[GuideDemoSetup] TextMeshPro default font asset is missing.");
@@ -31,7 +39,7 @@ public static class GuideDemoSetup
     new GameObject("GameMgr").AddComponent<GameMgr>();
     CreateMainCamera();
     CreateEventSystem();
-    CreateGuideCanvas(font, config);
+    CreateGuideCanvas(font, config, cursorPrefab);
 
     if (!EditorSceneManager.SaveScene(scene, ScenePath))
       throw new InvalidOperationException($"[GuideDemoSetup] Failed to save scene: {ScenePath}");
@@ -63,7 +71,7 @@ public static class GuideDemoSetup
     eventSystem.transform.SetAsLastSibling();
   }
 
-  private static void CreateGuideCanvas(TMP_FontAsset font, GuideConfig config)
+  private static void CreateGuideCanvas(TMP_FontAsset font, GuideConfig config, GameObject cursorPrefab)
   {
     GameObject canvasObject = new GameObject(
       "GuideCanvas",
@@ -109,6 +117,8 @@ public static class GuideDemoSetup
     buttonImage.color = new Color(0.16f, 0.48f, 0.78f, 1f);
     Button button = buttonObject.AddComponent<Button>();
     button.targetGraphic = buttonImage;
+    GuideCursor cursor = buttonObject.AddComponent<GuideCursor>();
+    cursor.SetTargetId("NextButton");
 
     TextMeshProUGUI buttonText = CreateText("ButtonText", buttonObject.transform, font, 22f, TextAlignmentOptions.Center);
     SetRect(buttonText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
@@ -120,8 +130,7 @@ public static class GuideDemoSetup
     SetObjectReference(view, "titleText", title);
     SetObjectReference(view, "contentText", body);
     SetObjectReference(view, "stepText", progress);
-    SetObjectReference(view, "nextButton", button);
-    SetObjectReference(view, "nextButtonText", buttonText);
+    SetObjectReference(view, "cursorPrefab", cursorPrefab);
 
     GuideDemoBootstrap bootstrap = canvasObject.GetComponent<GuideDemoBootstrap>();
     SetObjectReference(bootstrap, "guideView", view);

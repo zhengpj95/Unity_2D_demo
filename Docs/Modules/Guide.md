@@ -6,7 +6,7 @@
 
 系统主要用于 MMO、RPG 游戏的新手引导，也需要具备后续扩展到其他游戏类型的能力。
 
-本阶段只实现基础引导流程，不实现复杂的目标高亮、遮罩镂空、游戏操作检测等功能。
+当前实现支持按步骤点击 UI 目标推进、目标区域镂空遮罩和可选点击手势；复杂游戏操作检测仍不在范围内。
 
 ### 核心目标
 
@@ -16,7 +16,7 @@
 4. 使用 GuideView 展示引导 UI。
 5. 支持开始、下一步、暂停、恢复、停止和完成。
 6. 引导流程与 UI 展示解耦。
-7. 为后续目标注册、事件驱动、输入控制等功能预留扩展能力。
+7. 通过场景中的 GuideCursor 注册 UI 点击目标，并允许每一步独立显示遮罩和手势。
 
 ---
 
@@ -183,6 +183,12 @@ public class GuideStepData
 
     [TextArea(2, 5)]
     public string Content;
+
+    public string TargetId;
+
+    public bool ShowMask = true;
+
+    public bool ShowCursor = true;
 }
 ```
 
@@ -191,6 +197,9 @@ public class GuideStepData
 StepId 是业务标识，不是数组索引。
 
 不要要求 StepId 必须连续。
+
+每一步必须配置非空 TargetId，且场景中必须存在唯一匹配的 GuideCursor。
+ShowMask 与 ShowCursor 分别控制遮罩和手势；Content 非空时显示在目标/手势附近，空内容时不显示气泡。
 
 ---
 
@@ -233,14 +242,23 @@ Steps:
     StepId: 1
     Title: 欢迎进入游戏
     Content: 欢迎来到冒险世界！
+    TargetId: NextButton
+    ShowMask: true
+    ShowCursor: true
 
     StepId: 2
     Title: 学习移动
     Content: 使用移动摇杆控制角色移动。
+    TargetId: MoveStick
+    ShowMask: true
+    ShowCursor: true
 
     StepId: 3
     Title: 学习背包
     Content: 点击背包，查看你的装备。
+    TargetId: Backpack
+    ShowMask: true
+    ShowCursor: true
 ```
 
 ---
@@ -443,11 +461,14 @@ Canvas
         ├── TitleText
         ├── ContentText
         ├── StepText
-        └── NextButton
-            └── Text
+        └── (可选) 作为引导目标的 UI 控件
+└── GuideInteractionOverlay (运行时创建)
+    ├── 遮罩
+    ├── GuideCursorGesture
+    └── GuideContentBubble (Content 非空时显示)
 ```
 
-使用 TextMeshProUGUI 和 Unity UI Button。
+GuideCursor 可添加到带 UI Graphic 的目标对象，不要求目标使用 Unity Button。GuideContentBubble 由 GuideView 运行时创建；ContentText 被临时移入气泡，销毁 GuideView 时恢复原父级与布局。
 
 ### 10.2 Inspector 字段
 
@@ -465,11 +486,16 @@ private TMP_Text contentText;
 private TMP_Text stepText;
 
 [SerializeField]
-private Button nextButton;
+private GameObject cursorPrefab;
 
 [SerializeField]
-private TMP_Text nextButtonText;
+private Vector2 cursorOffset;
+
+[SerializeField]
+private Vector2 contentOffset;
 ```
+
+GuideView 还提供遮罩颜色、高亮边距、气泡最大宽度和内边距配置。
 
 ### 10.3 绑定接口
 
@@ -496,12 +522,13 @@ Unbind 要求：
 
 OnStepChanged：
 
-- 显示 GuidePanel。
+- 按目标是否位于 GuidePanel 内决定是否显示面板。
 - 更新标题。
-- 更新引导内容。
 - 更新步骤进度。
-- 最后一步按钮显示「完成」。
-- 其他步骤按钮显示「下一步」。
+- 每一步都通过 TargetId 匹配的 GuideCursor 点击推进。
+- ShowMask 与 ShowCursor 独立控制遮罩和手势。
+- Content 非空时，在目标/手势附近显示正文气泡；空内容时隐藏气泡。
+- 遮罩镂空区域随目标 RectTransform 的布局、缩放和动画变化更新。
 
 进度显示格式：
 
@@ -515,14 +542,14 @@ OnStepChanged：
 
 | 状态      | UI 行为              |
 | --------- | -------------------- |
-| Running   | 显示面板，按钮可点击 |
-| Paused    | 保留面板，按钮禁用   |
+| Running   | 显示目标交互与配置的引导内容 |
+| Paused    | 保留说明面板并清除目标交互 |
 | None      | 隐藏面板             |
 | Completed | 隐藏面板             |
 
-### 10.6 按钮交互
+### 10.6 目标交互
 
-点击 NextButton：
+GuideCursor 标记可点击的 UI 目标，不依赖 Unity Button。目标 Graphic 必须启用 Raycast Target；也可以通过 GuideCursor 配置更精确的点击/高亮矩形。点击目标：
 
 ```csharp
 guideModule.Next();
@@ -533,8 +560,8 @@ GuideView 不直接修改 CurrentIndex。
 ### 10.7 生命周期
 
 - Awake 中初始化 UI 并隐藏面板。
-- Awake 中注册按钮监听。
-- OnDestroy 中解除事件订阅和按钮监听。
+- 运行时创建遮罩和手势层，不更改目标控件的 Button/Image 类型。
+- OnDestroy 中解除事件订阅并恢复 ContentText 的原父级与布局。
 - 防止重复 Bind 导致事件重复订阅。
 
 ---
