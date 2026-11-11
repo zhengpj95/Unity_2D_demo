@@ -73,6 +73,9 @@ public sealed class GameMgr : MonoBehaviour
     if (AssetLoader.IsCreated)
       AssetLoader.Instance.ReleaseAll();
 
+    // 兜底清空静态订阅表：各系统释放后再清理，避免未解绑的 MonoBehaviour 被跨会话强引用。
+    EventBus.OffAll();
+
     _instance = null;
   }
 

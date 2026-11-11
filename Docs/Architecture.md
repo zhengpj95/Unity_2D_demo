@@ -199,7 +199,10 @@ Command 不自行成为长期事件中心，不应承担持久化数据容器，
 - 所有监听器统一使用 `Action<EventContext>`；`EventContext.EventId` 保存事件 ID，`Data` 保存可选数据，`HasData` 直接根据 `Data != null` 判断是否存在数据，因此无参派发与显式传入 `null` 都视为无数据。
 - `Emit(eventId)` 与 `Emit(eventId, data)` 可以用于同一事件 ID，监听方通过 `HasData` 判断是否携带数据，并通过 `TryGetData<T>` 或 `GetData<T>` 读取具体类型。
 - 统一消息结构以一次 `object` 装箱换取相同事件名下的有参/无参派发能力；高频且类型固定的对象内部通知仍优先使用直接调用或强类型 C# 事件。
-- `owner` 不可为 `null`；传入 `null` 会抛出 `ArgumentNullException`，避免产生无法通过 `OffAll(owner)` 清理的订阅。
+- `owner` 不可为 `null`；传入 `null` 会记录错误日志并拒绝本次注册/解绑，不再抛出异常，避免产生无法通过 `OffAll(owner)` 清理的订阅。
+- `Emit` 派发时逐监听器隔离异常：单个监听器抛出的异常会记录事件 ID 与 owner 类型后继续派发给其他订阅者，不会中断事件链。
+- `EventContext.GetData<T>()` 在无数据或类型不匹配时记录错误日志并返回类型默认值；需要显式判断类型时使用 `TryGetData<T>()`。
+- `GameMgr.OnDestroy` 在所有系统释放后调用无参 `EventBus.OffAll()` 兜底清空静态订阅表，避免未解绑的 MonoBehaviour 被跨会话强引用。
 
 ```csharp
 // 正确：按 owner 归属注册

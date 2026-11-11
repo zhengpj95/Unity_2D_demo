@@ -16,6 +16,13 @@ namespace FrogAdventure
       EventBus.On(EventDefine.FROG_HEALTH_CHANGED, SetHeart, this);
     }
 
+    /// <summary>场景卸载或界面销毁时按 owner 解绑两个事件，避免静态订阅表持有已销毁对象。</summary>
+    private void OnDestroy()
+    {
+      EventBus.Off(EventDefine.FROG_LEVEL_CHANGED, SetLevelText, this);
+      EventBus.Off(EventDefine.FROG_HEALTH_CHANGED, SetHeart, this);
+    }
+
     private void SetLevelText(EventContext context)
     {
       RefreshLevelText();

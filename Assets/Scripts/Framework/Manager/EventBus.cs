@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 /// <summary>
 /// 统一事件消息。所有 EventBus 监听器都会收到该结构，EventId 表示事件类型，Data 保存可选数据。
@@ -37,15 +38,16 @@ public readonly struct EventContext
   }
 
   /// <summary>
-  /// 获取指定类型的事件数据；无数据或类型不匹配时抛出异常，适合参数类型固定的事件。
+  /// 获取指定类型的事件数据；无数据或类型不匹配时记录错误日志并返回类型默认值，适合参数类型固定的事件。
   /// </summary>
   public T GetData<T>()
   {
     if (TryGetData(out T data)) return data;
 
+    // 类型不匹配属于调用方约定错误：记录事件 ID 与期望/实际类型，返回默认值而不中断事件派发。
     string actualType = Data == null ? "null" : Data.GetType().Name;
-    throw new InvalidCastException(
-      $"Event '{EventId}' data type mismatch. Expected: {typeof(T).Name}, Actual: {actualType}.");
+    Debug.LogError($"[EventBus] 事件 {EventId} 的数据类型不匹配，期望 {typeof(T).Name}，实际 {actualType}，返回默认值。");
+    return default;
   }
 }
 
@@ -67,9 +69,14 @@ public static class EventBus
   /// </summary>
   public static void On(int eventId, Action<EventContext> listener, object owner)
   {
-    ValidateEventId(eventId);
-    ValidateOwner(owner);
-    if (listener == null) throw new ArgumentNullException(nameof(listener));
+    // 校验失败只记录日志并忽略本次操作，避免抛异常中断调用方流程或留下无法清理的订阅。
+    if (!ValidateEventId(eventId)) return;
+    if (!ValidateOwner(owner)) return;
+    if (listener == null)
+    {
+      Debug.LogError($"[EventBus] 注册事件 {eventId} 失败：监听器不能为空，本次注册已忽略。");
+      return;
+    }
 
     if (!EventTable.TryGetValue(eventId, out List<EventSubscription> subscriptions))
     {
@@ -93,8 +100,8 @@ public static class EventBus
   /// <summary>取消指定 owner 的事件监听。</summary>
   public static void Off(int eventId, Action<EventContext> listener, object owner)
   {
-    ValidateEventId(eventId);
-    ValidateOwner(owner);
+    if (!ValidateEventId(eventId)) return;
+    if (!ValidateOwner(owner)) return;
     if (!EventTable.TryGetValue(eventId, out List<EventSubscription> subscriptions)) return;
 
     for (int i = subscriptions.Count - 1; i >= 0; i--)
@@ -128,7 +135,7 @@ public static class EventBus
   /// <summary>清空指定 owner 的全部事件监听。</summary>
   public static void OffAll(object owner)
   {
-    ValidateOwner(owner);
+    if (!ValidateOwner(owner)) return;
 
     List<int> emptyEventIds = null;
     foreach (KeyValuePair<int, List<EventSubscription>> pair in EventTable)
@@ -144,24 +151,55 @@ public static class EventBus
     foreach (int eventId in emptyEventIds) EventTable.Remove(eventId);
   }
 
+  /// <summary>同步派发事件；单个监听器异常只记录日志，不影响同事件的其他订阅者。</summary>
   private static void Dispatch(EventContext message)
   {
-    ValidateEventId(message.EventId);
+    if (!ValidateEventId(message.EventId)) return;
     if (!EventTable.TryGetValue(message.EventId, out List<EventSubscription> subscriptions)) return;
 
     EventSubscription[] snapshot = subscriptions.ToArray();
     foreach (EventSubscription subscription in snapshot)
-      subscription.Handler.Invoke(message);
+    {
+      Action<EventContext> handler = subscription.Handler;
+      if (handler == null)
+      {
+        Debug.LogError($"[EventBus] 派发事件 {message.EventId} 时发现空监听器，Owner={GetOwnerName(subscription.Owner)}。");
+        continue;
+      }
+
+      try
+      {
+        handler.Invoke(message);
+      }
+      catch (Exception exception)
+      {
+        // 监听器可能来自已销毁对象或业务代码异常；隔离后继续派发，日志记录归属便于定位泄漏。
+        Debug.LogError($"[EventBus] 派发事件 {message.EventId} 的监听器异常，Owner={GetOwnerName(subscription.Owner)}，Error={exception}");
+      }
+    }
   }
 
-  private static void ValidateEventId(int eventId)
+  /// <summary>校验事件 ID；非法时记录日志并返回 false，由调用方终止本次操作。</summary>
+  private static bool ValidateEventId(int eventId)
   {
-    if (eventId <= 0)
-      throw new ArgumentOutOfRangeException(nameof(eventId), eventId, "Event ID must be greater than zero.");
+    if (eventId > 0) return true;
+
+    Debug.LogError($"[EventBus] 非法事件 ID：{eventId}，事件 ID 必须大于 0，本次操作已忽略。");
+    return false;
   }
 
-  private static void ValidateOwner(object owner)
+  /// <summary>校验订阅归属；owner 为空时记录日志并返回 false，避免产生无法按 owner 清理的订阅。</summary>
+  private static bool ValidateOwner(object owner)
   {
-    if (owner == null) throw new ArgumentNullException(nameof(owner));
+    if (owner != null) return true;
+
+    Debug.LogError("[EventBus] 事件订阅归属 owner 不能为空，本次操作已忽略。");
+    return false;
+  }
+
+  /// <summary>取订阅归属的类型名；避免对已销毁的 Unity 对象调用 ToString() 触发二次异常。</summary>
+  private static string GetOwnerName(object owner)
+  {
+    return owner == null ? "null" : owner.GetType().Name;
   }
 }
