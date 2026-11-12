@@ -12,7 +12,7 @@ public sealed class GuideView : UIView
   [SerializeField, Tooltip("手势相对于目标中心的偏移。")]
   private Vector2 cursorOffset = new Vector2(48f, -36f);
   [SerializeField, Tooltip("说明气泡相对于手势的偏移。")]
-  private Vector2 contentOffset = new Vector2(0f, 300f);
+  private Vector2 contentOffset = new Vector2(0f, 200f);
   [SerializeField, Min(80f), Tooltip("说明文本的最大宽度。")]
   private float contentMaxWidth = 320f;
   [SerializeField, Tooltip("说明文本区域的内边距。")]
