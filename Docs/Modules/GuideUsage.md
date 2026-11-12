@@ -11,16 +11,17 @@
 | `Assets/Scripts/Modules/Guide/GuideConfig.cs`   | ScriptableObject 配置；一个资源代表一套引导，包含 `GuideId`、名称和有序步骤列表。               |
 | `Assets/Scripts/Modules/Guide/GuideRunner.cs`   | 纯 C# 流程执行器；保存当前配置、状态和步骤索引，并发出步骤、状态及完成事件。                    |
 | `Assets/Scripts/Modules/Guide/GuideModule.cs`   | 由 ModuleManager 管理的统一入口；创建和释放 Runner，并提供开始、下一步、暂停、恢复和停止 API。  |
-| `Assets/Scripts/Modules/Guide/GuideView.cs`     | 显示步骤和进度；订阅 Runner 事件，按钮点击转交给 GuideModule，不判断游戏业务条件。              |
-| `Assets/Scripts/TestCode/GuideDemoBootstrap.cs` | GuideDemo 场景的示例启动器；绑定场景中的 GuideView 并启动指定配置，不是正式游戏的必需组件。     |
+| `Assets/Scripts/Modules/Guide/View/GuideView.cs` | 显示手势、说明和遮罩；步骤与目标协调由 GuidePresenter 负责。                                       |
+| `Assets/Scripts/TestCode/GuideDemoBootstrap.cs` | 按场景 Inspector 引用启动指定配置的演示组件；GuideDemo 与 Launcher 的样例入口使用。              |
 | `Assets/Editor/GuideDemoSetup.cs`               | Editor 菜单工具，用于创建/重建 GuideDemo 演示场景。                                             |
 | `Assets/Configs/Guide/Guide_001.asset`          | 三步新手入门演示配置。                                                                          |
+| `Assets/Configs/Guide/Guide_002.asset`          | Launcher 中的两步弹窗引导配置，目标为 `btnTip` 和 `btn_confirm`。                              |
 
-`Assets/Scripts/Framework/Launcher/GameMgr.cs` 在启动时注册 `GuideModule`。Guide 是独立 Module，但它的场景 View 使用显式 `Bind`，不通过 UIManager/Presenter 加载。
+`Assets/Scripts/Framework/Launcher/GameMgr.cs` 在启动时注册 `GuideModule`。`GuidePresenter` 通过 UIManager 加载 `GuidePanel`，并协调 Runner、View 和可点击目标。
 
 ## 2. 创建引导配置
 
-1. 在 Unity Project 窗口选择 **Create → Guide → Guide Config**，创建 `GuideConfig` 资源。
+1. 在 Unity Project 窗口选择 **Create → Game Data → Guide → Guide Config**，创建 `GuideConfig` 资源。
 2. 设置业务 `GuideId`（建议项目内唯一）和便于识别的 `GuideName`。
 3. 按执行顺序填写 `Steps`。每步设置不重复的 `StepId`、`Title` 和 `Content`。
 4. `StepId` 不要求连续；执行顺序由 Inspector 列表顺序决定。
@@ -61,14 +62,18 @@
 1. 等待 Unity 编译完成。
 2. 执行 **Tools → Guide → Create Guide Demo Scene**。
 3. 打开 `Assets/Scenes/GuideDemo.unity` 并进入 Play Mode。
-4. 场景中的 `GuideDemoBootstrap` 会取得 `ModuleName.Guide` 对应的 GuideModule，绑定 GuideView 并启动样例配置。
+4. 场景中的 `GuideDemoBootstrap` 会取得 `ModuleName.Guide` 对应的 GuideModule 并启动 Inspector 指定的配置；`GuidePresenter` 负责加载和显示 `GuidePanel`。
 5. 点击按钮依次切换步骤；最后一步按钮显示“完成”，再点击后进入 `Completed` 并隐藏面板。
 
 如果演示场景对象或引用缺失，检查 `GameMgr`、`EventSystem`、`Main Camera`、`GuideView` 的 Inspector 字段以及 `GuideDemoBootstrap` 上的配置引用。重新执行菜单会重建演示场景；先保存当前场景中的其他工作。
 
+### Launcher 场景中的 Guide_002
+
+`Launcher.unity` 的根对象包含 `GameMgr`，由它初始化 `GuideModule`；`UIRoot` 上的 `GuideDemoBootstrap` 引用 `Guide_002` 并在场景启动后播放样例：先点击带有 `btnTip` 目标标识的按钮打开确认弹窗，再点击弹窗中带有 `btn_confirm` 标识的按钮完成引导。确认弹窗异步实例化时，GuidePresenter 会等待对应目标启用后再显示该步骤。
+
 ### 正式游戏场景
 
-正式场景不应依赖 `GuideDemoBootstrap`。由实际拥有业务条件的 Presenter、场景控制器或玩法流程对象持有配置引用，并在条件满足时调用模块 API：
+`Launcher.unity` 当前的 `GuideDemoBootstrap` 仅用于演示 `Guide_002` 的场景启动链路。正式业务引导不应依赖它判断玩家进度；应由实际拥有业务条件的 Presenter、场景控制器或玩法流程对象持有配置引用，并在条件满足时调用模块 API：
 
 ```csharp
 private GuideModule _guideModule;

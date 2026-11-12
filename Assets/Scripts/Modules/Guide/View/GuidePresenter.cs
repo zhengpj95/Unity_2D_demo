@@ -7,6 +7,7 @@ public sealed class GuidePresenter : BasePresenter<GuideView>
   private GuideModule _guideModule;
   private GuideRunner _runner;
   private GuideCursor _activeTarget;
+  private GuideStepConfig _pendingStep;
 
   /// <summary>引导界面显示在全局 Guide 层，位于顶层。</summary>
   public override UILayerIndex Layer => UILayerIndex.Guide;
@@ -31,6 +32,7 @@ public sealed class GuidePresenter : BasePresenter<GuideView>
 
     base.OnOpen(args);
     UnbindRunner();
+    GuideCursor.TargetActivated += OnTargetActivated;
     _guideModule = module;
     _runner = module.Runner;
     _runner.OnStepChanged += OnStepChanged;
@@ -67,7 +69,10 @@ public sealed class GuidePresenter : BasePresenter<GuideView>
     UnbindTarget();
     ViewT.HideStep();
     if (state == GuideState.None || state == GuideState.Completed)
+    {
+      GuideCursor.TargetActivated -= OnTargetActivated;
       UIManager.Instance.HidePresenter(this);
+    }
   }
 
   private void ShowCurrentStep()
@@ -86,28 +91,56 @@ public sealed class GuidePresenter : BasePresenter<GuideView>
       return;
     }
 
-    GuideCursor target = FindTarget(step.TargetId);
-    if (target == null)
+    _pendingStep = step;
+    if (!TryShowPendingStep())
     {
       ViewT.HideStep();
-      return;
+      Debug.Log($"[GuidePresenter] Waiting for target '{step.TargetId}' to become active.", ViewT);
     }
+  }
 
+  private bool TryShowPendingStep()
+  {
+    if (_pendingStep == null)
+      return false;
+
+    GuideStepConfig step = _pendingStep;
+    GuideCursor target = FindTarget(step.TargetId, false);
+    if (target == null)
+      return false;
+
+    _pendingStep = null;
     if (!target.HasRaycastableGraphic)
     {
       Debug.LogError($"[GuidePresenter] Target '{step.TargetId}' has no enabled raycastable UI Graphic.", target);
       ViewT.HideStep();
-      return;
+      return true;
     }
 
     if (!ViewT.ShowStep(step, target))
-      return;
+      return true;
 
     _activeTarget = target;
     _activeTarget.Clicked += OnTargetClicked;
+    return true;
   }
 
-  private GuideCursor FindTarget(string targetId)
+  private void OnTargetActivated(GuideCursor target)
+  {
+    if (_runner == null
+        || _runner.State != GuideState.Running
+        || _pendingStep == null
+        || target == null
+        || !target.isActiveAndEnabled
+        || target.TargetId != _pendingStep.TargetId)
+    {
+      return;
+    }
+
+    TryShowPendingStep();
+  }
+
+  private GuideCursor FindTarget(string targetId, bool logMissing = true)
   {
     GuideCursor found = null;
     GuideCursor[] targets = UnityEngine.Object.FindObjectsOfType<GuideCursor>(true);
@@ -125,7 +158,7 @@ public sealed class GuidePresenter : BasePresenter<GuideView>
       found = target;
     }
 
-    if (found == null)
+    if (found == null && logMissing)
       Debug.LogError($"[GuidePresenter] No active GuideCursor matches target ID '{targetId}'.", ViewT);
 
     return found;
@@ -139,6 +172,7 @@ public sealed class GuidePresenter : BasePresenter<GuideView>
 
   private void UnbindTarget()
   {
+    _pendingStep = null;
     if (_activeTarget != null)
       _activeTarget.Clicked -= OnTargetClicked;
 
@@ -148,6 +182,7 @@ public sealed class GuidePresenter : BasePresenter<GuideView>
   private void UnbindRunner()
   {
     UnbindTarget();
+    GuideCursor.TargetActivated -= OnTargetActivated;
     if (_runner != null)
     {
       _runner.OnStepChanged -= OnStepChanged;

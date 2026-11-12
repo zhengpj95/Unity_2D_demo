@@ -9,6 +9,8 @@ using UnityEngine.UI;
 [RequireComponent(typeof(RectTransform))]
 public sealed class GuideCursor : MonoBehaviour, IPointerClickHandler
 {
+  internal static event Action<GuideCursor> TargetActivated;
+
   [SerializeField, Tooltip("与 GuideStepConfig.TargetId 一致的目标标识。")]
   private string targetId;
   [SerializeField, Tooltip("可选的精确点击/高亮矩形；留空时自动使用所有 Raycast Target Graphic 的矩形并集。")]
@@ -104,6 +106,11 @@ public sealed class GuideCursor : MonoBehaviour, IPointerClickHandler
   private void Awake()
   {
     RefreshGraphics();
+  }
+
+  private void OnEnable()
+  {
+    TargetActivated?.Invoke(this);
   }
 
   private void OnTransformChildrenChanged()
