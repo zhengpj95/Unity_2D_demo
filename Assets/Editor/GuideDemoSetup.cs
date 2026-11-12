@@ -3,7 +3,6 @@ using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -11,7 +10,6 @@ using UnityEngine.UI;
 public static class GuideDemoSetup
 {
   private const string ConfigPath = "Assets/Configs/Guide/Guide_001.asset";
-  private const string CursorPrefabPath = "Assets/Prefabs/Common/GuideCursor.prefab";
   private const string ScenePath = "Assets/Scenes/GuideDemo.unity";
 
   [MenuItem("Tools/Guide/Create Guide Demo Scene")]
@@ -24,13 +22,6 @@ public static class GuideDemoSetup
       return;
     }
 
-    GameObject cursorPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(CursorPrefabPath);
-    if (cursorPrefab == null)
-    {
-      Debug.LogError($"[GuideDemoSetup] GuideCursor gesture Prefab is missing: {CursorPrefabPath}");
-      return;
-    }
-
     TMP_FontAsset font = TMP_Settings.defaultFontAsset;
     if (font == null)
       throw new InvalidOperationException("[GuideDemoSetup] TextMeshPro default font asset is missing.");
@@ -38,8 +29,7 @@ public static class GuideDemoSetup
     Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
     new GameObject("GameMgr").AddComponent<GameMgr>();
     CreateMainCamera();
-    CreateEventSystem();
-    CreateGuideCanvas(font, config, cursorPrefab);
+    CreateGuideCanvas(font, config);
 
     if (!EditorSceneManager.SaveScene(scene, ScenePath))
       throw new InvalidOperationException($"[GuideDemoSetup] Failed to save scene: {ScenePath}");
@@ -62,23 +52,15 @@ public static class GuideDemoSetup
     camera.backgroundColor = new Color(0.192f, 0.302f, 0.475f, 0f);
   }
 
-  private static void CreateEventSystem()
-  {
-    GameObject eventSystem = new GameObject(
-      "EventSystem",
-      typeof(EventSystem),
-      typeof(StandaloneInputModule));
-    eventSystem.transform.SetAsLastSibling();
-  }
-
-  private static void CreateGuideCanvas(TMP_FontAsset font, GuideConfig config, GameObject cursorPrefab)
+  private static void CreateGuideCanvas(TMP_FontAsset font, GuideConfig config)
   {
     GameObject canvasObject = new GameObject(
-      "GuideCanvas",
+      "UIRoot",
       typeof(RectTransform),
       typeof(Canvas),
       typeof(CanvasScaler),
       typeof(GraphicRaycaster),
+      typeof(UILauncher),
       typeof(GuideDemoBootstrap));
 
     Canvas canvas = canvasObject.GetComponent<Canvas>();
@@ -89,30 +71,13 @@ public static class GuideDemoSetup
     scaler.referenceResolution = new Vector2(1280f, 720f);
     scaler.matchWidthOrHeight = 0.5f;
 
-    GameObject panel = CreateRectObject("GuidePanel", canvasObject.transform);
-    SetRect(panel.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(650f, 360f));
+    Transform mainLayer = CreateLayer("MainLayer", canvasObject.transform);
+    Transform windowLayer = CreateLayer("WindowLayer", canvasObject.transform);
+    Transform modelLayer = CreateLayer("ModelLayer", canvasObject.transform);
+    Transform tipLayer = CreateLayer("TipLayer", canvasObject.transform);
 
-    GameObject background = CreateRectObject("Background", panel.transform);
-    SetRect(background.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-    Image backgroundImage = background.AddComponent<Image>();
-    backgroundImage.color = new Color(0.07f, 0.1f, 0.15f, 0.96f);
-    backgroundImage.raycastTarget = true;
-
-    GameObject content = CreateRectObject("Content", panel.transform);
-    SetRect(content.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, Vector2.zero, new Vector2(-48f, -40f));
-
-    TextMeshProUGUI title = CreateText("TitleText", content.transform, font, 32f, TextAlignmentOptions.Center);
-    SetRect(title.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0f, -28f), new Vector2(-20f, 54f), new Vector2(0.5f, 1f));
-
-    TextMeshProUGUI body = CreateText("ContentText", content.transform, font, 24f, TextAlignmentOptions.TopLeft);
-    SetRect(body.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0f, -100f), new Vector2(-24f, 132f), new Vector2(0.5f, 1f));
-    body.enableWordWrapping = true;
-
-    TextMeshProUGUI progress = CreateText("StepText", content.transform, font, 20f, TextAlignmentOptions.Center);
-    SetRect(progress.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 82f), new Vector2(160f, 36f));
-
-    GameObject buttonObject = CreateRectObject("NextButton", content.transform);
-    SetRect(buttonObject.GetComponent<RectTransform>(), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 28f), new Vector2(180f, 58f));
+    GameObject buttonObject = CreateRectObject("NextButton", mainLayer);
+    SetRect(buttonObject.GetComponent<RectTransform>(), new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f), Vector2.zero, new Vector2(180f, 58f));
     Image buttonImage = buttonObject.AddComponent<Image>();
     buttonImage.color = new Color(0.16f, 0.48f, 0.78f, 1f);
     Button button = buttonObject.AddComponent<Button>();
@@ -122,19 +87,24 @@ public static class GuideDemoSetup
 
     TextMeshProUGUI buttonText = CreateText("ButtonText", buttonObject.transform, font, 22f, TextAlignmentOptions.Center);
     SetRect(buttonText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-    buttonText.text = "下一步";
+    buttonText.text = "继续";
     buttonText.raycastTarget = false;
 
-    GuideView view = panel.AddComponent<GuideView>();
-    SetObjectReference(view, "panel", panel);
-    SetObjectReference(view, "titleText", title);
-    SetObjectReference(view, "contentText", body);
-    SetObjectReference(view, "stepText", progress);
-    SetObjectReference(view, "cursorPrefab", cursorPrefab);
+    UILauncher launcher = canvasObject.GetComponent<UILauncher>();
+    SetObjectReference(launcher, "_mainLayer", mainLayer);
+    SetObjectReference(launcher, "_windowLayer", windowLayer);
+    SetObjectReference(launcher, "_modelLayer", modelLayer);
+    SetObjectReference(launcher, "_tipLayer", tipLayer);
 
     GuideDemoBootstrap bootstrap = canvasObject.GetComponent<GuideDemoBootstrap>();
-    SetObjectReference(bootstrap, "guideView", view);
     SetObjectReference(bootstrap, "guideConfig", config);
+  }
+
+  private static Transform CreateLayer(string layerName, Transform parent)
+  {
+    GameObject layer = CreateRectObject(layerName, parent);
+    SetRect(layer.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+    return layer.transform;
   }
 
   private static TextMeshProUGUI CreateText(

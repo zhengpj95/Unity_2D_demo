@@ -1,16 +1,15 @@
 using UnityEngine;
 
-/// <summary>GuideDemo 场景入口；绑定 GuideView 并启动 Inspector 指定的样例配置。</summary>
+/// <summary>GuideDemo 场景入口；通过 GuideModule 打开 Presenter 并启动样例配置。</summary>
 public sealed class GuideDemoBootstrap : MonoBehaviour
 {
-  [SerializeField] private GuideView guideView;
   [SerializeField] private GuideConfig guideConfig;
 
-  private void Start()
+  private async void Start()
   {
-    if (guideView == null || guideConfig == null)
+    if (guideConfig == null)
     {
-      Debug.LogError("[GuideDemoBootstrap] Assign GuideView and GuideConfig in the scene.", this);
+      Debug.LogError("[GuideDemoBootstrap] Assign GuideConfig in the scene.", this);
       return;
     }
 
@@ -27,17 +26,7 @@ public sealed class GuideDemoBootstrap : MonoBehaviour
       return;
     }
 
-    guideView.Bind(guideModule);
-    if (!guideModule.StartGuide(guideConfig))
-    {
-      guideView.Unbind();
-      Debug.LogError("[GuideDemoBootstrap] The sample GuideConfig is invalid.", this);
-    }
-  }
-
-  private void OnDestroy()
-  {
-    if (guideView != null)
-      guideView.Unbind();
+    if (!await guideModule.StartGuide(guideConfig))
+      Debug.LogError("[GuideDemoBootstrap] Failed to start the sample guide.", this);
   }
 }

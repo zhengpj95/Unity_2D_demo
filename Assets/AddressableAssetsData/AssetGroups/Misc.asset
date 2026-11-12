@@ -27,6 +27,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8c7f8d333bb83774db3edf51f1156ad9
+    m_Address: Prefabs/Guide/GuidePanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 8a054adbc01b7bc43ae8bb7c69ea80ae, type: 2}
   m_SchemaSet:

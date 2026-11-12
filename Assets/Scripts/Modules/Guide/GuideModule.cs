@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>引导模块入口；持有并统一转发引导流程 API，不负责 UI 展示。</summary>
@@ -12,6 +13,7 @@ public sealed class GuideModule : BaseModule
   protected override void OnInit()
   {
     Runner = new GuideRunner();
+    RegPresenter<GuidePresenter>(GuideViewType.Panel);
   }
 
   protected override void OnRelease()
@@ -20,16 +22,36 @@ public sealed class GuideModule : BaseModule
     Runner = null;
   }
 
-  /// <summary>使用配置开始一套引导；配置无效时返回 false 且不会开始流程。</summary>
+  /// <summary>启动引导并异步打开其顶层 Presenter；配置或资源无效时返回 false。</summary>
   /// <param name="config">完整的引导配置。</param>
-  /// <returns>配置有效并成功开始时返回 true。</returns>
-  public bool StartGuide(GuideConfig config)
+  /// <returns>配置有效且 GuidePanel 成功打开时返回 true。</returns>
+  public async Task<bool> StartGuide(GuideConfig config)
   {
-    bool started = GetRunner().Start(config);
-    if (!started)
+    GuideRunner runner = GetRunner();
+    if (!runner.Start(config))
+    {
       Debug.LogWarning("[GuideModule] StartGuide rejected: config is null, empty, or contains invalid steps.");
+      return false;
+    }
 
-    return started;
+    bool presenterOpened = false;
+    try
+    {
+      GuidePresenter presenter = await OpenWindow<GuidePresenter>(GuideViewType.Panel, this);
+      if (presenter == null)
+      {
+        Debug.LogError("[GuideModule] Failed to open GuidePanel; the guide has been stopped.");
+        return false;
+      }
+
+      presenterOpened = true;
+      return true;
+    }
+    finally
+    {
+      if (!presenterOpened && ReferenceEquals(Runner, runner))
+        runner.Stop();
+    }
   }
 
   /// <summary>推进到下一步骤；仅 Running 状态会生效。</summary>

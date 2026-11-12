@@ -164,7 +164,7 @@ ModuleManager
 - 跨模块访问必须显式经过 `ModuleManager` 或稳定接口/事件边界；
 - 禁止形成循环依赖。
 
-`GuideModule` 是由 `GameMgr` 注册的独立业务模块，持有纯 C# `GuideRunner` 并暴露开始、推进、暂停、恢复和停止 API。场景中的 `GuideView` 显式绑定模块、订阅 Runner 事件并负责显示，不经 UIManager/Presenter 加载，也不把流程状态放入 View。
+`GuideModule` 是由 `GameMgr` 注册的独立业务模块，持有纯 C# `GuideRunner`，并登记 `GuidePresenter` 管理引导界面。开始引导时模块先启动流程，再通过 UIManager 加载 `GuidePanel` Prefab；Presenter 订阅 Runner 与目标点击，`GuideView` 只更新 Prefab 内的手势、说明和四片遮罩。引导层使用 `Tip` 层并置于该层最上方，不在场景里另行创建遮罩或气泡。
 
 Presenter 采用定义于 `Assets/Scripts/Define/ViewType.cs` 的模块 ViewType 映射：模块在 `OnInit` 中通过
 `RegPresenter<TPresenter>(viewType)` 登记 ViewType 与 Presenter 的一一对应关系，调用方统一 `await OpenWindow<TPresenter>(viewType, args)` 打开界面。该方法始终返回 Task；`UIManager` 内部决定复用缓存或异步加载 Prefab，调用方不需要选择同步/异步接口。Presenter 的 `Layer` 与 `PrefabPath` 属性分别决定 UI 层级和传给 `AssetLoader` 的资源键，默认层级是 `Window`；特殊界面由具体 Presenter 重写，注册或打开接口不再传入层级和资源键。一个 Presenter 类型应只归属一个 Module，并只绑定一个 ViewType；`BaseModule` 负责本模块内的重复注册校验。Presenter 缓存身份由 `UIManager` 内部使用模块名与 ViewType 组合生成，组合键不属于共享 ViewType 定义或业务 API。ViewType 命名采用 `模块名ViewType`，例如 `SurvivorViewType` 与 `MiscViewType`。

@@ -56,9 +56,11 @@ ModuleManager
             |
             +-- GuideRunner
             |
-            +-- GuideConfig
+            +-- GuidePresenter
+            |       |
+            |       +-- GuideView
             |
-            +-- GuideView
+            +-- GuideConfig
 ```
 
 各模块职责：
@@ -67,10 +69,11 @@ ModuleManager
 | ------------- | ---------------- | -------------------------- |
 | GuideModule   | BaseModule       | 引导模块入口，对外提供 API |
 | GuideRunner   | 普通 C#          | 管理引导执行流程           |
-| GuideConfig   | ScriptableObject | 保存一套引导配置           |
-| GuideStepData | Serializable     | 保存单个引导步骤           |
-| GuideView     | MonoBehaviour    | 展示引导 UI                |
-| GuideState    | Enum             | 定义引导状态               |
+| GuidePresenter | BasePresenter<GuideView> | 管理引导界面的打开、关闭与交互 |
+| GuideConfig    | ScriptableObject         | 保存一套引导配置               |
+| GuideStepConfig | Serializable             | 保存单个引导步骤               |
+| GuideView      | UIView                    | 展示引导 UI                    |
+| GuideState     | Enum                      | 定义引导状态                   |
 
 ### 架构原则
 
@@ -97,7 +100,7 @@ Assets/
         │
         ├── Config/
         │   ├── GuideConfig.cs
-        │   └── GuideStepData.cs
+        │   └── GuideStepConfig.cs
         │
         └── View/
             └── GuideView.cs
@@ -158,7 +161,7 @@ Stop 不等于 Completed。
 
 ---
 
-## 6. GuideStepData
+## 6. GuideStepConfig
 
 用于定义单个引导步骤。
 
@@ -175,7 +178,7 @@ Stop 不等于 Completed。
 
 ```csharp
 [Serializable]
-public class GuideStepData
+public class GuideStepConfig
 {
     public int StepId;
 
@@ -213,7 +216,7 @@ ShowMask 与 ShowCursor 分别控制遮罩和手势；Content 非空时显示在
 - 一个配置代表一套完整引导。
 - 支持配置 GuideId。
 - 支持配置 GuideName。
-- 支持配置多个 GuideStepData。
+- 支持配置多个 GuideStepConfig。
 - 可以在 Inspector 中调整步骤顺序。
 
 参考结构：
@@ -228,7 +231,7 @@ public class GuideConfig : ScriptableObject
 
     public string GuideName;
 
-    public List<GuideStepData> Steps;
+    public List<GuideStepConfig> Steps;
 }
 ```
 
@@ -288,7 +291,7 @@ GuideConfig Config { get; }
 
 int CurrentIndex { get; }
 
-GuideStepData CurrentStep { get; }
+GuideStepConfig CurrentStep { get; }
 ```
 
 CurrentIndex 从 0 开始。
@@ -300,7 +303,7 @@ CurrentStep 根据 Config 和 CurrentIndex 获取。
 需要提供：
 
 ```csharp
-event Action<GuideStepData, int, int> OnStepChanged;
+event Action<GuideStepConfig, int, int> OnStepChanged;
 
 event Action<GuideState> OnStateChanged;
 
@@ -424,7 +427,7 @@ GuideModule 继承项目现有 BaseModule。
 对外提供：
 
 ```csharp
-bool StartGuide(GuideConfig config);
+Task<bool> StartGuide(GuideConfig config);
 
 void Next();
 
@@ -447,107 +450,46 @@ void Stop();
 
 ## 10. GuideView
 
-GuideView 继承 MonoBehaviour。
+GuideView 继承项目的 UIView。
 
 负责展示当前引导步骤。
 
-### 10.1 UI 结构
+### 10.1 Prefab UI 结构
 
 ```text
-Canvas
-└── GuidePanel
-    ├── Background
-    └── Content
-        ├── TitleText
-        ├── ContentText
-        ├── StepText
-        └── (可选) 作为引导目标的 UI 控件
-└── GuideInteractionOverlay (运行时创建)
-    ├── 遮罩
-    ├── GuideCursorGesture
-    └── GuideContentBubble (Content 非空时显示)
+GuidePanel (UIView)
+├── GuideMask
+│   ├── Top
+│   ├── Right
+│   ├── Bottom
+│   └── Left
+├── GuideTips
+│   └── tmp
+└── GuideCursor
 ```
 
-GuideCursor 可添加到带 UI Graphic 的目标对象，不要求目标使用 Unity Button。GuideContentBubble 由 GuideView 运行时创建；ContentText 被临时移入气泡，销毁 GuideView 时恢复原父级与布局。
+`GuidePresenter` 通过 UIManager 加载 `Assets/Prefabs/Guide/GuidePanel.prefab`，并放入 `UILayerIndex.Tip`。Prefab 的 GuideView 直接复用四片遮罩、手势和文本控件；不在运行时另建第二套遮罩或手势对象。GuideCursor 可添加到带 UI Graphic 的目标，不要求目标使用 Unity Button。
 
-### 10.2 Inspector 字段
+### 10.2 UI 展示
 
-```csharp
-[SerializeField]
-private GameObject panel;
+GuideModule 启动流程后异步打开 GuidePresenter，Presenter 根据 Runner 当前步骤更新 View：
 
-[SerializeField]
-private TMP_Text titleText;
-
-[SerializeField]
-private TMP_Text contentText;
-
-[SerializeField]
-private TMP_Text stepText;
-
-[SerializeField]
-private GameObject cursorPrefab;
-
-[SerializeField]
-private Vector2 cursorOffset;
-
-[SerializeField]
-private Vector2 contentOffset;
-```
-
-GuideView 还提供遮罩颜色、高亮边距、气泡最大宽度和内边距配置。
-
-### 10.3 绑定接口
-
-```csharp
-void Bind(GuideModule module);
-
-void Unbind();
-```
-
-Bind 要求：
-
-- 先解除旧订阅。
-- 保存 GuideModule。
-- 订阅 GuideRunner 的步骤变化事件。
-- 订阅 GuideRunner 的状态变化事件。
-- 如果当前引导已经运行或暂停，正确恢复当前 UI 显示。
-
-Unbind 要求：
-
-- 解除所有事件订阅。
-- 清理 GuideModule 引用。
-
-### 10.4 UI 展示
-
-OnStepChanged：
-
-- 按目标是否位于 GuidePanel 内决定是否显示面板。
-- 更新标题。
-- 更新步骤进度。
+- 在 Tip 层显示 GuidePanel，并置于该层最上方。
 - 每一步都通过 TargetId 匹配的 GuideCursor 点击推进。
 - ShowMask 与 ShowCursor 独立控制遮罩和手势。
-- Content 非空时，在目标/手势附近显示正文气泡；空内容时隐藏气泡。
+- Content 非空时，在目标/手势附近显示说明；空内容时隐藏说明区域。
 - 遮罩镂空区域随目标 RectTransform 的布局、缩放和动画变化更新。
 
-进度显示格式：
-
-```text
-1 / 3
-2 / 3
-3 / 3
-```
-
-### 10.5 状态变化
+### 10.3 状态变化
 
 | 状态      | UI 行为              |
 | --------- | -------------------- |
 | Running   | 显示目标交互与配置的引导内容 |
-| Paused    | 保留说明面板并清除目标交互 |
-| None      | 隐藏面板             |
-| Completed | 隐藏面板             |
+| Paused    | 清除目标交互并隐藏引导层 |
+| None      | 隐藏并缓存 Presenter |
+| Completed | 隐藏并缓存 Presenter |
 
-### 10.6 目标交互
+### 10.4 目标交互
 
 GuideCursor 标记可点击的 UI 目标，不依赖 Unity Button。目标 Graphic 必须启用 Raycast Target；也可以通过 GuideCursor 配置更精确的点击/高亮矩形。点击目标：
 
@@ -557,12 +499,11 @@ guideModule.Next();
 
 GuideView 不直接修改 CurrentIndex。
 
-### 10.7 生命周期
+### 10.5 生命周期
 
-- Awake 中初始化 UI 并隐藏面板。
-- 运行时创建遮罩和手势层，不更改目标控件的 Button/Image 类型。
-- OnDestroy 中解除事件订阅并恢复 ContentText 的原父级与布局。
-- 防止重复 Bind 导致事件重复订阅。
+- GuidePresenter 在 OnOpen 订阅 Runner 与目标，在 OnClose 解除订阅。
+- 引导结束、停止或暂停时隐藏目标交互层。
+- GuideDemo 通过 GuideModule.StartGuide 异步打开 Presenter，不再绑定场景中的 GuideView。
 
 ---
 
@@ -575,8 +516,8 @@ GuideView 不直接修改 CurrentIndex。
 1. 将 GuideModule 注册到现有模块管理体系。
 2. 确保 GuideModule.Init() 正常执行。
 3. 在场景 UI 初始化完成后获取 GuideModule。
-4. 调用 GuideView.Bind()。
-5. 场景销毁时正确解绑。
+4. 调用并等待 GuideModule.StartGuide(config)。
+5. UIManager 根据 GuidePresenter 将 GuidePanel 放到 Tip 层。
 6. 不修改 ModuleManager 核心实现，除非确实存在必要且经过说明的改动。
 
 启动流程：
@@ -591,19 +532,19 @@ ModuleManager 初始化
 GuideModule 初始化
     |
     v
-进入游戏场景
+UILauncher 初始化 TipLayer
     |
     v
-GuideView 创建
+GuideModule.StartGuide(config)
     |
     v
-GuideView.Bind(GuideModule)
+GuideRunner 通知 GuidePresenter
     |
     v
-StartGuide(GuideConfig)
+UIManager 在 TipLayer 打开 GuidePanel
 ```
 
-以上为逻辑流程，实际调用位置应遵循项目现有场景生命周期。
+以上为逻辑流程；调用 StartGuide 前，UIManager 必须已由 UILauncher 初始化。
 
 ---
 
@@ -740,7 +681,7 @@ Step 3:
 实现：
 
 - GuideState。
-- GuideStepData。
+- GuideStepConfig。
 - GuideConfig。
 
 ### 第三步：实现流程控制

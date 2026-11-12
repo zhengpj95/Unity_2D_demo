@@ -9,7 +9,7 @@ using UnityEngine.UI;
 [RequireComponent(typeof(RectTransform))]
 public sealed class GuideCursor : MonoBehaviour, IPointerClickHandler
 {
-  [SerializeField, Tooltip("与 GuideStepData.TargetId 一致的目标标识。")]
+  [SerializeField, Tooltip("与 GuideStepConfig.TargetId 一致的目标标识。")]
   private string targetId;
   [SerializeField, Tooltip("可选的精确点击/高亮矩形；留空时自动使用所有 Raycast Target Graphic 的矩形并集。")]
   private RectTransform targetArea;
