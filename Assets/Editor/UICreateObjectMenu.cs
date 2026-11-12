@@ -11,7 +11,7 @@ public class UICreateObjectMenu
   /// <summary>
   /// 在 Project 窗口当前目录创建仅包含 RectTransform 的空 UI 根对象预制体。
   /// </summary>
-  [MenuItem("Assets/Create/New Prefab %#p", false, 1)]
+  [MenuItem("Assets/Create/Prefab Template", false, 204)]
   private static void CreatePrefabAsset(MenuCommand menuCommand)
   {
     var folderPath = GetSelectedAssetFolder(menuCommand);
@@ -21,8 +21,8 @@ public class UICreateObjectMenu
       return;
     }
 
-    var prefabPath = AssetDatabase.GenerateUniqueAssetPath($"{folderPath}/New Prefab.prefab");
-    var temporaryObject = new GameObject("New Prefab", typeof(RectTransform), typeof(CanvasRenderer));
+    var prefabPath = AssetDatabase.GenerateUniqueAssetPath($"{folderPath}/PrefabTemplate.prefab");
+    var temporaryObject = new GameObject("PrefabTemplate", typeof(RectTransform), typeof(CanvasRenderer));
     temporaryObject.layer = LayerMask.NameToLayer("UI");
     try
     {
