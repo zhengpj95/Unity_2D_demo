@@ -28,7 +28,7 @@ namespace VampireSurvivorsLike
   /// <summary>
   /// 保存一组可复用的 Wave 生成规则。时间位置由 WaveTimelineConfig 决定，运行时状态由 EnemyDirector 保存。
   /// </summary>
-  [CreateAssetMenu(fileName = "WaveSpawnConfig", menuName = "Survivor/Wave/Wave Spawn Config")]
+  [CreateAssetMenu(fileName = "WaveSpawnConfig", menuName = "Game Data/Survivor/Waves/Spawn Config")]
   public sealed class WaveSpawnConfig : ScriptableObject
   {
     [Tooltip("该 Wave 允许同时存活的敌人上限。")]

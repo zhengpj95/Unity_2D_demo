@@ -28,7 +28,7 @@ namespace VampireSurvivorsLike
   }
 
   /// <summary>按列表顺序组织一局战斗的 Wave 时间轴，起止时间由各段 Duration 自动累加。</summary>
-  [CreateAssetMenu(fileName = "WaveTimeline", menuName = "Survivor/Wave/Wave Timeline")]
+  [CreateAssetMenu(fileName = "WaveTimeline", menuName = "Game Data/Survivor/Waves/Timeline")]
   public sealed class WaveTimelineConfig : ScriptableObject
   {
     [Tooltip("按执行顺序配置 Wave；无限持续项必须放在最后。")]

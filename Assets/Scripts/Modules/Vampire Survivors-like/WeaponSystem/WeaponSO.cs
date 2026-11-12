@@ -5,7 +5,7 @@ using UnityEngine;
 namespace VampireSurvivorsLike
 {
 
-  [CreateAssetMenu(fileName = "New Weapon", menuName = "Weapon/WeaponSO")]
+  [CreateAssetMenu(fileName = "New Weapon", menuName = "Game Data/Survivor/Weapons/Weapon")]
   public class WeaponSO : ScriptableObject
   {
     public string weaponId;

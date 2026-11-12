@@ -84,7 +84,7 @@ namespace VampireSurvivorsLike
     PlayerAttackRange,
   }
 
-  [CreateAssetMenu(fileName = "NewWeaponUpgrade", menuName = "Survivor/Upgrade/New Weapon")]
+  [CreateAssetMenu(fileName = "NewWeaponUpgrade", menuName = "Game Data/Survivor/Upgrades/New Weapon")]
   public sealed class NewWeaponUpgradeConfig : UpgradeConfig
   {
     // 新武器候选的目标武器资源；运行时只读取，不修改资源。
@@ -132,7 +132,7 @@ namespace VampireSurvivorsLike
     }
   }
 
-  [CreateAssetMenu(fileName = "WeaponUpgrade", menuName = "Survivor/Upgrade/Weapon Level")]
+  [CreateAssetMenu(fileName = "WeaponUpgrade", menuName = "Game Data/Survivor/Upgrades/Weapon Level")]
   public sealed class WeaponUpgradeConfig : UpgradeConfig
   {
     // 武器升级候选的目标 WeaponSO；当前等级由 WeaponManager 的实例保存。
@@ -180,7 +180,7 @@ namespace VampireSurvivorsLike
     }
   }
 
-  [CreateAssetMenu(fileName = "PlayerUpgrade", menuName = "Survivor/Upgrade/Player Stat")]
+  [CreateAssetMenu(fileName = "PlayerUpgrade", menuName = "Game Data/Survivor/Upgrades/Player Stat")]
   public sealed class PlayerUpgradeConfig : UpgradeConfig
   {
     // 要修改的统一玩家属性；枚举值与旧 PlayerUpgradeStat 一致，已有资源可直接兼容。

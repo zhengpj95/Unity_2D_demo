@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Rpg
 {
-  [CreateAssetMenu(fileName = "NewItem", menuName = "RPG/Item")]
+  [CreateAssetMenu(fileName = "NewItem", menuName = "Game Data/RPG/Inventory/Item")]
   public class ItemSO : ScriptableObject
   {
     public int id;

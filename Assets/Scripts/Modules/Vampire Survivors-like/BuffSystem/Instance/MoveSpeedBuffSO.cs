@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace VampireSurvivorsLike {
 
-  [CreateAssetMenu(menuName = "Buff/MoveSpeedUpSO")]
+  [CreateAssetMenu(fileName = "MoveSpeedBuff", menuName = "Game Data/Survivor/Buffs/Move Speed")]
   public class MoveSpeedBuffSO : BuffSO
   {
     [Tooltip("移动速度增加率【0.2f 表示增加20%】"), Range(0.05f, 1f)]

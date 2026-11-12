@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>以 ScriptableObject 保存的一套完整引导配置。</summary>
-[CreateAssetMenu(fileName = "GuideConfig", menuName = "Guide/Guide Config")]
+[CreateAssetMenu(fileName = "GuideConfig", menuName = "Game Data/Guide/Guide Config")]
 public sealed class GuideConfig : ScriptableObject
 {
   /// <summary>此套引导的业务标识。</summary>

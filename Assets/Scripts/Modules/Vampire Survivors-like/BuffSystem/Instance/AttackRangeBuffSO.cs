@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace VampireSurvivorsLike {
 
-  [CreateAssetMenu(menuName = "Buff/AttackRangeBuffSO")]
+  [CreateAssetMenu(fileName = "AttackRangeBuff", menuName = "Game Data/Survivor/Buffs/Attack Range")]
   public class AttackRangeBuffSO : BuffSO
   {
     [Tooltip("攻击范围增加率【0.2f 表示增加20%】"), Range(0.05f, 0.5f)]
