@@ -73,7 +73,7 @@ public class UISizeFitter : MonoBehaviour, ILayoutSelfController
 
   private void Awake()
   {
-    m_rectTransform = GetComponent<RectTransform>();
+    EnsureRectTransform();
     RefreshParentLayoutGroup();
   }
 
@@ -112,7 +112,7 @@ public class UISizeFitter : MonoBehaviour, ILayoutSelfController
 
   private void SetDirty()
   {
-    if (!gameObject.activeInHierarchy || target == null)
+    if (!gameObject.activeInHierarchy || target == null || !EnsureRectTransform())
     {
       return;
     }
@@ -171,7 +171,11 @@ public class UISizeFitter : MonoBehaviour, ILayoutSelfController
   private void UpdateTracker()
   {
     m_tracker.Clear();
-    if (!useTracker || !enabled || target == null)
+    if (!useTracker
+        || !isActiveAndEnabled
+        || !gameObject.activeInHierarchy
+        || target == null
+        || !EnsureRectTransform())
     {
       return;
     }
@@ -184,7 +188,24 @@ public class UISizeFitter : MonoBehaviour, ILayoutSelfController
     {
       drivenProperties |= DrivenTransformProperties.SizeDeltaY;
     }
+
+    if (drivenProperties == DrivenTransformProperties.None)
+    {
+      return;
+    }
+
     m_tracker.Add(this, m_rectTransform, drivenProperties);
+  }
+
+  private bool EnsureRectTransform()
+  {
+    if (m_rectTransform == null)
+    {
+      // OnValidate 的延迟回调可能早于 Awake，因此不能依赖 Awake 已缓存此引用。
+      m_rectTransform = GetComponent<RectTransform>();
+    }
+
+    return m_rectTransform != null;
   }
 
   // ILayoutSelfController 接口实现
@@ -196,7 +217,7 @@ public class UISizeFitter : MonoBehaviour, ILayoutSelfController
   {
     UnityEditor.EditorApplication.delayCall += () =>
     {
-      if (this == null) return;
+      if (this == null || !gameObject.activeInHierarchy) return;
       UpdateTracker();
       SetDirty();
     };
