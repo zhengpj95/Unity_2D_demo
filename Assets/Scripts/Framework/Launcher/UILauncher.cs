@@ -16,6 +16,7 @@ public class UILauncher : MonoBehaviour
   [SerializeField] private Transform _windowLayer;
   [SerializeField] private Transform _modelLayer;
   [SerializeField] private Transform _tipLayer;
+  [SerializeField] private Transform _guideLayer;
 
   private bool _dontDestroyOnLoad = true;
 
@@ -48,7 +49,7 @@ public class UILauncher : MonoBehaviour
 
   private void InitializeUIManager()
   {
-    var config = new UIManagerConfig(_mainLayer, _windowLayer, _modelLayer, _tipLayer);
+    var config = new UIManagerConfig(_mainLayer, _windowLayer, _modelLayer, _tipLayer, _guideLayer);
     UIManager.Instance.Initialize(config);
 
     if (_dontDestroyOnLoad)

@@ -8,8 +8,8 @@ public sealed class GuidePresenter : BasePresenter<GuideView>
   private GuideRunner _runner;
   private GuideCursor _activeTarget;
 
-  /// <summary>引导界面显示在全局 Tip 顶层。</summary>
-  public override UILayerIndex Layer => UILayerIndex.Tip;
+  /// <summary>引导界面显示在全局 Guide 层，位于顶层。</summary>
+  public override UILayerIndex Layer => UILayerIndex.Guide;
 
   /// <summary>GuidePanel 预制体对应的稳定资源键。</summary>
   public override string PrefabPath => "Prefabs/Guide/GuidePanel";

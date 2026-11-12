@@ -14,13 +14,15 @@ public class UIManagerConfig
   public Transform windowLayer;
   public Transform modelLayer;
   public Transform tipLayer;
+  public Transform guideLayer;
 
-  public UIManagerConfig(Transform main, Transform window, Transform model, Transform tip)
+  public UIManagerConfig(Transform main, Transform window, Transform model, Transform tip, Transform guide)
   {
     mainLayer = main;
     windowLayer = window;
     modelLayer = model;
     tipLayer = tip;
+    guideLayer = guide;
   }
 
   /// <summary>
@@ -29,7 +31,7 @@ public class UIManagerConfig
   public bool IsValid()
   {
     return mainLayer != null && windowLayer != null &&
-           modelLayer != null && tipLayer != null;
+           modelLayer != null && tipLayer != null && guideLayer != null;
   }
 }
 
@@ -267,6 +269,7 @@ public class UIManager : Singleton<UIManager>
       UILayerIndex.Window => _config.windowLayer,
       UILayerIndex.Model => _config.modelLayer,
       UILayerIndex.Tip => _config.tipLayer,
+      UILayerIndex.Guide => _config.guideLayer,
       _ => _config.mainLayer
     };
   }

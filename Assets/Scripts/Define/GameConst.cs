@@ -7,6 +7,7 @@ public enum UILayerIndex
   Window = 1,
   Model = 2,
   Tip = 3,
+  Guide = 4,
 }
 
 /**
