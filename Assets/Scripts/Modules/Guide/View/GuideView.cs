@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>GuidePanel 预制体视图；负责定位目标、更新四片遮罩和展示手势说明。</summary>
+/// <summary>GuidePanel 视图；负责定位目标、更新四片遮罩和展示手势说明。</summary>
 public sealed class GuideView : UIView
 {
   private static readonly string[] MaskNames = { "Top", "Right", "Bottom", "Left" };
@@ -27,6 +27,7 @@ public sealed class GuideView : UIView
 
   private readonly Vector3[] _targetCorners = new Vector3[4];
   private GuideCursor _target;
+  private RectTransform _pathTarget;
   private RectTransform _rootRect;
   private bool _initialized;
   private bool _showMask;
@@ -105,6 +106,29 @@ public sealed class GuideView : UIView
       return false;
 
     _target = target;
+    _pathTarget = null;
+    return ShowStep(step);
+  }
+
+  /// <summary>使用 Presenter 路径找到的按钮矩形显示引导步骤。</summary>
+  /// <param name="step">当前引导步骤。</param>
+  /// <param name="target">按钮所在的 RectTransform。</param>
+  /// <returns>目标区域有效且成功开始展示时返回 true。</returns>
+  public bool ShowStep(GuideStepConfig step, RectTransform target)
+  {
+    if (!_initialized)
+      InitView();
+
+    if (step == null || target == null)
+      return false;
+
+    _target = null;
+    _pathTarget = target;
+    return ShowStep(step);
+  }
+
+  private bool ShowStep(GuideStepConfig step)
+  {
     _showMask = step.ShowMask;
     _showCursor = step.ShowCursor;
     _canvasBounds = _rootRect.rect;
@@ -134,6 +158,7 @@ public sealed class GuideView : UIView
   public void HideStep()
   {
     _target = null;
+    _pathTarget = null;
     _showMask = false;
     _showCursor = false;
 
@@ -147,12 +172,16 @@ public sealed class GuideView : UIView
 
   private void LateUpdate()
   {
-    if (object.ReferenceEquals(_target, null))
+    if (object.ReferenceEquals(_target, null) && object.ReferenceEquals(_pathTarget, null))
       return;
 
-    if (_target == null || !_target.isActiveAndEnabled)
+    bool cursorTargetInvalid = _target != null && !_target.isActiveAndEnabled;
+    bool pathTargetInvalid = _target == null
+      && (_pathTarget == null || !_pathTarget.gameObject.activeInHierarchy);
+    if (cursorTargetInvalid || pathTargetInvalid)
     {
-      Debug.LogError("[GuideView] The active guide target became unavailable.", _target);
+      UnityEngine.Object targetContext = _target != null ? (UnityEngine.Object)_target : _pathTarget;
+      Debug.LogError("[GuideView] The active guide target became unavailable.", targetContext);
       HideStep();
       return;
     }
@@ -166,9 +195,10 @@ public sealed class GuideView : UIView
     if (_canvasBounds.width <= 0f || _canvasBounds.height <= 0f)
       return true;
 
-    if (!_target.TryGetTargetBounds(_rootRect, _targetCorners, out Bounds targetBounds))
+    if (!TryGetTargetBounds(out Bounds targetBounds))
     {
-      Debug.LogError("[GuideView] The active guide target has no valid RectTransform display area.", _target);
+      UnityEngine.Object targetContext = _target != null ? (UnityEngine.Object)_target : _pathTarget;
+      Debug.LogError("[GuideView] The active guide target has no valid RectTransform display area.", targetContext);
       HideStep();
       return false;
     }
@@ -179,7 +209,8 @@ public sealed class GuideView : UIView
     float maxY = Mathf.Min(_canvasBounds.yMax, targetBounds.max.y + highlightPadding.y);
     if (minX >= maxX || minY >= maxY)
     {
-      Debug.LogError("[GuideView] The active guide target is outside the visible GuidePanel bounds.", _target);
+      UnityEngine.Object targetContext = _target != null ? (UnityEngine.Object)_target : _pathTarget;
+      Debug.LogError("[GuideView] The active guide target is outside the visible GuidePanel bounds.", targetContext);
       HideStep();
       return false;
     }
@@ -206,6 +237,30 @@ public sealed class GuideView : UIView
     }
 
     return true;
+  }
+
+  private bool TryGetTargetBounds(out Bounds bounds)
+  {
+    if (_target != null)
+      return _target.TryGetTargetBounds(_rootRect, _targetCorners, out bounds);
+
+    bounds = default;
+    if (_pathTarget == null || !_pathTarget.gameObject.activeInHierarchy)
+      return false;
+
+    _pathTarget.GetWorldCorners(_targetCorners);
+    bounds = CreateCanvasBounds(_targetCorners);
+    return true;
+  }
+
+  private Bounds CreateCanvasBounds(Vector3[] corners)
+  {
+    Vector3 firstCorner = _rootRect.InverseTransformPoint(corners[0]);
+    Bounds bounds = new Bounds(firstCorner, Vector3.zero);
+    for (int i = 1; i < 4; i++)
+      bounds.Encapsulate(_rootRect.InverseTransformPoint(corners[i]));
+
+    return bounds;
   }
 
   private static void SetMaskRect(RectTransform rect, float minX, float maxX, float minY, float maxY)

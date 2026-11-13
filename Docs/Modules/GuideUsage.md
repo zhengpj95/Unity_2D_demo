@@ -1,32 +1,43 @@
 # Guide 引导系统使用说明
 
-本文说明当前 Guide 模块中的文件职责、配置和场景接入方式，以及在实际业务中如何触发、取消和切换 Guide。系统现状以代码为准；目标高亮、操作条件检测和已完成进度保存目前尚未实现。
+本文说明当前 Guide 模块中的文件职责、配置和场景接入方式，以及在实际业务中如何触发、取消和切换 Guide。目标高亮和两种目标定位方式已实现；操作条件检测和已完成进度保存目前尚未实现。
 
 ## 1. 文件职责
 
 | 文件                                            | 职责                                                                                            |
 | ----------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | `Assets/Scripts/Modules/Guide/GuideState.cs`    | 定义 `None`、`Running`、`Paused`、`Completed` 四种状态。                                        |
-| `Assets/Scripts/Modules/Guide/GuideStepData.cs` | 定义一条可在 Inspector 编辑的步骤：`StepId`、标题和多行内容。`StepId` 是业务 ID，不是步骤索引。 |
+| `Assets/Scripts/Modules/Guide/Config/GuideStepConfig.cs` | 定义可在 Inspector 编辑的步骤内容及两种互斥目标配置。`StepId` 是业务 ID，不是步骤索引。 |
 | `Assets/Scripts/Modules/Guide/GuideConfig.cs`   | ScriptableObject 配置；一个资源代表一套引导，包含 `GuideId`、名称和有序步骤列表。               |
 | `Assets/Scripts/Modules/Guide/GuideRunner.cs`   | 纯 C# 流程执行器；保存当前配置、状态和步骤索引，并发出步骤、状态及完成事件。                    |
 | `Assets/Scripts/Modules/Guide/GuideModule.cs`   | 由 ModuleManager 管理的统一入口；创建和释放 Runner，并提供开始、下一步、暂停、恢复和停止 API。  |
-| `Assets/Scripts/Modules/Guide/View/GuideView.cs` | 显示手势、说明和遮罩；步骤与目标协调由 GuidePresenter 负责。                                       |
+| `Assets/Scripts/Modules/Guide/GuidePathFinder.cs` | 按 Presenter 标识和 View 相对路径查找 `UIButton` 或 Unity `Button`。                              |
+| `Assets/Scripts/Modules/Guide/GuideCursor.cs`    | 旧式目标标记；按 `TargetId` 匹配并提供点击通知与可高亮区域。                                    |
+| `Assets/Scripts/Modules/Guide/View/GuideView.cs` | 显示手势、说明和遮罩；步骤与目标协调由 GuidePresenter 负责。                                      |
 | `Assets/Scripts/TestCode/GuideDemoBootstrap.cs` | 按场景 Inspector 引用启动指定配置的演示组件；GuideDemo 与 Launcher 的样例入口使用。              |
 | `Assets/Editor/GuideDemoSetup.cs`               | Editor 菜单工具，用于创建/重建 GuideDemo 演示场景。                                             |
 | `Assets/Configs/Guide/Guide_001.asset`          | 三步新手入门演示配置。                                                                          |
 | `Assets/Configs/Guide/Guide_002.asset`          | Launcher 中的两步弹窗引导配置，目标为 `btnTip` 和 `btn_confirm`。                              |
 
-`Assets/Scripts/Framework/Launcher/GameMgr.cs` 在启动时注册 `GuideModule`。`GuidePresenter` 通过 UIManager 加载 `GuidePanel`，并协调 Runner、View 和可点击目标。
+`Assets/Scripts/Framework/Launcher/GameMgr.cs` 在启动时注册 `GuideModule`。`GuidePresenter` 通过 UIManager 加载 `GuidePanel`，协调 Runner、View 和目标；目标可使用 GuideCursor 标记，也可通过 GuidePathFinder 按 Presenter/View 路径查找。
 
 ## 2. 创建引导配置
 
 1. 在 Unity Project 窗口选择 **Create → Game Data → Guide → Guide Config**，创建 `GuideConfig` 资源。
 2. 设置业务 `GuideId`（建议项目内唯一）和便于识别的 `GuideName`。
-3. 按执行顺序填写 `Steps`。每步设置不重复的 `StepId`、`Title` 和 `Content`。
+3. 按执行顺序填写 `Steps`。每步设置不重复的 `StepId`、`Title` 和 `Content`，并选择一种目标配置方式。
 4. `StepId` 不要求连续；执行顺序由 Inspector 列表顺序决定。
 
 `StartGuide` 会拒绝空配置、空步骤列表、空步骤项以及重复的 `StepId`，并返回 `false`。`GuideId` 目前只是配置上的业务标识，不会被模块用于查找、去重或记录完成状态。
+
+### 两种目标配置方式
+
+每个步骤必须且只能选择以下一种方式；不要同时填写或同时留空：
+
+1. **旧方式：`TargetId`**。填写场景中 `GuideCursor` 的目标标识；目标需处于启用状态并具有可接收射线的 UI Graphic。
+2. **路径方式：`PresenterId` + `TargetPath`**。`PresenterId` 格式为四位 `ModuleName` 枚举值、下划线、一位或两位模块 `ViewType` 枚举值。例如 `1002_2` 表示 `ModuleName.Misc` 的 `MiscViewType.Confirm`。`TargetPath` 是相对于该 Presenter 的 View 根节点的 Transform 路径，路径末端对象必须有 `UIButton` 或 Unity `Button` 组件。当前需要在 GuidePathFinder 中映射对应模块的 ViewType 枚举。
+
+路径方式不要求在目标上添加 GuideCursor。目标 Presenter 尚未打开时，引导会等待对应的 Presenter 打开事件，再按路径查找；若已打开但路径或按钮组件配置错误，会记录错误日志。路径跟随 Prefab 层级，重命名或移动目标节点时要同步更新配置。
 
 ## 3. 先弄清楚：一个 Config 代表什么
 
@@ -158,6 +169,7 @@ private void OnInventoryActionSucceeded()
 - 最后一步再次 Next 后面板隐藏，状态为 `Completed`。
 - Stop 后面板隐藏、状态为 `None`，不会触发 `OnCompleted`。
 - 空配置和空步骤返回失败，不产生空引用异常。
+- 每个步骤恰好配置一种目标方式；路径方式能定位带 UIButton 或 Button 的目标并在点击后推进。
 - 连续 Bind 不重复订阅；Unbind 后不再响应 Runner 事件。
 - 业务操作仅在成功条件满足后切换 Guide；模块本身不会自动检测业务操作。
 

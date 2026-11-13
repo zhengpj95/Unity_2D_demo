@@ -99,12 +99,16 @@ public sealed class GuideRunner
     HashSet<int> stepIds = new HashSet<int>();
     foreach (GuideStepConfig step in config.Steps)
     {
-      if (step == null
-          || !stepIds.Add(step.StepId)
-          || string.IsNullOrWhiteSpace(step.TargetId))
-      {
+      if (step == null || !stepIds.Add(step.StepId))
         return false;
-      }
+
+      bool hasCursorTarget = !string.IsNullOrWhiteSpace(step.TargetId);
+      bool hasPresenterId = !string.IsNullOrWhiteSpace(step.PresenterId);
+      bool hasTargetPath = !string.IsNullOrWhiteSpace(step.TargetPath);
+      if (hasCursorTarget
+            ? hasPresenterId || hasTargetPath
+            : !hasPresenterId || !hasTargetPath)
+        return false;
     }
 
     return true;

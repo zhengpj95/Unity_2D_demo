@@ -15,8 +15,14 @@ public sealed class GuideStepConfig
   [TextArea(2, 5)]
   public string Content;
 
-  /// <summary>此步骤必须点击的 GuideCursor 目标标识。</summary>
+  /// <summary>旧式目标标识；填写时通过场景中的 GuideCursor 定位目标。</summary>
   public string TargetId;
+
+  /// <summary>新式目标所在 Presenter，格式为四位 ModuleName 编号、下划线和一位或两位 ViewType 编号，例如 1002_2。</summary>
+  public string PresenterId;
+
+  /// <summary>目标按钮相对于 Presenter View 根节点的 Transform 路径。</summary>
+  public string TargetPath;
 
   /// <summary>是否显示遮罩并阻挡目标区域以外的点击，与手势显示独立配置。</summary>
   public bool ShowMask = true;

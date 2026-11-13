@@ -19,11 +19,15 @@ MonoBehaviour:
     Title: "\u70B9\u51FB\u5F39\u7A97\u6309\u94AE"
     Content: "\u70B9\u51FB\u6253\u5F00\u5F39\u7A97"
     TargetId: btnTip
+    PresenterId:
+    TargetPath:
     ShowMask: 1
     ShowCursor: 1
   - StepId: 2
     Title: "\u70B9\u51FB\u786E\u8BA4\u5173\u95ED"
     Content: "\u70B9\u51FB\u5173\u95ED\u5F39\u7A97"
-    TargetId: btn_confirm
+    TargetId:
+    PresenterId: 1002_2
+    TargetPath: btn_confirm
     ShowMask: 1
     ShowCursor: 1

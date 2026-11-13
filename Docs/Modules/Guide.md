@@ -16,7 +16,7 @@
 4. 使用 GuideView 展示引导 UI。
 5. 支持开始、下一步、暂停、恢复、停止和完成。
 6. 引导流程与 UI 展示解耦。
-7. 通过场景中的 GuideCursor 注册 UI 点击目标，并允许每一步独立显示遮罩和手势。
+7. 支持通过 GuideCursor 或 PresenterId/TargetPath 两种方式注册 UI 点击目标，并允许每一步独立显示遮罩和手势。
 
 ---
 
@@ -187,7 +187,12 @@ public class GuideStepConfig
     [TextArea(2, 5)]
     public string Content;
 
+    // 二选一：旧式 GuideCursor 目标标识
     public string TargetId;
+
+    // 二选一：Presenter 编码与相对 View 路径
+    public string PresenterId;
+    public string TargetPath;
 
     public bool ShowMask = true;
 
@@ -201,7 +206,11 @@ StepId 是业务标识，不是数组索引。
 
 不要要求 StepId 必须连续。
 
-每一步必须配置非空 TargetId，且场景中必须存在唯一匹配的 GuideCursor。
+每一步必须且只能配置一种目标：
+
+- 旧方式：配置非空 TargetId，并在目标上挂唯一匹配的 GuideCursor。
+- 路径方式：配置 PresenterId 和 TargetPath；PresenterId 使用四位 ModuleName 编号、下划线和一位或两位 ViewType 编号，TargetPath 相对于 Presenter View 根节点，末端对象需挂 UIButton 或 Unity Button。
+
 ShowMask 与 ShowCursor 分别控制遮罩和手势；Content 非空时显示在目标/手势附近，空内容时不显示气泡。
 
 ---
@@ -468,14 +477,14 @@ GuidePanel (UIView)
 └── GuideCursor
 ```
 
-`GuidePresenter` 通过 UIManager 加载 `Assets/Prefabs/Guide/GuidePanel.prefab`，并放入 `UILayerIndex.Tip`。Prefab 的 GuideView 直接复用四片遮罩、手势和文本控件；不在运行时另建第二套遮罩或手势对象。GuideCursor 可添加到带 UI Graphic 的目标，不要求目标使用 Unity Button。
+`GuidePresenter` 通过 UIManager 加载 `Assets/Prefabs/Guide/GuidePanel.prefab`，并放入 `UILayerIndex.Tip`。Prefab 的 GuideView 直接复用四片遮罩、手势和文本控件；不在运行时另建第二套遮罩或手势对象。GuideCursor 可添加到带 UI Graphic 的目标，不要求目标使用 Unity Button。也可在 GuideStepConfig 中使用 PresenterId 和 TargetPath，通过 GuidePathFinder 查找已有 Presenter View 下的 UIButton 或 Unity Button，无需为该目标添加 GuideCursor；该路径方式依赖 Prefab 的层级名称。
 
 ### 10.2 UI 展示
 
 GuideModule 启动流程后异步打开 GuidePresenter，Presenter 根据 Runner 当前步骤更新 View：
 
 - 在 Tip 层显示 GuidePanel，并置于该层最上方。
-- 每一步都通过 TargetId 匹配的 GuideCursor 点击推进。
+- 每一步使用 GuideCursor/TargetId 或 PresenterId/TargetPath 其中一种方式解析点击目标并推进。
 - ShowMask 与 ShowCursor 独立控制遮罩和手势。
 - Content 非空时，在目标/手势附近显示说明；空内容时隐藏说明区域。
 - 遮罩镂空区域随目标 RectTransform 的布局、缩放和动画变化更新。
@@ -491,7 +500,7 @@ GuideModule 启动流程后异步打开 GuidePresenter，Presenter 根据 Runner
 
 ### 10.4 目标交互
 
-GuideCursor 标记可点击的 UI 目标，不依赖 Unity Button。目标 Graphic 必须启用 Raycast Target；也可以通过 GuideCursor 配置更精确的点击/高亮矩形。点击目标：
+GuideCursor 标记可点击的 UI 目标，不依赖 Unity Button。目标 Graphic 必须启用 Raycast Target；也可以通过 GuideCursor 配置更精确的点击/高亮矩形。另一种方式通过 PresenterId 和相对 View 根节点的 TargetPath 查找 UIButton 或 Unity Button。点击任一目标：
 
 ```csharp
 guideModule.Next();
