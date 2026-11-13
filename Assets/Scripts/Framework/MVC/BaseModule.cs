@@ -197,6 +197,24 @@ public abstract class BaseModule : BaseEmitter
     return UIManager.Instance.GetPresenter(ModuleName, viewType);
   }
 
+  /// <summary>按数字编号查找本模块已登记的 ViewType 枚举值。</summary>
+  /// <param name="viewTypeCode">模块内 ViewType 的数字编号。</param>
+  /// <param name="viewType">找到时返回对应模块枚举值；未登记时为 null。</param>
+  /// <returns>本模块已登记该编号时返回 true。</returns>
+  public bool TryGetRegisteredViewType(int viewTypeCode, out Enum viewType)
+  {
+    foreach (Enum registeredViewType in _presenterDefinitions.Keys)
+    {
+      if (Convert.ToInt32(registeredViewType) != viewTypeCode) continue;
+
+      viewType = registeredViewType;
+      return true;
+    }
+
+    viewType = null;
+    return false;
+  }
+
   private bool HasPresenterType(Type presenterType)
   {
     foreach (PresenterDefinition definition in _presenterDefinitions.Values)

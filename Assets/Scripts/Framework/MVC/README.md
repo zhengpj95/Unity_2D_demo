@@ -109,6 +109,7 @@ Proxy 可以更新本模块状态或派发业务事件，但不能直接访问 V
 - Presenter 缓存身份由 `UIManager` 内部组合模块名和 ViewType；业务调用方只需使用模块自己的 ViewType。
 - `BaseModule.OpenWindow(viewType, args)` 可由通用 UI 组件按本模块登记的 ViewType 打开 Presenter；跨模块导航先通过 `ModuleManager` 找到目标模块。
 - `GetPresenter(viewType)` 只返回已经实例化的 Presenter，未打开时返回 `null`。
+- `TryGetRegisteredViewType(viewTypeCode, out viewType)` 可将数字编号解析为本模块已登记的 ViewType 枚举值；Guide 的 `PresenterId` 使用此方式定位界面，不需要按模块维护 ViewType 类型映射。
 - UI 生命周期通过 EventBus 派发：`EventDefine.UI_PRESENTER_OPENED` / `UI_PRESENTER_CLOSED` 分别在界面打开/关闭后触发，载荷为 `PresenterLifecycleEventArgs`，包含 `ModuleName` 和模块内 `ViewType`；无可见状态变化的重复请求不会重复触发。打开与关闭时会记录 Presenter 类型、模块名和 ViewType。
 - `UIManager.HidePresenter` 隐藏并保留缓存；`CloseWindow` 会关闭并销毁 Presenter。
 - `UIManager.ShowUI` / `HideUI` 是为 FrogAdventure 原型保留的旧式路径接口，已标记 `[Obsolete]`；新界面应登记 Presenter 并通过 Module 打开。

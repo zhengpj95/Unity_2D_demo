@@ -31,10 +31,12 @@ public static class GuidePathFinder
   public static FindResult FindTarget(string presenterId, string targetPath, out Component target)
   {
     target = null;
-    if (!TryParsePresenterId(presenterId, out ModuleName moduleName, out Enum viewType))
+    if (!TryParsePresenterId(presenterId, out _, out BaseModule module, out Enum viewType))
+    {
       return FindResult.InvalidPresenterId;
+    }
 
-    BasePresenter presenter = UIManager.Instance.GetPresenter(moduleName, viewType);
+    BasePresenter presenter = module.GetPresenter(viewType);
     if (presenter == null
         || !presenter.IsVisible
         || presenter.View == null
@@ -80,14 +82,19 @@ public static class GuidePathFinder
   /// <returns>标识格式有效且模块、界面类型均匹配时返回 true。</returns>
   public static bool MatchesPresenter(string presenterId, ModuleName moduleName, Enum viewType)
   {
-    return TryParsePresenterId(presenterId, out ModuleName parsedModule, out Enum parsedView)
+    return TryParsePresenterId(presenterId, out ModuleName parsedModule, out _, out Enum parsedView)
       && parsedModule == moduleName
       && Equals(parsedView, viewType);
   }
 
-  private static bool TryParsePresenterId(string presenterId, out ModuleName moduleName, out Enum viewType)
+  private static bool TryParsePresenterId(
+    string presenterId,
+    out ModuleName moduleName,
+    out BaseModule module,
+    out Enum viewType)
   {
     moduleName = ModuleName.None;
+    module = null;
     viewType = null;
     if (presenterId == null
         || (presenterId.Length != 6 && presenterId.Length != 7)
@@ -100,23 +107,13 @@ public static class GuidePathFinder
     }
 
     moduleName = (ModuleName)moduleCode;
-    Type viewTypeEnum = GetViewTypeEnum(moduleName);
-    if (viewTypeEnum == null || !Enum.IsDefined(viewTypeEnum, viewCode))
-      return false;
-
-    viewType = (Enum)Enum.ToObject(viewTypeEnum, viewCode);
-    return true;
-  }
-
-  private static Type GetViewTypeEnum(ModuleName moduleName)
-  {
-    // ViewType 是按模块分别定义的枚举，因此通过模块显式选择对应类型。
-    return moduleName switch
+    if (!ModuleManager.Instance.TryGetModule(moduleName, out module)
+        || !module.TryGetRegisteredViewType(viewCode, out viewType))
     {
-      ModuleName.Misc => typeof(MiscViewType),
-      ModuleName.Survivor => typeof(SurvivorViewType),
-      ModuleName.Guide => typeof(GuideViewType),
-      _ => null
-    };
+      module = null;
+      return false;
+    }
+
+    return true;
   }
 }
