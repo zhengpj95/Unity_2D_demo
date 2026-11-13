@@ -37,4 +37,9 @@ public static class EventDefine
 
   /// <summary>登录 Command 的测试事件，数据类型为 string。</summary>
   public static readonly int TEST_LOGIN_COMMAND = NextId();
+
+  /// <summary>Presenter 打开事件，数据类型为 PresenterLifecycleEventArgs。</summary>
+  public static readonly int UI_PRESENTER_OPENED = NextId();
+  /// <summary>Presenter 关闭事件，数据类型为 PresenterLifecycleEventArgs。</summary>
+  public static readonly int UI_PRESENTER_CLOSED = NextId();
 }

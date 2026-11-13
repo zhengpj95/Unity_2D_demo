@@ -35,6 +35,25 @@ public class UIManagerConfig
   }
 }
 
+/// <summary>UI Presenter 生命周期事件数据，标识所属模块和界面类型。</summary>
+public readonly struct PresenterLifecycleEventArgs
+{
+  /// <summary>Presenter 所属模块。</summary>
+  public ModuleName ModuleName { get; }
+
+  /// <summary>Presenter 在所属模块中的界面类型。</summary>
+  public Enum ViewType { get; }
+
+  /// <summary>创建包含模块和界面类型的生命周期事件数据。</summary>
+  /// <param name="moduleName">Presenter 所属模块。</param>
+  /// <param name="viewType">Presenter 在所属模块中的界面类型。</param>
+  public PresenterLifecycleEventArgs(ModuleName moduleName, Enum viewType)
+  {
+    ModuleName = moduleName;
+    ViewType = viewType;
+  }
+}
+
 /// <summary>
 /// UI管理器（纯C#实现）
 /// 负责UI的显示、隐藏、层级管理和缓存
@@ -370,7 +389,7 @@ public class UIManager : Singleton<UIManager>
       if (parentOverride != null && cachedPresenter.View != null && cachedPresenter.View.transform.parent != parentOverride)
         cachedPresenter.View.transform.SetParent(parentOverride, false);
       if (!cachedPresenter.IsVisible)
-        cachedPresenter.OnOpen(args);
+        OpenPresenter(viewKey, cachedPresenter, args);
       return Task.FromResult(cachedPresenter);
     }
 
@@ -436,7 +455,7 @@ public class UIManager : Singleton<UIManager>
         if (parentOverride != null && existingPresenter.View != null && existingPresenter.View.transform.parent != parentOverride)
           existingPresenter.View.transform.SetParent(parentOverride, false);
         if (!existingPresenter.IsVisible)
-          existingPresenter.OnOpen(args);
+          OpenPresenter(viewKey, existingPresenter, args);
         return existingPresenter;
       }
 
@@ -451,7 +470,7 @@ public class UIManager : Singleton<UIManager>
       isCached = true;
 
       if (!presenter.IsVisible)
-        presenter.OnOpen(args);
+        OpenPresenter(viewKey, presenter, args);
       return presenter;
     }
     catch
@@ -504,7 +523,7 @@ public class UIManager : Singleton<UIManager>
         && _presenterCache.TryGetValue(viewKey, out BasePresenter cachedPresenter)
         && ReferenceEquals(cachedPresenter, presenter))
     {
-      if (presenter.IsVisible) presenter.OnClose();
+      ClosePresenter(viewKey, presenter);
       presenter.OnDestroy();
       RemovePresenter(viewKey, presenter);
       return;
@@ -513,6 +532,7 @@ public class UIManager : Singleton<UIManager>
     if (presenter.IsVisible)
     {
       presenter.OnClose();
+      Debug.Log($"关闭界面：{presenter.GetType().Name}, m:unknown, v:unknown");
     }
     presenter.OnDestroy();
   }
@@ -525,10 +545,31 @@ public class UIManager : Singleton<UIManager>
   {
     if (_presenterCache.TryGetValue(viewKey, out BasePresenter presenter))
     {
-      if (presenter.IsVisible) presenter.OnClose();
+      ClosePresenter(viewKey, presenter);
       presenter.OnDestroy();
       RemovePresenter(viewKey, presenter);
     }
+  }
+
+  private void OpenPresenter(PresenterKey viewKey, BasePresenter presenter, object args)
+  {
+    presenter.OnOpen(args);
+    Debug.Log($"打开界面：{presenter.GetType().Name}, m:{(int)viewKey.ModuleName}, v:{Convert.ToInt32(viewKey.ViewType)}");
+    EventBus.Emit(
+      EventDefine.UI_PRESENTER_OPENED,
+      new PresenterLifecycleEventArgs(viewKey.ModuleName, viewKey.ViewType));
+  }
+
+  private void ClosePresenter(PresenterKey viewKey, BasePresenter presenter)
+  {
+    if (!presenter.IsVisible)
+      return;
+
+    presenter.OnClose();
+    Debug.Log($"关闭界面：{presenter.GetType().Name}, m:{(int)viewKey.ModuleName}, v:{Convert.ToInt32(viewKey.ViewType)}");
+    EventBus.Emit(
+      EventDefine.UI_PRESENTER_CLOSED,
+      new PresenterLifecycleEventArgs(viewKey.ModuleName, viewKey.ViewType));
   }
 
   private void RemovePresenter(PresenterKey viewKey, BasePresenter presenter)
@@ -553,7 +594,13 @@ public class UIManager : Singleton<UIManager>
   {
     if (presenter != null && !presenter.IsVisible)
     {
-      presenter.OnOpen(args);
+      if (_presenterKeys.TryGetValue(presenter, out PresenterKey viewKey))
+        OpenPresenter(viewKey, presenter, args);
+      else
+      {
+        presenter.OnOpen(args);
+        Debug.Log($"打开界面：{presenter.GetType().Name}, m:unknown, v:unknown");
+      }
     }
   }
 
@@ -564,7 +611,13 @@ public class UIManager : Singleton<UIManager>
   {
     if (presenter != null && presenter.IsVisible)
     {
-      presenter.OnClose();
+      if (_presenterKeys.TryGetValue(presenter, out PresenterKey viewKey))
+        ClosePresenter(viewKey, presenter);
+      else
+      {
+        presenter.OnClose();
+        Debug.Log($"关闭界面：{presenter.GetType().Name}, m:unknown, v:unknown");
+      }
     }
   }
 
