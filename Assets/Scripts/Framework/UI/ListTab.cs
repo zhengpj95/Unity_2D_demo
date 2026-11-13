@@ -11,7 +11,7 @@ public sealed class ListTab : MonoBehaviour
   private VirtualList virtualList;
   [SerializeField, Tooltip("所有页签 Presenter 的共同父节点；必须位于 ListTab 宿主层级内。")]
   private Transform contentRoot;
-  [SerializeField, Min(0f), Tooltip("页签切走后等待多久销毁其 Presenter；0 表示立即销毁。")]
+  [SerializeField, Min(0f), Tooltip("页签切走后等待多少秒销毁其 Presenter；0 表示立即销毁。")]
   private float inactivePresenterDestroyDelay = 5f;
 
   private sealed class HostedPresenter
@@ -306,7 +306,7 @@ public sealed class ListTab : MonoBehaviour
     }
 
     matchedEntry.DestroyTimerId = TimerManager.Instance.AddTimer(
-      inactivePresenterDestroyDelay,
+      inactivePresenterDestroyDelay * 1000f,
       () => DestroyInactivePresenter(tabId, presenter));
   }
 

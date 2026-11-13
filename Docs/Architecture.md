@@ -341,6 +341,8 @@ Network 的已知限制、优化优先级与后续规划统一记录在 `Assets/
 - `ModuleManager`
 - `NetworkMgr`
 
+`TimerManager.AddTimer` 的时间参数以毫秒为单位，内部按缩放后的游戏时间推进；帧计时器仍以帧数配置。
+
 `PoolManager` 的普通 GameObject 池按 Prefab 分组复用实例，并通过最低保留量、最大隐藏缓存量和空闲超时进行分批缩容；这些限制只作用于 `[PoolRoot]` 中已归还的对象，不限制场上活跃对象。用资源句柄预热的池会保留 Prefab，清池后仍等待活跃实例归还或被检测销毁才释放句柄。UI 池保持独立生命周期。
 
 `Framework/Animation` 提供不依赖 Animator Controller 的通用序列帧能力：`AnimFrameBase` 负责播放状态和生命周期，`AnimSprite` 驱动场景中的 `SpriteRenderer`，`AnimUI` 驱动 UI `Image`，动画数据直接由组件内的 `AnimFrameData` 保存。池对象或界面被禁用时会停止播放并清理完成回调，重新启用时可按配置自动播放。

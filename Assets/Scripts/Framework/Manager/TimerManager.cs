@@ -7,9 +7,10 @@ public class Timer
 {
   public uint Id;
 
-  // 时间计时器字段
-  public float Duration; // 总时长（用于时间计时器）
-  public float ExeTime;  // 执行时间（用于时间计时器）
+  /// <summary>时间计时器的循环间隔，单位为毫秒。</summary>
+  public float DurationMilliseconds;
+  /// <summary>时间计时器的剩余时长，单位为毫秒。</summary>
+  public float RemainingMilliseconds;
 
   // 帧计时器字段
   public int InitialFrames;   // 初始帧数（用于帧计时器，loop 重置用）
@@ -34,7 +35,7 @@ public class TimerManager : Singleton<TimerManager>
     {
       return;
     }
-    float dt = Time.deltaTime;
+    float deltaMilliseconds = Time.deltaTime * 1000f;
     for (int i = timers.Count - 1; i >= 0; i--)
     {
       // 更新每个计时器
@@ -72,9 +73,9 @@ public class TimerManager : Singleton<TimerManager>
         else
         {
           // 时间计时器
-          timer.ExeTime -= dt;
+          timer.RemainingMilliseconds -= deltaMilliseconds;
 
-          if (timer.ExeTime <= 0f)
+          if (timer.RemainingMilliseconds <= 0f)
           {
             try
             {
@@ -89,7 +90,7 @@ public class TimerManager : Singleton<TimerManager>
             if (timer.Loop)
             {
               // 重置计时器
-              timer.ExeTime = timer.Duration;
+              timer.RemainingMilliseconds = timer.DurationMilliseconds;
             }
             else
             {
@@ -102,13 +103,13 @@ public class TimerManager : Singleton<TimerManager>
     }
   }
 
-  private uint CreateTimer(float duration, Action callback, bool loop = false)
+  private uint CreateTimer(float durationMilliseconds, Action callback, bool loop = false)
   {
     Timer timer = new Timer
     {
       Id = ++_idSeed,
-      Duration = duration,
-      ExeTime = duration,
+      DurationMilliseconds = durationMilliseconds,
+      RemainingMilliseconds = durationMilliseconds,
       Loop = loop,
       IsActive = true,
       Paused = false,
@@ -118,15 +119,26 @@ public class TimerManager : Singleton<TimerManager>
     return timer.Id;
   }
 
-  public uint AddTimer(float duration, Action callback, bool loop = false)
+  /// <summary>
+  /// 添加一个基于游戏时间的计时器，延迟以毫秒计；可选择循环触发。
+  /// </summary>
+  /// <param name="durationMilliseconds">触发间隔，单位为毫秒。</param>
+  /// <param name="callback">计时到期时执行的回调。</param>
+  /// <param name="loop">是否在每次触发后重新计时。</param>
+  /// <returns>新计时器 ID，可用于暂停、恢复或取消。</returns>
+  public uint AddTimer(float durationMilliseconds, Action callback, bool loop = false)
   {
-    return CreateTimer(duration, callback, loop);
+    return CreateTimer(durationMilliseconds, callback, loop);
   }
 
   /// <summary>
   /// 添加一个基于帧的计时器，指定帧数后触发一次回调（或循环）。
   /// 每帧在 Update() 中都会将剩余帧数减少 1。
   /// </summary>
+  /// <param name="frames">触发间隔的帧数。</param>
+  /// <param name="callback">计时到期时执行的回调。</param>
+  /// <param name="loop">是否在每次触发后重新计时。</param>
+  /// <returns>新计时器 ID，可用于暂停、恢复或取消。</returns>
   public uint AddFrameTimer(int frames, Action callback, bool loop = false)
   {
     return CreateFrameTimer(frames, callback, loop);
