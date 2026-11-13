@@ -13,7 +13,7 @@ public sealed class GuideModule : BaseModule
   protected override void OnInit()
   {
     Runner = new GuideRunner();
-    RegPresenter<GuidePresenter>(GuideViewType.Panel);
+    RegPresenter<GuidePresenter>(GuideViewType.GuidePanel);
   }
 
   protected override void OnRelease()
@@ -37,7 +37,7 @@ public sealed class GuideModule : BaseModule
     bool presenterOpened = false;
     try
     {
-      GuidePresenter presenter = await OpenWindow<GuidePresenter>(GuideViewType.Panel, this);
+      GuidePresenter presenter = await OpenWindow<GuidePresenter>(GuideViewType.GuidePanel, this);
       if (presenter == null)
       {
         Debug.LogError("[GuideModule] Failed to open GuidePanel; the guide has been stopped.");
