@@ -24,6 +24,14 @@ public class UICreateObjectMenu
     var prefabPath = AssetDatabase.GenerateUniqueAssetPath($"{folderPath}/PrefabTemplate.prefab");
     var temporaryObject = new GameObject("PrefabTemplate", typeof(RectTransform), typeof(CanvasRenderer));
     temporaryObject.layer = LayerMask.NameToLayer("UI");
+    RectTransform rectTransform = temporaryObject.GetComponent<RectTransform>();
+    rectTransform.anchorMin = Vector2.zero;
+    rectTransform.anchorMax = Vector2.one;
+    rectTransform.pivot = new Vector2(0.5f, 0.5f);
+    rectTransform.offsetMax = Vector2.zero;
+    rectTransform.offsetMin = Vector2.zero;
+    rectTransform.localScale = Vector3.one;
+
     try
     {
       var prefab = PrefabUtility.SaveAsPrefabAsset(temporaryObject, prefabPath, out var success);
