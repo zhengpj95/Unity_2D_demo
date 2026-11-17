@@ -16,14 +16,12 @@ public static class SoundType
   public const string Jump = "cartoon-jump-6462";
 }
 
-public class AudioManager : MonoBehaviour
+public class AudioManager : SingletonMono<AudioManager>
 {
-  public static AudioManager Instance { get; private set; }
-
-  [Header("默认背景音乐")] 
+  [Header("默认背景音乐")]
   public AudioClip defaultBgm;
 
-  [Header("音量设置")] 
+  [Header("音量设置")]
   [Range(0f, 1f)] public float bgmVolume = 1f;
   [Range(0f, 1f)] public float sfxVolume = 1f;
   private float[] _volumeCache = { 0f, 0f };
@@ -46,16 +44,17 @@ public class AudioManager : MonoBehaviour
   // 音效对象池
   private readonly Queue<AudioSource> _sfxPool = new();
   private const int InitialSfxPoolSize = 5;
+  private bool _isDuplicate;
 
-  protected void Awake()
+  protected override void Awake()
   {
-    if (Instance != null && Instance != this)
+    base.Awake();
+    if (SingletonMono<AudioManager>.Instance != this)
     {
-      Destroy(gameObject);
+      _isDuplicate = true;
+      enabled = false;
       return;
     }
-    Instance = this;
-    DontDestroyOnLoad(gameObject);
 
     _bgm = gameObject.GetComponent<AudioSource>();
     if (_bgm == null)
@@ -99,29 +98,32 @@ public class AudioManager : MonoBehaviour
     }
   }
 
-  private void OnDestroy()
+  protected override void OnDestroy()
   {
-    StopAllCoroutines();
-    _bgmCoroutine = null;
-    _bgmRequestGeneration++;
-    _sfxRequestGeneration++;
-    if (_bgm != null)
+    if (!_isDuplicate)
     {
-      _bgm.Stop();
-      _bgm.clip = null;
+      // 先释放本实例持有的音频资源，再让基类清理单例引用。
+      StopAllCoroutines();
+      _bgmCoroutine = null;
+      _bgmRequestGeneration++;
+      _sfxRequestGeneration++;
+      if (_bgm != null)
+      {
+        _bgm.Stop();
+        _bgm.clip = null;
+      }
+
+      _bgmAssetHandle?.Dispose();
+      _bgmAssetHandle = null;
+      foreach (AssetHandle<AudioClip> handle in _sfxAssetHandles.Values)
+        handle.Dispose();
+      _sfxAssetHandles.Clear();
+      _sfxList.Clear();
+      _loopSfxList.Clear();
+      _sfxPool.Clear();
     }
 
-    _bgmAssetHandle?.Dispose();
-    _bgmAssetHandle = null;
-    foreach (AssetHandle<AudioClip> handle in _sfxAssetHandles.Values)
-      handle.Dispose();
-    _sfxAssetHandles.Clear();
-    _sfxList.Clear();
-    _loopSfxList.Clear();
-    _sfxPool.Clear();
-
-    if (Instance == this)
-      Instance = null;
+    base.OnDestroy();
   }
 
   // 暂停背景音乐和所有音效
