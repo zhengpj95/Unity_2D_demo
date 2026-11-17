@@ -11,6 +11,7 @@ public sealed class MiscModule : BaseModule
 
   protected override void OnInit()
   {
+    Debug.Log("[MiscModule] Initialized");
     RegProxy<MiscProxy>();
     RegPresenter<AlertTipsPanelPresenter>(MiscViewType.AlertTips);
     RegPresenter<ConfirmPanelPresenter>(MiscViewType.Confirm);

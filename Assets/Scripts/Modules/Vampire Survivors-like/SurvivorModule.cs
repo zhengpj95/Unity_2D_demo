@@ -12,6 +12,7 @@ public class SurvivorModule : BaseModule
 
   protected override void OnInit()
   {
+    Debug.Log("[SurvivorModule] Initialized");
     _proxy = RegProxy<SurvivorProxy>();
     _gameplayController = new SurvivorGameplayController(this, _proxy);
 

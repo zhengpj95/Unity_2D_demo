@@ -68,6 +68,12 @@ Assets/Scripts/Framework/Launcher/GameMgr.cs
 Awake
   ├─ 建立单例
   ├─ DontDestroyOnLoad
+  ├─ InitializeManagers（按依赖顺序创建）
+  │    ├─ AssetLoader
+  │    ├─ PoolManager
+  │    ├─ TimerManager
+  │    ├─ NetworkMgr
+  │    └─ ModuleManager
   └─ InitializeModules
        ├─ PushModules<MiscModule>()
        ├─ PushModules<LoginModule>()
@@ -94,6 +100,8 @@ OnApplicationQuit
   └─ await NetworkMgr.Close()
        └─ NetworkMgr.Dispose()
 ```
+
+`GameMgr.InitializeManagers` 先创建 `AssetLoader` 再创建 `PoolManager`，并在初始化模块前创建 `NetworkMgr`，因为 `MiscModule.OnInit` 会订阅网络连接失败事件。`UIManager` 的层级配置由 `UILauncher.Awake` 根据场景引用初始化；UI 对象池也在同一生命周期阶段绑定 Canvas，允许 `PoolManager` 已由 `GameMgr` 预先创建。
 
 停止 Editor Play Mode 或退出 Player 时，`GameMgr.OnApplicationQuit` 会先等待 WebSocket Close 握手，再释放 Socket 回调和本地引用；此时 `OnDestroy` 不会提前调用 `Dispose`。普通对象销毁仍使用同步 `Dispose` 作为本地资源清理。进程被强制终止、编辑器崩溃或操作系统直接杀进程时无法保证关闭握手完成。
 

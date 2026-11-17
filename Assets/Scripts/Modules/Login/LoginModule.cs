@@ -9,8 +9,8 @@ public sealed class LoginModule : BaseModule
 
   protected override void OnInit()
   {
-    RegProxy<LoginProxy>();
     Debug.Log("[LoginModule] Initialized");
+    RegProxy<LoginProxy>();
     RegCmd<LoginCmd>(EventDefine.TEST_LOGIN_COMMAND);
   }
 

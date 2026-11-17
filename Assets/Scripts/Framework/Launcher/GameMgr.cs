@@ -25,6 +25,7 @@ public sealed class GameMgr : MonoBehaviour
     _instance = this;
     DontDestroyOnLoad(gameObject);
 
+    InitializeManagers();
     InitializeModules();
   }
 
@@ -112,5 +113,18 @@ public sealed class GameMgr : MonoBehaviour
     ModuleManager.Instance.PushModules<SurvivorModule>();
     ModuleManager.Instance.PushModules<GuideModule>();
     ModuleManager.Instance.InitializeAll();
+  }
+
+  /// <summary>按依赖顺序创建全局管理器，避免模块初始化时隐式创建依赖项。</summary>
+  private static void InitializeManagers()
+  {
+    // 对象池和 UI 加载都可能请求资源，先建立统一资源入口。
+    _ = AssetLoader.Instance;
+    _ = PoolManager.Instance;
+
+    // 计时器独立于其他管理器；网络管理器需先于会订阅它的 MiscModule 创建。
+    _ = TimerManager.Instance;
+    _ = NetworkMgr.Instance;
+    _ = ModuleManager.Instance;
   }
 }

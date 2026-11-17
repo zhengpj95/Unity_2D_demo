@@ -9,7 +9,6 @@ using UnityEngine.EventSystems;
 public class UILauncher : MonoBehaviour
 {
   private static UILauncher _instance;
-  private bool _isDuplicate;
 
   // [Header("UI Layers")]
   [SerializeField] private Transform _mainLayer;
@@ -25,37 +24,28 @@ public class UILauncher : MonoBehaviour
     // UILauncher 会跨场景保留；场景重载时先销毁新场景中的重复实例。
     if (_instance != null && _instance != this)
     {
-      _isDuplicate = true;
       Destroy(gameObject);
       return;
     }
 
     _instance = this;
+    if (_dontDestroyOnLoad)
+    {
+      DontDestroyOnLoad(gameObject);
+    }
+
     // EventSystem 只由首个有效 UILauncher 创建，避免返回 Launcher 时场景序列化对象先触发重复 OnEnable。
     EnsureEventSystem();
+    // 初始化 UIManager，绑定各层级节点。
     InitializeUIManager();
-  }
-
-  private void Start()
-  {
-    if (_isDuplicate) return;
-
-    // 初始化 UI 池
-    if (!PoolManager.IsCreated)
-    {
-      PoolManager.Instance.InitializeUIPool(GetComponentInChildren<Canvas>());
-    }
+    // GameMgr 可能已按依赖顺序创建 PoolManager；在 Awake 中完成 Canvas 绑定。
+    PoolManager.Instance.InitializeUIPool(GetComponentInChildren<Canvas>());
   }
 
   private void InitializeUIManager()
   {
     var config = new UIManagerConfig(_mainLayer, _windowLayer, _modelLayer, _tipLayer, _guideLayer);
     UIManager.Instance.Initialize(config);
-
-    if (_dontDestroyOnLoad)
-    {
-      DontDestroyOnLoad(gameObject);
-    }
   }
 
   /// <summary>

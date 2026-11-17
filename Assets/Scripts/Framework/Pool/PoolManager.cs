@@ -72,11 +72,14 @@ public class PoolManager : Singleton<PoolManager>
   }
 
   /// <summary>
-  /// 初始化 UI 池（需要在游戏启动时调用）
+  /// 初始化 UI 池（需要在游戏启动时调用；重复调用不会创建额外的池根节点）。
   /// </summary>
   /// <param name="mainCanvas">主 Canvas</param>
   public void InitializeUIPool(Canvas mainCanvas)
   {
+    if (_uiPoolRoot != null)
+      return;
+
     if (mainCanvas == null)
     {
       Debug.LogWarning("Main canvas is null. UI pool will not be initialized.");
@@ -87,7 +90,7 @@ public class PoolManager : Singleton<PoolManager>
     _uiPoolRoot = new GameObject("[UIPoolRoot]");
     _uiPoolRoot.transform.SetParent(_mainCanvas.transform, false);
     _uiPoolRoot.transform.SetAsFirstSibling(); // 放在最底层
-    Debug.Log($"UIPool initialized under canvas: {_mainCanvas.name}");
+    Debug.Log($"[PoolManager] Initialized UI pool under canvas: {_mainCanvas.name}");
   }
 
   /// <summary>

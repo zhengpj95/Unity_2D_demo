@@ -12,6 +12,7 @@ public sealed class GuideModule : BaseModule
 
   protected override void OnInit()
   {
+    Debug.Log("[GuideModule] Initialized");
     Runner = new GuideRunner();
     RegPresenter<GuidePresenter>(GuideViewType.GuidePanel);
   }
