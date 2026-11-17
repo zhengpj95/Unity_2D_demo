@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 /// <summary>
 /// 带生命周期的 EventBus 使用基类，统一记录并清理由当前对象创建的事件订阅。
@@ -17,8 +18,12 @@ public abstract class BaseEmitter
   /// <summary>监听事件；所有监听器统一接收 EventContext。</summary>
   protected void On(int eventId, Action<EventContext> listener)
   {
-    ValidateEventId(eventId);
-    if (listener == null) throw new ArgumentNullException(nameof(listener));
+    if (!TryValidateEventId(eventId)) return;
+    if (listener == null)
+    {
+      Debug.LogError($"[{GetType().Name}] Cannot subscribe with a null listener.");
+      return;
+    }
 
     foreach (EventSubscription subscription in _subscriptions)
     {
@@ -37,14 +42,14 @@ public abstract class BaseEmitter
   /// <summary>发出不携带数据的事件。</summary>
   protected void Emit(int eventId)
   {
-    ValidateEventId(eventId);
+    if (!TryValidateEventId(eventId)) return;
     EventBus.Emit(eventId);
   }
 
   /// <summary>发出携带数据的事件。</summary>
   protected void Emit<T>(int eventId, T data)
   {
-    ValidateEventId(eventId);
+    if (!TryValidateEventId(eventId)) return;
     EventBus.Emit(eventId, data);
   }
 
@@ -63,7 +68,18 @@ public abstract class BaseEmitter
 
   protected static void ValidateEventId(int eventId)
   {
+    TryValidateEventId(eventId);
+  }
+
+  /// <summary>验证事件编号；无效时记录错误并返回 false。</summary>
+  protected static bool TryValidateEventId(int eventId)
+  {
     if (eventId <= 0)
-      throw new ArgumentOutOfRangeException(nameof(eventId), eventId, "Event ID must be greater than zero.");
+    {
+      Debug.LogError($"[BaseEmitter] Event ID must be greater than zero; got {eventId}.");
+      return false;
+    }
+
+    return true;
   }
 }

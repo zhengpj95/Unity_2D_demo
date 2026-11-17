@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Google.Protobuf;
+using UnityEngine;
 
 /// <summary>
 /// 模块的数据与协议访问基类。每个 Proxy 独立管理自己注册的网络协议。
@@ -15,7 +16,13 @@ public abstract class BaseProxy : BaseEmitter
   internal void Initialize(BaseModule module)
   {
     if (IsInitialized) return;
-    Module = module ?? throw new ArgumentNullException(nameof(module));
+    if (module == null)
+    {
+      Debug.LogError($"[{GetType().Name}] Cannot initialize Proxy without an owning Module.");
+      return;
+    }
+
+    Module = module;
     OnInit();
     IsInitialized = true;
   }
@@ -40,9 +47,16 @@ public abstract class BaseProxy : BaseEmitter
   protected void RegisterHandler<T>(uint command, Action<T> handler) where T : IMessage<T>
   {
     if (handler == null)
-      throw new ArgumentNullException(nameof(handler));
+    {
+      Debug.LogError($"[{GetType().Name}] Cannot register a null handler for command {command}.");
+      return;
+    }
     if (!_registeredCommands.Add(command))
-      throw new InvalidOperationException($"[{GetType().Name}] Handler already registered: {command}");
+    {
+      Debug.LogError($"[{GetType().Name}] Handler already registered for command {command}.");
+      return;
+    }
+
     NetworkMgr.Instance.RegisterHandler(command, handler);
   }
 

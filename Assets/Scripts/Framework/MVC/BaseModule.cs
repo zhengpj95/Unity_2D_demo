@@ -31,10 +31,24 @@ public abstract class BaseModule : BaseEmitter
   {
     if (IsInitialized) return;
 
-    Manager = manager ?? throw new ArgumentNullException(nameof(manager));
+    if (manager == null)
+    {
+      Debug.LogError($"[{GetType().Name}] Cannot initialize Module without a ModuleManager.");
+      return;
+    }
+
+    Manager = manager;
     OnInit();
 
-    foreach (BaseProxy proxy in _proxies.Values) proxy.Initialize(this);
+    foreach (BaseProxy proxy in _proxies.Values)
+    {
+      proxy.Initialize(this);
+      if (proxy.IsInitialized) continue;
+
+      Debug.LogError($"[{GetType().Name}] Failed to initialize Proxy {proxy.GetType().Name}.");
+      return;
+    }
+
     IsInitialized = true;
     IsRunning = true;
   }
@@ -77,11 +91,21 @@ public abstract class BaseModule : BaseEmitter
   /// <summary>登记 ViewType 与 Presenter 的一一对应关系，打开时才实例化 Presenter。</summary>
   protected void RegPresenter<T>(Enum viewType) where T : BasePresenter, new()
   {
-    if (viewType == null) throw new ArgumentNullException(nameof(viewType));
+    if (viewType == null)
+    {
+      Debug.LogError($"[{GetType().Name}] Cannot register a Presenter with a null ViewType.");
+      return;
+    }
     if (_presenterDefinitions.ContainsKey(viewType))
-      throw new InvalidOperationException($"[{GetType().Name}] ViewType already registered: {viewType}");
+    {
+      Debug.LogError($"[{GetType().Name}] ViewType already registered: {viewType}.");
+      return;
+    }
     if (HasPresenterType(typeof(T)))
-      throw new InvalidOperationException($"[{GetType().Name}] Presenter already registered: {typeof(T).Name}");
+    {
+      Debug.LogError($"[{GetType().Name}] Presenter already registered: {typeof(T).Name}.");
+      return;
+    }
 
     _presenterDefinitions.Add(viewType, new PresenterDefinition
     {
@@ -96,9 +120,16 @@ public abstract class BaseModule : BaseEmitter
   /// <returns>表示打开过程的任务；资源缺失或请求取消时结果为 null。</returns>
   public async Task<BasePresenter> OpenWindow(Enum viewType, object args = null)
   {
-    if (viewType == null) throw new ArgumentNullException(nameof(viewType));
+    if (viewType == null)
+    {
+      Debug.LogError($"[{GetType().Name}] Cannot open a window with a null ViewType.");
+      return null;
+    }
     if (!_presenterDefinitions.TryGetValue(viewType, out PresenterDefinition definition))
-      throw new InvalidOperationException($"[{GetType().Name}] ViewType is not registered: {viewType}");
+    {
+      Debug.LogError($"[{GetType().Name}] ViewType is not registered: {viewType}.");
+      return null;
+    }
 
     BasePresenter presenter = await UIManager.Instance.OpenWindow(
       ModuleName,
@@ -107,7 +138,11 @@ public abstract class BaseModule : BaseEmitter
       definition.PresenterType,
       args);
     if (presenter != null && presenter.GetType() != definition.PresenterType)
-      throw new InvalidOperationException($"ViewType {viewType} is bound to {definition.PresenterType.Name}, but UIManager returned {presenter.GetType().Name}.");
+    {
+      Debug.LogError($"[{GetType().Name}] ViewType {viewType} is bound to {definition.PresenterType.Name}, but UIManager returned {presenter.GetType().Name}.");
+      return null;
+    }
+
     return presenter;
   }
 
@@ -118,10 +153,21 @@ public abstract class BaseModule : BaseEmitter
   /// <returns>表示打开过程的任务；资源缺失或请求取消时结果为 null。</returns>
   public async Task<BasePresenter> OpenWindowIn(Enum viewType, Transform parent, object args = null)
   {
-    if (viewType == null) throw new ArgumentNullException(nameof(viewType));
-    if (parent == null) throw new ArgumentNullException(nameof(parent));
+    if (viewType == null)
+    {
+      Debug.LogError($"[{GetType().Name}] Cannot open a window with a null ViewType.");
+      return null;
+    }
+    if (parent == null)
+    {
+      Debug.LogError($"[{GetType().Name}] Cannot open {viewType} without a parent Transform.");
+      return null;
+    }
     if (!_presenterDefinitions.TryGetValue(viewType, out PresenterDefinition definition))
-      throw new InvalidOperationException($"[{GetType().Name}] ViewType is not registered: {viewType}");
+    {
+      Debug.LogError($"[{GetType().Name}] ViewType is not registered: {viewType}.");
+      return null;
+    }
 
     BasePresenter presenter = await UIManager.Instance.OpenWindowIn(
       ModuleName,
@@ -131,7 +177,11 @@ public abstract class BaseModule : BaseEmitter
       parent,
       args);
     if (presenter != null && presenter.GetType() != definition.PresenterType)
-      throw new InvalidOperationException($"ViewType {viewType} is bound to {definition.PresenterType.Name}, but UIManager returned {presenter.GetType().Name}.");
+    {
+      Debug.LogError($"[{GetType().Name}] ViewType {viewType} is bound to {definition.PresenterType.Name}, but UIManager returned {presenter.GetType().Name}.");
+      return null;
+    }
+
     return presenter;
   }
 
@@ -139,18 +189,33 @@ public abstract class BaseModule : BaseEmitter
   /// <param name="viewType">本模块注册的界面类型。</param>
   public void CancelPendingOpen(Enum viewType)
   {
-    if (viewType == null) throw new ArgumentNullException(nameof(viewType));
+    if (viewType == null)
+    {
+      Debug.LogError($"[{GetType().Name}] Cannot cancel a Presenter open with a null ViewType.");
+      return;
+    }
+
     UIManager.Instance.CancelPendingOpen(ModuleName, viewType);
   }
 
   /// <summary>按模块 ViewType 打开强类型界面；Presenter 类型必须与登记定义一致。</summary>
   protected async Task<T> OpenWindow<T>(Enum viewType, object args = null) where T : BasePresenter, new()
   {
-    if (viewType == null) throw new ArgumentNullException(nameof(viewType));
+    if (viewType == null)
+    {
+      Debug.LogError($"[{GetType().Name}] Cannot open a window with a null ViewType.");
+      return null;
+    }
     if (!_presenterDefinitions.TryGetValue(viewType, out PresenterDefinition definition))
-      throw new InvalidOperationException($"[{GetType().Name}] ViewType is not registered: {viewType}");
+    {
+      Debug.LogError($"[{GetType().Name}] ViewType is not registered: {viewType}.");
+      return null;
+    }
     if (definition.PresenterType != typeof(T))
-      throw new InvalidOperationException($"ViewType {viewType} is bound to {definition.PresenterType.Name}, not {typeof(T).Name}.");
+    {
+      Debug.LogError($"[{GetType().Name}] ViewType {viewType} is bound to {definition.PresenterType.Name}, not {typeof(T).Name}.");
+      return null;
+    }
 
     BasePresenter presenter = await UIManager.Instance.OpenWindow(
       ModuleName,
@@ -160,15 +225,27 @@ public abstract class BaseModule : BaseEmitter
       args);
     if (presenter == null) return null;
     if (presenter is T typedPresenter) return typedPresenter;
-    throw new InvalidOperationException($"ViewType {viewType} is bound to {presenter.GetType().Name}, not {typeof(T).Name}.");
+    Debug.LogError($"[{GetType().Name}] ViewType {viewType} is bound to {presenter.GetType().Name}, not {typeof(T).Name}.");
+    return null;
   }
 
   /// <summary>登记 Proxy；模块已运行时会立即初始化该 Proxy。</summary>
   protected T RegProxy<T>(T proxy) where T : BaseProxy
   {
-    if (proxy == null) throw new ArgumentNullException(nameof(proxy));
-    RegisterUnique(_proxies, proxy, "Proxy");
-    if (IsInitialized) proxy.Initialize(this);
+    if (proxy == null)
+    {
+      Debug.LogError($"[{GetType().Name}] Cannot register a null Proxy.");
+      return null;
+    }
+    if (!RegisterUnique(_proxies, proxy, "Proxy"))
+      return null;
+    if (IsInitialized)
+    {
+      proxy.Initialize(this);
+      if (!proxy.IsInitialized)
+        return null;
+    }
+
     return proxy;
   }
 
@@ -177,9 +254,10 @@ public abstract class BaseModule : BaseEmitter
   /// <summary>将事件绑定到 Command；参数由 Dispatch 在触发时传入，模块释放时自动取消监听。</summary>
   protected T RegCmd<T>(int eventId) where T : BaseCommand, new()
   {
-    ValidateEventId(eventId);
+    if (!TryValidateEventId(eventId)) return null;
     T command = new T();
-    RegisterCommand(command);
+    if (!RegisterCommand(command))
+      return null;
 
     // 所有事件统一携带 EventContext，Command 可同时读取事件类型和可选数据。
     Action<EventContext> listener = command.Execute;
@@ -193,7 +271,12 @@ public abstract class BaseModule : BaseEmitter
   /// <summary>按模块 ViewType 获取已实例化的 Presenter；未打开时返回 null。</summary>
   public BasePresenter GetPresenter(Enum viewType)
   {
-    if (viewType == null) throw new ArgumentNullException(nameof(viewType));
+    if (viewType == null)
+    {
+      Debug.LogError($"[{GetType().Name}] Cannot get a Presenter with a null ViewType.");
+      return null;
+    }
+
     return UIManager.Instance.GetPresenter(ModuleName, viewType);
   }
 
@@ -222,18 +305,32 @@ public abstract class BaseModule : BaseEmitter
     return false;
   }
 
-  private void RegisterCommand(BaseCommand command)
+  private bool RegisterCommand(BaseCommand command)
   {
-    RegisterUnique(_commands, command, "Command");
+    if (!RegisterUnique(_commands, command, "Command"))
+      return false;
+
     command.SetModule(this);
+    return true;
   }
 
-  private void RegisterUnique<T>(Dictionary<Type, T> items, T item, string itemType)
+  private bool RegisterUnique<T>(Dictionary<Type, T> items, T item, string itemType)
   {
+    if (item == null)
+    {
+      Debug.LogError($"[{GetType().Name}] Cannot register a null {itemType}.");
+      return false;
+    }
+
     Type type = item.GetType();
     if (items.ContainsKey(type))
-      throw new InvalidOperationException($"[{GetType().Name}] {itemType} already registered: {type.Name}");
+    {
+      Debug.LogError($"[{GetType().Name}] {itemType} already registered: {type.Name}.");
+      return false;
+    }
+
     items.Add(type, item);
+    return true;
   }
 
 }

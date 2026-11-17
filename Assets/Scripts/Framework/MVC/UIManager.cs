@@ -72,11 +72,8 @@ public class UIManager : Singleton<UIManager>
 
     public PresenterKey(ModuleName moduleName, Enum viewType)
     {
-      if (moduleName == ModuleName.None)
-        throw new ArgumentException("ModuleName cannot be None.", nameof(moduleName));
-
       ModuleName = moduleName;
-      ViewType = viewType ?? throw new ArgumentNullException(nameof(viewType));
+      ViewType = viewType;
     }
 
     public bool Equals(PresenterKey other)
@@ -188,6 +185,11 @@ public class UIManager : Singleton<UIManager>
   public void ShowUI(string prefabPath, UILayerIndex layer)
   {
     if (!CheckInitialized()) return;
+    if (string.IsNullOrWhiteSpace(prefabPath))
+    {
+      Debug.LogError("[UIManager] Cannot show UI with an empty Prefab path.");
+      return;
+    }
 
     if (!_uiCache.TryGetValue(prefabPath, out GameObject uiObj) || uiObj == null)
     {
@@ -212,10 +214,19 @@ public class UIManager : Singleton<UIManager>
         _uiAssetHandles[prefabPath] = prefabHandle;
         Debug.Log($"[UIManager] Created UI: {prefabPath}");
       }
-      catch
+      catch (Exception exception)
       {
+        if (uiObj != null)
+          UnityEngine.Object.Destroy(uiObj);
+
+        _uiCache.Remove(prefabPath);
+        if (_uiAssetHandles.TryGetValue(prefabPath, out AssetHandle<GameObject> cachedHandle)
+            && ReferenceEquals(cachedHandle, prefabHandle))
+          _uiAssetHandles.Remove(prefabPath);
+
         prefabHandle.Dispose();
-        throw;
+        Debug.LogError($"[UIManager] Failed to create UI '{prefabPath}'. Error={exception}");
+        return;
       }
     }
 
@@ -332,6 +343,9 @@ public class UIManager : Singleton<UIManager>
     Type expectedPresenterType,
     object args = null)
   {
+    if (!ValidatePresenterKey(moduleName, viewType, "open a Presenter"))
+      return Task.FromResult<BasePresenter>(null);
+
     PresenterKey viewKey = new PresenterKey(moduleName, viewType);
     return OpenWindowInternal(viewKey, presenterFactory, expectedPresenterType, args, null);
   }
@@ -352,7 +366,14 @@ public class UIManager : Singleton<UIManager>
     Transform parent,
     object args = null)
   {
-    if (parent == null) throw new ArgumentNullException(nameof(parent));
+    if (parent == null)
+    {
+      Debug.LogError($"[UIManager] Cannot open {viewType} without a parent Transform.");
+      return Task.FromResult<BasePresenter>(null);
+    }
+    if (!ValidatePresenterKey(moduleName, viewType, "open a Presenter"))
+      return Task.FromResult<BasePresenter>(null);
+
     PresenterKey viewKey = new PresenterKey(moduleName, viewType);
     return OpenWindowInternal(viewKey, presenterFactory, expectedPresenterType, args, parent);
   }
@@ -360,6 +381,9 @@ public class UIManager : Singleton<UIManager>
   /// <summary>取消指定界面尚未完成的打开请求；资源加载完成后会释放句柄且不创建 View。</summary>
   internal void CancelPendingOpen(ModuleName moduleName, Enum viewType)
   {
+    if (!ValidatePresenterKey(moduleName, viewType, "cancel a Presenter open"))
+      return;
+
     CancelPendingOpen(new PresenterKey(moduleName, viewType));
   }
 
@@ -379,17 +403,38 @@ public class UIManager : Singleton<UIManager>
     object args,
     Transform parentOverride)
   {
-    if (presenterFactory == null) throw new ArgumentNullException(nameof(presenterFactory));
+    if (presenterFactory == null)
+    {
+      Debug.LogError($"[UIManager] Cannot open {viewKey} with a null Presenter factory.");
+      return Task.FromResult<BasePresenter>(null);
+    }
+    if (expectedPresenterType == null)
+    {
+      Debug.LogError($"[UIManager] Cannot open {viewKey} without an expected Presenter type.");
+      return Task.FromResult<BasePresenter>(null);
+    }
+    if (!IsInitialized)
+    {
+      Debug.LogError($"[UIManager] Cannot open {viewKey} before UIManager is initialized.");
+      return Task.FromResult<BasePresenter>(null);
+    }
+
     bool hasParentOverride = parentOverride != null;
 
     if (_presenterCache.TryGetValue(viewKey, out BasePresenter cachedPresenter))
     {
       if (!expectedPresenterType.IsInstanceOfType(cachedPresenter))
-        throw new InvalidOperationException($"[UIManager] View key {viewKey} is bound to {cachedPresenter.GetType().Name}, not {expectedPresenterType.Name}.");
+      {
+        Debug.LogError($"[UIManager] View key {viewKey} is bound to {cachedPresenter.GetType().Name}, not {expectedPresenterType.Name}.");
+        return Task.FromResult<BasePresenter>(null);
+      }
       if (parentOverride != null && cachedPresenter.View != null && cachedPresenter.View.transform.parent != parentOverride)
         cachedPresenter.View.transform.SetParent(parentOverride, false);
       if (!cachedPresenter.IsVisible)
-        OpenPresenter(viewKey, cachedPresenter, args);
+      {
+        if (!OpenPresenter(viewKey, cachedPresenter, args))
+          return Task.FromResult<BasePresenter>(null);
+      }
       return Task.FromResult(cachedPresenter);
     }
 
@@ -426,9 +471,15 @@ public class UIManager : Singleton<UIManager>
     {
       presenter = presenterFactory();
       if (presenter == null)
-        throw new InvalidOperationException($"[UIManager] Presenter factory returned null for view key {viewKey}.");
+      {
+        Debug.LogError($"[UIManager] Presenter factory returned null for view key {viewKey}.");
+        return null;
+      }
       if (!expectedPresenterType.IsInstanceOfType(presenter))
-        throw new InvalidOperationException($"[UIManager] Presenter factory for {viewKey} returned {presenter.GetType().Name}, not {expectedPresenterType.Name}.");
+      {
+        Debug.LogError($"[UIManager] Presenter factory for {viewKey} returned {presenter.GetType().Name}, not {expectedPresenterType.Name}.");
+        return null;
+      }
       if (string.IsNullOrWhiteSpace(presenter.PrefabPath))
       {
         Debug.LogError($"[UIManager] Presenter {presenter.GetType().Name} must define a valid PrefabPath.");
@@ -439,7 +490,10 @@ public class UIManager : Singleton<UIManager>
       if (pending.IsCancelled || !IsInitialized)
         return null;
       if (hasParentOverride && parentOverride == null)
+      {
+        Debug.LogWarning($"[UIManager] Parent Transform for {viewKey} was destroyed before the Presenter finished loading.");
         return null;
+      }
       if (prefabHandle == null)
       {
         Debug.LogError($"[UIManager] Prefab not found: {presenter.PrefabPath}");
@@ -451,17 +505,40 @@ public class UIManager : Singleton<UIManager>
         prefabHandle.Dispose();
         prefabHandle = null;
         if (!expectedPresenterType.IsInstanceOfType(existingPresenter))
-          throw new InvalidOperationException($"[UIManager] View key {viewKey} is bound to {existingPresenter.GetType().Name}, not {expectedPresenterType.Name}.");
+        {
+          Debug.LogError($"[UIManager] View key {viewKey} is bound to {existingPresenter.GetType().Name}, not {expectedPresenterType.Name}.");
+          return null;
+        }
         if (parentOverride != null && existingPresenter.View != null && existingPresenter.View.transform.parent != parentOverride)
           existingPresenter.View.transform.SetParent(parentOverride, false);
         if (!existingPresenter.IsVisible)
-          OpenPresenter(viewKey, existingPresenter, args);
+        {
+          if (!OpenPresenter(viewKey, existingPresenter, args))
+            return null;
+        }
+
         return existingPresenter;
       }
 
       Transform parent = parentOverride != null ? parentOverride : GetLayerParent(presenter.Layer);
       viewObject = UnityEngine.Object.Instantiate(prefabHandle.Asset, parent);
-      presenter.OnInit(viewObject.GetComponent<UIView>());
+      UIView view = viewObject.GetComponent<UIView>();
+      if (view == null)
+      {
+        Debug.LogError($"[UIManager] Prefab for {viewKey} has no UIView component.");
+        UnityEngine.Object.Destroy(viewObject);
+        viewObject = null;
+        return null;
+      }
+
+      presenter.OnInit(view);
+      if (presenter.View != view)
+      {
+        Debug.LogError($"[UIManager] Presenter {presenter.GetType().Name} failed to bind the View for {viewKey}.");
+        UnityEngine.Object.Destroy(viewObject);
+        viewObject = null;
+        return null;
+      }
 
       _presenterCache.Add(viewKey, presenter);
       _presenterKeys.Add(presenter, viewKey);
@@ -470,10 +547,19 @@ public class UIManager : Singleton<UIManager>
       isCached = true;
 
       if (!presenter.IsVisible)
-        OpenPresenter(viewKey, presenter, args);
+      {
+        if (!OpenPresenter(viewKey, presenter, args))
+        {
+          presenter.OnDestroy();
+          RemovePresenter(viewKey, presenter);
+          isCached = false;
+          return null;
+        }
+      }
+
       return presenter;
     }
-    catch
+    catch (Exception exception)
     {
       if (isCached && presenter != null)
       {
@@ -485,7 +571,9 @@ public class UIManager : Singleton<UIManager>
       {
         UnityEngine.Object.Destroy(viewObject);
       }
-      throw;
+
+      Debug.LogError($"[UIManager] Failed to create Presenter for {viewKey}. Error={exception}");
+      return null;
     }
     finally
     {
@@ -551,13 +639,35 @@ public class UIManager : Singleton<UIManager>
     }
   }
 
-  private void OpenPresenter(PresenterKey viewKey, BasePresenter presenter, object args)
+  private bool OpenPresenter(PresenterKey viewKey, BasePresenter presenter, object args)
   {
-    presenter.OnOpen(args);
+    if (presenter == null || presenter.View == null)
+    {
+      Debug.LogError($"[UIManager] Cannot open uninitialized Presenter for {viewKey}.");
+      return false;
+    }
+
+    try
+    {
+      presenter.OnOpen(args);
+    }
+    catch (Exception exception)
+    {
+      Debug.LogError($"[UIManager] Presenter {presenter.GetType().Name} failed to open for {viewKey}. Error={exception}");
+      return false;
+    }
+
+    if (!presenter.IsVisible)
+    {
+      Debug.LogError($"[UIManager] Presenter {presenter.GetType().Name} did not become visible for {viewKey}.");
+      return false;
+    }
+
     Debug.Log($"打开界面：{presenter.GetType().Name}, m:{(int)viewKey.ModuleName}, v:{Convert.ToInt32(viewKey.ViewType)}");
     EventBus.Emit(
       EventDefine.UI_PRESENTER_OPENED,
       new PresenterLifecycleEventArgs(viewKey.ModuleName, viewKey.ViewType));
+    return true;
   }
 
   private void ClosePresenter(PresenterKey viewKey, BasePresenter presenter)
@@ -598,7 +708,28 @@ public class UIManager : Singleton<UIManager>
         OpenPresenter(viewKey, presenter, args);
       else
       {
-        presenter.OnOpen(args);
+        if (presenter.View == null)
+        {
+          Debug.LogError($"[UIManager] Cannot open uninitialized Presenter {presenter.GetType().Name}.");
+          return;
+        }
+
+        try
+        {
+          presenter.OnOpen(args);
+        }
+        catch (Exception exception)
+        {
+          Debug.LogError($"[UIManager] Presenter {presenter.GetType().Name} failed to open. Error={exception}");
+          return;
+        }
+
+        if (!presenter.IsVisible)
+        {
+          Debug.LogError($"[UIManager] Presenter {presenter.GetType().Name} did not become visible.");
+          return;
+        }
+
         Debug.Log($"打开界面：{presenter.GetType().Name}, m:unknown, v:unknown");
       }
     }
@@ -640,6 +771,9 @@ public class UIManager : Singleton<UIManager>
   /// <summary>供 BaseModule 按模块 ViewType 查询已创建的 Presenter。</summary>
   internal BasePresenter GetPresenter(ModuleName moduleName, Enum viewType)
   {
+    if (!ValidatePresenterKey(moduleName, viewType, "get a Presenter"))
+      return null;
+
     PresenterKey viewKey = new PresenterKey(moduleName, viewType);
     return _presenterCache.TryGetValue(viewKey, out BasePresenter presenter) ? presenter : null;
   }
@@ -647,8 +781,28 @@ public class UIManager : Singleton<UIManager>
   /// <summary>检查指定模块 ViewType 的 Presenter 是否存在。</summary>
   internal bool HasPresenter(ModuleName moduleName, Enum viewType)
   {
+    if (!ValidatePresenterKey(moduleName, viewType, "check a Presenter"))
+      return false;
+
     PresenterKey viewKey = new PresenterKey(moduleName, viewType);
     return _presenterCache.ContainsKey(viewKey);
+  }
+
+  private static bool ValidatePresenterKey(ModuleName moduleName, Enum viewType, string operation)
+  {
+    if (moduleName == ModuleName.None)
+    {
+      Debug.LogError($"[UIManager] Cannot {operation}: ModuleName is None.");
+      return false;
+    }
+
+    if (viewType == null)
+    {
+      Debug.LogError($"[UIManager] Cannot {operation}: ViewType is null.");
+      return false;
+    }
+
+    return true;
   }
 
   #endregion

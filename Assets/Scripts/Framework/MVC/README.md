@@ -92,7 +92,7 @@ MonoBehaviour 通常在 `OnEnable`/`OnDisable` 成对订阅；继承 `BaseEmitte
 
 ## Proxy 与协议
 
-Proxy 在 `OnInit` 中通过 `RegisterHandler<T>(uint command, Action<T> handler)` 注册协议。每个 Proxy 独立记录自己注册的 cmd；重复注册会抛异常，模块释放时自动注销。
+Proxy 在 `OnInit` 中通过 `RegisterHandler<T>(uint command, Action<T> handler)` 注册协议。每个 Proxy 独立记录自己注册的 cmd；重复注册会记录错误并跳过，模块释放时自动注销。
 
 Proxy 可以更新本模块状态或派发业务事件，但不能直接访问 View。网络数据流与限制见 `../Network/README.md`。
 
@@ -100,7 +100,9 @@ Proxy 可以更新本模块状态或派发业务事件，但不能直接访问 V
 
 模块用 `RegPresenter<TPresenter>(viewType)` 建立一一映射；统一通过 `await OpenWindow(viewType, args)` 或 `await OpenWindow<TPresenter>(viewType, args)` 打开界面。调用方式不区分首次打开与缓存复用：`UIManager` 内部优先复用已缓存 Presenter，否则异步加载 Prefab 并创建 Presenter/View。非泛型入口返回 `BasePresenter`，需要强类型结果时使用泛型入口。
 
-相同 Module/ViewType 的并发打开会共享同一个创建任务。异步完成后会检查 Presenter 是否仍有效，模块释放会取消尚未完成的打开，并在资源返回后释放句柄。资源缺失或请求取消时结果为 `null`，加载异常会通过 Task 传播，调用方应明确处理。
+相同 Module/ViewType 的并发打开会共享同一个创建任务。异步完成后会检查 Presenter 是否仍有效，模块释放会取消尚未完成的打开，并在资源返回后释放句柄。资源缺失、无效参数、Presenter 生命周期失败或加载异常会记录错误日志，打开任务以 `null` 完成；调用方应检查返回值，不依赖异常处理这些失败。
+
+MVC 的参数与状态校验失败统一记录 `Debug.LogError` 并中止当前操作。为保持现有 API 签名，`void` 操作不继续执行，对象或异步对象结果返回 `null`，已有 `bool` 查询返回 `false`；有返回值的注册 API 返回 `null` 表示注册失败，`void` 注册 API 记录错误后跳过本次注册。
 
 - Presenter 的 `Layer` 决定 `Main/Window/Model/Tip` 层级。
 - `await BaseModule.OpenWindowIn(viewType, parent, args)` 可把 Presenter View 挂到复合界面的局部容器；指定父节点时优先于 `Layer`，普通 `OpenWindow` 仍使用全局层级。
@@ -116,7 +118,7 @@ Proxy 可以更新本模块状态或派发业务事件，但不能直接访问 V
 - `OnClose` 会解除 `BaseEmitter` 事件，`OnDestroy` 还会清理按钮监听和 View 实例。
 - Presenter 隐藏时资源句柄随缓存保留；Presenter 销毁时释放 Prefab 句柄。
 
-需要强类型参数时使用 `BasePresenter<TView, TArgs>`，其中 `TArgs` 必须为 `struct`，每次打开都必须传入准确类型的参数；缺失或类型错误会抛出 `ArgumentException`，不再以默认值继续打开。`BasePresenter<TView>` 初始化时要求 View 存在且类型匹配，否则立即抛出异常。Presenter 销毁后不可再次初始化或打开；按钮监听随 View 销毁清理，隐藏缓存时保留以供复用。界面关闭、异步返回和场景切换时应重新检查目标对象是否仍有效。
+需要强类型参数时使用 `BasePresenter<TView, TArgs>`，其中 `TArgs` 必须为 `struct`，每次打开都必须传入准确类型的参数；参数缺失或类型错误会记录错误并中止打开，不会以默认值继续。`BasePresenter<TView>` 初始化时要求 View 存在且类型匹配；无效 View 会记录错误，UIManager 随后放弃本次打开并返回 `null`。Presenter 销毁后不可再次初始化或打开；按钮监听随 View 销毁清理，隐藏缓存时保留以供复用。界面关闭、异步返回和场景切换时应重新检查目标对象是否仍有效。
 
 ## 跨模块规则
 

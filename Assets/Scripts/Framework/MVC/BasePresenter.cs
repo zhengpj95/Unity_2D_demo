@@ -37,11 +37,20 @@ public abstract class BasePresenter : BaseEmitter
   public virtual void OnInit(UIView view)
   {
     if (_isDestroyed)
-      throw new InvalidOperationException($"[{GetType().Name}] Destroyed Presenter cannot be initialized again.");
+    {
+      Debug.LogError($"[{GetType().Name}] Destroyed Presenter cannot be initialized again.");
+      return;
+    }
     if (view == null)
-      throw new ArgumentNullException(nameof(view), $"[{GetType().Name}] View component is required.");
+    {
+      Debug.LogError($"[{GetType().Name}] View component is required.");
+      return;
+    }
     if (View != null)
-      throw new InvalidOperationException($"[{GetType().Name}] Presenter has already been initialized.");
+    {
+      Debug.LogError($"[{GetType().Name}] Presenter has already been initialized.");
+      return;
+    }
 
     View = view;
   }
@@ -49,7 +58,7 @@ public abstract class BasePresenter : BaseEmitter
   // 打开界面
   public virtual void OnOpen(object args = null)
   {
-    EnsureInitialized();
+    if (!TryEnsureInitialized()) return;
     IsVisible = true;
     View.gameObject.SetActive(true);
     OnShow();
@@ -98,8 +107,19 @@ public abstract class BasePresenter : BaseEmitter
   /// <summary>检查 Presenter 是否已绑定有效 View，避免生命周期错误延迟成空引用异常。</summary>
   protected void EnsureInitialized()
   {
+    TryEnsureInitialized();
+  }
+
+  /// <summary>验证 Presenter 是否绑定有效 View；无效时记录错误并返回 false。</summary>
+  protected bool TryEnsureInitialized()
+  {
     if (_isDestroyed || View == null)
-      throw new InvalidOperationException($"[{GetType().Name}] Presenter must be initialized and alive before use.");
+    {
+      Debug.LogError($"[{GetType().Name}] Presenter must be initialized and alive before use.");
+      return false;
+    }
+
+    return true;
   }
 
   #endregion
@@ -194,16 +214,20 @@ public abstract class BasePresenter<TView> : BasePresenter where TView : UIView
   {
     get
     {
-      EnsureInitialized();
+      if (!TryEnsureInitialized()) return null;
       if (View is TView typedView) return typedView;
-      throw new InvalidOperationException($"[{GetType().Name}] Bound View must be {typeof(TView).Name}, got {View.GetType().Name}.");
+      Debug.LogError($"[{GetType().Name}] Bound View must be {typeof(TView).Name}, got {View.GetType().Name}.");
+      return null;
     }
   }
 
   public override void OnInit(UIView view)
   {
     if (view is not TView)
-      throw new InvalidOperationException($"[{GetType().Name}] View type mismatch: expected {typeof(TView)}, got {view?.GetType().Name ?? "null"}.");
+    {
+      Debug.LogError($"[{GetType().Name}] View type mismatch: expected {typeof(TView)}, got {view?.GetType().Name ?? "null"}.");
+      return;
+    }
 
     base.OnInit(view);
   }
@@ -229,9 +253,8 @@ public abstract class BasePresenter<TView, TArgs> : BasePresenter<TView>
       return;
     }
 
-    throw new ArgumentException(
-      $"[{GetType().Name}] Open arguments must be {typeof(TArgs).Name}; got {args?.GetType().Name ?? "null"}.",
-      nameof(args));
+    Debug.LogError(
+      $"[{GetType().Name}] Open arguments must be {typeof(TArgs).Name}; got {args?.GetType().Name ?? "null"}.");
   }
 
   /// <summary>
@@ -240,7 +263,7 @@ public abstract class BasePresenter<TView, TArgs> : BasePresenter<TView>
   /// <param name="args">类型安全的参数</param>
   public virtual void OnOpen(TArgs args)
   {
-    EnsureInitialized();
+    if (!TryEnsureInitialized()) return;
     base.OnOpen(null);
   }
 }
