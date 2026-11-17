@@ -23,15 +23,15 @@
 
 不要求每次把所有文档全部读完；根据任务先读取最接近的事实源，再沿真实调用链补充：
 
-| 任务 | 必读内容 |
-| --- | --- |
-| 启动、全局生命周期、Module、跨模块依赖 | `Docs/Architecture.md`、`GameMgr.cs`、目标 Module 与基类 |
-| UI、Presenter、窗口层级 | `Docs/Architecture.md`、`Framework/MVC/README.md`、`UIManager.cs`、目标 Presenter/View/Prefab |
-| 资源、Addressables、对象池协作 | `Docs/ResourceManagement.md`、`Framework/Resource/`、`PoolManager.cs`、真实调用方 |
-| Network/Protobuf | `Framework/Network/README.md`、Network 代码、协议定义与目标 Proxy |
-| Survivor | 本文“Survivor 模块开发”列出的文档与代码 |
-| 独立原型（FrogAdventure/RPG/Melee） | 目标场景、组件和调用方；不要默认其已接入 Module/MVC |
-| 第三方资源或包 | `Docs/ThirdPartyAssets.md`、`Packages/manifest.json`、本地许可证文件 |
+| 任务                                   | 必读内容                                                                                      |
+| -------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 启动、全局生命周期、Module、跨模块依赖 | `Docs/Architecture.md`、`GameMgr.cs`、目标 Module 与基类                                      |
+| UI、Presenter、窗口层级                | `Docs/Architecture.md`、`Framework/MVC/README.md`、`UIManager.cs`、目标 Presenter/View/Prefab |
+| 资源、Addressables、对象池协作         | `Docs/ResourceManagement.md`、`Framework/Resource/`、`PoolManager.cs`、真实调用方             |
+| Network/Protobuf                       | `Framework/Network/README.md`、Network 代码、协议定义与目标 Proxy                             |
+| Survivor                               | 本文“Survivor 模块开发”列出的文档与代码                                                       |
+| 独立原型（FrogAdventure/RPG/Melee）    | 目标场景、组件和调用方；不要默认其已接入 Module/MVC                                           |
+| 第三方资源或包                         | `Docs/ThirdPartyAssets.md`、`Packages/manifest.json`、本地许可证文件                          |
 
 ## 基本原则
 
@@ -43,6 +43,8 @@
 - 开始前先检查 `git status --short`；用户已有修改默认不可覆盖、回退或顺手格式化。
 - 不确定业务规则时先从调用方、已有实现和文档取证；只有仓库无法消除关键歧义时才向用户提问。
 - 新增通用 Manager、Service、Bus 或基础设施前，先搜索是否已有同职责实现，避免重复系统。
+- 不要写 throw 异常处理代码，除非明确需要。使用 Debug 打印处理，或使用 Boolean+Debug 处理。
+- 不要修改第三方插件代码，如 `Assets/ThirdParty/` 和 `Packages/`，除非明确需要。
 
 ## Unity 约定
 
