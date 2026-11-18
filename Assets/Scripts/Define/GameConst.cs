@@ -18,3 +18,36 @@ public enum LayoutType
   Vertical,
   Horizontal,
 }
+
+/**
+ * 实体状态
+ */
+public enum EntityState
+{
+  Idle,
+  Run,
+  Jump,
+  Fall,
+  Attack,
+  Hurt,
+  Death,
+}
+
+/**
+ * 掉落物品类型
+ */
+public enum DropItemType
+{
+  Gem,
+  Coin,
+}
+
+/**
+ * Buff叠加类型
+ */
+public enum BuffStackType
+{
+  Refresh,   // 刷新时间
+  Stack,     // 叠加层数，一个效果*层数
+  Replace,   // 覆盖
+}
