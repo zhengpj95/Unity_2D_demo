@@ -15,7 +15,7 @@
 | `Assets/Scripts/Modules/Guide/GuideCursor.cs`    | 旧式目标标记；按 `TargetId` 匹配并提供点击通知与可高亮区域。                                    |
 | `Assets/Scripts/Modules/Guide/View/GuideView.cs` | 显示手势、说明和遮罩；步骤与目标协调由 GuidePresenter 负责。                                      |
 | `Assets/Scripts/TestCode/GuideDemoBootstrap.cs` | 按场景 Inspector 引用启动指定配置的演示组件；GuideDemo 与 Launcher 的样例入口使用。              |
-| `Assets/Editor/GuideDemoSetup.cs`               | Editor 菜单工具，用于创建/重建 GuideDemo 演示场景。                                             |
+| `Assets/Editor/SceneAndDemo/GuideDemoSetup.cs`  | Editor 菜单工具，用于创建/重建 GuideDemo 演示场景。                                             |
 | `Assets/Configs/Guide/Guide_001.asset`          | 三步新手入门演示配置。                                                                          |
 | `Assets/Configs/Guide/Guide_002.asset`          | Launcher 中的两步弹窗引导配置，目标为 `btnTip` 和 `btn_confirm`。                              |
 
