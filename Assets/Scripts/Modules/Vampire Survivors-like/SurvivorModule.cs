@@ -9,6 +9,16 @@ public class SurvivorModule : BaseModule
 
   private SurvivorProxy _proxy;
   private SurvivorGameplayController _gameplayController;
+  private Vector2 _moveInput;
+
+  /// <summary>当前屏幕摇杆输出的移动向量；由局内 HUD Presenter 写入，Hero 每帧读取。</summary>
+  public Vector2 MoveInput => _moveInput;
+
+  /// <summary>设置屏幕摇杆方向；零向量表示摇杆归中。</summary>
+  public void SetMoveInput(Vector2 moveInput)
+  {
+    _moveInput = Vector2.ClampMagnitude(moveInput, 1f);
+  }
 
   protected override void OnInit()
   {

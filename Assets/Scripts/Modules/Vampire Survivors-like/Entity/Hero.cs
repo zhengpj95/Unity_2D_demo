@@ -71,7 +71,7 @@ namespace VampireSurvivorsLike
 
     void Update()
     {
-      var moveInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+      Vector2 moveInput = GetMoveInput();
       if (moveInput != Vector2.zero)
       {
         var face = GetCardinal(moveInput);
@@ -108,6 +108,18 @@ namespace VampireSurvivorsLike
       return _survivorModule == null
         ? temporaryModifier.ApplyTo(baseValue)
         : _survivorModule.CalculatePlayerStat(stat, baseValue, temporaryModifier);
+    }
+
+    /// <summary>
+    /// 读取本帧移动输入：屏幕摇杆输出非零时优先使用，否则回退键盘轴。
+    /// 这样 Editor 中鼠标拖拽摇杆、触屏拖拽和原有键盘操作可以同时保留。
+    /// </summary>
+    private Vector2 GetMoveInput()
+    {
+      if (_survivorModule != null && _survivorModule.MoveInput != Vector2.zero)
+        return _survivorModule.MoveInput;
+
+      return new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
     }
 
     private Vector2 GetCardinal(Vector2 v)

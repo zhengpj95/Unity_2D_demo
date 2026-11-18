@@ -202,6 +202,14 @@ Hero / SurvivorModel 基础值
 
 当前场景对 Hero Prefab 的 `basePickupRadius` 覆盖值为 `0.3`，实际效果仍应以运行时 Inspector 和 Gizmos 为准。
 
+### 玩家移动输入
+
+`Hero.Update()` 通过 `GetMoveInput()` 读取本帧移动向量：屏幕摇杆输出非零时优先使用，否则回退旧 Input Manager 的 `Horizontal` / `Vertical` 轴。因此键盘、Editor 中的鼠标拖拽摇杆和触屏拖拽摇杆可以同时使用，原有 `normalized → MoveSpeed → Rigidbody2D.velocity` 链路与四方向动画表现保持不变。
+
+屏幕摇杆资源是 `Assets/Prefabs/Joystick/JoystickPanel.prefab`。局内 HUD 初始化时，`SurvivorMainPresenter` 通过 `AssetLoader.LoadHandleAsync<GameObject>("Prefabs/Joystick/JoystickPanel")` 加载并实例化到 HUD 根节点下，运行时挂载 `JoystickView`，不修改预制体资源。`JoystickView` 用 uGUI `IPointerDownHandler` / `IDragHandler` / `IPointerUpHandler` 同时接收鼠标与触摸拖拽，并按 `pointerId` 只跟踪首个指针；方向经 `SurvivorModule.SetMoveInput()` 转交 Hero，Presenter 不直接操作实体。界面隐藏时摇杆归中并清零输入，Presenter 销毁时退订事件并释放资源句柄。
+
+UI 事件系统当前由 `UILauncher` 运行时创建 `StandaloneInputModule`，项目 `activeInputHandler: 2`（Both），触屏会被映射为指针事件。若以后切换为纯 Input System，需要同步改为 `InputSystemUIInputModule`。
+
 ---
 
 ## 7. 无限地图与相机
