@@ -1,8 +1,7 @@
 using System.Collections;
 using UnityEngine;
-using Msg;
 
-/// <summary>承载 Launcher 登录界面交互，以及网络和提示的测试入口。</summary>
+/// <summary>承载 Launcher 登录界面交互。</summary>
 public class LoadingBehaviour : MonoBehaviour
 {
   /// <summary>登录展示进度条；优先使用 Inspector 引用，缺失时 Awake 在子节点中查找。</summary>
@@ -131,43 +130,6 @@ public class LoadingBehaviour : MonoBehaviour
       Debug.LogError($"[Login] 异步打开 SurvivorHome 失败：{exception}", this);
       SetLoadingVisible(false);
     }
-  }
-
-  /// <summary>按钮测试入口：发送打开通用提示窗的业务事件，由 Misc 模块处理显示。</summary>
-  public void OnOpenAlert()
-  {
-    // EventBus.Emit(EventDefine.MISC_OPEN_ALERT, new AlertTipsPanelArgs("警告标题", "警告信息！不允许随便修改！", null));
-    TimerManager.Instance.AddTimer(3000, () =>
-    {
-      EventBus.Emit(EventDefine.MISC_OPEN_CONFIRM, new ConfirmPanelArgs { title = "确认标题", desc = "确认信息！", confirmAction = () => Debug.Log("[LoadingBehaviour] 确认按钮被点击。", this) });
-      Debug.Log("[LoadingBehaviour] 3 秒后执行。", this);
-    });
-    // EventBus.Emit(EventDefine.MISC_OPEN_CONFIRM, new ConfirmPanelArgs { title = "确认标题", desc = "确认信息！", confirmAction = () => Debug.Log("[LoadingBehaviour] 确认按钮被点击。", this) });
-  }
-
-  /// <summary>按钮测试入口：异步发送固定账号 1001 的登录消息；非 Sent 结果会输出日志。</summary>
-  public async void OnSendLogin()
-  {
-    c2s_user_login message = new c2s_user_login
-    {
-      AccountId = 1001,
-    };
-    NetworkSendResult sendResult = await NetworkMgr.Instance.Send(MessageId.C2S_USER_LOGIN, message);
-    if (sendResult != NetworkSendResult.Sent)
-      Debug.LogWarning($"[LoadingBehaviour] Login message was not sent. Result: {sendResult}", this);
-  }
-
-  /// <summary>按钮测试入口：连接本机 3000 端口的 WebSocket 服务，供协议收发测试使用。</summary>
-  public async void OnConnectProtobuf()
-  {
-    Debug.Log("[LoadingBehaviour] Manual WebSocket connection requested.", this);
-    await NetworkMgr.Instance.Connect("ws://localhost:3000");
-  }
-
-  /// <summary>按钮测试入口：派发测试登录命令事件，验证事件到业务 Command 的调用。</summary>
-  public void OnClickBtnCmd()
-  {
-    EventBus.Emit(EventDefine.TEST_LOGIN_COMMAND, "你好");
   }
 
   /// <summary>解除按钮回调，取消登录任务；下次启用时重新注册。</summary>
