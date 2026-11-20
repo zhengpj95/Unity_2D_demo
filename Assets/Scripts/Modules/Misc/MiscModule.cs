@@ -17,6 +17,8 @@ public sealed class MiscModule : BaseModule
     RegPresenter<ConfirmPanelPresenter>(MiscViewType.Confirm);
     RegCmd<OpenAlertTipsCmd>(EventDefine.MISC_OPEN_ALERT);
     RegCmd<OpenConfirmCmd>(EventDefine.MISC_OPEN_CONFIRM);
+    RegCmd<OpenViewCmd>(EventDefine.UI_OPEN_VIEW);
+    RegCmd<CloseViewCmd>(EventDefine.UI_CLOSE_VIEW);
 
     // 网络层只报告失败状态；通用提示与重试入口属于 Misc 业务模块。
     _networkMgr = NetworkMgr.Instance;

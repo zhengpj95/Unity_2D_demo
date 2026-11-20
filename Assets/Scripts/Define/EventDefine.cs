@@ -42,4 +42,9 @@ public static class EventDefine
   public static readonly int UI_PRESENTER_OPENED = NextId();
   /// <summary>Presenter 关闭事件，数据类型为 PresenterLifecycleEventArgs。</summary>
   public static readonly int UI_PRESENTER_CLOSED = NextId();
+
+  /// <summary>请求按模块名与 ViewType 打开界面，数据类型为 OpenViewArgs。</summary>
+  public static readonly int UI_OPEN_VIEW = NextId();
+  /// <summary>请求按模块名与 ViewType 关闭界面，数据类型为 CloseViewArgs。</summary>
+  public static readonly int UI_CLOSE_VIEW = NextId();
 }
