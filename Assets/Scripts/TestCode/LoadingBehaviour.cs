@@ -18,9 +18,15 @@ public class LoadingBehaviour : MonoBehaviour
   private void Awake()
   {
     if (progressBar == null)
-      progressBar = GetComponentInChildren<UIProgressBar>(true);
+    {
+      // GetComponentInChildren<UIProgressBar>(true); // 递归所有层级的子节点，找到第一个匹配类型就返回
+      progressBar = transform.Find("ProgressBarMask")?.GetComponent<UIProgressBar>();
+    }
     if (btnLogin == null)
+    {
+      // 只查指定名字的直接子节点，路径写错或层级变深就返回 null
       btnLogin = transform.Find("btnLogin")?.GetComponent<UIButton>();
+    }
   }
 
   /// <summary>每次启用恢复登录状态，并注册本组件拥有的按钮回调。</summary>
@@ -30,9 +36,9 @@ public class LoadingBehaviour : MonoBehaviour
     _loadingCoroutine = null;
     SetLoadingVisible(false);
     if (btnLogin != null)
+    {
       btnLogin.Clicked += OnLogin;
-    else
-      Debug.LogError("[LoadingBehaviour] 未绑定 btnLogin UIButton。", this);
+    }
   }
 
   /// <summary>按钮和进度条互斥显示；失败重试时回到登录按钮。</summary>
@@ -51,7 +57,6 @@ public class LoadingBehaviour : MonoBehaviour
     if (_isEnteringGame || !isActiveAndEnabled) return;
     if (progressBar == null)
     {
-      Debug.LogError("[LoadingBehaviour] 未绑定 UIProgressBar，无法播放登录进度。", this);
       return;
     }
 
@@ -73,7 +78,6 @@ public class LoadingBehaviour : MonoBehaviour
       yield return null;
       if (progressBar == null)
       {
-        Debug.LogError("[LoadingBehaviour] 登录进度条已被销毁，取消进入 Home。", this);
         _loadingCoroutine = null;
         _isEnteringGame = false;
         SetLoadingVisible(false);
