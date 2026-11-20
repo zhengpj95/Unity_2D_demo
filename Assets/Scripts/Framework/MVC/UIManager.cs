@@ -490,6 +490,13 @@ public class UIManager : Singleton<UIManager>
         Debug.LogError($"[UIManager] Presenter factory returned null for view key {viewKey}.");
         return null;
       }
+      // 注入所属模块，Presenter 才能用 GetProxy<T>() 访问本模块数据。
+      if (!ModuleManager.Instance.TryGetModule(viewKey.ModuleName, out BaseModule owningModule) || owningModule == null)
+      {
+        Debug.LogError($"[UIManager] Owning module {viewKey.ModuleName} not found for {viewKey}.");
+        return null;
+      }
+      presenter.SetModule(owningModule);
       if (!expectedPresenterType.IsInstanceOfType(presenter))
       {
         Debug.LogError($"[UIManager] Presenter factory for {viewKey} returned {presenter.GetType().Name}, not {expectedPresenterType.Name}.");

@@ -22,8 +22,9 @@ public class SurvivorMainPresenter : BasePresenter
     _survivorModule = ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor);
     if (_survivorModule == null)
       Debug.LogError("[SurvivorMainPresenter] 未找到 SurvivorModule，摇杆输入无法转交 Hero。");
-    else
-      _proxy = _survivorModule.GetProxy<SurvivorProxy>();
+
+    // 通过 BasePresenter.GetProxy 获取本模块 Proxy，不直接访问 ModuleManager 的 Proxy 集合。
+    _proxy = GetProxy<SurvivorProxy>();
 
     // Presenter 自行订阅数据变化，避免 Module 或 Controller 直接调用本类方法。
     On(EventDefine.SURVIVOR_MODEL_CHANGED, OnModelChanged);

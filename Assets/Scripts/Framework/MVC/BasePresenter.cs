@@ -20,6 +20,15 @@ public abstract class BasePresenter : BaseEmitter
   public bool IsVisible { get; private set; }
   private bool _isDestroyed;
 
+  /// <summary>本 Presenter 所属的业务模块；由 UIManager 在创建时注入，用于访问本模块 Proxy。</summary>
+  public BaseModule Module { get; private set; }
+
+  /// <summary>由 UIManager 注入所属模块；Presenter 不自行查找和初始化其他模块。</summary>
+  internal void SetModule(BaseModule module)
+  {
+    Module = module;
+  }
+
   /// <summary>界面所属 UI 层级；默认窗口层，特殊界面由具体 Presenter 重写。</summary>
   public virtual UILayerIndex Layer => UILayerIndex.Window;
   /// <summary>Resources 下的界面 Prefab 路径；注册到模块的 Presenter 必须重写。</summary>
@@ -186,6 +195,44 @@ public abstract class BasePresenter : BaseEmitter
   #endregion
 
   #region 公共方法
+
+  /// <summary>
+  /// 获取本模块登记的指定 Proxy；Presenter 未绑定模块或 Proxy 未登记时返回 null。
+  /// </summary>
+  /// <typeparam name="T">要获取的 Proxy 类型。</typeparam>
+  /// <returns>本模块的 Proxy 实例，未找到时返回 null。</returns>
+  public T GetProxy<T>() where T : BaseProxy
+  {
+    if (Module == null)
+    {
+      Debug.LogError($"[{GetType().Name}] 未绑定所属模块，无法获取 {typeof(T).Name}。");
+      return null;
+    }
+
+    return Module.GetProxy<T>();
+  }
+
+  /// <summary>
+  /// 获取其他模块登记的指定 Proxy；用于跨模块只读数据访问，不缓存返回引用。
+  /// </summary>
+  /// <param name="moduleName">目标模块名。</param>
+  /// <returns>目标模块的 Proxy 实例，模块未注册或未初始化时返回 null。</returns>
+  public T GetProxy<T>(ModuleName moduleName) where T : BaseProxy
+  {
+    if (moduleName == ModuleName.None)
+    {
+      Debug.LogError($"[{GetType().Name}] 目标模块名为 None，无法获取 {typeof(T).Name}。");
+      return null;
+    }
+
+    if (!ModuleManager.Instance.TryGetModule(moduleName, out BaseModule targetModule) || targetModule == null)
+    {
+      Debug.LogError($"[{GetType().Name}] 目标模块 {moduleName} 未注册，无法获取 {typeof(T).Name}。");
+      return null;
+    }
+
+    return targetModule.GetProxy<T>();
+  }
 
   /// <summary>
   /// 关闭自己
