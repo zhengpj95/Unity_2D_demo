@@ -29,6 +29,8 @@ public sealed class GuideModule : BaseModule
   public async Task<bool> StartGuide(GuideConfig config)
   {
     GuideRunner runner = GetRunner();
+    if (runner == null)
+      return false;
     if (!runner.Start(config))
     {
       Debug.LogWarning("[GuideModule] StartGuide rejected: config is null, empty, or contains invalid steps.");
@@ -56,19 +58,23 @@ public sealed class GuideModule : BaseModule
   }
 
   /// <summary>推进到下一步骤；仅 Running 状态会生效。</summary>
-  public void Next() => GetRunner().Next();
+  public void Next() => GetRunner()?.Next();
 
   /// <summary>暂停当前引导；仅 Running 状态会生效。</summary>
-  public void Pause() => GetRunner().Pause();
+  public void Pause() => GetRunner()?.Pause();
 
   /// <summary>恢复已暂停的引导；仅 Paused 状态会生效。</summary>
-  public void Resume() => GetRunner().Resume();
+  public void Resume() => GetRunner()?.Resume();
 
   /// <summary>停止当前引导并清除进度，不触发完成事件。</summary>
-  public void Stop() => GetRunner().Stop();
+  public void Stop() => GetRunner()?.Stop();
 
+  /// <summary>获取引导执行器；模块未初始化或已释放时记录错误并返回 null。</summary>
   private GuideRunner GetRunner()
   {
-    return Runner ?? throw new InvalidOperationException("[GuideModule] GuideRunner is unavailable because the module is not initialized or has been released.");
+    if (Runner != null) return Runner;
+
+    Debug.LogError("[GuideModule] GuideRunner is unavailable because the module is not initialized or has been released.");
+    return null;
   }
 }

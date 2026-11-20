@@ -74,12 +74,13 @@ namespace VampireSurvivorsLike
   /// <summary>为颜色配置提供统一的十六进制字符串转换与格式校验。</summary>
   internal static class HexColor
   {
-    /// <summary>将 #RRGGBB 或 #RRGGBBAA 格式的十六进制颜色转换为 Color32。</summary>
+    /// <summary>将 #RRGGBB 或 #RRGGBBAA 格式的十六进制颜色转换为 Color32；格式无效时返回默认值并记录错误。</summary>
     internal static Color32 Parse(string hex)
     {
       if (!ColorUtility.TryParseHtmlString(hex, out Color color))
       {
-        throw new System.ArgumentException($"无效的颜色值：{hex}", nameof(hex));
+        Debug.LogError($"[HexColor] 无效的颜色值：{hex}，已返回默认颜色。");
+        return default;
       }
 
       return (Color32)color;

@@ -24,7 +24,10 @@ public static class GuideDemoSetup
 
     TMP_FontAsset font = TMP_Settings.defaultFontAsset;
     if (font == null)
-      throw new InvalidOperationException("[GuideDemoSetup] TextMeshPro default font asset is missing.");
+    {
+      Debug.LogError("[GuideDemoSetup] TextMeshPro default font asset is missing, scene creation aborted.");
+      return;
+    }
 
     Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
     new GameObject("GameMgr").AddComponent<GameMgr>();
@@ -32,7 +35,10 @@ public static class GuideDemoSetup
     CreateGuideCanvas(font, config);
 
     if (!EditorSceneManager.SaveScene(scene, ScenePath))
-      throw new InvalidOperationException($"[GuideDemoSetup] Failed to save scene: {ScenePath}");
+    {
+      Debug.LogError($"[GuideDemoSetup] Failed to save scene: {ScenePath}");
+      return;
+    }
 
     AssetDatabase.SaveAssets();
     AssetDatabase.Refresh();
@@ -151,7 +157,10 @@ public static class GuideDemoSetup
     SerializedObject serializedObject = new SerializedObject(target);
     SerializedProperty property = serializedObject.FindProperty(propertyName);
     if (property == null)
-      throw new InvalidOperationException($"[GuideDemoSetup] Serialized field not found: {target.GetType().Name}.{propertyName}");
+    {
+      Debug.LogError($"[GuideDemoSetup] Serialized field not found: {target.GetType().Name}.{propertyName}");
+      return;
+    }
 
     property.objectReferenceValue = value;
     serializedObject.ApplyModifiedPropertiesWithoutUndo();

@@ -29,8 +29,9 @@ public class ConfirmPanelPresenter : BasePresenter<ConfirmPanelView, ConfirmPane
         || ViewT.txt_title == null
         || ViewT.txt_desc == null)
     {
-      throw new InvalidOperationException(
-        "[ConfirmPanelPresenter] ConfirmPanelView is missing a required button or text reference.");
+      // 缺少必要引用时记录日志并跳过事件绑定，避免 OnInit 中断或后续空引用。
+      Debug.LogError("[ConfirmPanelPresenter] ConfirmPanelView is missing a required button or text reference.");
+      return;
     }
 
     AddClickListener(ViewT.btn_confirm, OnConfirmClicked);

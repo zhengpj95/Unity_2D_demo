@@ -90,7 +90,10 @@ public sealed class GuideCursor : MonoBehaviour, IPointerClickHandler
   public void SetTargetId(string value)
   {
     if (string.IsNullOrWhiteSpace(value))
-      throw new ArgumentException("Guide target ID cannot be empty.", nameof(value));
+    {
+      Debug.LogError("[GuideCursor] Guide target ID cannot be empty, assignment ignored.");
+      return;
+    }
 
     targetId = value;
   }

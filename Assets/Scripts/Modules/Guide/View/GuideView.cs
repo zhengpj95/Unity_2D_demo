@@ -60,28 +60,36 @@ public sealed class GuideView : UIView
         maskBackground.enabled = false;
     }
 
-    if (_rootRect == null)
-      throw new MissingComponentException("[GuideView] GuidePanel root requires a RectTransform.");
-    if (maskRoot == null)
-      throw new MissingComponentException("[GuideView] GuidePanel is missing the GuideMask object.");
-    if (cursorRect == null)
-      throw new MissingComponentException("[GuideView] GuidePanel is missing the GuideCursor RectTransform.");
-    if (tipsRect == null)
-      throw new MissingComponentException("[GuideView] GuidePanel is missing the GuideTips RectTransform.");
-    if (contentText == null)
-      throw new MissingComponentException("[GuideView] GuidePanel is missing the TMP_Text at GuideTips/tmp.");
+    // 预制体引用缺失时记录日志并终止初始化，避免后续遍历时空引用；_initialized 保持 false 便于重试。
+    bool isValid = true;
+    if (_rootRect == null) { Debug.LogError("[GuideView] GuidePanel root requires a RectTransform."); isValid = false; }
+    if (maskRoot == null) { Debug.LogError("[GuideView] GuidePanel is missing the GuideMask object."); isValid = false; }
+    if (cursorRect == null) { Debug.LogError("[GuideView] GuidePanel is missing the GuideCursor RectTransform."); isValid = false; }
+    if (tipsRect == null) { Debug.LogError("[GuideView] GuidePanel is missing the GuideTips RectTransform."); isValid = false; }
+    if (contentText == null) { Debug.LogError("[GuideView] GuidePanel is missing the TMP_Text at GuideTips/tmp."); isValid = false; }
+    if (!isValid) return;
 
     for (int i = 0; i < maskRects.Length; i++)
     {
       if (maskRects[i] == null)
-        throw new MissingComponentException($"[GuideView] GuidePanel prefab is missing GuideMask/{MaskNames[i]}.");
+      {
+        Debug.LogError($"[GuideView] GuidePanel prefab is missing GuideMask/{MaskNames[i]}.");
+        isValid = false;
+        continue;
+      }
 
       Image maskImage = maskRects[i].GetComponent<Image>();
       if (maskImage == null)
-        throw new MissingComponentException($"[GuideView] GuideMask/{MaskNames[i]} requires an Image component.");
+      {
+        Debug.LogError($"[GuideView] GuideMask/{MaskNames[i]} requires an Image component.");
+        isValid = false;
+        continue;
+      }
 
       maskImage.raycastTarget = true;
     }
+
+    if (!isValid) return;
 
     foreach (Graphic graphic in cursorRect.GetComponentsInChildren<Graphic>(true))
       graphic.raycastTarget = false;

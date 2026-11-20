@@ -30,7 +30,10 @@ public sealed class GuidePresenter : BasePresenter<GuideView>
   public override void OnOpen(object args = null)
   {
     if (args is not GuideModule module || module.Runner == null)
-      throw new ArgumentException("[GuidePresenter] OnOpen requires an initialized GuideModule.", nameof(args));
+    {
+      Debug.LogError("[GuidePresenter] OnOpen requires an initialized GuideModule, open aborted.");
+      return;
+    }
 
     base.OnOpen(args);
     UnbindRunner();

@@ -19,8 +19,13 @@ public sealed class SurvivorGameplayController
 
   public SurvivorGameplayController(SurvivorModule module, SurvivorProxy proxy)
   {
-    _module = module ?? throw new ArgumentNullException(nameof(module));
-    _proxy = proxy ?? throw new ArgumentNullException(nameof(proxy));
+    // 构造函数无法返回错误码：依赖为空时记录日志并保留 null，后续使用时由各流程做空检查。
+    if (module == null)
+      Debug.LogError("[SurvivorGameplayController] 构造时 module 为空，战斗流程可能不可用。");
+    if (proxy == null)
+      Debug.LogError("[SurvivorGameplayController] 构造时 proxy 为空，战斗流程可能不可用。");
+    _module = module;
+    _proxy = proxy;
   }
 
   /// <summary>
@@ -278,7 +283,11 @@ public sealed class SurvivorGameplayController
     {
       AsyncOperation loadOperation = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
       if (loadOperation == null)
-        throw new InvalidOperationException($"无法创建场景加载操作：{sceneName}");
+      {
+        Debug.LogError($"[SurvivorGameplayController] 无法创建场景加载操作：{sceneName}");
+        if (onFailed != null) await onFailed();
+        return;
+      }
 
       if (!loadOperation.isDone)
       {
