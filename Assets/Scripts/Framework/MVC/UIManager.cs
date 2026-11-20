@@ -172,6 +172,21 @@ public class UIManager : Singleton<UIManager>
     Debug.Log("[UIManager] Released");
   }
 
+  /// <summary>
+  /// 统一驱动所有可见且声明 NeedUpdate 的 Presenter 的每帧逻辑。
+  /// 放在 UIManager 而非各 Module，是为了让 Module 不需要持有或调用 Presenter 实例方法。
+  /// </summary>
+  public void OnUpdate()
+  {
+    if (!IsInitialized) return;
+
+    foreach (BasePresenter presenter in _presenterCache.Values.ToArray())
+    {
+      if (presenter != null && presenter.IsVisible && presenter.NeedUpdate)
+        presenter.Update();
+    }
+  }
+
   #endregion
 
   #region UI显示与隐藏

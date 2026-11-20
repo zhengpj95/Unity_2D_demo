@@ -10,6 +10,7 @@ public class SurvivorMainPresenter : BasePresenter
 
   private SurvivorMainView _view;
   private SurvivorModule _survivorModule;
+  private SurvivorProxy _proxy;
   private Joystick _joystick;
   private AssetHandle<GameObject> _joystickHandle;
   private Action<Vector2> _joystickCallback;
@@ -21,6 +22,11 @@ public class SurvivorMainPresenter : BasePresenter
     _survivorModule = ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor);
     if (_survivorModule == null)
       Debug.LogError("[SurvivorMainPresenter] 未找到 SurvivorModule，摇杆输入无法转交 Hero。");
+    else
+      _proxy = _survivorModule.GetProxy<SurvivorProxy>();
+
+    // Presenter 自行订阅数据变化，避免 Module 或 Controller 直接调用本类方法。
+    On(EventDefine.SURVIVOR_MODEL_CHANGED, OnModelChanged);
 
     // 摇杆是独立预制体，由本 Presenter 统一加载、挂载和释放。
     _ = LoadJoystickAsync();
@@ -70,6 +76,19 @@ public class SurvivorMainPresenter : BasePresenter
       _survivorModule.SetMoveInput(direction);
   }
 
+  /// <summary>收到数据变化事件后自行刷新；Presenter 不接收 Model 参数，数据来源始终是 Proxy。</summary>
+  private void OnModelChanged(EventContext context)
+  {
+    RefreshView();
+  }
+
+  /// <summary>从缓存恢复显示时刷新一次，避免隐藏期间发生的数据变化没有反映到界面。</summary>
+  public override void OnShow()
+  {
+    base.OnShow();
+    RefreshView();
+  }
+
   /// <summary>界面隐藏时归中摇杆并清零输入，避免升级/结算面板期间玩家继续移动。</summary>
   public override void OnClose()
   {
@@ -92,12 +111,17 @@ public class SurvivorMainPresenter : BasePresenter
     _joystickHandle?.Dispose();
     _joystickHandle = null;
     _survivorModule = null;
+    _proxy = null;
   }
 
-  /// <summary>只展示 SurvivorModel 快照，不持有游戏运行时数据。</summary>
-  public void Refresh(SurvivorModel model)
+  /// <summary>从 Proxy 读取当前 Model 快照并刷新显示；Presenter 只在需要显示时访问数据，不持有业务数据。</summary>
+  private void RefreshView()
   {
-    if (_view == null || model == null)
+    if (_view == null || _proxy == null)
+      return;
+
+    SurvivorModel model = _proxy.Model;
+    if (model == null)
       return;
 
     UpdateHp(model.CurrentHealth, model.MaxHealth);

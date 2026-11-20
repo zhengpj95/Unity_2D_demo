@@ -49,6 +49,7 @@ public sealed class GameMgr : MonoBehaviour
 
     TimerManager.Instance.OnUpdate();
     PoolManager.Instance.OnUpdate();
+    UIManager.Instance.OnUpdate();
 
     if (ModuleManager.IsCreated)
       ModuleManager.Instance.Update();

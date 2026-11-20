@@ -79,7 +79,7 @@ public sealed class SurvivorGameplayController
       return;
 
     _proxy.AddExp(value);
-    _module.RefreshMainView();
+    _module.NotifyModelChanged();
 
     if (_proxy.Model.GameState == SurvivorGameState.Playing && _proxy.HasPendingLevelUp)
       OpenNextLevelUp();
@@ -130,7 +130,7 @@ public sealed class SurvivorGameplayController
       _module.HideSkillSelectPanel();
       _proxy.SetGameState(SurvivorGameState.GameOver);
       Time.timeScale = 0f;
-      _module.RefreshMainView();
+      _module.NotifyModelChanged();
 
       SurvivorGameOverPresenter panel = await _module.OpenGameOverPanel(CreateGameOverArgs());
       if (panel == null)
@@ -216,7 +216,7 @@ public sealed class SurvivorGameplayController
   {
     _proxy.SetGameState(SurvivorGameState.Playing);
     Time.timeScale = 1f;
-    _module.RefreshMainView();
+    _module.NotifyModelChanged();
   }
 
   /// <summary>
@@ -237,7 +237,7 @@ public sealed class SurvivorGameplayController
     ClearCurrentRoundEntities();
     _proxy.ResetRound();
     // UI 根节点跨场景保留，必须在场景重载前立即推送新的 Model，避免继续显示上一局血量。
-    _module.RefreshMainView();
+    _module.NotifyModelChanged();
     Time.timeScale = 1f;
     SceneManager.LoadScene(activeScene.buildIndex);
   }

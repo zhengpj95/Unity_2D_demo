@@ -40,19 +40,17 @@ public class SurvivorModule : BaseModule
       new SurvivorHomeArgs(_gameplayController.StartBattle));
   }
 
-  /// <summary>统一打开幸存者主界面，并按当前 Model 快照刷新显示。</summary>
-  public async Task<SurvivorMainPresenter> OpenSurvivorMain()
+  /// <summary>统一打开幸存者主界面；HUD 显示由 Presenter 从 Proxy 自行读取。</summary>
+  public Task<SurvivorMainPresenter> OpenSurvivorMain()
   {
-    SurvivorMainPresenter presenter = await OpenWindow<SurvivorMainPresenter>(SurvivorViewType.Main);
-    RefreshMainPresenter(presenter);
-    return presenter;
+    return OpenWindow<SurvivorMainPresenter>(SurvivorViewType.Main);
   }
 
   /// <summary>结算一次玩家伤害，返回更新后的 Model 供生命组件判断死亡。</summary>
   public SurvivorModel ApplyPlayerDamage(int damage)
   {
     _proxy.ApplyDamage(damage);
-    RefreshMainView();
+    NotifyModelChanged();
     return _proxy.Model;
   }
 
@@ -60,7 +58,7 @@ public class SurvivorModule : BaseModule
   public void OverridePlayerHealthForTesting(int maxHealth)
   {
     _proxy.OverrideHealthForTesting(maxHealth);
-    RefreshMainView();
+    NotifyModelChanged();
   }
 
   /// <summary>兼容旧调用入口：应用最大生命升级。</summary>
@@ -76,7 +74,7 @@ public class SurvivorModule : BaseModule
   {
     bool applied = _proxy.ApplyPlayerStatUpgrade(stat, value, isPercent);
     if (applied)
-      RefreshMainView();
+      NotifyModelChanged();
     return applied;
   }
 
@@ -106,18 +104,18 @@ public class SurvivorModule : BaseModule
   public void UpdateEnemyKillCount()
   {
     _proxy.SetKillCount(EnemyDirector.Instance.KillEnemyCount);
-    RefreshMainView();
+    NotifyModelChanged();
   }
 
   public void AddDropItem(DropItemType dropItemType, int count)
   {
     _proxy.AddDropItem(dropItemType, count);
-    RefreshMainView();
+    NotifyModelChanged();
   }
 
   public void UpdateInventory()
   {
-    RefreshMainView();
+    NotifyModelChanged();
   }
 
   public Task<SurvivorSkillSelectPanelPresenter> OpenSkillSelectPanel(SurvivorSkillSelectArgs args)
@@ -151,32 +149,16 @@ public class SurvivorModule : BaseModule
     HidePresenter(SurvivorViewType.Main);
   }
 
-  /// <summary>用 SurvivorModel 的当前快照刷新已打开的主界面。</summary>
-  public void RefreshMainView()
+  /// <summary>广播本局数据变化；HUD Presenter 订阅后自行从 Proxy 读取并刷新，Module 不直接操作 Presenter。</summary>
+  public void NotifyModelChanged()
   {
-    RefreshMainPresenter(GetPresenter(SurvivorViewType.Main) as SurvivorMainPresenter);
-  }
-
-  protected override void OnUpdate()
-  {
-    SurvivorSkillSelectPanelPresenter presenter = GetPresenter(SurvivorViewType.SkillSelect) as SurvivorSkillSelectPanelPresenter;
-    if (presenter?.NeedUpdate == true)
-      presenter.Update();
+    EventBus.Emit(EventDefine.SURVIVOR_MODEL_CHANGED);
   }
 
   protected override void OnRelease()
   {
     // 模块在暂停或结算状态被释放时恢复全局时间，避免切场景后仍保持冻结。
     Time.timeScale = 1f;
-  }
-
-  private void RefreshMainPresenter(SurvivorMainPresenter presenter)
-  {
-    if (presenter == null)
-      return;
-
-    SurvivorModel model = _proxy.Model;
-    presenter.Refresh(model);
   }
 
   /// <summary>按 ViewType 隐藏已创建的 Presenter；未打开时不做处理。</summary>

@@ -47,4 +47,7 @@ public static class EventDefine
   public static readonly int UI_OPEN_VIEW = NextId();
   /// <summary>请求按模块名与 ViewType 关闭界面，数据类型为 CloseViewArgs。</summary>
   public static readonly int UI_CLOSE_VIEW = NextId();
+
+  /// <summary>Survivor 本局数据发生变化，HUD Presenter 收到后会从 Proxy 重新读取 Model 刷新显示。</summary>
+  public static readonly int SURVIVOR_MODEL_CHANGED = NextId();
 }

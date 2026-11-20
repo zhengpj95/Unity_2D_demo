@@ -117,6 +117,24 @@ MVC 的参数与状态校验失败统一记录 `Debug.LogError` 并中止当前�
 - `UIManager.ShowUI` / `HideUI` 是为 FrogAdventure 原型保留的旧式路径接口，已标记 `[Obsolete]`；新界面应登记 Presenter 并通过 Module 打开。
 - `OnClose` 会解除 `BaseEmitter` 事件，`OnDestroy` 还会清理按钮监听和 View 实例。
 - Presenter 隐藏时资源句柄随缓存保留；Presenter 销毁时释放 Prefab 句柄。
+- `UIManager.OnUpdate()` 每帧统一驱动所有可见且 `NeedUpdate` 的 Presenter，由 `GameMgr.Update` 调用；Module 不得自行驱动 Presenter 的 `Update`。
+
+### 数据刷新方向与禁令（强制）
+
+界面显示数据的唯一来源是 Presenter 所属模块的 Proxy/Model，刷新由 Presenter 自己发起：
+
+```text
+数据变更方 → 更新 Proxy → EventBus.Emit(数据变化事件)
+                              ↓
+Presenter（OnInit 中订阅事件）→ 从 GetProxy<T>() 读取 Model → 刷新 View
+```
+
+- **禁止 Module / GameplayController / Command 调用 Presenter 的显示刷新或数据设置方法**（如 `Refresh`、`UpdateHp`、`SetScore`、`ShowXxx`）。这些方法必须是 `private`，由 Presenter 在事件回调、`OnOpen` 或 `OnShow` 中自行调用。
+- Presenter 的公开方法只允许留给框架生命周期（`OnInit/OnOpen/OnShow/OnClose/OnHide/OnDestroy/Update`）和 UIManager 管理接口；业务层不得新增供外部调用的刷新入口。
+- 数据变更通过 `EventDefine` 中的事件广播；事件只发"发生了变化"的信号，不携带 Model 快照，Presenter 收到后从 Proxy 读取当前值，避免多份数据副本。
+- Presenter 可以缓存本模块 Proxy 引用，但只读 Model，不得修改业务数据；数据写入仍由 Module/Proxy 负责。
+- 打开界面时传入的 Args 只用于一次性参数（回调、配置、跳转上下文），不得把会持续变化的业务数据作为参数传给 Presenter 反复调用刷新。
+- 违反上述规则会让业务层反向依赖界面层，导致刷新遗漏（隐藏期间数据变化、缓存恢复）和职责倒置；新增界面时必须按此模式实现。
 
 需要强类型参数时使用 `BasePresenter<TView, TArgs>`，其中 `TArgs` 必须为 `struct`，每次打开都必须传入准确类型的参数；参数缺失或类型错误会记录错误并中止打开，不会以默认值继续。`BasePresenter<TView>` 初始化时要求 View 存在且类型匹配；无效 View 会记录错误，UIManager 随后放弃本次打开并返回 `null`。Presenter 销毁后不可再次初始化或打开；按钮监听随 View 销毁清理，隐藏缓存时保留以供复用。界面关闭、异步返回和场景切换时应重新检查目标对象是否仍有效。
 
