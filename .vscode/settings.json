@@ -70,7 +70,7 @@
         "Assets/XLua": true,
         "Assets/AddressableAssetsData": true,
         "Assets/Configs": true,
-        "Assets/ThridParty": true,
+        "Assets/ThirdParty": true,
     },
     "dotnet.defaultSolution": "Unity_2D_demo.sln",
     "dotnet.preferCSharpExtension": true
