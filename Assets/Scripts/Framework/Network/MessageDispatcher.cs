@@ -16,12 +16,14 @@ public class MessageDispatcher
   {
     if (handler == null)
     {
-      throw new ArgumentNullException(nameof(handler));
+      UnityEngine.Debug.LogError($"[MessageDispatcher] 注册失败：Cmd={cmd} 的 handler 为空。");
+      return;
     }
 
     if (_handlers.ContainsKey(cmd))
     {
-      throw new InvalidOperationException($"Handler already registered. Cmd: {cmd}");
+      UnityEngine.Debug.LogError($"[MessageDispatcher] 注册失败：Cmd={cmd} 已重复注册，已忽略本次注册。");
+      return;
     }
 
     Action<IMessage> wrapper =
@@ -29,12 +31,10 @@ public class MessageDispatcher
         {
           if (message is not T typedMessage)
           {
-            throw new InvalidCastException(
-                      $"Message type mismatch. " +
-                      $"Cmd: {cmd}, " +
-                      $"Expected: {typeof(T).Name}, " +
-                      $"Actual: {message?.GetType().Name}"
-                  );
+            UnityEngine.Debug.LogError(
+              $"[MessageDispatcher] 消息类型不匹配，已忽略：Cmd={cmd}, " +
+              $"Expected={typeof(T).Name}, Actual={message?.GetType().Name}");
+            return;
           }
 
           handler(typedMessage);
@@ -64,7 +64,8 @@ public class MessageDispatcher
   {
     if (message == null)
     {
-      throw new ArgumentNullException(nameof(message));
+      UnityEngine.Debug.LogError($"[MessageDispatcher] 分发失败：Cmd={cmd} 的 message 为空。");
+      return;
     }
 
     if (!_handlers.TryGetValue(cmd, out Action<IMessage> handler))

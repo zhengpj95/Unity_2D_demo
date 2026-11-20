@@ -11,7 +11,8 @@ internal sealed class ResourcesAssetLoader : IAssetLoader
   /// <inheritdoc />
   public AssetLoadResult<T> Load<T>(string assetKey) where T : UnityEngine.Object
   {
-    ValidateAssetKey(assetKey);
+    if (!ValidateAssetKey(assetKey))
+      return new AssetLoadResult<T>(null);
 
     return new AssetLoadResult<T>(Resources.Load<T>(assetKey));
   }
@@ -19,7 +20,8 @@ internal sealed class ResourcesAssetLoader : IAssetLoader
   /// <inheritdoc />
   public Task<AssetLoadResult<T>> LoadAsync<T>(string assetKey) where T : UnityEngine.Object
   {
-    ValidateAssetKey(assetKey);
+    if (!ValidateAssetKey(assetKey))
+      return Task.FromResult(new AssetLoadResult<T>(null));
 
     ResourceRequest request = Resources.LoadAsync<T>(assetKey);
     if (request.isDone)
@@ -30,10 +32,15 @@ internal sealed class ResourcesAssetLoader : IAssetLoader
     return completionSource.Task;
   }
 
-  /// <summary>统一校验同步与异步接口使用的资源键。</summary>
-  private static void ValidateAssetKey(string assetKey)
+  /// <summary>统一校验同步与异步接口使用的资源键，非法时记录日志并返回 false。</summary>
+  private static bool ValidateAssetKey(string assetKey)
   {
     if (string.IsNullOrWhiteSpace(assetKey))
-      throw new ArgumentException("资源键不能为空。", nameof(assetKey));
+    {
+      Debug.LogError("[ResourcesAssetLoader] 资源键不能为空。");
+      return false;
+    }
+
+    return true;
   }
 }

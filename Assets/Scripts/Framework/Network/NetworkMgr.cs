@@ -110,10 +110,8 @@ public class NetworkMgr : Singleton<NetworkMgr>
     {
       if (value < PacketCodec.HeaderSize)
       {
-        throw new ArgumentOutOfRangeException(
-            nameof(value),
-            value,
-            $"Maximum incoming packet size must be at least {PacketCodec.HeaderSize} bytes.");
+        Debug.LogError($"{LogTag} 最大入站包字节数不能小于 {PacketCodec.HeaderSize}，当前={value}，已忽略本次设置。");
+        return;
       }
 
       _maxIncomingPacketBytes = value;
@@ -152,7 +150,11 @@ public class NetworkMgr : Singleton<NetworkMgr>
 
   public void RegisterHandler<T>(uint cmd, Action<T> handler) where T : IMessage<T>
   {
-    if (handler == null) throw new ArgumentNullException(nameof(handler));
+    if (handler == null)
+    {
+      Debug.LogError($"{LogTag} 注册处理器失败：Cmd={cmd} 的 handler 为空。");
+      return;
+    }
 
     int commandVersion = GetNextCommandVersion(cmd);
     if (_dispatcher == null)
@@ -180,13 +182,17 @@ public class NetworkMgr : Singleton<NetworkMgr>
   {
     if (string.IsNullOrWhiteSpace(url))
     {
-      throw new ArgumentException("URL cannot be empty.", nameof(url));
+      Debug.LogError($"{LogTag} 连接失败：URL 为空。");
+      return Task.CompletedTask;
     }
 
     if (_connectTask != null && !_connectTask.IsCompleted)
     {
       if (!string.Equals(_url, url, StringComparison.Ordinal))
-        throw new InvalidOperationException("Cannot change the server URL while a connection is in progress. Close the current connection first.");
+      {
+        Debug.LogError($"{LogTag} 连接中不能切换服务器地址，已忽略：当前={_url}, 请求={url}。");
+        return _connectTask;
+      }
 
       return _connectTask;
     }
@@ -194,13 +200,19 @@ public class NetworkMgr : Singleton<NetworkMgr>
     if (_reconnectTask != null && !_reconnectTask.IsCompleted)
     {
       if (!string.Equals(_url, url, StringComparison.Ordinal))
-        throw new InvalidOperationException("Cannot change the server URL while reconnecting. Close the current connection first.");
+      {
+        Debug.LogError($"{LogTag} 重连中不能切换服务器地址，已忽略：当前={_url}, 请求={url}。");
+        return _reconnectTask;
+      }
 
       return _reconnectTask;
     }
 
     if (IsConnected && !string.Equals(_url, url, StringComparison.Ordinal))
-      throw new InvalidOperationException("Cannot change the server URL while connected. Close the current connection first.");
+    {
+      Debug.LogError($"{LogTag} 已连接时不能切换服务器地址，已忽略：当前={_url}, 请求={url}。");
+      return Task.CompletedTask;
+    }
 
     bool isNewConnection = !string.Equals(_url, url, StringComparison.Ordinal) || _manualClose;
     if (isNewConnection)
@@ -407,10 +419,16 @@ public class NetworkMgr : Singleton<NetworkMgr>
     where TResponse : IMessage
   {
     if (timeoutSeconds <= 0f)
-      throw new ArgumentOutOfRangeException(nameof(timeoutSeconds), timeoutSeconds, "Timeout must be greater than zero.");
+    {
+      Debug.LogError($"{LogTag} Request 失败：超时秒数必须大于零，当前={timeoutSeconds}。RequestCmd={requestCmd}");
+      return new NetworkRequestResult<TResponse>(NetworkRequestStatus.SendFailed, NetworkSendResult.NotConnected);
+    }
 
     if (_pendingRequests.ContainsKey(responseCmd))
-      throw new InvalidOperationException($"A request is already waiting for response cmd: {responseCmd}");
+    {
+      Debug.LogError($"{LogTag} Request 失败：Cmd={responseCmd} 已有等待中的请求，已忽略本次请求。");
+      return new NetworkRequestResult<TResponse>(NetworkRequestStatus.SendFailed, NetworkSendResult.NotConnected);
+    }
 
     PendingRequest pendingRequest = new();
     _pendingRequests.Add(responseCmd, pendingRequest);

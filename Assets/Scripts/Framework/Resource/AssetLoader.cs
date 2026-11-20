@@ -90,7 +90,8 @@ public sealed class AssetLoader : Singleton<AssetLoader>
   /// <returns>加载成功时返回资源句柄，否则返回 null。</returns>
   public AssetHandle<T> LoadHandle<T>(string assetKey) where T : UnityEngine.Object
   {
-    ValidateAssetKey(assetKey);
+    if (!ValidateAssetKey(assetKey))
+      return null;
     AssetLoadResult<T> result = _resourcesBackend.Load<T>(assetKey);
     if (result.Asset == null)
       result = _addressablesBackend.Load<T>(assetKey);
@@ -107,7 +108,8 @@ public sealed class AssetLoader : Singleton<AssetLoader>
   /// <returns>加载成功时返回资源句柄，否则返回 null。</returns>
   public async Task<AssetHandle<T>> LoadHandleAsync<T>(string assetKey) where T : UnityEngine.Object
   {
-    ValidateAssetKey(assetKey);
+    if (!ValidateAssetKey(assetKey))
+      return null;
 
     AssetKey cacheKey = new AssetKey(assetKey, typeof(T));
     if (!_pendingLoads.TryGetValue(cacheKey, out object pendingObject))
@@ -120,7 +122,10 @@ public sealed class AssetLoader : Singleton<AssetLoader>
     }
 
     if (pendingObject is not PendingAssetLoad<T> sharedLoad)
-      throw new InvalidOperationException($"[AssetLoader] Pending resource type mismatch for key '{assetKey}'.");
+    {
+      Debug.LogError($"[AssetLoader] 资源键 '{assetKey}' 的并发加载类型不匹配，已取消本次加载。");
+      return null;
+    }
 
     sharedLoad.WaiterCount++;
     try
@@ -193,10 +198,15 @@ public sealed class AssetLoader : Singleton<AssetLoader>
     return lease;
   }
 
-  private static void ValidateAssetKey(string assetKey)
+  private static bool ValidateAssetKey(string assetKey)
   {
     if (string.IsNullOrWhiteSpace(assetKey))
-      throw new ArgumentException("资源键不能为空。", nameof(assetKey));
+    {
+      Debug.LogError("[AssetLoader] 资源键不能为空。");
+      return false;
+    }
+
+    return true;
   }
 
   /// <summary>

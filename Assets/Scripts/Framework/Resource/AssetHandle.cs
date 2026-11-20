@@ -28,7 +28,10 @@ internal sealed class AssetLease<T> : IAssetLease where T : UnityEngine.Object
   public void Reserve()
   {
     if (_isReleased)
-      throw new ObjectDisposedException(nameof(AssetLease<T>));
+    {
+      Debug.LogError($"[AssetLease<{typeof(T).Name}>] 租约已释放，无法再次 Reserve。");
+      return;
+    }
 
     _referenceCount++;
   }
@@ -36,7 +39,10 @@ internal sealed class AssetLease<T> : IAssetLease where T : UnityEngine.Object
   public AssetHandle<T> CreateHandle()
   {
     if (_isReleased)
-      throw new ObjectDisposedException(nameof(AssetLease<T>));
+    {
+      Debug.LogError($"[AssetLease<{typeof(T).Name}>] 租约已释放，无法创建句柄。");
+      return null;
+    }
 
     _referenceCount++;
     return new AssetHandle<T>(this);
@@ -85,13 +91,24 @@ public sealed class AssetHandle<T> : IDisposable where T : UnityEngine.Object
 
   internal AssetHandle(AssetLease<T> lease)
   {
-    _lease = lease ?? throw new ArgumentNullException(nameof(lease));
+    // 构造函数无法返回错误码：租约为空时记录日志，句柄进入已释放状态，Asset 返回 null。
+    if (lease == null)
+      Debug.LogError($"[AssetHandle<{typeof(T).Name}>] 构造时租约为空，句柄不可用。");
+    _lease = lease;
   }
 
-  /// <summary>获取已加载资源；句柄释放后再次访问会抛出异常。</summary>
-  public T Asset => _lease != null && !_lease.IsReleased
-    ? _lease.Asset
-    : throw new ObjectDisposedException(nameof(AssetHandle<T>));
+  /// <summary>获取已加载资源；句柄释放后再次访问返回 null 并记录错误。</summary>
+  public T Asset
+  {
+    get
+    {
+      if (_lease != null && !_lease.IsReleased)
+        return _lease.Asset;
+
+      Debug.LogError($"[AssetHandle<{typeof(T).Name}>] 句柄已释放，无法访问资源。");
+      return null;
+    }
+  }
 
   /// <summary>指示句柄是否已释放。</summary>
   public bool IsReleased => _lease == null || _lease.IsReleased;
@@ -101,7 +118,10 @@ public sealed class AssetHandle<T> : IDisposable where T : UnityEngine.Object
   public AssetHandle<T> Retain()
   {
     if (_lease == null)
-      throw new ObjectDisposedException(nameof(AssetHandle<T>));
+    {
+      Debug.LogError($"[AssetHandle<{typeof(T).Name}>] 句柄已释放，无法 Retain。");
+      return null;
+    }
 
     return _lease.CreateHandle();
   }

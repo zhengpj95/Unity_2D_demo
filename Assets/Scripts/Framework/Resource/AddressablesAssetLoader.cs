@@ -13,7 +13,8 @@ internal sealed class AddressablesAssetLoader : IAssetLoader
   /// <inheritdoc />
   public AssetLoadResult<T> Load<T>(string assetKey) where T : UnityEngine.Object
   {
-    ValidateAssetKey(assetKey);
+    if (!ValidateAssetKey(assetKey))
+      return new AssetLoadResult<T>(null);
 
     AsyncOperationHandle<T> handle = Addressables.LoadAssetAsync<T>(assetKey);
     try
@@ -39,7 +40,8 @@ internal sealed class AddressablesAssetLoader : IAssetLoader
   /// <inheritdoc />
   public async Task<AssetLoadResult<T>> LoadAsync<T>(string assetKey) where T : UnityEngine.Object
   {
-    ValidateAssetKey(assetKey);
+    if (!ValidateAssetKey(assetKey))
+      return new AssetLoadResult<T>(null);
 
     AsyncOperationHandle<T> handle = Addressables.LoadAssetAsync<T>(assetKey);
     try
@@ -76,10 +78,15 @@ internal sealed class AddressablesAssetLoader : IAssetLoader
     });
   }
 
-  /// <summary>校验 Addressables 与 Resources 后端共用的资源键输入。</summary>
-  private static void ValidateAssetKey(string assetKey)
+  /// <summary>校验资源键输入，非法时记录日志并返回 false。</summary>
+  private static bool ValidateAssetKey(string assetKey)
   {
     if (string.IsNullOrWhiteSpace(assetKey))
-      throw new ArgumentException("资源键不能为空。", nameof(assetKey));
+    {
+      Debug.LogError("[AddressablesAssetLoader] 资源键不能为空。");
+      return false;
+    }
+
+    return true;
   }
 }

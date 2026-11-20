@@ -149,7 +149,10 @@ public class PoolManager : Singleton<PoolManager>
   public async Task<bool> PreloadAsync(string assetKey, int count)
   {
     if (count <= 0)
-      throw new System.ArgumentOutOfRangeException(nameof(count), count, "预热数量必须大于零。");
+    {
+      Debug.LogError($"[PoolManager] 预热数量必须大于零，当前={count}，资源键={assetKey}。");
+      return false;
+    }
 
     int generation = _preloadGeneration;
     AssetHandle<GameObject> handle = await AssetLoader.Instance.LoadHandleAsync<GameObject>(assetKey);

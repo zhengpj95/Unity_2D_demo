@@ -19,12 +19,14 @@ public static class ProtoMgr
   {
     if (parser == null)
     {
-      throw new ArgumentNullException(nameof(parser));
+      UnityEngine.Debug.LogError($"[ProtoMgr] 注册失败：Cmd={cmd} 的 Parser 为空。");
+      return;
     }
 
     if (s_parsers.ContainsKey(cmd))
     {
-      throw new InvalidOperationException($"Proto cmd already registered: {cmd}");
+      UnityEngine.Debug.LogError($"[ProtoMgr] 注册失败：Cmd={cmd} 已重复注册，已忽略本次注册。");
+      return;
     }
 
     s_parsers.Add(cmd, parser);
@@ -70,7 +72,8 @@ public static class ProtoMgr
   {
     if (message == null)
     {
-      throw new ArgumentNullException(nameof(message));
+      UnityEngine.Debug.LogError("[ProtoMgr] Encode 失败：message 为空。");
+      return null;
     }
 
     return message.ToByteArray();
@@ -84,7 +87,8 @@ public static class ProtoMgr
   {
     if (message == null)
     {
-      throw new ArgumentNullException(nameof(message));
+      UnityEngine.Debug.LogError("[ProtoMgr] Encode<T> 失败：message 为空。");
+      return null;
     }
 
     return message.ToByteArray();
@@ -102,12 +106,14 @@ public static class ProtoMgr
   {
     if (data == null)
     {
-      throw new ArgumentNullException(nameof(data));
+      UnityEngine.Debug.LogError($"[ProtoMgr] Decode 失败：Cmd={cmd} 的 data 为空。");
+      return null;
     }
 
     if (!s_parsers.TryGetValue(cmd, out MessageParser parser))
     {
-      throw new KeyNotFoundException($"Proto parser not found. Cmd: {cmd}");
+      UnityEngine.Debug.LogError($"[ProtoMgr] Decode 失败：Cmd={cmd} 未注册 Parser。");
+      return null;
     }
 
     return parser.ParseFrom(data);
@@ -121,12 +127,14 @@ public static class ProtoMgr
   {
     if (data == null)
     {
-      throw new ArgumentNullException(nameof(data));
+      UnityEngine.Debug.LogError($"[ProtoMgr] Decode<T> 失败：data 为空。");
+      return default;
     }
 
     if (parser == null)
     {
-      throw new ArgumentNullException(nameof(parser));
+      UnityEngine.Debug.LogError($"[ProtoMgr] Decode<T> 失败：parser 为空。");
+      return default;
     }
 
     return parser.ParseFrom(data);

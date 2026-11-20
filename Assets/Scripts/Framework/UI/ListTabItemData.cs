@@ -1,4 +1,6 @@
 using System;
+using UnityEngine;
+
 /// <summary>描述一个虚拟页签及其要打开的 Module Presenter。</summary>
 public sealed class ListTabItemData
 {
@@ -34,8 +36,11 @@ public sealed class ListTabItemData
     int funcId = 0,
     object extraData = null)
   {
-    if (moduleName == ModuleName.None) throw new ArgumentException("ModuleName cannot be None.", nameof(moduleName));
-    if (viewType == null) throw new ArgumentNullException(nameof(viewType));
+    // 构造函数无法返回错误码：参数非法时记录日志并保留原始值，由调用方 ValidateTabs 或使用阶段拦截。
+    if (moduleName == ModuleName.None)
+      Debug.LogError("[ListTabItemData] 目标模块不能为 None，页签数据可能无效。");
+    if (viewType == null)
+      Debug.LogError("[ListTabItemData] ViewType 不能为空，页签数据可能无效。");
 
     Id = id;
     Name = name ?? string.Empty;

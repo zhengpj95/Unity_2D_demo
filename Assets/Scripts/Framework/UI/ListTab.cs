@@ -84,7 +84,9 @@ public sealed class ListTab : MonoBehaviour
   public void SetTabs(IList<ListTabItemData> tabs, int? initialSelectedId = null)
   {
     _openRequestGeneration++;
-    ValidateTabs(tabs);
+    bool tabsValid = ValidateTabs(tabs);
+    if (!tabsValid)
+      Debug.LogWarning("[ListTab] 页签数据存在非法项，已记录日志并继续设置，请检查配置。");
     _tabs = tabs == null ? null : new List<ListTabItemData>(tabs);
     PruneHostedPresenters();
 
@@ -98,7 +100,11 @@ public sealed class ListTab : MonoBehaviour
 
     int selectedIndex = initialSelectedId.HasValue ? FindIndex(initialSelectedId.Value) : 0;
     if (selectedIndex < 0)
-      throw new ArgumentException($"Initial tab id was not found: {initialSelectedId.Value}", nameof(initialSelectedId));
+    {
+      // 初始 ID 不存在时记录日志并回退到第一项，避免 SetTabs 中断导致页签整体不可用。
+      Debug.LogError($"[ListTab] 初始页签 ID 不存在：{initialSelectedId.Value}，已回退到第一项。");
+      selectedIndex = 0;
+    }
 
     _selectedTabId = _tabs[selectedIndex].Id;
     if (virtualList == null) return;
@@ -444,13 +450,14 @@ public sealed class ListTab : MonoBehaviour
     return -1;
   }
 
-  /// <summary>检查页签集合中的空项和重复 ID，保证虚拟列表稳定键唯一。</summary>
+  /// <summary>校验页签集合的合法性；非法项记录日志并返回 false，由调用方决定是否终止设置。</summary>
   /// <param name="tabs">待验证的页签集合；null 表示清空列表。</param>
-  /// <exception cref="ArgumentException">集合含空元素或重复页签 ID 时抛出。</exception>
-  private static void ValidateTabs(IList<ListTabItemData> tabs)
+  /// <returns>集合全部合法时返回 true，否则返回 false。</returns>
+  private static bool ValidateTabs(IList<ListTabItemData> tabs)
   {
-    if (tabs == null) return;
+    if (tabs == null) return true;
 
+    bool isValid = true;
     HashSet<int> ids = new HashSet<int>();
     // 页签局部去重，不让 UIManager 的私有缓存键泄漏到 UI 组件。
     Dictionary<ModuleName, HashSet<Enum>> moduleViewTypes =
@@ -458,12 +465,30 @@ public sealed class ListTab : MonoBehaviour
     for (int i = 0; i < tabs.Count; i++)
     {
       ListTabItemData tab = tabs[i];
-      if (tab == null) throw new ArgumentException($"Tab data at index {i} is null.", nameof(tabs));
-      if (!ids.Add(tab.Id)) throw new ArgumentException($"Duplicate tab id: {tab.Id}.", nameof(tabs));
+      if (tab == null)
+      {
+        Debug.LogError($"[ListTab] 页签数据为空，索引={i}。");
+        isValid = false;
+        continue;
+      }
+      if (!ids.Add(tab.Id))
+      {
+        Debug.LogError($"[ListTab] 页签 ID 重复：{tab.Id}。");
+        isValid = false;
+        continue;
+      }
       if (tab.ModuleName == ModuleName.None)
-        throw new ArgumentException($"Tab at index {i} has no module.", nameof(tabs));
+      {
+        Debug.LogError($"[ListTab] 页签未配置模块，索引={i}，ID={tab.Id}。");
+        isValid = false;
+        continue;
+      }
       if (tab.ViewType == null)
-        throw new ArgumentException($"Tab at index {i} has no ViewType.", nameof(tabs));
+      {
+        Debug.LogError($"[ListTab] 页签未配置 ViewType，索引={i}，ID={tab.Id}。");
+        isValid = false;
+        continue;
+      }
 
       if (!moduleViewTypes.TryGetValue(tab.ModuleName, out HashSet<Enum> viewTypes))
       {
@@ -472,7 +497,12 @@ public sealed class ListTab : MonoBehaviour
       }
 
       if (!viewTypes.Add(tab.ViewType))
-        throw new ArgumentException($"Presenter target is assigned to more than one tab: {tab.ModuleName}.{tab.ViewType}.", nameof(tabs));
+      {
+        Debug.LogError($"[ListTab] 多个页签指向同一界面：{tab.ModuleName}.{tab.ViewType}。");
+        isValid = false;
+      }
     }
+
+    return isValid;
   }
 }

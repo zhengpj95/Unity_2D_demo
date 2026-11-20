@@ -47,14 +47,17 @@ public static class PacketCodec
   /// </summary>
   public static Packet Decode(byte[] data)
   {
+    // 解码失败返回 Body 为空数组的无效包，调用方可用 Body.Length==0 判断并丢弃。
     if (data == null)
     {
-      throw new ArgumentNullException(nameof(data));
+      UnityEngine.Debug.LogError("[PacketCodec] Decode 失败：data 为空。");
+      return new Packet(0, Array.Empty<byte>());
     }
 
     if (data.Length < HeaderSize)
     {
-      throw new ArgumentException($"Packet data too small. " + $"Length: {data.Length}");
+      UnityEngine.Debug.LogError($"[PacketCodec] Decode 失败：包数据过小，长度={data.Length}。");
+      return new Packet(0, Array.Empty<byte>());
     }
 
     uint cmd = ReadUInt32LE(data, 0);
