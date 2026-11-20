@@ -230,7 +230,7 @@ public abstract class BaseModule : BaseEmitter
   }
 
   /// <summary>登记 Proxy；模块已运行时会立即初始化该 Proxy。</summary>
-  protected T RegProxy<T>(T proxy) where T : BaseProxy
+  private T RegProxy<T>(T proxy) where T : BaseProxy
   {
     if (proxy == null)
     {

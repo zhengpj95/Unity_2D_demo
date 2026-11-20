@@ -16,7 +16,7 @@ public sealed class ModuleManager : Singleton<ModuleManager>
   private ModuleManager() { }
 
   /// <summary>注册模块实例。管理器已初始化时，模块会立即完成初始化。</summary>
-  public void RegisterModule(BaseModule module)
+  private void RegisterModule(BaseModule module)
   {
     if (module == null)
     {
@@ -43,21 +43,21 @@ public sealed class ModuleManager : Singleton<ModuleManager>
     }
   }
 
-  public void RegisterModules(params BaseModule[] modules)
-  {
-    if (modules == null)
-    {
-      Debug.LogError("[ModuleManager] Cannot register a null Module array.");
-      return;
-    }
+  // private void RegisterModules(params BaseModule[] modules)
+  // {
+  //   if (modules == null)
+  //   {
+  //     Debug.LogError("[ModuleManager] Cannot register a null Module array.");
+  //     return;
+  //   }
 
-    foreach (BaseModule module in modules) RegisterModule(module);
-  }
+  //   foreach (BaseModule module in modules) RegisterModule(module);
+  // }
 
   /// <summary>延迟登记模块类型；将在 InitializeAll 时创建，适合游戏启动阶段集中配置。</summary>
   public void PushModules<T>() where T : BaseModule, new() => PushModules(typeof(T));
 
-  public void PushModules(params Type[] moduleTypes)
+  private void PushModules(params Type[] moduleTypes)
   {
     if (moduleTypes == null)
     {
@@ -76,16 +76,16 @@ public sealed class ModuleManager : Singleton<ModuleManager>
   public bool TryGetModule(ModuleName moduleName, out BaseModule module) => _modules.TryGetValue(moduleName, out module);
   public T GetModule<T>(ModuleName moduleName) where T : BaseModule => TryGetModule(moduleName, out BaseModule module) ? module as T : null;
 
-  public void InitializeModule(ModuleName moduleName)
-  {
-    if (TryGetModule(moduleName, out BaseModule module))
-    {
-      module.Initialize(this);
-      if (!module.IsInitialized)
-        Debug.LogError($"[ModuleManager] Failed to initialize Module {moduleName}.");
-    }
-    else Debug.LogWarning($"[ModuleManager] Module not found: {moduleName}");
-  }
+  // private void InitializeModule(ModuleName moduleName)
+  // {
+  //   if (TryGetModule(moduleName, out BaseModule module))
+  //   {
+  //     module.Initialize(this);
+  //     if (!module.IsInitialized)
+  //       Debug.LogError($"[ModuleManager] Failed to initialize Module {moduleName}.");
+  //   }
+  //   else Debug.LogWarning($"[ModuleManager] Module not found: {moduleName}");
+  // }
 
   /// <summary>创建所有延迟模块，并初始化尚未初始化的模块；可安全重复调用。</summary>
   public void InitializeAll()
@@ -136,12 +136,12 @@ public sealed class ModuleManager : Singleton<ModuleManager>
     foreach (BaseModule module in _modules.Values) module.UpdateModule();
   }
 
-  public void ReleaseModule(ModuleName moduleName)
-  {
-    if (!_modules.TryGetValue(moduleName, out BaseModule module)) return;
-    module.Release();
-    _modules.Remove(moduleName);
-  }
+  // private void ReleaseModule(ModuleName moduleName)
+  // {
+  //   if (!_modules.TryGetValue(moduleName, out BaseModule module)) return;
+  //   module.Release();
+  //   _modules.Remove(moduleName);
+  // }
 
   public void ReleaseAll()
   {

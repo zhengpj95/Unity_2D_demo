@@ -109,10 +109,12 @@ public sealed class GameMgr : MonoBehaviour
 
   private static void InitializeModules()
   {
+    // 模块加入队列
     ModuleManager.Instance.PushModules<MiscModule>();
     ModuleManager.Instance.PushModules<LoginModule>();
     ModuleManager.Instance.PushModules<SurvivorModule>();
     ModuleManager.Instance.PushModules<GuideModule>();
+    // 初始化所有模块
     ModuleManager.Instance.InitializeAll();
   }
 
