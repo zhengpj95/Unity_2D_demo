@@ -102,6 +102,7 @@ public abstract class BasePresenter : BaseEmitter
 
     IsVisible = false;
     _isDestroyed = true;
+    Module = null;
   }
 
   // 每次从隐藏到显示时调用（例如从缓存恢复）

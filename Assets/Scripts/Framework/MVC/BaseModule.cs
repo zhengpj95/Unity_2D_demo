@@ -42,7 +42,7 @@ public abstract class BaseModule : BaseEmitter
 
     foreach (BaseProxy proxy in _proxies.Values)
     {
-      proxy.Initialize(this);
+      proxy.SetModule(this);
       if (proxy.IsInitialized) continue;
 
       Debug.LogError($"[{GetType().Name}] Failed to initialize Proxy {proxy.GetType().Name}.");
@@ -241,7 +241,7 @@ public abstract class BaseModule : BaseEmitter
       return null;
     if (IsInitialized)
     {
-      proxy.Initialize(this);
+      proxy.SetModule(this);
       if (!proxy.IsInitialized)
         return null;
     }

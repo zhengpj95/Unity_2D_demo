@@ -13,7 +13,8 @@ public abstract class BaseProxy : BaseEmitter
   public BaseModule Module { get; private set; }
   public bool IsInitialized { get; private set; }
 
-  internal void Initialize(BaseModule module)
+  /// <summary>由所属 BaseModule 注入模块引用并完成 Proxy 初始化；重复调用无效。</summary>
+  internal void SetModule(BaseModule module)
   {
     if (IsInitialized) return;
     if (module == null)
