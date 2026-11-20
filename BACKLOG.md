@@ -1,6 +1,6 @@
 # Survivor 项目 Backlog
 
-更新时间：2026-09-22
+更新时间：2026-11-20
 
 本文只管理当前主要演进模块 Survivor 的未完成工作、优先级和验收出口。项目现状以代码、场景/资源和 `Docs/Modules` 为准；已完成条目只在文末保留简要索引，不与待办混排。
 
@@ -49,19 +49,6 @@
 - [ ] 可在 Inspector 或开发开关中启停，正式构建默认关闭。
 - [ ] 统计值能辅助确认生成上限、超距回收、重开清理和池缩容。
 - [ ] Profiler 中关闭监控时无额外持续分配，开启时更新频率和开销有记录。
-
-### SB-015 资源异步入口与所有权闭环
-
-**状态：待实现**　**依赖：无**
-
-按 `Docs/ResourceManagement.md` 推进一条正式 UI 异步加载链路，处理重复打开、加载失败、界面/Module 提前关闭和句柄释放。不得让 Addressables API 或 `AsyncOperationHandle` 泄漏到业务层。
-
-完成定义：
-
-- [ ] 同一资源的并发请求可合并或有明确的唯一加载所有者。
-- [ ] 调用方销毁后，异步完成不会创建悬空 View。
-- [ ] 至少一个正式 UI 流程完成 Play Mode 验收。
-- [ ] `Docs/ResourceManagement.md` 与 `Docs/Architecture.md` 同步更新。
 
 ### SB-016 Network 收包边界保护
 
@@ -138,8 +125,8 @@ SB-007 运行时监控
     ├─→ SB-008 Wave 扩展
     └─→ SB-014 性能基线
 
-SB-015 资源异步闭环 ─┐
-SB-016 收包边界保护 ─┴→ 可与玩法线并行推进
+SB-015 资源异步闭环（已完成，见文末基线）
+SB-016 收包边界保护 → 可与玩法线并行推进
 
 SB-009 局外 Coin → SB-010 构筑系统
 ```
@@ -152,6 +139,7 @@ SB-009 局外 Coin → SB-010 构筑系统
 | SB-002 核心玩法闭环 | Wave、掉落、升级、GameOver、连续重开已验收 | `PlayModeAcceptance.md` |
 | SB-004 武器等级字段效果 | 各武器适用字段已落地并验收 | `UpgradeSystem.md` |
 | SB-005 首版数值平衡 | 玩家、武器、敌人、Wave、掉落基线已验收 | `BalanceSystem.md` |
+| SB-015 资源异步入口与所有权闭环 | 并发合并、取消迟到加载、句柄按生命周期释放，Play Mode 已验收 | `ResourceManagement.md`、`Architecture.md` |
 
 编号 `SB-003` 当前没有有效条目，保留空缺以避免重用历史编号。
 
