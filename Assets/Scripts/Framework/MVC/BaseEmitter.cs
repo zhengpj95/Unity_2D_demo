@@ -7,13 +7,9 @@ using UnityEngine;
 /// </summary>
 public abstract class BaseEmitter
 {
-  private sealed class EventSubscription
-  {
-    public int EventId;
-    public Action<EventContext> Listener;
-  }
-
-  private readonly List<EventSubscription> _subscriptions = new();
+  // 按事件 ID 分组记录订阅，同一事件下去重用 HashSet 去重；On 的去重从 O(n) 降为 O(1)。
+  // 该结构只保存"本对象订阅过什么"，真正的订阅表由 EventBus 按事件 ID 持有。
+  private readonly Dictionary<int, HashSet<Action<EventContext>>> _subscriptions = new();
 
   /// <summary>监听事件；所有监听器统一接收 EventContext。</summary>
   protected void On(int eventId, Action<EventContext> listener)
@@ -25,18 +21,16 @@ public abstract class BaseEmitter
       return;
     }
 
-    foreach (EventSubscription subscription in _subscriptions)
+    if (!_subscriptions.TryGetValue(eventId, out HashSet<Action<EventContext>> listeners))
     {
-      if (subscription.EventId == eventId && Equals(subscription.Listener, listener))
-        return;
+      listeners = new HashSet<Action<EventContext>>();
+      _subscriptions.Add(eventId, listeners);
     }
 
+    // HashSet.Add 返回 false 表示相同委托已存在，跳过重复注册，避免 EventBus 再做一次线性去重。
+    if (!listeners.Add(listener)) return;
+
     EventBus.On(eventId, listener, this);
-    _subscriptions.Add(new EventSubscription
-    {
-      EventId = eventId,
-      Listener = listener
-    });
   }
 
   /// <summary>发出不携带数据的事件。</summary>
@@ -53,15 +47,12 @@ public abstract class BaseEmitter
     EventBus.Emit(eventId, data);
   }
 
-  /// <summary>解除当前对象通过 On 创建的全部事件订阅；可重复调用。</summary>
+  /// <summary>
+  /// 解除当前对象通过 On 创建的全部事件订阅；可重复调用。
+  /// 直接按 owner 清理 EventBus，无需逐个 Off：后者与 OffAll(owner) 重复，且会在遍历时修改 EventBus 订阅表。
+  /// </summary>
   protected void OffAll()
   {
-    for (int i = _subscriptions.Count - 1; i >= 0; i--)
-    {
-      EventSubscription subscription = _subscriptions[i];
-      EventBus.Off(subscription.EventId, subscription.Listener, this);
-    }
-
     _subscriptions.Clear();
     EventBus.OffAll(this);
   }
