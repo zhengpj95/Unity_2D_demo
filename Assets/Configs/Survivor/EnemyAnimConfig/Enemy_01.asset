@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6a3f2913e5640de96e9d5c7a4b8f102, type: 3}
+  m_Name: Enemy_01
+  m_EditorClassIdentifier: 
+  configId: 1001
+  configName: enemy_01
+  defaultClipName: Walk
+  clips:
+  - animName: Walk
+    frames:
+    - {fileID: -2141202187, guid: 5de83238bb54b7242874e7041a43677f, type: 3}
+    - {fileID: 1592775907, guid: 5de83238bb54b7242874e7041a43677f, type: 3}
+    - {fileID: 1832399439, guid: 5de83238bb54b7242874e7041a43677f, type: 3}
+    - {fileID: -1526614317, guid: 5de83238bb54b7242874e7041a43677f, type: 3}
+    - {fileID: -392171390, guid: 5de83238bb54b7242874e7041a43677f, type: 3}
+    - {fileID: -1135061252, guid: 5de83238bb54b7242874e7041a43677f, type: 3}
+    frameRate: 12
+    loop: 1
+    randomStartFrame: 1
+  - animName: Idle
+    frames:
+    - {fileID: 101010101, guid: eddbce4c1ed49e744b2a639d8cc28d80, type: 3}
+    - {fileID: 101010102, guid: eddbce4c1ed49e744b2a639d8cc28d80, type: 3}
+    - {fileID: 101010103, guid: eddbce4c1ed49e744b2a639d8cc28d80, type: 3}
+    - {fileID: 101010104, guid: eddbce4c1ed49e744b2a639d8cc28d80, type: 3}
+    - {fileID: 101010105, guid: eddbce4c1ed49e744b2a639d8cc28d80, type: 3}
+    frameRate: 12
+    loop: 1
+    randomStartFrame: 0
+  - animName: Hit
+    frames:
+    - {fileID: 101020101, guid: 3496decc06dd6cc409c2fa5cabd31e2f, type: 3}
+    - {fileID: 101020102, guid: 3496decc06dd6cc409c2fa5cabd31e2f, type: 3}
+    frameRate: 12
+    loop: 0
+    randomStartFrame: 0

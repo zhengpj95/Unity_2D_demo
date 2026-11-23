@@ -8,7 +8,7 @@ using UnityEngine;
 public abstract class AnimFrameBase : MonoBehaviour
 {
   [SerializeField, Tooltip("当前组件可以播放的全部动画配置。")]
-  private AnimFrameData[] animations = Array.Empty<AnimFrameData>();
+  private AnimFrameClip[] animations = Array.Empty<AnimFrameClip>();
 
   [SerializeField, Tooltip("启用时默认播放的动画名称；留空时使用第一组有效动画。")]
   private string defaultAnimName;
@@ -16,7 +16,7 @@ public abstract class AnimFrameBase : MonoBehaviour
   [SerializeField, Tooltip("组件启用时是否自动从头播放默认动画。")]
   private bool playOnEnable = true;
 
-  private AnimFrameData _currentAnim;
+  private AnimFrameClip _currentAnim;
   private Action _onComplete;
   private float _elapsedTime;
   private int _frameIndex;
@@ -91,12 +91,12 @@ public abstract class AnimFrameBase : MonoBehaviour
   /// <summary>
   /// 按名称播放动画。再次调用会从该动画的起始帧重新播放。
   /// </summary>
-  /// <param name="animName">AnimFrameData 中配置的动画名称。</param>
+  /// <param name="animName">AnimFrameClip 中配置的动画名称。</param>
   /// <param name="onComplete">非循环动画完整播放后的回调；循环动画不会触发。</param>
   /// <returns>找到有效动画并开始播放时返回 true，否则返回 false。</returns>
   public bool Play(string animName, Action onComplete = null)
   {
-    AnimFrameData anim = FindAnimation(animName);
+    AnimFrameClip anim = FindAnimation(animName);
     if (anim == null)
     {
       Debug.LogWarning($"[AnimFrame] Animation not found or has no frames: {animName}", this);
@@ -114,7 +114,7 @@ public abstract class AnimFrameBase : MonoBehaviour
   /// <returns>存在有效默认动画并开始播放时返回 true，否则返回 false。</returns>
   public bool PlayDefault(Action onComplete = null)
   {
-    AnimFrameData anim = FindDefaultAnimation();
+    AnimFrameClip anim = FindDefaultAnimation();
     if (anim == null)
     {
       return false;
@@ -198,7 +198,7 @@ public abstract class AnimFrameBase : MonoBehaviour
   }
 
   /// <summary>使用给定配置初始化本次播放状态并立即显示起始帧。</summary>
-  private void StartAnimation(AnimFrameData anim, Action onComplete)
+  private void StartAnimation(AnimFrameClip anim, Action onComplete)
   {
     _currentAnim = anim;
     _onComplete = anim.Loop ? null : onComplete;
@@ -231,7 +231,7 @@ public abstract class AnimFrameBase : MonoBehaviour
   /// <summary>停止状态下准备默认动画的首帧，便于编辑器和关闭自动播放时预览。</summary>
   private void PrepareDefaultFrame()
   {
-    AnimFrameData anim = FindDefaultAnimation();
+    AnimFrameClip anim = FindDefaultAnimation();
     if (anim == null)
     {
       return;
@@ -247,7 +247,7 @@ public abstract class AnimFrameBase : MonoBehaviour
   }
 
   /// <summary>查找默认名称指定的动画，名称为空时返回第一组有效配置。</summary>
-  private AnimFrameData FindDefaultAnimation()
+  private AnimFrameClip FindDefaultAnimation()
   {
     if (!string.IsNullOrWhiteSpace(defaultAnimName))
     {
@@ -261,7 +261,7 @@ public abstract class AnimFrameBase : MonoBehaviour
 
     for (int i = 0; i < animations.Length; i++)
     {
-      AnimFrameData anim = animations[i];
+      AnimFrameClip anim = animations[i];
       if (anim != null && anim.FrameCount > 0)
       {
         return anim;
@@ -272,7 +272,7 @@ public abstract class AnimFrameBase : MonoBehaviour
   }
 
   /// <summary>按名称查找第一组有效动画配置。</summary>
-  private AnimFrameData FindAnimation(string animName)
+  private AnimFrameClip FindAnimation(string animName)
   {
     if (animations == null || string.IsNullOrWhiteSpace(animName))
     {
@@ -281,7 +281,7 @@ public abstract class AnimFrameBase : MonoBehaviour
 
     for (int i = 0; i < animations.Length; i++)
     {
-      AnimFrameData anim = animations[i];
+      AnimFrameClip anim = animations[i];
       if (anim != null && anim.FrameCount > 0 &&
           string.Equals(anim.AnimName, animName, StringComparison.Ordinal))
       {

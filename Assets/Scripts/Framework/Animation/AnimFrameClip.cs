@@ -6,7 +6,7 @@ using UnityEngine;
 /// 数据直接序列化在使用它的组件上，不额外创建 ScriptableObject 资源。
 /// </summary>
 [Serializable]
-public sealed class AnimFrameData
+public sealed class AnimFrameClip
 {
   [SerializeField, Tooltip("代码播放动画时使用的名称，例如 Move、Hit、Death。")]
   private string animName = "Default";
