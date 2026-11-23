@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   configId: 1001
   configName: enemy_01
-  defaultClipName: Walk
+  defaultClipName: Move
   clips:
-  - animName: Walk
+  - animName: Move
     frames:
     - {fileID: -2141202187, guid: 5de83238bb54b7242874e7041a43677f, type: 3}
     - {fileID: 1592775907, guid: 5de83238bb54b7242874e7041a43677f, type: 3}

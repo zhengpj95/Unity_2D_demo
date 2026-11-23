@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6a3f2913e5640de96e9d5c7a4b8f102, type: 3}
+  m_Name: Enemy_Rino
+  m_EditorClassIdentifier: 
+  configId: 1004
+  configName: enemy_rino
+  defaultClipName: Move
+  clips:
+  - animName: Move
+    frames:
+    - {fileID: 6858001784930192701, guid: 5f6e4279b73f74146bcf36013201d778, type: 3}
+    - {fileID: -144779502802482253, guid: 5f6e4279b73f74146bcf36013201d778, type: 3}
+    - {fileID: -4586267875643385387, guid: 5f6e4279b73f74146bcf36013201d778, type: 3}
+    - {fileID: 3195440121365438547, guid: 5f6e4279b73f74146bcf36013201d778, type: 3}
+    - {fileID: 5954703513139029531, guid: 5f6e4279b73f74146bcf36013201d778, type: 3}
+    - {fileID: 3645781599010443287, guid: 5f6e4279b73f74146bcf36013201d778, type: 3}
+    frameRate: 12
+    loop: 1
+    randomStartFrame: 1
+  - animName: Idle
+    frames:
+    - {fileID: -1075854790282143660, guid: e3531be27cb827743bac8ea66dae5bfd, type: 3}
+    - {fileID: 8655131874898858446, guid: e3531be27cb827743bac8ea66dae5bfd, type: 3}
+    - {fileID: -820654707376584040, guid: e3531be27cb827743bac8ea66dae5bfd, type: 3}
+    - {fileID: 156153531355689427, guid: e3531be27cb827743bac8ea66dae5bfd, type: 3}
+    - {fileID: 9127768303896570375, guid: e3531be27cb827743bac8ea66dae5bfd, type: 3}
+    - {fileID: 6417604408115182409, guid: e3531be27cb827743bac8ea66dae5bfd, type: 3}
+    - {fileID: 1174575801267489233, guid: e3531be27cb827743bac8ea66dae5bfd, type: 3}
+    - {fileID: 7140330242567135557, guid: e3531be27cb827743bac8ea66dae5bfd, type: 3}
+    - {fileID: -3136031247263263121, guid: e3531be27cb827743bac8ea66dae5bfd, type: 3}
+    - {fileID: 1513087955126141088, guid: e3531be27cb827743bac8ea66dae5bfd, type: 3}
+    - {fileID: -1195877170302790509, guid: e3531be27cb827743bac8ea66dae5bfd, type: 3}
+    frameRate: 12
+    loop: 1
+    randomStartFrame: 0
+  - animName: Hit
+    frames:
+    - {fileID: -5629135272633566843, guid: 0d45a0d8b949d0a4e9eafdc24f22ef64, type: 3}
+    - {fileID: -2715152553310997712, guid: 0d45a0d8b949d0a4e9eafdc24f22ef64, type: 3}
+    - {fileID: -4919157991825847783, guid: 0d45a0d8b949d0a4e9eafdc24f22ef64, type: 3}
+    - {fileID: 5977564812290476861, guid: 0d45a0d8b949d0a4e9eafdc24f22ef64, type: 3}
+    - {fileID: 2439156637083800784, guid: 0d45a0d8b949d0a4e9eafdc24f22ef64, type: 3}
+    frameRate: 12
+    loop: 0
+    randomStartFrame: 0
