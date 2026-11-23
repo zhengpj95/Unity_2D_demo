@@ -52,6 +52,21 @@ Assets/Scripts/
 └── TestCode/                  # 测试、学习和验证代码
 ```
 
+ScriptableObject 配置统一放在 `Assets/Configs/`，按业务域分子目录，`Assets/Scripts/` 下只保存 C# 代码：
+
+```text
+Assets/Configs/
+├── Guide/                     # 引导流程与光标动画配置
+├── Rpg/Loot/                  # RPG 掉落物配置
+└── Survivor/
+    ├── WeaponConfig/          # 武器 SO
+    ├── BuffConfig/            # Buff SO
+    ├── EnemyAnimConfig/       # 敌人序列帧配置
+    └── DropItemAnimConfig/    # 掉落物序列帧配置
+```
+
+移动配置资源时必须让 `.asset` 与同名 `.meta` 一起移动，保证 GUID 不变，场景和 Prefab 中的序列化引用才不会断。`AddressableAssetsData/`、`TextMesh Pro/` 等第三方或系统生成资源不属于业务配置，不纳入该约定。
+
 `Assets/Editor/` 还包含虚拟列表等组件的自定义 Inspector 与创建菜单。目录是职责提示，不等于强制依赖边界；FrogAdventure、RPG、Melee 和 TestCode 保留较多学习/原型式 MonoBehaviour，不应仅因位于 `Modules` 就假设它们已经使用统一 Module/MVC。
 
 ## 4. 启动与全局生命周期
