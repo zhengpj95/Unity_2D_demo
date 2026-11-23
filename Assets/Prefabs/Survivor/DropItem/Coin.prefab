@@ -99,17 +99,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 259cb51216d84ae4b30bd5606984ed74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  animations:
-  - animName: Idle
-    frames:
-    - {fileID: 21300000, guid: 03b3b03d94fe64ca991436d28accda10, type: 3}
-    - {fileID: 21300000, guid: bff474feb3ed041f0abe9d1ec39e3b73, type: 3}
-    - {fileID: 21300000, guid: a1938ef5e3ea44afd9b1ca7a23b8f39f, type: 3}
-    - {fileID: 21300000, guid: 601ee6102f54d41e9908ba8c8ade2173, type: 3}
-    frameRate: 8
-    loop: 1
-    randomStartFrame: 0
-  defaultAnimName: Idle
+  config: {fileID: 11400000, guid: b8e4a1c7d3f260958a4b1c6e8f2d7a30, type: 2}
   playOnEnable: 1
   target: {fileID: 7048276066485105848}
 --- !u!58 &-6555543417569831352

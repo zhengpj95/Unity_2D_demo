@@ -321,36 +321,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 259cb51216d84ae4b30bd5606984ed74, type: 3}
   m_Name:
   m_EditorClassIdentifier:
-  animations:
-  - animName: Move
-    frames:
-    - {fileID: 811482248, guid: 61d1e9c3337a3c04c9d565b0fa50f4ae, type: 3}
-    - {fileID: 698607012, guid: 61d1e9c3337a3c04c9d565b0fa50f4ae, type: 3}
-    - {fileID: -753674547, guid: 61d1e9c3337a3c04c9d565b0fa50f4ae, type: 3}
-    - {fileID: -1335124280, guid: 61d1e9c3337a3c04c9d565b0fa50f4ae, type: 3}
-    - {fileID: -1798132853, guid: 61d1e9c3337a3c04c9d565b0fa50f4ae, type: 3}
-    - {fileID: -2067591925, guid: 61d1e9c3337a3c04c9d565b0fa50f4ae, type: 3}
-    frameRate: 12
-    loop: 1
-    randomStartFrame: 1
-  - animName: Idle
-    frames:
-    - {fileID: 102010101, guid: 16b2c9d7ff871694f83b7b18d5a1e6d1, type: 3}
-    - {fileID: 102010102, guid: 16b2c9d7ff871694f83b7b18d5a1e6d1, type: 3}
-    - {fileID: 102010103, guid: 16b2c9d7ff871694f83b7b18d5a1e6d1, type: 3}
-    - {fileID: 102010104, guid: 16b2c9d7ff871694f83b7b18d5a1e6d1, type: 3}
-    - {fileID: 102010105, guid: 16b2c9d7ff871694f83b7b18d5a1e6d1, type: 3}
-    frameRate: 12
-    loop: 1
-    randomStartFrame: 0
-  - animName: Hit
-    frames:
-    - {fileID: 102020101, guid: 44c0a85d7cbbdab408e73a36fcfcb60e, type: 3}
-    - {fileID: 102020102, guid: 44c0a85d7cbbdab408e73a36fcfcb60e, type: 3}
-    frameRate: 12
-    loop: 0
-    randomStartFrame: 0
-  defaultAnimName: Move
+  config: {fileID: 11400000, guid: 3c9a7f1b8e2d4a6f0b5c8d1e7a9f2b43, type: 2}
   playOnEnable: 1
   target: {fileID: 7859222473702140540}
 --- !u!1 &7437596646902730000

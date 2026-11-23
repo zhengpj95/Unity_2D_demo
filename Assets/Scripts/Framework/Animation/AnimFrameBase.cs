@@ -7,11 +7,8 @@ using UnityEngine;
 /// </summary>
 public abstract class AnimFrameBase : MonoBehaviour
 {
-  [SerializeField, Tooltip("当前组件可以播放的全部动画配置。")]
-  private AnimFrameClip[] animations = Array.Empty<AnimFrameClip>();
-
-  [SerializeField, Tooltip("启用时默认播放的动画名称；留空时使用第一组有效动画。")]
-  private string defaultAnimName;
+  [SerializeField, Tooltip("序列帧动画配置资源；播放器仅从该资源查找动作与默认动作。")]
+  private AnimFrameConfig config;
 
   [SerializeField, Tooltip("组件启用时是否自动从头播放默认动画。")]
   private bool playOnEnable = true;
@@ -57,6 +54,13 @@ public abstract class AnimFrameBase : MonoBehaviour
   protected virtual void Awake()
   {
     ResolveTarget();
+    if (config == null)
+    {
+      // 移除内联数据后配置缺失意味着组件完全无法工作，启动时显式告警便于定位漏配的资源。
+      Debug.LogWarning("[AnimFrame] AnimFrameConfig is not assigned; no animation will play.", this);
+      return;
+    }
+
     PrepareDefaultFrame();
   }
 
@@ -246,22 +250,28 @@ public abstract class AnimFrameBase : MonoBehaviour
     ApplyCurrentFrame();
   }
 
-  /// <summary>查找默认名称指定的动画，名称为空时返回第一组有效配置。</summary>
+  /// <summary>查找默认名称指定的动画，名称为空时返回配置中第一组有效动画。</summary>
   private AnimFrameClip FindDefaultAnimation()
   {
-    if (!string.IsNullOrWhiteSpace(defaultAnimName))
-    {
-      return FindAnimation(defaultAnimName);
-    }
-
-    if (animations == null)
+    if (config == null)
     {
       return null;
     }
 
-    for (int i = 0; i < animations.Length; i++)
+    if (!string.IsNullOrWhiteSpace(config.DefaultClipName))
     {
-      AnimFrameClip anim = animations[i];
+      return FindAnimation(config.DefaultClipName);
+    }
+
+    AnimFrameClip[] clips = config.Clips;
+    if (clips == null)
+    {
+      return null;
+    }
+
+    for (int i = 0; i < clips.Length; i++)
+    {
+      AnimFrameClip anim = clips[i];
       if (anim != null && anim.FrameCount > 0)
       {
         return anim;
@@ -271,17 +281,18 @@ public abstract class AnimFrameBase : MonoBehaviour
     return null;
   }
 
-  /// <summary>按名称查找第一组有效动画配置。</summary>
+  /// <summary>按名称从配置中查找第一组有效动画。</summary>
   private AnimFrameClip FindAnimation(string animName)
   {
-    if (animations == null || string.IsNullOrWhiteSpace(animName))
+    if (config == null || config.Clips == null || string.IsNullOrWhiteSpace(animName))
     {
       return null;
     }
 
-    for (int i = 0; i < animations.Length; i++)
+    AnimFrameClip[] clips = config.Clips;
+    for (int i = 0; i < clips.Length; i++)
     {
-      AnimFrameClip anim = animations[i];
+      AnimFrameClip anim = clips[i];
       if (anim != null && anim.FrameCount > 0 &&
           string.Equals(anim.AnimName, animName, StringComparison.Ordinal))
       {

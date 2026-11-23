@@ -321,24 +321,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 259cb51216d84ae4b30bd5606984ed74, type: 3}
   m_Name:
   m_EditorClassIdentifier:
-  animations:
-  - animName: Move
-    frames:
-    - {fileID: -1133438033, guid: 0d2c39cec07c94949b3ca163555ab5c0, type: 3}
-    - {fileID: 2045062292, guid: 0d2c39cec07c94949b3ca163555ab5c0, type: 3}
-    - {fileID: -1714467342, guid: 0d2c39cec07c94949b3ca163555ab5c0, type: 3}
-    - {fileID: 1954965592, guid: 0d2c39cec07c94949b3ca163555ab5c0, type: 3}
-    frameRate: 12
-    loop: 1
-    randomStartFrame: 1
-  - animName: Hit
-    frames:
-    - {fileID: 103020101, guid: c1ddf6736e0c27249bb2054a95d15920, type: 3}
-    - {fileID: 103020102, guid: c1ddf6736e0c27249bb2054a95d15920, type: 3}
-    frameRate: 12
-    loop: 0
-    randomStartFrame: 0
-  defaultAnimName: Move
+  config: {fileID: 11400000, guid: 7e1d4b9a2c6f8e3d5a0b7c9f1d4e6a82, type: 2}
   playOnEnable: 1
   target: {fileID: 7859222473702140540}
 --- !u!1 &7437596646902730000

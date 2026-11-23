@@ -124,14 +124,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af832ed94c6e49afbf69707ad31cc818, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  animations:
-  - animName: Tap
-    frames:
-    - {fileID: 21300000, guid: 7be59999eb8beee4282d59953a07df63, type: 3}
-    - {fileID: 21300000, guid: 116e54391e2b15942a13f6c262f88bc5, type: 3}
-    frameRate: 6
-    loop: 1
-    randomStartFrame: 0
-  defaultAnimName: Tap
+  config: {fileID: 11400000, guid: da06c3e9f5b482107c6d3e8a0b4f9c52, type: 2}
   playOnEnable: 1
   target: {fileID: 8752631064011389615}

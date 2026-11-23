@@ -3,7 +3,7 @@ using UnityEngine;
 
 /// <summary>
 /// 一组序列帧动画配置，保存动作名称、帧图片、帧率和循环规则。
-/// 数据直接序列化在使用它的组件上，不额外创建 ScriptableObject 资源。
+/// 数据由 AnimFrameConfig 资源持有，播放器从配置资源中查找并播放。
 /// </summary>
 [Serializable]
 public sealed class AnimFrameClip
