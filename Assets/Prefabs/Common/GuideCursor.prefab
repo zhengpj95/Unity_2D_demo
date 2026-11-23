@@ -121,9 +121,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 8214282941903178543}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: af832ed94c6e49afbf69707ad31cc818, type: 3}
+  m_Script: {fileID: 11500000, guid: 259cb51216d84ae4b30bd5606984ed74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   config: {fileID: 11400000, guid: da06c3e9f5b482107c6d3e8a0b4f9c52, type: 2}
   playOnEnable: 1
-  target: {fileID: 8752631064011389615}
+  target: {fileID: 0}
+  image: {fileID: 8752631064011389615}

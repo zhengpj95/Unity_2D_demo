@@ -76,8 +76,8 @@ Assets/Scripts/Framework/Pool/PoolManager.cs
 
 - 在 `OnAlloc` 时恢复满血。
 - 受伤后刷新 `UI_HpBar` 和伤害飘字。
-- 对配置了 `AnimSprite` 的敌人播放一次 `Hit`，完成后恢复循环的 `Move`；旧敌人未配置该组件时保持原行为。
-- 当前 `Enemy_01/02/03`、`Enemy_Rino`、`Enemy_Slime` 和 `Enemy_Treant` 均使用 `AnimSprite`；Treant 没有 `Hit` 素材，受伤时继续保持 `Move`。
+- 对配置了 `AnimFrame` 的敌人播放一次 `Hit`，完成后恢复循环的 `Move`；旧敌人未配置该组件时保持原行为。
+- 当前 `Enemy_01/02/03`、`Enemy_Rino`、`Enemy_Slime` 和 `Enemy_Treant` 均使用 `AnimFrame`（拖入 `SpriteRenderer`）；Treant 没有 `Hit` 素材，受伤时继续保持 `Move`。
 - 生命值归零时累计击杀、生成掉落并通过 `EnemyDirector.RecycleEnemy` 回收。
 - 武器高频调用的最近/随机选敌直接遍历已注册敌人；随机选择使用蓄水池抽样，不创建候选列表或按距离排序。
 - `ClearActiveEnemies` 在重开前回收当前活跃敌人，避免旧回合实体进入下一局。
@@ -163,7 +163,7 @@ HP <= 0：
     └── EnemyDirector.RecycleEnemy()
 ```
 
-死亡掉落由场景 `DropItemManager` 的 `gemDropWeight/coinDropWeight` 统一抽取；当前 `SurvivorsDemo` 配置为 `80:10`，每次击杀必定掉落一件，金币作为局外武器升级资源保持稀缺。Gem 和 Coin 的显示动画由 `AnimSprite` 驱动，不再依赖各自的 Animator Controller；拾取流程见 [Survivor.md](Survivor.md)。
+死亡掉落由场景 `DropItemManager` 的 `gemDropWeight/coinDropWeight` 统一抽取；当前 `SurvivorsDemo` 配置为 `80:10`，每次击杀必定掉落一件，金币作为局外武器升级资源保持稀缺。Gem 和 Coin 的显示动画由 `AnimFrame` 驱动，不再依赖各自的 Animator Controller；拾取流程见 [Survivor.md](Survivor.md)。
 
 ---
 
@@ -189,7 +189,7 @@ RecycleEnemy
 池复用时必须重置状态：
 
 - `VSEnemyHealth.OnAlloc` 恢复满血。
-- `VSEnemyHealth.OnAlloc` 将 `AnimSprite` 恢复为 `Move`，入池时停止动画并清理上一轮完成回调。
+- `VSEnemyHealth.OnAlloc` 将 `AnimFrame` 恢复为 `Move`，入池时停止动画并清理上一轮完成回调。
 - `EnemyChasing.OnAlloc` 清零 Rigidbody2D 速度。
 - `EnemyChasing.OnFree` 注销敌人。
 

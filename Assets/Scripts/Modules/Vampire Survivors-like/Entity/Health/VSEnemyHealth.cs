@@ -12,12 +12,12 @@ namespace VampireSurvivorsLike
 
     [SerializeField] private int maxHealth;
     private int currentHealth;
-    private AnimSprite _animSprite;
+    private AnimFrame _animFrame;
     private Action _resumeMoveAnimation;
 
     private void Awake()
     {
-      _animSprite = GetComponentInChildren<AnimSprite>(true);
+      _animFrame = GetComponentInChildren<AnimFrame>(true);
       _resumeMoveAnimation = ResumeMoveAnimation;
     }
 
@@ -25,13 +25,13 @@ namespace VampireSurvivorsLike
     {
       currentHealth = maxHealth;
       UpdateHpBar();
-      _animSprite?.Play(MoveAnimName);
+      _animFrame?.Play(MoveAnimName);
     }
 
     public void OnFree()
     {
       currentHealth = 0;
-      _animSprite?.Stop(false);
+      _animFrame?.Stop(false);
     }
 
     public void TakeDamage(int damage)
@@ -50,16 +50,16 @@ namespace VampireSurvivorsLike
       }
 
       // 受击动画为单次播放，结束后恢复统一的移动动作；连续受击会从头重播 Hit。
-      if (_animSprite != null && _animSprite.HasAnimation(HitAnimName))
+      if (_animFrame != null && _animFrame.HasAnimation(HitAnimName))
       {
-        _animSprite.Play(HitAnimName, _resumeMoveAnimation);
+        _animFrame.Play(HitAnimName, _resumeMoveAnimation);
       }
     }
 
     /// <summary>受击动画结束后恢复敌人的循环移动动画。</summary>
     private void ResumeMoveAnimation()
     {
-      _animSprite?.Play(MoveAnimName);
+      _animFrame?.Play(MoveAnimName);
     }
 
     private void UpdateHpBar()
