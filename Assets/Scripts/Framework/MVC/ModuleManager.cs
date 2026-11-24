@@ -9,6 +9,9 @@ public sealed class ModuleManager : Singleton<ModuleManager>
 {
   private readonly Dictionary<ModuleName, BaseModule> _modules = new();
   private readonly List<Type> _pendingModuleTypes = new();
+  // Update 复用快照，避免每帧分配；异常只上报一次，避免持续失败时刷屏。
+  private readonly List<BaseModule> _updateSnapshot = new();
+  private readonly HashSet<ModuleName> _updateErrorReported = new();
 
   public bool IsInitialized { get; private set; }
   public int ModuleCount => _modules.Count;
@@ -131,9 +134,32 @@ public sealed class ModuleManager : Singleton<ModuleManager>
     IsInitialized = allModulesInitialized;
   }
 
+  /// <summary>
+  /// 逐模块驱动 Update。单个模块异常只记录并跳过，避免中断后续模块；
+  /// 使用复用快照，避免模块更新期间增删注册表导致遍历失效。
+  /// </summary>
   public void Update()
   {
-    foreach (BaseModule module in _modules.Values) module.UpdateModule();
+    _updateSnapshot.Clear();
+    foreach (BaseModule module in _modules.Values)
+      _updateSnapshot.Add(module);
+
+    for (int i = 0; i < _updateSnapshot.Count; i++)
+    {
+      BaseModule module = _updateSnapshot[i];
+      if (module == null) continue;
+
+      try
+      {
+        module.UpdateModule();
+        _updateErrorReported.Remove(module.ModuleName);
+      }
+      catch (Exception exception)
+      {
+        if (_updateErrorReported.Add(module.ModuleName))
+          Debug.LogError($"[ModuleManager] Failed to update Module {module.ModuleName}. Error={exception}");
+      }
+    }
   }
 
   // private void ReleaseModule(ModuleName moduleName)
@@ -143,12 +169,38 @@ public sealed class ModuleManager : Singleton<ModuleManager>
   //   _modules.Remove(moduleName);
   // }
 
+  /// <summary>
+  /// 释放所有模块。先快照再逐个释放并隔离异常，保证一个模块失败不会阻断后续模块；
+  /// 无论释放是否抛错，最终都会清空注册表并复位状态，避免影响 GameMgr 后续清理链路。
+  /// </summary>
   public void ReleaseAll()
   {
-    foreach (BaseModule module in _modules.Values) module.Release();
-    _modules.Clear();
-    _pendingModuleTypes.Clear();
-    IsInitialized = false;
+    List<BaseModule> modules = null;
+    try
+    {
+      // 释放期间可能通过事件间接改动注册表，先快照再遍历。
+      modules = new List<BaseModule>(_modules.Values);
+      foreach (BaseModule module in modules)
+      {
+        if (module == null) continue;
+        try
+        {
+          module.Release();
+        }
+        catch (Exception exception)
+        {
+          Debug.LogError($"[ModuleManager] Failed to release Module {module.ModuleName}. Error={exception}");
+        }
+      }
+    }
+    finally
+    {
+      _modules.Clear();
+      _pendingModuleTypes.Clear();
+      _updateSnapshot.Clear();
+      _updateErrorReported.Clear();
+      IsInitialized = false;
+    }
   }
 
   private bool ContainsModuleType(Type moduleType)

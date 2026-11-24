@@ -167,6 +167,8 @@ public class UIManager : Singleton<UIManager>
       DestroyWindow(presenter);
 
     DestroyAllUI();
+    // 清空复用快照，避免单例长期持有已销毁 Presenter 引用。
+    _updateSnapshot.Clear();
     _config = null;
     IsInitialized = false;
     Debug.Log("[UIManager] Released");
@@ -180,8 +182,14 @@ public class UIManager : Singleton<UIManager>
   {
     if (!IsInitialized) return;
 
-    foreach (BasePresenter presenter in _presenterCache.Values.ToArray())
+    // 复用列表保存快照：Presenter 在 Update 中开关界面也不会破坏遍历。
+    _updateSnapshot.Clear();
+    foreach (BasePresenter presenter in _presenterCache.Values)
+      _updateSnapshot.Add(presenter);
+
+    for (int i = 0; i < _updateSnapshot.Count; i++)
     {
+      BasePresenter presenter = _updateSnapshot[i];
       if (presenter != null && presenter.IsVisible && presenter.NeedUpdate)
         presenter.Update();
     }
@@ -337,6 +345,8 @@ public class UIManager : Singleton<UIManager>
   #region BasePresenter处理
   // Presenter 的全局身份由 ModuleName + ViewType 决定，不能仅按 Presenter 类型缓存。
   private readonly Dictionary<PresenterKey, BasePresenter> _presenterCache = new Dictionary<PresenterKey, BasePresenter>();
+  // OnUpdate 复用的 Presenter 快照：避免每帧 ToArray 分配，并隔离更新期间对缓存的增删。
+  private readonly List<BasePresenter> _updateSnapshot = new List<BasePresenter>();
   // 供 Presenter 自身关闭或模块释放时反查其全局身份。
   private readonly Dictionary<BasePresenter, PresenterKey> _presenterKeys = new Dictionary<BasePresenter, PresenterKey>();
   private readonly Dictionary<BasePresenter, AssetHandle<GameObject>> _presenterAssetHandles =
