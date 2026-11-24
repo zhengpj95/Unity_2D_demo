@@ -130,6 +130,8 @@ public sealed class SurvivorGameplayController
       _module.HideSkillSelectPanel();
       _proxy.SetGameState(SurvivorGameState.GameOver);
       Time.timeScale = 0f;
+      // 暂停后飘字会冻结在屏幕上，先清理再弹结算，避免盖在面板下方或被带进下一场景。
+      ClearFloatingDamageTexts();
       _module.NotifyModelChanged();
 
       SurvivorGameOverPresenter panel = await _module.OpenGameOverPanel(CreateGameOverArgs());
@@ -155,6 +157,7 @@ public sealed class SurvivorGameplayController
     _module.HideSkillSelectPanel();
     _module.HideSurvivorMain();
     ClearCurrentRoundEntities();
+    ClearFloatingDamageTexts();
     Time.timeScale = 0f;
 
     LoadSceneAsync(
@@ -235,6 +238,7 @@ public sealed class SurvivorGameplayController
     }
 
     ClearCurrentRoundEntities();
+    ClearFloatingDamageTexts();
     _proxy.ResetRound();
     // UI 根节点跨场景保留，必须在场景重载前立即推送新的 Model，避免继续显示上一局血量。
     _module.NotifyModelChanged();
@@ -256,6 +260,14 @@ public sealed class SurvivorGameplayController
 
     WeaponManager weaponManager = UnityEngine.Object.FindObjectOfType<WeaponManager>();
     weaponManager?.ClearActiveWeaponEffects();
+  }
+
+  /// <summary>清理仍在播放的伤害飘字；飘字挂在跨场景保留的 UIRoot 下，不清理会残留到主页或下一局。</summary>
+  private static void ClearFloatingDamageTexts()
+  {
+    DamageController damageController = DamageController.Instance;
+    if (damageController != null)
+      damageController.ClearAll();
   }
 
   /// <summary>创建本次结算窗口所需的数据和流程回调，避免失败恢复时复制参数组装逻辑。</summary>

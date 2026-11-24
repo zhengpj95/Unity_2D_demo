@@ -64,6 +64,29 @@ public class DamageController : MonoBehaviour
     }
   }
 
+  /// <summary>
+  /// 清除当前所有仍在播放的飘字。结算暂停时 Time.deltaTime 为 0，飘字会停在屏幕上，
+  /// 而 UIRoot 跨场景保留，不主动清理就会残留到主页或下一局。
+  /// </summary>
+  public void ClearAll()
+  {
+    if (point == null)
+    {
+      return;
+    }
+
+    for (int i = point.childCount - 1; i >= 0; i--)
+    {
+      Transform child = point.GetChild(i);
+      if (child.GetComponent<UI_Damage>() == null)
+      {
+        continue;
+      }
+
+      Destroy(child.gameObject);
+    }
+  }
+
   private bool TryGetCanvas(out Canvas canvas)
   {
     if (point == null)
