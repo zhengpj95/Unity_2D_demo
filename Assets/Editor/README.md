@@ -1,6 +1,6 @@
 # Assets/Editor 编辑器工具
 
-本目录存放项目自有的 Unity Editor 工具，按职责分为 `CodeGeneration`、`UI`、`Sprites`、`SceneAndDemo` 四个子目录。所有脚本都只在编辑器程序集编译：Unity 对路径中任意层级的 `Editor` 目录都按 Editor 程序集处理，当前项目在 `Assets/Editor` 下没有 asmdef，因此子目录划分不影响编译。
+本目录存放项目自有的 Unity Editor 工具，按职责分为 `CodeGeneration`、`UI`、`Sprites`、`SceneAndDemo`、`Config` 五个子目录。所有脚本都只在编辑器程序集编译：Unity 对路径中任意层级的 `Editor` 目录都按 Editor 程序集处理，当前项目在 `Assets/Editor` 下没有 asmdef，因此子目录划分不影响编译。
 
 运行时组件不得放入本目录；带 `#if UNITY_EDITOR` 条件编译段的运行时组件（如 `VirtualList`、`UIGray`、`UILauncher`）必须留在 `Assets/Scripts`，否则构建中组件整体不可用。
 
@@ -12,6 +12,7 @@
 | `UI/`             | Inspector 绘制，以及 UI 创建与 View/Presenter 绑定工作流 |
 | `Sprites/`        | 贴图 Sprite 切割与 Project 窗口辅助                      |
 | `SceneAndDemo/`   | 场景启动与演示场景生成                                   |
+| `Config/`         | ScriptableObject 配置的创建与编辑                        |
 
 ## CodeGeneration/
 
@@ -56,6 +57,14 @@ UI 编辑期辅助工具，既包含只读 Inspector 扩展，也包含通过菜
 | `SceneEditorUtils.cs` | `EditorTools.SceneEditorUtils` | 菜单 `Tools/01 Start Game`：保存当前场景后打开 `Assets/Scenes/Launcher.unity` 并进入播放模式。                                                                                                                               |
 | `GuideDemoSetup.cs`   | `GuideDemoSetup`，全局命名空间 | 菜单 `Tools/Guide/Create Guide Demo Scene`：读取 Guide 示例配置，生成包含相机、UI 层级、按钮和引导光标的 `GuideDemo.unity` 场景。依赖 `GuideConfig`、`GuideDemoBootstrap`、`GuideCursor`、`GameMgr`、`UILauncher` 与 TMPro。 |
 
+## Config/
+
+ScriptableObject 配置的编辑工作流。
+
+| 文件                    | 类型 / 命名空间                                | 作用与入口                                                                                                                                                                                               |
+| ----------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `EnemyConfigEditor.cs`  | `EditorTools.EnemyConfigEditor : EditorWindow` | 菜单 `Tools/05 Enemy Config Editor`：在一个窗口内新建与编辑 `AnimFrameConfig`（序列帧）和 `EnemyTypeConfig`（敌人数值/碰撞体/显示），新建资源自动保存到 `Assets/Configs/Survivor/` 对应子目录。预览区随上方选中的 `AnimFrameConfig` 实时刷新：切换现有配置、新建配置或新增/修改 Clip 与帧后，下一次重绘即显示对应默认 Clip（无默认则第一组有效 Clip）的首帧；也可手动拖入 Sprite 覆盖。选中 `EnemyTypeConfig` 时预览图叠加碰撞体矩形（绿色 Vertical / 橙色 Horizontal），拖动中心改 `colliderOffset`、四角改 `colliderSize`，实时写回配置；另附诊断按钮输出预览来源与 Clip/帧状态到 Console。多帧播放预览尚未实现。 |
+
 ## 生成产物与边界
 
 - 生成输出路径定义在 `CodeGeneration/CodeGenerationPaths.cs`，产物落在 `Assets/Scripts/Define/Editor`、`Assets/Scripts/Define/UI`、`Assets/Scripts/Modules/Presenters`。
@@ -64,7 +73,7 @@ UI 编辑期辅助工具，既包含只读 Inspector 扩展，也包含通过菜
 
 ## 维护约定
 
-- 新增 Editor 工具时按职责放入四个目录；存在调用关系的工具放同一目录。
+- 新增 Editor 工具时按职责放入五个目录；存在调用关系的工具放同一目录。
 - 移动脚本时必须连同同名 `.meta` 一起移动，保留 GUID，避免序列化引用丢失。
 - 不要随意修改 namespace：现有文件分别位于 `EditorTools` 和全局命名空间；尤其 `CodeGenerationPaths` 是全局共享配置，添加 namespace 需同步修改四个调用方。
 - `[MenuItem]` 路径与物理目录无关，调整目录时不应顺带改变菜单路径（`Tools/01` 至 `Tools/04` 保留现有顺序）。
