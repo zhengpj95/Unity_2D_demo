@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b6a3f2913e5640de96e9d5c7a4b8f102, type: 3}
-  m_Name: Enemy_Treant
+  m_Name: EnemyAnimTreant
   m_EditorClassIdentifier: 
   configId: 1006
   configName: enemy_treant
