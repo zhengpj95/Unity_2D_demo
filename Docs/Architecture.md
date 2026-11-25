@@ -61,7 +61,9 @@ Assets/Configs/
 └── Survivor/
     ├── WeaponConfig/          # 武器 SO
     ├── BuffConfig/            # Buff SO
+    ├── WaveConfig/            # Wave 时间轴与刷怪组合
     ├── EnemyAnimConfig/       # 敌人序列帧配置
+    ├── EnemyTypeConfig/       # 敌人类型数值、碰撞体与显示配置
     └── DropItemAnimConfig/    # 掉落物序列帧配置
 ```
 

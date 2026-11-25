@@ -30,6 +30,28 @@ public abstract class AnimFrameBase : MonoBehaviour
   public int CurrentFrameIndex => _currentAnim == null ? -1 : _frameIndex;
 
   /// <summary>
+  /// 运行时替换动画配置，使同一个 Prefab 能播放不同敌人的序列帧。
+  /// </summary>
+  /// <param name="newConfig">新的动画配置；为空时停止播放并清空当前帧。</param>
+  /// <param name="playDefault">是否立即播放新配置的默认动画。</param>
+  public void SetConfig(AnimFrameConfig newConfig, bool playDefault = true)
+  {
+    config = newConfig;
+    ResolveTarget();
+    Stop(false);
+    if (config == null)
+    {
+      SetSprite(null);
+      return;
+    }
+
+    if (playDefault)
+      PlayDefault();
+    else
+      PrepareDefaultFrame();
+  }
+
+  /// <summary>
   /// 检查当前组件是否配置了指定名称且至少包含一帧的动画。
   /// </summary>
   /// <param name="animName">需要检查的动画名称。</param>

@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d8f3a1c9e2b47508a3d6c1f9e4b7a25, type: 3}
+  m_Name: EnemyTypeSlime
+  m_EditorClassIdentifier: 
+  typeId: Enemy_Slime
+  animConfig: {fileID: 11400000, guid: d18b6e3f9a2c4705b8d1e6f3a9c2b574, type: 2}
+  chaseSpeed: 0.5
+  damage: 1
+  maxHealth: 2
+  colliderOffset: {x: 0.00228035, y: -0.038764212}
+  colliderSize: {x: 0.44579595, y: 0.39122546}
+  colliderDirection: 1
+  spriteSize: {x: 0, y: 0}
+  hpBarLocalPosition: {x: -0.298, y: 0.3, z: 0}
+  hpBarLocalScale: {x: 0.59999996, y: 0.1, z: 1}

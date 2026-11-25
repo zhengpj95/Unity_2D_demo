@@ -9,6 +9,17 @@ namespace VampireSurvivorsLike {
 
     public int Damage { get => damage; }
 
+    /// <summary>
+    /// 按敌人类型配置覆盖追击速度与碰撞伤害；由生成链路在每次出池后调用。
+    /// </summary>
+    /// <param name="speed">世界单位/秒的追击速度。</param>
+    /// <param name="hitDamage">碰撞玩家造成的伤害。</param>
+    public void Configure(float speed, int hitDamage)
+    {
+      chaseSpeed = Mathf.Max(0f, speed);
+      damage = Mathf.Max(0, hitDamage);
+    }
+
     private Transform player;
     private Transform spriteTransform;
     private Rigidbody2D rb;

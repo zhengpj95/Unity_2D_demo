@@ -63,7 +63,7 @@ ScriptableObject 配置的编辑工作流。
 
 | 文件                    | 类型 / 命名空间                                | 作用与入口                                                                                                                                                                                               |
 | ----------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `EnemyConfigEditor.cs`  | `EditorTools.EnemyConfigEditor : EditorWindow` | 菜单 `Tools/05 Enemy Config Editor`：在一个窗口内新建与编辑 `AnimFrameConfig`（序列帧）和 `EnemyTypeConfig`（敌人数值/碰撞体/显示），新建资源自动保存到 `Assets/Configs/Survivor/` 对应子目录。预览区随上方选中的 `AnimFrameConfig` 实时刷新：切换现有配置、新建配置或新增/修改 Clip 与帧后，下一次重绘即显示对应默认 Clip（无默认则第一组有效 Clip）的首帧；也可手动拖入 Sprite 覆盖。选中 `EnemyTypeConfig` 时预览图叠加碰撞体矩形（绿色 Vertical / 橙色 Horizontal），拖动中心改 `colliderOffset`、四角改 `colliderSize`，实时写回配置；另附诊断按钮输出预览来源与 Clip/帧状态到 Console。多帧播放预览尚未实现。 |
+| `EnemyConfigEditor.cs`  | `EditorTools.EnemyConfigEditor : EditorWindow` | 菜单 `Tools/05 Enemy Config Editor`：在一个窗口内新建与编辑 `AnimFrameConfig`（序列帧）和 `EnemyTypeConfig`（敌人数值/碰撞体/显示），新建资源自动保存到 `Assets/Configs/Survivor/` 对应子目录。预览区随上方选中的 `AnimFrameConfig` 实时刷新：切换现有配置、新建配置或新增/修改 Clip 与帧后，下一次重绘即显示对应默认 Clip（无默认则第一组有效 Clip）的首帧；也可手动拖入 Sprite 覆盖。选中 `EnemyTypeConfig` 时预览图叠加碰撞体矩形（绿色 Vertical / 橙色 Horizontal），拖动中心改 `colliderOffset`、四角改 `colliderSize`，实时写回配置；另附诊断按钮输出预览来源与 Clip/帧状态到 Console；可指定 `EnemyCommon.prefab` 并把选中的 `EnemyTypeConfig` 实例化到当前场景。多帧播放预览尚未实现。 |
 
 ## 生成产物与边界
 

@@ -17,9 +17,9 @@ MonoBehaviour:
   chaseSpeed: 0.8
   damage: 2
   maxHealth: 6
-  colliderOffset: {x: 0, y: 0}
-  colliderSize: {x: 0.25, y: 0.26}
+  colliderOffset: {x: 0.01105132, y: 0.031996414}
+  colliderSize: {x: 0.2364453, y: 0.32839152}
   colliderDirection: 0
   spriteSize: {x: 0, y: 0}
-  hpBarLocalPosition: {x: 0, y: 0, z: 0}
-  hpBarLocalScale: {x: 1, y: 0.1, z: 1}
+  hpBarLocalPosition: {x: -0.298, y: 0.3, z: 0}
+  hpBarLocalScale: {x: 0.6, y: 0.1, z: 1}

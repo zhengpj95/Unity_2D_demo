@@ -15,8 +15,10 @@ MonoBehaviour:
   maxEnemies: 30
   spawnEntries:
   - enemyPrefab: {fileID: 5408803987995198023, guid: 93efd6b0d0006e64b9cddfee1ef2a143, type: 3}
+    enemyTypeConfig: {fileID: 11400000, guid: 99097656a53346b0bae5ee2bb4a6ac38, type: 2}
     spawnInterval: 0.8
     spawnCount: 1
   - enemyPrefab: {fileID: 1196323208441000344, guid: 61aa0f0ecfaf6de45b0119b6c2a82247, type: 3}
+    enemyTypeConfig: {fileID: 11400000, guid: e3f7b73d361e4d70bf2e69a87cc648ae, type: 2}
     spawnInterval: 1.5
     spawnCount: 1

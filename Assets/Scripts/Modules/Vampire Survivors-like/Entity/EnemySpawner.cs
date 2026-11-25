@@ -19,7 +19,8 @@ namespace VampireSurvivorsLike
     /// <param name="spawnRadius">敌人相对玩家的出生半径。</param>
     /// <param name="director">负责登记敌人并提供回收入口的导演器。</param>
     /// <param name="prefab">本次生成使用的敌人预制体。</param>
-    public EnemyChasing Spawn(Transform player, float spawnRadius, EnemyDirector director, GameObject prefab)
+    /// <param name="config">可选敌人类型配置；设置时在初始化前注入通用 Prefab 实例。</param>
+    public EnemyChasing Spawn(Transform player, float spawnRadius, EnemyDirector director, GameObject prefab, EnemyTypeConfig config = null)
     {
       if (player == null || director == null || prefab == null)
         return null;
@@ -32,6 +33,13 @@ namespace VampireSurvivorsLike
       GameObject enemyObject = PoolManager.Instance.Alloc(prefab, spawnPosition, Quaternion.identity);
       if (enemyObject == null)
         return null;
+
+      // PoolManager 的 OnAlloc 先于配置注入执行，因此这里覆盖数值并重启默认动画。
+      if (config != null && !EnemyConfigurator.Apply(enemyObject, config))
+      {
+        PoolManager.Instance.Free(enemyObject);
+        return null;
+      }
 
       if (_enemyContainer != null)
         enemyObject.transform.SetParent(_enemyContainer, true);

@@ -21,6 +21,17 @@ namespace VampireSurvivorsLike
       _resumeMoveAnimation = ResumeMoveAnimation;
     }
 
+    /// <summary>
+    /// 按敌人类型配置重置最大生命并刷新血条；池复用时每次出池后由配置注入器调用。
+    /// </summary>
+    /// <param name="health">该敌人的最大生命值。</param>
+    public void Configure(int health)
+    {
+      maxHealth = Mathf.Max(1, health);
+      currentHealth = maxHealth;
+      UpdateHpBar();
+    }
+
     public void OnAlloc()
     {
       currentHealth = maxHealth;

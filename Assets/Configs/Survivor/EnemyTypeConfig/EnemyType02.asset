@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d8f3a1c9e2b47508a3d6c1f9e4b7a25, type: 3}
+  m_Name: EnemyType02
+  m_EditorClassIdentifier: 
+  typeId: Enemy_02
+  animConfig: {fileID: 11400000, guid: 3c9a7f1b8e2d4a6f0b5c8d1e7a9f2b43, type: 2}
+  chaseSpeed: 0.8
+  damage: 2
+  maxHealth: 6
+  colliderOffset: {x: -0.0073513985, y: 0.028929293}
+  colliderSize: {x: 0.19963986, y: 0.33452576}
+  colliderDirection: 0
+  spriteSize: {x: 0, y: 0}
+  hpBarLocalPosition: {x: -0.298, y: 0.3, z: 0}
+  hpBarLocalScale: {x: 0.6, y: 0.1, z: 1}

@@ -37,11 +37,14 @@ Assets/Scripts/Modules/Vampire Survivors-like/Entity/EnemySpawner.cs
 
 | 字段 | 含义 |
 | --- | --- |
-| `enemyPrefab` | 要生成的敌人 Prefab，必须挂载 `EnemyChasing` |
+| `enemyPrefab` | 旧式敌人 Prefab，必须挂载 `EnemyChasing`；配置 `enemyTypeConfig` 时可留空 |
+| `enemyTypeConfig` | 可选敌人类型配置；设置后统一从 `EnemyDirector.enemyCommonPrefab` 生成并注入数值 |
 | `spawnInterval` | 两次生成触发的间隔，单位为秒 |
 | `spawnCount` | 每次触发生成的数量 |
 
-Prefab 为空、间隔不大于 0 或数量不大于 0 时，条目无效并在运行时被跳过。
+`enemyPrefab` 与 `enemyTypeConfig` 都为空、间隔不大于 0 或数量不大于 0 时，条目无效并在运行时被跳过。
+
+当前 4 份示例 Wave 的条目同时填写了 `enemyPrefab` 与 `enemyTypeConfig`；运行时以 `enemyTypeConfig` 为准，`enemyPrefab` 仅作为回退与对照保留。两种方式的完整对比和收敛计划见 [EnemySystem.md](EnemySystem.md) 第 10 节。
 
 ### WaveSpawnConfig
 
@@ -93,14 +96,15 @@ Wave 变化时重建 WaveSpawnRuntime
 
 ## 4. 对象池与边界
 
-`EnemySpawner` 只接受当前条目明确指定的 Prefab，负责：
+`EnemySpawner` 接受条目解析后的 Prefab：配置驱动时使用 `EnemyDirector.enemyCommonPrefab`，否则使用条目的 `enemyPrefab`。它负责：
 
 1. 以 Player 为圆心计算出生位置。
 2. 从 `PoolManager` 取得 Prefab 实例。
-3. 设置 `enemyContainer` 父节点。
-4. 调用 `EnemyChasing.Initialize(player, director)`。
+3. 若条目带 `EnemyTypeConfig`，调用 `EnemyConfigurator.Apply` 覆盖数值、动画、碰撞体和血条。
+4. 设置 `enemyContainer` 父节点。
+5. 调用 `EnemyChasing.Initialize(player, director)`。
 
-`EnemyDirector` 会收集时间轴内所有有效 Prefab并去重预热。敌人死亡、碰撞玩家或超出 `despawnRadius` 时仍通过 `EnemyDirector.RecycleEnemy` 和 `PoolManager.Free` 回收。
+`EnemyDirector` 会收集时间轴内所有实际使用的 Prefab 并去重预热。敌人死亡、碰撞玩家或超出 `despawnRadius` 时仍通过 `EnemyDirector.RecycleEnemy` 和 `PoolManager.Free` 回收。
 
 ## 5. 当前示例
 

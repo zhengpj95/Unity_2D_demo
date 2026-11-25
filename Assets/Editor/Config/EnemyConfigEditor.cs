@@ -1,4 +1,5 @@
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using VampireSurvivorsLike;
 
@@ -26,6 +27,7 @@ namespace EditorTools
 
     private AnimFrameConfig _selectedAnimConfig;
     private EnemyTypeConfig _selectedTypeConfig;
+    [SerializeField] private GameObject _enemyCommonPrefab;
     private SerializedObject _animSerialized;
     private SerializedObject _typeSerialized;
     private Vector2 _scrollPosition;
@@ -59,6 +61,8 @@ namespace EditorTools
       DrawConfigSection<EnemyTypeConfig>(
         "敌人类型配置", TypeConfigFolder, "NewEnemyTypeConfig",
         ref _selectedTypeConfig, ref _typeSerialized, CreateTypeConfig);
+      EditorGUILayout.Space(8f);
+      DrawSceneSpawnSection();
       if (_selectedAnimConfig != null || _selectedTypeConfig != null)
       {
         EditorGUILayout.Space(8f);
@@ -595,6 +599,68 @@ namespace EditorTools
       _typeSerialized.ApplyModifiedProperties();
       EditorUtility.SetDirty(_selectedTypeConfig);
       Repaint();
+    }
+
+    /// <summary>把当前选中的敌人类型配置实例化到编辑场景，便于直接检查不同 SO 的效果。</summary>
+    private void DrawSceneSpawnSection()
+    {
+      EditorGUILayout.LabelField("场景实例化", EditorStyles.boldLabel);
+      _enemyCommonPrefab = (GameObject)EditorGUILayout.ObjectField(
+        "通用敌人 Prefab", _enemyCommonPrefab, typeof(GameObject), false);
+      EditorGUILayout.HelpBox(
+        "选中 EnemyTypeConfig 并指定 EnemyCommon Prefab 后点击按钮，实例会放到 Scene 视图中心并自动聚焦。", MessageType.None);
+      if (_selectedTypeConfig == null || _enemyCommonPrefab == null)
+        EditorGUILayout.HelpBox("请先在上方选中 EnemyTypeConfig，并拖入通用敌人 Prefab。", MessageType.Warning);
+
+      using (new EditorGUI.DisabledScope(_selectedTypeConfig == null || _enemyCommonPrefab == null))
+      {
+        if (GUILayout.Button("实例化选中配置到场景"))
+          SpawnSelectedTypeToScene();
+      }
+    }
+
+    /// <summary>用通用 Prefab 创建场景实例，并注入当前选中的敌人类型配置。</summary>
+    private void SpawnSelectedTypeToScene()
+    {
+      GameObject instance = PrefabUtility.InstantiatePrefab(_enemyCommonPrefab) as GameObject;
+      if (instance == null)
+      {
+        Debug.LogError("[EnemyConfigEditor] 无法实例化通用敌人 Prefab。");
+        return;
+      }
+
+      // 放在 Scene 视图中心并压到 z=0 平面，避免落在相机视线外或地表背面。
+      SceneView sceneView = SceneView.lastActiveSceneView;
+      if (sceneView != null)
+      {
+        Vector3 pivot = sceneView.pivot;
+        pivot.z = 0f;
+        instance.transform.position = pivot;
+      }
+      else
+      {
+        instance.transform.position = Vector3.zero;
+        Debug.LogWarning("[EnemyConfigEditor] 未找到 Scene 视图，实例放在世界原点。");
+      }
+
+      if (!EnemyConfigurator.Apply(instance, _selectedTypeConfig))
+      {
+        UnityEngine.Object.DestroyImmediate(instance);
+        return;
+      }
+
+      instance.name = string.IsNullOrEmpty(_selectedTypeConfig.TypeId) ? _selectedTypeConfig.name : _selectedTypeConfig.TypeId;
+      EditorSceneManager.MarkSceneDirty(instance.scene);
+      Selection.activeGameObject = instance;
+      EditorGUIUtility.PingObject(instance);
+      if (sceneView != null)
+      {
+        sceneView.FrameSelected();
+        sceneView.Repaint();
+      }
+
+      Debug.Log($"[EnemyConfigEditor] 已在场景中实例化 '{instance.name}'，位置 {instance.transform.position}");
+      _statusMessage = $"已在场景中实例化敌人配置：{_selectedTypeConfig.name}（Scene 视图已聚焦）";
     }
 
     private void SetVector2(string propertyName, Vector2 value)

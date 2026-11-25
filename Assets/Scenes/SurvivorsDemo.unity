@@ -634,6 +634,7 @@ MonoBehaviour:
   despawnRadius: 20
   preloadCountPerPrefab: 3
   waveTimeline: {fileID: 11400000, guid: ca9a7b6a7e4c42afa44bb01528e3e2d8, type: 2}
+  enemyCommonPrefab: {fileID: 1196323208441000344, guid: d723977d2ccb41649487f0539cf6af18, type: 3}
 --- !u!1 &2051200000
 GameObject:
   m_ObjectHideFlags: 0

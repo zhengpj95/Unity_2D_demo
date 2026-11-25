@@ -31,6 +31,10 @@ namespace VampireSurvivorsLike
     [Tooltip("本局使用的 Wave 时间轴；为空时不会生成敌人。")]
     [SerializeField] private WaveTimelineConfig waveTimeline;
 
+    [Header("配置驱动敌人")]
+    [Tooltip("WaveSpawnEntry 配置 EnemyTypeConfig 时使用的通用敌人 Prefab。")]
+    [SerializeField] private GameObject enemyCommonPrefab;
+
     private float gameTime;
     private EnemySpawner _spawner;
     private bool _playerResolutionAttempted;
@@ -177,9 +181,13 @@ namespace VampireSurvivorsLike
       // 每种敌人仍按各自的固定间隔触发；容量只决定本次还能生成多少只。
       if (enemies.Count < currentMaxEnemies)
       {
+        GameObject prefab = ResolveSpawnPrefab(runtime.Config);
+        if (prefab == null)
+          return;
+
         int count = Mathf.Min(runtime.Config.SpawnCount, currentMaxEnemies - enemies.Count);
         for (int i = 0; i < count; i++)
-          _spawner.Spawn(player, spawnRadius, this, runtime.Config.EnemyPrefab);
+          _spawner.Spawn(player, spawnRadius, this, prefab, runtime.Config.EnemyTypeConfig);
       }
 
       // 只处理一次触发，避免低帧率时一帧补刷过多；减去间隔可避免长期节奏漂移。
@@ -235,7 +243,27 @@ namespace VampireSurvivorsLike
       return player != null;
     }
 
-    /// <summary>预热所有 Wave 引用的敌人预制体；相同预制体只预热一次。</summary>
+    /// <summary>
+    /// 解析条目最终使用的 Prefab：配置驱动时统一使用通用 Prefab，否则沿用旧式引用。
+    /// </summary>
+    private GameObject ResolveSpawnPrefab(WaveSpawnEntry entry)
+    {
+      if (entry == null)
+        return null;
+
+      if (entry.EnemyTypeConfig == null)
+        return entry.EnemyPrefab;
+
+      if (enemyCommonPrefab == null)
+      {
+        Debug.LogError($"[EnemyDirector] Wave 条目配置了 EnemyTypeConfig '{entry.EnemyTypeConfig.name}'，但场景未指定 EnemyCommon Prefab。", this);
+        return null;
+      }
+
+      return enemyCommonPrefab;
+    }
+
+    /// <summary>预热所有 Wave 实际使用的敌人预制体；相同预制体只预热一次。</summary>
     private void PreloadWaveEnemies()
     {
       if (preloadCountPerPrefab <= 0)
@@ -251,8 +279,12 @@ namespace VampireSurvivorsLike
         for (int j = 0; j < wave.SpawnEntries.Count; j++)
         {
           WaveSpawnEntry entry = wave.SpawnEntries[j];
-          if (entry != null && entry.IsValid)
-            prefabs.Add(entry.EnemyPrefab);
+          if (entry == null || !entry.IsValid)
+            continue;
+
+          GameObject prefab = ResolveSpawnPrefab(entry);
+          if (prefab != null)
+            prefabs.Add(prefab);
         }
       }
 
