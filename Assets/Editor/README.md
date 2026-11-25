@@ -57,6 +57,15 @@ UI 编辑期辅助工具，既包含只读 Inspector 扩展，也包含通过菜
 | `SceneEditorUtils.cs` | `EditorTools.SceneEditorUtils` | 菜单 `Tools/01 Start Game`：保存当前场景后打开 `Assets/Scenes/Launcher.unity` 并进入播放模式。                                                                                                                               |
 | `GuideDemoSetup.cs`   | `GuideDemoSetup`，全局命名空间 | 菜单 `Tools/Guide/Create Guide Demo Scene`：读取 Guide 示例配置，生成包含相机、UI 层级、按钮和引导光标的 `GuideDemo.unity` 场景。依赖 `GuideConfig`、`GuideDemoBootstrap`、`GuideCursor`、`GameMgr`、`UILauncher` 与 TMPro。 |
 
+## Animation/
+
+`AnimFrameConfig` 与 `EnemyTypeConfig` 资源的只读首帧预览扩展。
+
+| 文件                                | 类型 / 命名空间                                         | 作用与入口                                                                                                                                                                                                                                 |
+| ----------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AnimFrameConfigInspector.cs`       | `EditorTools.AnimFrameConfigInspector : Editor`         | `[CustomEditor(typeof(AnimFrameConfig))]`：在 Inspector 顶部显示默认 Clip（无默认则第一组有效 Clip）的首帧 Sprite 名称、来源下标和缩略图，提供“定位”按钮在 Project 中选中资源；只读，不修改配置数据。                                      |
+| `EnemyTypeConfigInspector.cs`       | `EditorTools.EnemyTypeConfigInspector : Editor`         | `[CustomEditor(typeof(EnemyTypeConfig))]`：复用同一套首帧预览，展示 `AnimConfig` 引用配置的首帧 Sprite，方便直接从敌人类型配置确认外观来源；只读，不修改配置数据。                                                                       |
+
 ## Config/
 
 ScriptableObject 配置的编辑工作流。
