@@ -34,3 +34,5 @@ Assets/Arts/Hero Knight - Pixel Art
 # Codely 本地索引缓存（可重建）
 .codely-cli
 .codelyignore
+.codely/
+TmpTools/
