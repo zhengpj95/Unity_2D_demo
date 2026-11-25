@@ -41,7 +41,7 @@ Assets/Scripts/Modules/Vampire Survivors-like/View/SurvivorGameOverPresenter.cs
 - `GemCount`、`CoinCount`
 - `GameState`：`Playing`、`LevelUp`、`GameOver`
 
-`SurvivorModel.DefaultMaxHealth` 定义一局默认初始生命；`PlayerAttributes` 保存本局永久属性修正。`SurvivorProxy` 持有并修改 Model，负责伤害结算以及全部永久玩家属性升级；`VSPlayerHealth` 只负责接收伤害并上报死亡，不保存或初始化运行时生命。当前经验需求公式为：
+`SurvivorModel.DefaultMaxHealth` 定义一局默认初始生命；`PlayerAttributes` 保存本局永久属性修正。`SurvivorProxy` 持有并修改 Model，负责伤害结算以及全部永久玩家属性升级；`HeroHealth` 只负责接收伤害并上报死亡，不保存或初始化运行时生命。当前经验需求公式为：
 
 ```text
 RequiredExp(level) = 20 × level + 5 × level²
@@ -142,7 +142,7 @@ Home 只通过 `SurvivorHomeArgs.OnStartBattle` 将按钮输入交给 `SurvivorG
 
 ### GameOver 与重新开始
 
-`VSPlayerHealth` 只负责扣减生命与上报死亡；当生命降至 `0` 时，它只向 `SurvivorModule` 上报一次，由 `SurvivorGameplayController.OnPlayerDied` 编排后续流程：
+`HeroHealth` 只负责扣减生命与上报死亡；当生命降至 `0` 时，它只向 `SurvivorModule` 上报一次，由 `SurvivorGameplayController.OnPlayerDied` 编排后续流程：
 
 ```text
 玩家生命归零

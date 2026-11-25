@@ -11,7 +11,7 @@ EnemySpawner
     ↓ 计算出生点并从 PoolManager 取出实例
 EnemyChasing
     ↓ 追击、超距回收、碰撞玩家回收
-VSEnemyHealth
+EnemyHealth
     ↓ 受伤动画、死亡、击杀统计和掉落
 DropItemManager
 ```
@@ -22,7 +22,7 @@ DropItemManager
 Assets/Scripts/Modules/Vampire Survivors-like/Entity/Enemy/EnemyDirector.cs
 Assets/Scripts/Modules/Vampire Survivors-like/Entity/Enemy/EnemySpawner.cs
 Assets/Scripts/Modules/Vampire Survivors-like/Entity/Enemy/EnemyChasing.cs
-Assets/Scripts/Modules/Vampire Survivors-like/Entity/Enemy/VSEnemyHealth.cs
+Assets/Scripts/Modules/Vampire Survivors-like/Entity/Enemy/EnemyHealth.cs
 Assets/Scripts/Modules/Vampire Survivors-like/Entity/Enemy/EnemyTypeConfig.cs
 Assets/Scripts/Modules/Vampire Survivors-like/Entity/Enemy/EnemyConfigurator.cs
 Assets/Scripts/Framework/Pool/PoolManager.cs
@@ -64,7 +64,7 @@ Assets/Prefabs/Survivor/Enemy/EnemyCommon.prefab
 
 ### 配置驱动敌人（可选）
 
-`EnemyTypeConfig` 保存动画、速度、伤害、生命、碰撞体和血条位置。`EnemyCommon.prefab` 提供统一节点层级，`EnemyConfigurator.Apply` 在生成或 Editor 实例化时把配置写入实例：覆盖 `EnemyChasing` 与 `VSEnemyHealth` 数值、切换 `AnimFrame` 配置、设置 `CapsuleCollider2D` 和血条 Transform。池复用时每次出池都会重新应用，避免残留上一类型的数据。
+`EnemyTypeConfig` 保存动画、速度、伤害、生命、碰撞体和血条位置。`EnemyCommon.prefab` 提供统一节点层级，`EnemyConfigurator.Apply` 在生成或 Editor 实例化时把配置写入实例：覆盖 `EnemyChasing` 与 `EnemyHealth` 数值、切换 `AnimFrame` 配置、设置 `CapsuleCollider2D` 和血条 Transform。池复用时每次出池都会重新应用，避免残留上一类型的数据。
 
 `WaveSpawnEntry.enemyTypeConfig` 为空时走旧 Prefab 路径；非空时由 `EnemyDirector.enemyCommonPrefab` 提供外壳。当前 `SurvivorsDemo` 已绑定通用 Prefab，4 份 Wave 的条目也都设置了 `enemyTypeConfig`，因此实际生效的是配置驱动路径；条目上的 `enemyPrefab` 仅作为回退与对照保留。`spriteSize` 在 Simple 绘制模式下不参与显示，暂不注入实例。
 
@@ -79,7 +79,7 @@ Assets/Prefabs/Survivor/Enemy/EnemyCommon.prefab
 - 不再保存单个敌人的掉落类型或概率；死亡掉落统一由 `DropItemManager` 的场景权重决定。
 - 在池生命周期中重置刚体速度并注销自身。
 
-### VSEnemyHealth
+### EnemyHealth
 
 负责：
 
@@ -162,7 +162,7 @@ despawnRadius > spawnRadius
 ```text
 投射物/武器命中
     ↓
-VSEnemyHealth.TakeDamage
+EnemyHealth.TakeDamage
     ↓
 HP > 0：刷新血条
 HP <= 0：
@@ -197,8 +197,8 @@ RecycleEnemy
 
 池复用时必须重置状态：
 
-- `VSEnemyHealth.OnAlloc` 恢复满血。
-- `VSEnemyHealth.OnAlloc` 将 `AnimFrame` 恢复为 `Move`，入池时停止动画并清理上一轮完成回调。
+- `EnemyHealth.OnAlloc` 恢复满血。
+- `EnemyHealth.OnAlloc` 将 `AnimFrame` 恢复为 `Move`，入池时停止动画并清理上一轮完成回调。
 - `EnemyChasing.OnAlloc` 清零 Rigidbody2D 速度。
 - `EnemyChasing.OnFree` 注销敌人。
 
@@ -284,7 +284,7 @@ Assets/Scenes/Vampire Survivors-like/SurvivorsDemo.unity
 
 | 代码变更                                                               | 文档                                        |
 | ---------------------------------------------------------------------- | ------------------------------------------- |
-| `EnemyDirector`、`EnemySpawner`、`EnemyChasing`、`VSEnemyHealth`       | 本文件、`WaveSystem.md`                     |
+| `EnemyDirector`、`EnemySpawner`、`EnemyChasing`、`EnemyHealth`       | 本文件、`WaveSystem.md`                     |
 | `WaveSpawnConfig`、`WaveTimelineConfig`、敌人生命/速度或 Wave 调度规则 | `WaveSystem.md`、`BalanceSystem.md`、本文件 |
 | `PoolManager` 的敌人池生命周期                                         | 本文件、`Survivor.md`                       |
 | 掉落类型、死亡结算或拾取规则                                           | `Survivor.md`，必要时本文件                 |

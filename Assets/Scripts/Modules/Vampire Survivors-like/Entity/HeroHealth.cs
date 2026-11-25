@@ -5,7 +5,7 @@ using UnityEngine;
 namespace VampireSurvivorsLike
 {
 
-  public class VSPlayerHealth : MonoBehaviour
+  public class HeroHealth : MonoBehaviour
   {
     private bool _isDead;
 

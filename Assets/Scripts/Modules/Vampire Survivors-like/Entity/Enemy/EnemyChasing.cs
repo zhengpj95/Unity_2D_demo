@@ -72,7 +72,7 @@ namespace VampireSurvivorsLike {
     {
       if (collision.gameObject.CompareTag("Player"))
       {
-        var health = collision.gameObject.GetComponent<VSPlayerHealth>();
+        var health = collision.gameObject.GetComponent<HeroHealth>();
         if (health != null)
         {
           health.TakeDamage(damage);

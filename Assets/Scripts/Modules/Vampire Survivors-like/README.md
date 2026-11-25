@@ -16,7 +16,7 @@ Launcher + SurvivorHome ← 返回主页 ← GameOver
 
 ```text
 EnemyDirector / EnemySpawner
-    → EnemyChasing / VSEnemyHealth
+    → EnemyChasing / EnemyHealth
     → DropItemManager（Gem / Coin，PoolManager）
     → SurvivorModule.UpdateExp / AddDropItem
     → SurvivorProxy（经验、等级、击杀、货币、生命）
@@ -27,7 +27,7 @@ Hero
     → WeaponManager
     → WeaponController
     → PooledWeaponEffect（PoolManager）
-    → VSEnemyHealth
+    → EnemyHealth
 ```
 
 `SurvivorGameplayController` 是流程编排点：处理 Home 开始战斗与 GameOver 返回主页；经验溢出后逐次打开升级面板；升级和 GameOver 时暂停 `Time.timeScale`；重开或离开战斗前回收活跃敌人、掉落物及武器攻击对象。
@@ -64,9 +64,8 @@ Vampire Survivors-like/
 │   │   ├── EnemyChasing.cs               # 敌人追击与超距回收
 │   │   ├── EnemyTypeConfig.cs            # 敌人类型配置 SO
 │   │   ├── EnemyConfigurator.cs          # 把配置注入通用敌人实例
-│   │   └── VSEnemyHealth.cs              # 敌人生命、死亡与对象池重置
-│   └── Health/
-│       └── VSPlayerHealth.cs             # 伤害上报和死亡通知
+│   │   └── EnemyHealth.cs                # 敌人生命、死亡与对象池重置
+│   └── HeroHealth.cs                   # 伤害上报和死亡通知
 ├── WeaponSystem/
 │   ├── WeaponManager.cs                  # 场景级武器槽位与控制器创建
 │   ├── WeaponSO.cs / WeaponLevelData.cs  # 武器和等级配置
@@ -95,7 +94,7 @@ Vampire Survivors-like/
 | `UIManager` / Presenter / View | Home、主 HUD、三选一、GameOver 按既有 Presenter 生命周期打开、隐藏和关闭。               |
 | `SingletonMono<T>`             | `EnemyDirector`、`DropItemManager`、`WeaponManager`、`UpgradeManager` 等场景级组件使用。 |
 | `PoolManager` / `IPoolable`    | 敌人、掉落物、投射物和范围特效复用；不另建武器专用池。                                   |
-| `DamageController`             | `VSPlayerHealth` 调用项目现有的伤害飘字能力；该能力不由本模块维护。                      |
+| `DamageController`             | `HeroHealth` 调用项目现有的伤害飘字能力；该能力不由本模块维护。                      |
 
 ## 3. 当前已实现
 
@@ -185,7 +184,7 @@ Vampire Survivors-like/
 | 武器数值和等级数组                   | `WeaponSystem/SO/*.asset` 的 `WeaponSO.levels`。                              |
 | 自定义升级、默认属性升级图标         | `SurvivorsDemo/UpgradeManager` Inspector。                                    |
 | 玩家初始武器、基础移动/索敌/拾取范围 | Player 的 `Hero` 组件；永久增量保存在 `SurvivorModel.PlayerAttributes`。      |
-| 玩家与敌人生命、Collider、Tag        | Player / Enemy Prefab 上的 `VSPlayerHealth`、`VSEnemyHealth` 和 2D Collider。 |
+| 玩家与敌人生命、Collider、Tag        | Player / Enemy Prefab 上的 `HeroHealth`、`EnemyHealth` 和 2D Collider。 |
 
 不要在运行时修改 `WeaponSO`、`WaveSpawnConfig`、`WaveTimelineConfig` 等资源文件；局内等级、Buff 与属性增量应只保存在运行时实例中。
 

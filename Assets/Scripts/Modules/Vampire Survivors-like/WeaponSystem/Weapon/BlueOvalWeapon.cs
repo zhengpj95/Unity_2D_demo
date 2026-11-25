@@ -73,9 +73,9 @@ namespace VampireSurvivorsLike
         if (hitEnemies[i] != null)
         {
           var enemy = hitEnemies[i];
-          VSEnemyHealth vSHealth = enemy.GetComponent<VSEnemyHealth>();
-          if (vSHealth != null)
-            vSHealth.TakeDamage(damage);
+          EnemyHealth enemyHealth = enemy.GetComponent<EnemyHealth>();
+          if (enemyHealth != null)
+            enemyHealth.TakeDamage(damage);
         }
       }
     }

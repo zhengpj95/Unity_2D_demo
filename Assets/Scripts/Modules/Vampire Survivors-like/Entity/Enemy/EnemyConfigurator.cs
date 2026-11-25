@@ -23,7 +23,7 @@ namespace VampireSurvivorsLike
       }
 
       EnemyChasing chasing = enemyObject.GetComponent<EnemyChasing>();
-      VSEnemyHealth health = enemyObject.GetComponent<VSEnemyHealth>();
+      EnemyHealth health = enemyObject.GetComponent<EnemyHealth>();
       AnimFrame anim = enemyObject.GetComponentInChildren<AnimFrame>(true);
       CapsuleCollider2D collider = enemyObject.GetComponent<CapsuleCollider2D>();
       if (chasing == null || health == null || anim == null || collider == null)

@@ -13,7 +13,7 @@
 
 | 类别 | 当前基线 | 唯一配置位置 | 说明 |
 | --- | --- | --- | --- |
-| 玩家生命 | `5` | `SurvivorsDemo/Hero` 的 `VSPlayerHealth` 覆盖 | 正式局内初始生命；不使用测试覆盖入口。 |
+| 玩家生命 | `5` | `SurvivorsDemo/Hero` 的 `HeroHealth` 覆盖 | 正式局内初始生命；不使用测试覆盖入口。 |
 | 玩家移动速度 | `2` | `Hero.prefab` 的 `Hero.baseMoveSpeed` | 高于 Slime/Rino/Treant 的追击速度。 |
 | 玩家索敌范围 | `4` | `Hero.prefab` 的 `Hero.baseAttackRange` | 武器 `range` 以此值为倍率基础。 |
 | 玩家拾取范围 | `0.3` | `SurvivorsDemo/Hero` 的 `basePickupRadius` 覆盖 | 以 Hero 根节点为圆心。 |

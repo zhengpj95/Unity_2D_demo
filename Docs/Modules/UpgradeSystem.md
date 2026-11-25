@@ -76,7 +76,7 @@ MaxHealth
 TargetingRange
 ```
 
-所有玩家属性升级都通过 `SurvivorModule.ApplyPlayerStatUpgrade` 进入 `SurvivorProxy`，永久修正统一保存在 `SurvivorModel.PlayerAttributes`。`Hero` 和 `VSPlayerHealth` 不再持有三选一升级结果。配置的 `value` 由 `isPercent` 决定是百分比还是固定值。
+所有玩家属性升级都通过 `SurvivorModule.ApplyPlayerStatUpgrade` 进入 `SurvivorProxy`，永久修正统一保存在 `SurvivorModel.PlayerAttributes`。`Hero` 和 `HeroHealth` 不再持有三选一升级结果。配置的 `value` 由 `isPercent` 决定是百分比还是固定值。
 
 默认运行时候选目前只自动创建：移动速度、拾取范围、最大生命；索敌范围可以通过自定义 `PlayerUpgradeConfig` 资源加入。
 

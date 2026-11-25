@@ -91,9 +91,9 @@ namespace VampireSurvivorsLike
       if (!initialized || !IsActiveEffect) return;
       if (collision.gameObject.CompareTag("Enemy"))
       {
-        VSEnemyHealth vSHealth = collision.gameObject.GetComponent<VSEnemyHealth>();
-        if (vSHealth != null)
-          vSHealth.TakeDamage(damage);
+        EnemyHealth enemyHealth = collision.gameObject.GetComponent<EnemyHealth>();
+        if (enemyHealth != null)
+          enemyHealth.TakeDamage(damage);
 
         // 命中后统一归还对象池，不再销毁投射物实例。
         Recycle();
