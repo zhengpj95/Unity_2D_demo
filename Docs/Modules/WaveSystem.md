@@ -21,10 +21,10 @@ EnemySpawner → PoolManager → EnemyChasing
 相关代码：
 
 ```text
-Assets/Scripts/Modules/Vampire Survivors-like/WaveSystem/WaveSpawnConfig.cs
-Assets/Scripts/Modules/Vampire Survivors-like/WaveSystem/WaveTimelineConfig.cs
-Assets/Scripts/Modules/Vampire Survivors-like/Entity/Enemy/EnemyDirector.cs
-Assets/Scripts/Modules/Vampire Survivors-like/Entity/Enemy/EnemySpawner.cs
+Assets/Scripts/Modules/VampireSurvivorsLike/WaveSystem/WaveSpawnConfig.cs
+Assets/Scripts/Modules/VampireSurvivorsLike/WaveSystem/WaveTimelineConfig.cs
+Assets/Scripts/Modules/VampireSurvivorsLike/Entity/Enemy/EnemyDirector.cs
+Assets/Scripts/Modules/VampireSurvivorsLike/Entity/Enemy/EnemySpawner.cs
 ```
 
 `EnemyDirector` 不再保留 `enemyPrefab`、`spawnInterval`、`spawnCount` 固定刷怪逻辑。未配置有效 `WaveTimelineConfig` 时会输出警告，本局不生成敌人。

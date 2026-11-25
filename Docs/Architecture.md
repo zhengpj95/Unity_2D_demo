@@ -48,7 +48,7 @@ Assets/Scripts/
 │   ├── FrogAdventure/         # 青蛙冒险相关玩法
 │   ├── Melee/                 # 轻量近战原型
 │   ├── Rpg/                   # RPG 学习原型，当前未接入 Module/MVC
-│   └── Vampire Survivors-like/# 当前主要演进的类幸存者玩法
+│   └── VampireSurvivorsLike/# 当前主要演进的类幸存者玩法
 └── TestCode/                  # 测试、学习和验证代码
 ```
 

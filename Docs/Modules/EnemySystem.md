@@ -19,12 +19,12 @@ DropItemManager
 当前实现文件：
 
 ```text
-Assets/Scripts/Modules/Vampire Survivors-like/Entity/Enemy/EnemyDirector.cs
-Assets/Scripts/Modules/Vampire Survivors-like/Entity/Enemy/EnemySpawner.cs
-Assets/Scripts/Modules/Vampire Survivors-like/Entity/Enemy/EnemyChasing.cs
-Assets/Scripts/Modules/Vampire Survivors-like/Entity/Enemy/EnemyHealth.cs
-Assets/Scripts/Modules/Vampire Survivors-like/Entity/Enemy/EnemyTypeConfig.cs
-Assets/Scripts/Modules/Vampire Survivors-like/Entity/Enemy/EnemyConfigurator.cs
+Assets/Scripts/Modules/VampireSurvivorsLike/Entity/Enemy/EnemyDirector.cs
+Assets/Scripts/Modules/VampireSurvivorsLike/Entity/Enemy/EnemySpawner.cs
+Assets/Scripts/Modules/VampireSurvivorsLike/Entity/Enemy/EnemyChasing.cs
+Assets/Scripts/Modules/VampireSurvivorsLike/Entity/Enemy/EnemyHealth.cs
+Assets/Scripts/Modules/VampireSurvivorsLike/Entity/Enemy/EnemyTypeConfig.cs
+Assets/Scripts/Modules/VampireSurvivorsLike/Entity/Enemy/EnemyConfigurator.cs
 Assets/Scripts/Framework/Pool/PoolManager.cs
 Assets/Prefabs/Survivor/Enemy/EnemyCommon.prefab
 ```
@@ -209,7 +209,7 @@ RecycleEnemy
 场景位置：
 
 ```text
-Assets/Scenes/Vampire Survivors-like/SurvivorsDemo.unity
+Assets/Scenes/SurvivorsDemo.unity
 └── EnemyDirector
 ```
 

@@ -25,13 +25,13 @@ WeaponManager / SurvivorModule / SurvivorProxy.PlayerAttributes
 主要实现文件：
 
 ```text
-Assets/Scripts/Modules/Vampire Survivors-like/UpgradeSystem/UpgradeConfig.cs
-Assets/Scripts/Modules/Vampire Survivors-like/UpgradeSystem/UpgradeManager.cs
-Assets/Scripts/Modules/Vampire Survivors-like/WeaponSystem/WeaponManager.cs
-Assets/Scripts/Modules/Vampire Survivors-like/WeaponSystem/WeaponSO.cs
-Assets/Scripts/Modules/Vampire Survivors-like/WeaponSystem/WeaponLevelData.cs
-Assets/Scripts/Modules/Vampire Survivors-like/Gameplay/SurvivorGameplayController.cs
-Assets/Scripts/Modules/Vampire Survivors-like/View/SurvivorSkillSelectPanelPresenter.cs
+Assets/Scripts/Modules/VampireSurvivorsLike/UpgradeSystem/UpgradeConfig.cs
+Assets/Scripts/Modules/VampireSurvivorsLike/UpgradeSystem/UpgradeManager.cs
+Assets/Scripts/Modules/VampireSurvivorsLike/WeaponSystem/WeaponManager.cs
+Assets/Scripts/Modules/VampireSurvivorsLike/WeaponSystem/WeaponSO.cs
+Assets/Scripts/Modules/VampireSurvivorsLike/WeaponSystem/WeaponLevelData.cs
+Assets/Scripts/Modules/VampireSurvivorsLike/Gameplay/SurvivorGameplayController.cs
+Assets/Scripts/Modules/VampireSurvivorsLike/View/SurvivorSkillSelectPanelPresenter.cs
 ```
 
 ---

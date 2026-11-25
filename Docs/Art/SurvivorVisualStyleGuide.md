@@ -1,6 +1,6 @@
 # Survivor 视觉风格规范
 
-> 本文是 Vampire Survivors-like 模块的 UI、图标、宣传图与界面参考图的唯一视觉基准。新增或重新生成图片前，必须先阅读本文，并同时查看「参考素材」中的三张原图；代码、Prefab 或 Canvas 布局不因本文自动改变。
+> 本文是 VampireSurvivorsLike 模块的 UI、图标、宣传图与界面参考图的唯一视觉基准。新增或重新生成图片前，必须先阅读本文，并同时查看「参考素材」中的三张原图；代码、Prefab 或 Canvas 布局不因本文自动改变。
 
 ## 0. 已确认的主界面视觉参考
 
@@ -10,17 +10,17 @@
 
 已从该参考图拆分出可供主界面使用的新增资源：
 
-- `Assets/Arts/Vampire Survivors-like/MainMenu/vs-main-menu-background-720x1280-v2.png`：当前推荐的无 UI 720 × 1280 背景，保留两侧环境旗帜、左上乌鸦与右侧灯笼。
-- `Assets/Arts/Vampire Survivors-like/MainMenu/vs-main-menu-background-720x1280-v1.png`：首个无 UI 底图版本，仅作回退参考。
-- `Assets/Arts/Vampire Survivors-like/MainMenu/vs-main-menu-ui-atlas-1280x1280-v1.png`：带透明通道的 1280 × 1280 UI 图集。
+- `Assets/Arts/VampireSurvivorsLike/MainMenu/vs-main-menu-background-720x1280-v2.png`：当前推荐的无 UI 720 × 1280 背景，保留两侧环境旗帜、左上乌鸦与右侧灯笼。
+- `Assets/Arts/VampireSurvivorsLike/MainMenu/vs-main-menu-background-720x1280-v1.png`：首个无 UI 底图版本，仅作回退参考。
+- `Assets/Arts/VampireSurvivorsLike/MainMenu/vs-main-menu-ui-atlas-1280x1280-v1.png`：带透明通道的 1280 × 1280 UI 图集。
 
-具体导入参数、手动切片要求与建议 Sprite 命名见 [MainMenu/README.md](../../Assets/Arts/Vampire%20Survivors-like/MainMenu/README.md)。
+具体导入参数、手动切片要求与建议 Sprite 命名见 [MainMenu/README.md](../../Assets/Arts/VampireSurvivorsLike/MainMenu/README.md)。
 
 ## 1. 参考素材与适用范围
 
 | 用途                     | 项目内素材                                                                     | 使用规则                                                                                             |
 | ------------------------ | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
-| 场景底图与光照基调       | `Assets/Arts/Vampire Survivors-like/Login/vs-login-background-720x1280-v2.png` | 保持竖屏夜林、冷青月光、橙色火把与中心魔法阵的光照关系；UI 不应大面积遮住月亮、中心角色或环境纵深。  |
+| 场景底图与光照基调       | `Assets/Arts/VampireSurvivorsLike/Login/vs-login-background-720x1280-v2.png` | 保持竖屏夜林、冷青月光、橙色火把与中心魔法阵的光照关系；UI 不应大面积遮住月亮、中心角色或环境纵深。  |
 | 哥特框体、按钮与功能图标 | `Assets/Arts/UI/survivor01.png`                                                | 以暗石板、黑铁、蝙蝠、尖刺、骷髅和血红宝石为主要构件；优先复用图集已有部件，不另做不相容的扁平控件。 |
 | 等级框、徽章与品质色     | `Assets/Arts/UI/survivor02.png`                                                | 普通状态以暗铁/棕黑为主；红色代表主要操作或危险；蓝、紫、金只用于品质、状态或稀有度区分。            |
 

@@ -96,7 +96,7 @@
 
 ## Survivor 模块开发
 
-修改 `Assets/Scripts/Modules/Vampire Survivors-like/` 前，必须先阅读：
+修改 `Assets/Scripts/Modules/VampireSurvivorsLike/` 前，必须先阅读：
 
 1. `Docs/Architecture.md`
 2. `Docs/Modules/Survivor.md`

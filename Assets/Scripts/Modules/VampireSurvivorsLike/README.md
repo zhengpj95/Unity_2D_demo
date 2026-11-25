@@ -1,4 +1,4 @@
-# Vampire Survivors-like 模块
+# VampireSurvivorsLike 模块
 
 更新时间：2026-09-11
 
@@ -35,7 +35,7 @@ Hero
 ## 2. 目录与模块内框架大纲
 
 ```text
-Vampire Survivors-like/
+VampireSurvivorsLike/
 ├── SurvivorModule.cs                    # BaseModule：注册 Proxy 与 Presenter
 ├── Model/                               # 模块运行时数据与数据修改入口
 │   ├── SurvivorModel.cs                  # 一局生命、等级、经验、货币、游戏状态

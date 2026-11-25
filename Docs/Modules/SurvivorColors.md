@@ -1,8 +1,8 @@
 # Survivor UI 颜色配置
 
-本文件记录 Vampire Survivors-like 模块当前的颜色常量。代码来源：
+本文件记录 VampireSurvivorsLike 模块当前的颜色常量。代码来源：
 
-- `Assets/Scripts/Modules/Vampire Survivors-like/View/Display/SurvivorColors.cs`
+- `Assets/Scripts/Modules/VampireSurvivorsLike/View/Display/SurvivorColors.cs`
 
 所有颜色以 `#RRGGBB` 格式维护；如需透明度，可使用 `#RRGGBBAA`。运行时由内部的
 `HexColor.Parse` 转换为 `Color32`，格式不合法会抛出异常。

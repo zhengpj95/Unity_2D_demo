@@ -2,7 +2,7 @@
 
 ## 1. 当前职责
 
-Survivor 模块负责 Vampire Survivors-like 的局外 Home、场景进入/返回，以及一局战斗中的运行时状态、升级流程和界面刷新。当前实现以代码为准：
+Survivor 模块负责 VampireSurvivorsLike 的局外 Home、场景进入/返回，以及一局战斗中的运行时状态、升级流程和界面刷新。当前实现以代码为准：
 
 ```text
 SurvivorProxy
@@ -18,14 +18,14 @@ Presenter / View
 主要实现文件：
 
 ```text
-Assets/Scripts/Modules/Vampire Survivors-like/Model/SurvivorModel.cs
-Assets/Scripts/Modules/Vampire Survivors-like/Model/SurvivorProxy.cs
-Assets/Scripts/Modules/Vampire Survivors-like/Gameplay/SurvivorGameplayController.cs
-Assets/Scripts/Modules/Vampire Survivors-like/SurvivorModule.cs
-Assets/Scripts/Modules/Vampire Survivors-like/View/SurvivorHomePresenter.cs
-Assets/Scripts/Modules/Vampire Survivors-like/View/SurvivorMainPresenter.cs
-Assets/Scripts/Modules/Vampire Survivors-like/View/SurvivorSkillSelectPanelPresenter.cs
-Assets/Scripts/Modules/Vampire Survivors-like/View/SurvivorGameOverPresenter.cs
+Assets/Scripts/Modules/VampireSurvivorsLike/Model/SurvivorModel.cs
+Assets/Scripts/Modules/VampireSurvivorsLike/Model/SurvivorProxy.cs
+Assets/Scripts/Modules/VampireSurvivorsLike/Gameplay/SurvivorGameplayController.cs
+Assets/Scripts/Modules/VampireSurvivorsLike/SurvivorModule.cs
+Assets/Scripts/Modules/VampireSurvivorsLike/View/SurvivorHomePresenter.cs
+Assets/Scripts/Modules/VampireSurvivorsLike/View/SurvivorMainPresenter.cs
+Assets/Scripts/Modules/VampireSurvivorsLike/View/SurvivorSkillSelectPanelPresenter.cs
+Assets/Scripts/Modules/VampireSurvivorsLike/View/SurvivorGameOverPresenter.cs
 ```
 
 ---
