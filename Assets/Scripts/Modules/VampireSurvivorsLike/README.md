@@ -42,30 +42,30 @@ VampireSurvivorsLike/
 │   └── SurvivorProxy.cs                  # BaseProxy：唯一的局内数据修改入口
 ├── Gameplay/                            # 局内流程编排和可复用玩法辅助
 │   ├── SurvivorGameplayController.cs     # 场景切换、升级、暂停、结算与重开编排
-│   └── PointUtil.cs                      # 刷怪、扇形、圆形等二维坐标工具
+│   ├── PointUtil.cs                      # 刷怪、扇形、圆形等二维坐标工具
+│   ├── ColorUtils.cs                     # 品质颜色与显示名称转换
+│   ├── SurvivorColors.cs                 # UI 颜色常量
+│   ├── VampireQuality.cs                 # 品质枚举
+│   └── VampireQualityConfig.cs           # 品质显示配置 SO
 ├── PlayerAttributeSystem/               # 玩家属性枚举、修正结构、永久增量与计算规则
 ├── View/
 │   ├── SurvivorHomePresenter.cs          # Launcher 局外主界面 Presenter
 │   ├── SurvivorMainPresenter.cs          # 主界面 Presenter
 │   ├── SurvivorSkillSelectPanelPresenter.cs # 三选一 Presenter
 │   ├── SurvivorGameOverPresenter.cs      # GameOver Presenter
-│   ├── HpBarDisplay.cs                   # 实体血条显示
-│   └── Display/                          # 品质与颜色显示
-│       ├── VampireQuality.cs             # 品质枚举与 HexColor 解析
-│       ├── VampireQualityConfig.cs       # 掉落品质权重配置 SO
-│       └── SurvivorColors.cs             # UI 颜色常量
+│   └── HpBarDisplay.cs                   # 实体血条显示
 ├── Entity/
 │   ├── Hero.cs                           # 玩家移动、基础属性配置与最终属性消费
+│   ├── HeroHealth.cs                     # 伤害上报和死亡通知
 │   ├── DropItem.cs                       # Gem/Coin 拾取及对象池状态
 │   ├── DropItemManager.cs                # 掉落抽取、生成与回收
-│   ├── Enemy/                            # 敌人实体、生成与配置
-│   │   ├── EnemyDirector.cs              # 敌人列表、刷怪、Wave、选敌、回收
-│   │   ├── EnemySpawner.cs               # EnemyDirector 的生成与预热协作类
-│   │   ├── EnemyChasing.cs               # 敌人追击与超距回收
-│   │   ├── EnemyTypeConfig.cs            # 敌人类型配置 SO
-│   │   ├── EnemyConfigurator.cs          # 把配置注入通用敌人实例
-│   │   └── EnemyHealth.cs                # 敌人生命、死亡与对象池重置
-│   └── HeroHealth.cs                   # 伤害上报和死亡通知
+│   └── Enemy/                            # 敌人实体、生成与配置
+│       ├── EnemyDirector.cs              # 敌人列表、刷怪、Wave、选敌、回收
+│       ├── EnemySpawner.cs               # EnemyDirector 的生成与预热协作类
+│       ├── EnemyChasing.cs               # 敌人追击与超距回收
+│       ├── EnemyTypeConfig.cs            # 敌人类型配置 SO
+│       ├── EnemyConfigurator.cs          # 把配置注入通用敌人实例
+│       └── EnemyHealth.cs                # 敌人生命、死亡与对象池重置
 ├── WeaponSystem/
 │   ├── WeaponManager.cs                  # 场景级武器槽位与控制器创建
 │   ├── WeaponSO.cs / WeaponLevelData.cs  # 武器和等级配置

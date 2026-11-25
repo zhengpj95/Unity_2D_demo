@@ -2,7 +2,7 @@
 
 本文件记录 VampireSurvivorsLike 模块当前的颜色常量。代码来源：
 
-- `Assets/Scripts/Modules/VampireSurvivorsLike/View/Display/SurvivorColors.cs`
+- `Assets/Scripts/Modules/VampireSurvivorsLike/Gameplay/SurvivorColors.cs`
 
 所有颜色以 `#RRGGBB` 格式维护；如需透明度，可使用 `#RRGGBBAA`。运行时由内部的
 `HexColor.Parse` 转换为 `Color32`，格式不合法会抛出异常。
