@@ -45,7 +45,7 @@
 | Wave 2 | 上限 `30`；Slime：`1.25 / 秒`；Rino：约 `0.67 / 秒` | `Wave_02_Threat.asset` | 中期混合敌人。 |
 | Wave 3 | 上限 `40`；Slime：约 `3.33 / 秒`；Treant：约 `0.83 / 秒`；Rino：`0.5 / 秒` | `Wave_03_Heavy.asset` | 进入高耐久混合敌人阶段。 |
 | Wave 4 | 上限 `80`；Enemy_01：约 `8.33 / 秒`；Enemy_02：`2.5 / 秒`；Enemy_03：约 `1.11 / 秒` | `Wave_04.asset` | 最终无限段；三种条目保持各自的固定生成间隔。 |
-| 生成/回收半径 | `10 / 20` | `SurvivorsDemo/EnemyDirector` | 保证敌人在镜头外生成并在过远时回收。 |
+| 生成/回收半径 | `10 / 20` | `SurvivorsDemo/EnemyManager` | 保证敌人在镜头外生成并在过远时回收。 |
 | Gem / Coin 权重 | `80 / 10` | `SurvivorsDemo/DropItemManager` | Coin 概率约 `11.1%`，保持稀缺但可稳定出现。 |
 
 ## 5. Play Mode 验收

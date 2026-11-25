@@ -5,9 +5,9 @@ using UnityEngine.Serialization;
 namespace VampireSurvivorsLike
 {
 
-  public class EnemyDirector : SingletonMono<EnemyDirector>
+  public class EnemyManager : SingletonMono<EnemyManager>
   {
-    // EnemyDirector 持有当前场景的 Player、敌人容器和 Wave 运行时计时，重开时必须随场景重建。
+    // EnemyManager 持有当前场景的 Player、敌人容器和 Wave 运行时计时，重开时必须随场景重建。
     protected override bool PersistAcrossScenes => false;
 
     [Tooltip("生成后的敌人父节点；只用于整理层级，不改变敌人的世界坐标。")]
@@ -42,7 +42,7 @@ namespace VampireSurvivorsLike
     private readonly List<WaveScheduleRuntime> _waveSchedule = new List<WaveScheduleRuntime>();
     private readonly List<WaveSpawnRuntime> _activeSpawnEntries = new List<WaveSpawnRuntime>();
 
-    private readonly List<EnemyChasing> enemies = new List<EnemyChasing>();
+    private readonly List<EnemyChaser> enemies = new List<EnemyChaser>();
     public int KillEnemyCount { get; set; } = 0;
     public float DespawnSqrDistance => despawnRadius * despawnRadius;
     /// <summary>当前战斗已累计的游戏时间；受 Time.timeScale 影响。</summary>
@@ -158,7 +158,7 @@ namespace VampireSurvivorsLike
         WaveSpawnEntry entry = wave.SpawnEntries[i];
         if (entry == null || !entry.IsValid)
         {
-          Debug.LogWarning($"[EnemyDirector] Wave '{wave.name}' 包含无效 WaveSpawnEntry，已跳过。", wave);
+          Debug.LogWarning($"[EnemyManager] Wave '{wave.name}' 包含无效 WaveSpawnEntry，已跳过。", wave);
           continue;
         }
 
@@ -202,7 +202,7 @@ namespace VampireSurvivorsLike
       _waveSchedule.Clear();
       if (waveTimeline == null || waveTimeline.WaveEntries == null)
       {
-        Debug.LogWarning("[EnemyDirector] 未配置 WaveTimelineConfig，本局不会生成敌人。", this);
+        Debug.LogWarning("[EnemyManager] 未配置 WaveTimelineConfig，本局不会生成敌人。", this);
         return;
       }
 
@@ -212,7 +212,7 @@ namespace VampireSurvivorsLike
         WaveTimelineEntry entry = waveTimeline.WaveEntries[i];
         if (entry == null || !entry.IsValid)
         {
-          Debug.LogWarning($"[EnemyDirector] 时间轴 Wave[{i}] 配置无效，已跳过。", waveTimeline);
+          Debug.LogWarning($"[EnemyManager] 时间轴 Wave[{i}] 配置无效，已跳过。", waveTimeline);
           continue;
         }
 
@@ -222,7 +222,7 @@ namespace VampireSurvivorsLike
         if (entry.IsInfinite)
         {
           if (i != waveTimeline.WaveEntries.Count - 1)
-            Debug.LogWarning("[EnemyDirector] 无限 Wave 后的时间段不会执行。", waveTimeline);
+            Debug.LogWarning("[EnemyManager] 无限 Wave 后的时间段不会执行。", waveTimeline);
           break;
         }
 
@@ -256,7 +256,7 @@ namespace VampireSurvivorsLike
 
       if (enemyCommonPrefab == null)
       {
-        Debug.LogError($"[EnemyDirector] Wave 条目配置了 EnemyTypeConfig '{entry.EnemyTypeConfig.name}'，但场景未指定 EnemyCommon Prefab。", this);
+        Debug.LogError($"[EnemyManager] Wave 条目配置了 EnemyTypeConfig '{entry.EnemyTypeConfig.name}'，但场景未指定 EnemyCommon Prefab。", this);
         return null;
       }
 
@@ -308,7 +308,7 @@ namespace VampireSurvivorsLike
     {
       for (int i = enemies.Count - 1; i >= 0; i--)
       {
-        EnemyChasing enemy = enemies[i];
+        EnemyChaser enemy = enemies[i];
         if (enemy == null)
         {
           enemies.RemoveAt(i);
@@ -320,28 +320,28 @@ namespace VampireSurvivorsLike
     }
 
     #region Enemy Register
-    public void RegisterEnemy(EnemyChasing e)
+    public void RegisterEnemy(EnemyChaser e)
     {
       if (e != null && !enemies.Contains(e)) enemies.Add(e);
     }
 
-    public void UnregisterEnemy(EnemyChasing e)
+    public void UnregisterEnemy(EnemyChaser e)
     {
       enemies.Remove(e);
     }
 
     /// <summary>在攻击范围内查找距离中心点最近的有效敌人，不创建临时集合。</summary>
-    public EnemyChasing GetCloseest(Vector3 center, float maxRange = Mathf.Infinity)
+    public EnemyChaser GetCloseest(Vector3 center, float maxRange = Mathf.Infinity)
     {
       if (enemies.Count == 0)
         return null;
 
-      EnemyChasing enemy = null;
+      EnemyChaser enemy = null;
       float bestSqrDist = float.MaxValue;
       float maxSqr = float.IsInfinity(maxRange) ? float.MaxValue : maxRange * maxRange;
       for (int i = 0; i < enemies.Count; i++)
       {
-        EnemyChasing candidate = enemies[i];
+        EnemyChaser candidate = enemies[i];
         if (candidate == null || !candidate.gameObject.activeInHierarchy)
           continue;
 
@@ -362,17 +362,17 @@ namespace VampireSurvivorsLike
     /// <param name="center">用于计算距离的中心点。</param>
     /// <param name="maxRange">允许选中的最大距离。</param>
     /// <param name="excludedTargets">本次选敌需要跳过的敌人 Transform；传 null 时等价于普通最近目标查询。</param>
-    public EnemyChasing GetClosestExcluding(Vector3 center, float maxRange, ISet<Transform> excludedTargets)
+    public EnemyChaser GetClosestExcluding(Vector3 center, float maxRange, ISet<Transform> excludedTargets)
     {
       if (excludedTargets == null || excludedTargets.Count == 0)
         return GetCloseest(center, maxRange);
 
-      EnemyChasing enemy = null;
+      EnemyChaser enemy = null;
       float bestSqrDist = float.MaxValue;
       float maxSqr = float.IsInfinity(maxRange) ? float.MaxValue : maxRange * maxRange;
       for (int i = 0; i < enemies.Count; i++)
       {
-        EnemyChasing candidate = enemies[i];
+        EnemyChaser candidate = enemies[i];
         if (candidate == null || !candidate.gameObject.activeInHierarchy || excludedTargets.Contains(candidate.transform))
           continue;
 
@@ -388,17 +388,17 @@ namespace VampireSurvivorsLike
     }
 
     /// <summary>在攻击范围内等概率选择一名有效敌人，不创建候选列表或执行排序。</summary>
-    public EnemyChasing GetRandom(Vector3 center, float maxRange = Mathf.Infinity)
+    public EnemyChaser GetRandom(Vector3 center, float maxRange = Mathf.Infinity)
     {
       if (enemies.Count == 0)
         return null;
 
       float maxSqr = float.IsInfinity(maxRange) ? float.MaxValue : maxRange * maxRange;
-      EnemyChasing selected = null;
+      EnemyChaser selected = null;
       int eligibleCount = 0;
       for (int i = 0; i < enemies.Count; i++)
       {
-        EnemyChasing candidate = enemies[i];
+        EnemyChaser candidate = enemies[i];
         if (candidate == null || !candidate.gameObject.activeInHierarchy)
           continue;
 
@@ -418,17 +418,17 @@ namespace VampireSurvivorsLike
     /// 在攻击范围内等概率选择一名未被排除的有效敌人。
     /// 范围武器的 count 大于 1 时复用调用方提供的集合，确保同一轮多目标施放优先分散到不同敌人而不创建候选列表。
     /// </summary>
-    public EnemyChasing GetRandomExcluding(Vector3 center, float maxRange, ISet<Transform> excludedTargets)
+    public EnemyChaser GetRandomExcluding(Vector3 center, float maxRange, ISet<Transform> excludedTargets)
     {
       if (excludedTargets == null || excludedTargets.Count == 0)
         return GetRandom(center, maxRange);
 
       float maxSqr = float.IsInfinity(maxRange) ? float.MaxValue : maxRange * maxRange;
-      EnemyChasing selected = null;
+      EnemyChaser selected = null;
       int eligibleCount = 0;
       for (int i = 0; i < enemies.Count; i++)
       {
-        EnemyChasing candidate = enemies[i];
+        EnemyChaser candidate = enemies[i];
         if (candidate == null || !candidate.gameObject.activeInHierarchy || excludedTargets.Contains(candidate.transform))
           continue;
 

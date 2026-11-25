@@ -12,7 +12,7 @@ namespace VampireSurvivorsLike
       int effectCount = GetEffectCount(levelData);
       for (int i = 0; i < effectCount; i++)
       {
-        EnemyChasing enemy = GetRandomBurstTarget(levelData);
+        EnemyChaser enemy = GetRandomBurstTarget(levelData);
         if (enemy == null)
           break;
 

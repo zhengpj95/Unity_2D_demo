@@ -643,7 +643,7 @@ namespace EditorTools
         Debug.LogWarning("[EnemyConfigEditor] 未找到 Scene 视图，实例放在世界原点。");
       }
 
-      if (!EnemyConfigurator.Apply(instance, _selectedTypeConfig))
+      if (!EnemyConfigUtil.Apply(instance, _selectedTypeConfig))
       {
         UnityEngine.Object.DestroyImmediate(instance);
         return;

@@ -4,7 +4,7 @@ namespace VampireSurvivorsLike
 {
   /// <summary>
   /// 敌人类型配置资源：集中保存一种敌人的动画、战斗数值、碰撞体和显示偏移。
-  /// 运行时由 EnemyConfigurator 应用到 EnemyCommon Prefab 实例；Editor 工具也可据此实例化到场景。
+  /// 运行时由 EnemyConfigUtil 应用到 EnemyCommon Prefab 实例；Editor 工具也可据此实例化到场景。
   /// </summary>
   [CreateAssetMenu(fileName = "NewEnemyTypeConfig", menuName = "Game Data/Survivor/Enemies/Enemy Type Config")]
   public sealed class EnemyTypeConfig : ScriptableObject

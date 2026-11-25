@@ -122,7 +122,7 @@ Presenter 只负责显示图标、标题、描述和点击输入。隐藏弹窗�
 
 ## 5. 主界面、GameOver 与场景流转
 
-当前正式入口为：登录成功后先在 `Launcher.unity` 打开 `SurvivorHomePresenter`，而不是直接加载战斗场景。Home 位于常驻 `UILauncher/UIRoot` 的 `Main` 层；显示 Home 时没有加载 Player、EnemyDirector、WeaponManager 和 Wave，因此不需要用暂停状态维持局外界面。
+当前正式入口为：登录成功后先在 `Launcher.unity` 打开 `SurvivorHomePresenter`，而不是直接加载战斗场景。Home 位于常驻 `UILauncher/UIRoot` 的 `Main` 层；显示 Home 时没有加载 Player、EnemyManager、WeaponManager 和 Wave，因此不需要用暂停状态维持局外界面。
 
 ```text
 Launcher 登录成功
@@ -235,7 +235,7 @@ Main Camera 挂载 `SurvivorCameraFollow`：
 
 ## 8. 敌人与武器的关系
 
-敌人生成和 Wave 调度由 `EnemyDirector` 负责，详细规则见 [EnemySystem.md](EnemySystem.md) 和 [WaveSystem.md](WaveSystem.md)。敌人实例和掉落物都通过框架 `PoolManager` 复用。
+敌人生成和 Wave 调度由 `EnemyManager` 负责，详细规则见 [EnemySystem.md](EnemySystem.md) 和 [WaveSystem.md](WaveSystem.md)。敌人实例和掉落物都通过框架 `PoolManager` 复用。
 
 玩家武器由场景中的 `WeaponManager` 管理，详细升级规则见 [UpgradeSystem.md](UpgradeSystem.md)。
 
@@ -257,7 +257,7 @@ WeaponManager
 
 SB-004 已将 `WeaponLevelData` 接入实际玩法：`count` 决定一次触发创建的独立攻击对象数，`range` 对定向/范围武器作为 `Hero.TargetingRange` 的选敌倍率（Saw 保持为环绕半径），`speed` 作用于投射物与 Saw，`damageInterval` 仅作用于 Fire，`fireInterval` 控制触发节奏，`duration` 控制对象池回收时机。`level` 的运行时来源始终是 `WeaponSO.levels` 数组下标，字段本身只作 Inspector 标识。多发攻击会优先分散目标；候选不足时不为凑数量重复生成定向攻击对象。
 
-普通子弹和弓箭均为直线投射物：对应 Controller 每次开火会先收集本武器仍在飞行投射物的发射目标，并优先从未被占用的范围内敌人中选择最近者。范围内所有敌人都已经被本武器瞄准时，本次不生成投射物，等目标死亡、投射物入池或出现新的可选敌人后再发射，避免单敌场景连续浪费弹药。敌人死亡后会被 `EnemyDirector` 跳过，投射物入池后则从活跃集合注销，下一次选敌不会受旧目标影响。
+普通子弹和弓箭均为直线投射物：对应 Controller 每次开火会先收集本武器仍在飞行投射物的发射目标，并优先从未被占用的范围内敌人中选择最近者。范围内所有敌人都已经被本武器瞄准时，本次不生成投射物，等目标死亡、投射物入池或出现新的可选敌人后再发射，避免单敌场景连续浪费弹药。敌人死亡后会被 `EnemyManager` 跳过，投射物入池后则从活跃集合注销，下一次选敌不会受旧目标影响。
 
 ---
 
@@ -294,7 +294,7 @@ SB-004 已将 `WeaponLevelData` 接入实际玩法：`count` 决定一次触发�
 | --- | --- |
 | Model、经验、暂停、升级弹窗、GameOver 或重开流程 | `Survivor.md`、`UpgradeSystem.md` |
 | 登录、Home、开始战斗、返回主页或场景切换 | `SurvivorSceneFlow.md`、`Survivor.md`，必要时同步 `Architecture.md` |
-| EnemyDirector、EnemySpawner、EnemyChasing、掉落回收 | `EnemySystem.md`、`WaveSystem.md`，必要时同步本文件 |
+| EnemyManager、EnemySpawner、EnemyChaser、掉落回收 | `EnemySystem.md`、`WaveSystem.md`，必要时同步本文件 |
 | WaveSpawnConfig、WaveTimelineConfig、Wave 时间和 WaveSpawnEntry | `WaveSystem.md`、`EnemySystem.md` |
 | UpgradeConfig、WeaponManager、WeaponSO 等级、武器投射物/特效对象池 | `UpgradeSystem.md`，必要时同步本文件 |
 | 场景层级、相机、无限地表或拾取范围 | `Survivor.md` |

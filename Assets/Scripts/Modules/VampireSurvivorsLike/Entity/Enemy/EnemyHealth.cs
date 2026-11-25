@@ -52,11 +52,11 @@ namespace VampireSurvivorsLike
       DamageController.Instance.ShowDamage(damage, transform.position);
       if (currentHealth <= 0)
       {
-        EnemyDirector.Instance.KillEnemyCount++;
+        EnemyManager.Instance.KillEnemyCount++;
         ModuleManager.Instance.GetModule<SurvivorModule>(ModuleName.Survivor).UpdateEnemyKillCount();
         // 掉落由场景级权重统一决定，避免不同敌人 Prefab 固定产出同一种资源。
         DropItemManager.Instance.SpawnDropItem(transform.position);
-        EnemyDirector.Instance.RecycleEnemy(gameObject);
+        EnemyManager.Instance.RecycleEnemy(gameObject);
         return;
       }
 

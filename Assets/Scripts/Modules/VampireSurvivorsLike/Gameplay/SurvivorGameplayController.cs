@@ -252,8 +252,8 @@ public sealed class SurvivorGameplayController
   /// </summary>
   private static void ClearCurrentRoundEntities()
   {
-    EnemyDirector enemyDirector = UnityEngine.Object.FindObjectOfType<EnemyDirector>();
-    enemyDirector?.ClearActiveEnemies();
+    EnemyManager enemyManager = UnityEngine.Object.FindObjectOfType<EnemyManager>();
+    enemyManager?.ClearActiveEnemies();
 
     DropItemManager dropItemManager = UnityEngine.Object.FindObjectOfType<DropItemManager>();
     dropItemManager?.ClearActiveDropItems();

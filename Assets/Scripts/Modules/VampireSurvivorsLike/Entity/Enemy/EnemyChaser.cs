@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace VampireSurvivorsLike {
 
-  public class EnemyChasing : MonoBehaviour, IPoolable
+  public class EnemyChaser : MonoBehaviour, IPoolable
   {
     [SerializeField] private float chaseSpeed = 0.5f;
     [SerializeField] private int damage = 1;
@@ -23,7 +23,7 @@ namespace VampireSurvivorsLike {
     private Transform player;
     private Transform spriteTransform;
     private Rigidbody2D rb;
-    private EnemyDirector director;
+    private EnemyManager director;
 
     private void OnDisable()
     {
@@ -36,7 +36,7 @@ namespace VampireSurvivorsLike {
       rb = GetComponent<Rigidbody2D>();
     }
 
-    public void Initialize(Transform target, EnemyDirector owner)
+    public void Initialize(Transform target, EnemyManager owner)
     {
       player = target;
       director = owner;

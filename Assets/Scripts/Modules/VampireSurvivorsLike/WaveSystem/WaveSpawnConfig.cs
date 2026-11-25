@@ -8,7 +8,7 @@ namespace VampireSurvivorsLike
   [Serializable]
   public sealed class WaveSpawnEntry
   {
-    [Tooltip("旧式敌人预制体，必须挂载 EnemyChasing；配置 EnemyTypeConfig 时可留空。")]
+    [Tooltip("旧式敌人预制体，必须挂载 EnemyChaser；配置 EnemyTypeConfig 时可留空。")]
     [SerializeField] private GameObject enemyPrefab;
     [Tooltip("可选敌人类型配置；设置后从通用 EnemyCommon Prefab 生成对应敌人。")]
     [SerializeField] private EnemyTypeConfig enemyTypeConfig;
@@ -30,7 +30,7 @@ namespace VampireSurvivorsLike
   }
 
   /// <summary>
-  /// 保存一组可复用的 Wave 生成规则。时间位置由 WaveTimelineConfig 决定，运行时状态由 EnemyDirector 保存。
+  /// 保存一组可复用的 Wave 生成规则。时间位置由 WaveTimelineConfig 决定，运行时状态由 EnemyManager 保存。
   /// </summary>
   [CreateAssetMenu(fileName = "WaveSpawnConfig", menuName = "Game Data/Survivor/Waves/Spawn Config")]
   public sealed class WaveSpawnConfig : ScriptableObject

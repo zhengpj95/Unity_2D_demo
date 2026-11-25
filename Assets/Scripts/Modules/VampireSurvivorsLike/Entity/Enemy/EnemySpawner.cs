@@ -20,7 +20,7 @@ namespace VampireSurvivorsLike
     /// <param name="director">负责登记敌人并提供回收入口的导演器。</param>
     /// <param name="prefab">本次生成使用的敌人预制体。</param>
     /// <param name="config">可选敌人类型配置；设置时在初始化前注入通用 Prefab 实例。</param>
-    public EnemyChasing Spawn(Transform player, float spawnRadius, EnemyDirector director, GameObject prefab, EnemyTypeConfig config = null)
+    public EnemyChaser Spawn(Transform player, float spawnRadius, EnemyManager director, GameObject prefab, EnemyTypeConfig config = null)
     {
       if (player == null || director == null || prefab == null)
         return null;
@@ -35,7 +35,7 @@ namespace VampireSurvivorsLike
         return null;
 
       // PoolManager 的 OnAlloc 先于配置注入执行，因此这里覆盖数值并重启默认动画。
-      if (config != null && !EnemyConfigurator.Apply(enemyObject, config))
+      if (config != null && !EnemyConfigUtil.Apply(enemyObject, config))
       {
         PoolManager.Instance.Free(enemyObject);
         return null;
@@ -44,10 +44,10 @@ namespace VampireSurvivorsLike
       if (_enemyContainer != null)
         enemyObject.transform.SetParent(_enemyContainer, true);
 
-      EnemyChasing enemy = enemyObject.GetComponent<EnemyChasing>();
+      EnemyChaser enemy = enemyObject.GetComponent<EnemyChaser>();
       if (enemy == null)
       {
-        Debug.LogError($"[EnemySpawner] Prefab '{prefab.name}' is missing {nameof(EnemyChasing)}.");
+        Debug.LogError($"[EnemySpawner] Prefab '{prefab.name}' is missing {nameof(EnemyChaser)}.");
         PoolManager.Instance.Free(enemyObject);
         return null;
       }

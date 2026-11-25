@@ -46,7 +46,7 @@ namespace VampireSurvivorsLike
     /// 为直线弓箭或子弹选择目标：优先选择当前未被本控制器其他飞行投射物瞄准的最近敌人。
     /// 范围内所有敌人均已被瞄准时返回 null，本次不生成投射物，避免单敌场景浪费多枚直线攻击。
     /// </summary>
-    protected EnemyChasing GetClosestProjectileTarget(WeaponLevelData levelData)
+    protected EnemyChaser GetClosestProjectileTarget(WeaponLevelData levelData)
     {
       _occupiedProjectileTargets.Clear();
       for (int i = 0; i < _activeEffects.Count; i++)
@@ -57,7 +57,7 @@ namespace VampireSurvivorsLike
       }
 
       float attackRange = GetConfiguredTargetRange(levelData);
-      EnemyChasing enemy = EnemyDirector.Instance.GetClosestExcluding(
+      EnemyChaser enemy = EnemyManager.Instance.GetClosestExcluding(
         player.position, attackRange, _occupiedProjectileTargets);
       return enemy;
     }
@@ -72,9 +72,9 @@ namespace VampireSurvivorsLike
     }
 
     /// <summary>从当前施放范围内随机选择一名未被本次触发选中的敌人，并登记其占用状态。</summary>
-    protected EnemyChasing GetRandomBurstTarget(WeaponLevelData levelData)
+    protected EnemyChaser GetRandomBurstTarget(WeaponLevelData levelData)
     {
-      EnemyChasing enemy = EnemyDirector.Instance.GetRandomExcluding(
+      EnemyChaser enemy = EnemyManager.Instance.GetRandomExcluding(
         player.position, GetConfiguredTargetRange(levelData), _burstTargets);
       if (enemy != null)
         _burstTargets.Add(enemy.transform);
@@ -82,9 +82,9 @@ namespace VampireSurvivorsLike
     }
 
     /// <summary>从当前施放范围内选择距离最近且未被本次触发选中的敌人，并登记其占用状态。</summary>
-    protected EnemyChasing GetClosestBurstTarget(WeaponLevelData levelData)
+    protected EnemyChaser GetClosestBurstTarget(WeaponLevelData levelData)
     {
-      EnemyChasing enemy = EnemyDirector.Instance.GetClosestExcluding(
+      EnemyChaser enemy = EnemyManager.Instance.GetClosestExcluding(
         player.position, GetConfiguredTargetRange(levelData), _burstTargets);
       if (enemy != null)
         _burstTargets.Add(enemy.transform);

@@ -15,8 +15,8 @@ Launcher + SurvivorHome ← 返回主页 ← GameOver
 ```
 
 ```text
-EnemyDirector / EnemySpawner
-    → EnemyChasing / EnemyHealth
+EnemyManager / EnemySpawner
+    → EnemyChaser / EnemyHealth
     → DropItemManager（Gem / Coin，PoolManager）
     → SurvivorModule.UpdateExp / AddDropItem
     → SurvivorProxy（经验、等级、击杀、货币、生命）
@@ -60,11 +60,11 @@ VampireSurvivorsLike/
 │   ├── DropItem.cs                       # Gem/Coin 拾取及对象池状态
 │   ├── DropItemManager.cs                # 掉落抽取、生成与回收
 │   └── Enemy/                            # 敌人实体、生成与配置
-│       ├── EnemyDirector.cs              # 敌人列表、刷怪、Wave、选敌、回收
-│       ├── EnemySpawner.cs               # EnemyDirector 的生成与预热协作类
-│       ├── EnemyChasing.cs               # 敌人追击与超距回收
+│       ├── EnemyManager.cs              # 敌人列表、刷怪、Wave、选敌、回收
+│       ├── EnemySpawner.cs               # EnemyManager 的生成与预热协作类
+│       ├── EnemyChaser.cs               # 敌人追击与超距回收
 │       ├── EnemyTypeConfig.cs            # 敌人类型配置 SO
-│       ├── EnemyConfigurator.cs          # 把配置注入通用敌人实例
+│       ├── EnemyConfigUtil.cs          # 把配置注入通用敌人实例
 │       └── EnemyHealth.cs                # 敌人生命、死亡与对象池重置
 ├── WeaponSystem/
 │   ├── WeaponManager.cs                  # 场景级武器槽位与控制器创建
@@ -92,7 +92,7 @@ VampireSurvivorsLike/
 | `BaseModule` / `ModuleManager` | `SurvivorModule` 注册 Proxy、Presenter，并持有流程 Controller。                          |
 | `BaseProxy`                    | `SurvivorProxy` 持有并修改 `SurvivorModel`，不直接操作 UI。                              |
 | `UIManager` / Presenter / View | Home、主 HUD、三选一、GameOver 按既有 Presenter 生命周期打开、隐藏和关闭。               |
-| `SingletonMono<T>`             | `EnemyDirector`、`DropItemManager`、`WeaponManager`、`UpgradeManager` 等场景级组件使用。 |
+| `SingletonMono<T>`             | `EnemyManager`、`DropItemManager`、`WeaponManager`、`UpgradeManager` 等场景级组件使用。 |
 | `PoolManager` / `IPoolable`    | 敌人、掉落物、投射物和范围特效复用；不另建武器专用池。                                   |
 | `DamageController`             | `HeroHealth` 调用项目现有的伤害飘字能力；该能力不由本模块维护。                      |
 
@@ -110,8 +110,8 @@ VampireSurvivorsLike/
 
 - `PlayerAttributeSystem` 统一管理 `MoveSpeed`、`PickupRadius`、`MaxHealth`、`TargetingRange` 的类型与计算规则；永久增量在 `SurvivorModel`，临时增量由 `BuffHandler` 提供。
 - `Hero` 支持上下左右移动、武器索敌范围和拾取范围；它只保存 Inspector 基础值并消费最终属性，拾取范围由独立 `CircleCollider2D` 触发器驱动，并有 Scene Gizmos。
-- 敌人通过 `EnemyDirector` 管理活跃列表，支持追击玩家、超出回收距离时入池、死亡后入池和击杀计数。
-- `EnemySpawner` 使用玩家为中心的生成半径，在相机外生成；`EnemyDirector` 支持预热敌人 Prefab。
+- 敌人通过 `EnemyManager` 管理活跃列表，支持追击玩家、超出回收距离时入池、死亡后入池和击杀计数。
+- `EnemySpawner` 使用玩家为中心的生成半径，在相机外生成；`EnemyManager` 支持预热敌人 Prefab。
 - `WaveTimelineConfig` 保存一局的有序 `WaveTimelineEntry`，`WaveSpawnConfig` 保存可复用的敌人上限和 `WaveSpawnEntry` 组合；未配置有效时间轴时不会刷怪。
 - 敌人死亡通过 `DropItemManager` 按权重生成 Gem 或 Coin。Gem 增加经验，Coin 只增加本局货币；两者都使用对象池，并由 `AnimFrame` 播放循环序列帧。
 
@@ -178,7 +178,7 @@ VampireSurvivorsLike/
 
 | 目标                                 | 主要配置位置                                                                  |
 | ------------------------------------ | ----------------------------------------------------------------------------- |
-| 敌人、生成距离、Wave、预热数量       | `SurvivorsDemo/EnemyDirector` Inspector。                                     |
+| 敌人、生成距离、Wave、预热数量       | `SurvivorsDemo/EnemyManager` Inspector。                                     |
 | 掉落权重、掉落容器                   | `SurvivorsDemo/DropItemManager` Inspector。                                   |
 | 武器引用与最大槽位                   | `SurvivorsDemo/WeaponManager` Inspector。                                     |
 | 武器数值和等级数组                   | `WeaponSystem/SO/*.asset` 的 `WeaponSO.levels`。                              |

@@ -6,7 +6,7 @@ namespace VampireSurvivorsLike
   /// 把 EnemyTypeConfig 的配置应用到通用敌人实例。
   /// 运行时出池与 Editor 场景实例化共用同一入口，避免两处维护字段映射。
   /// </summary>
-  public static class EnemyConfigurator
+  public static class EnemyConfigUtil
   {
     /// <summary>
     /// 将配置写入通用敌人实例；组件缺失时记录错误并返回 false，调用方应放弃该实例。
@@ -18,17 +18,17 @@ namespace VampireSurvivorsLike
     {
       if (enemyObject == null || config == null)
       {
-        Debug.LogError("[EnemyConfigurator] 缺少敌人实例或 EnemyTypeConfig，未应用配置。");
+        Debug.LogError("[EnemyConfigUtil] 缺少敌人实例或 EnemyTypeConfig，未应用配置。");
         return false;
       }
 
-      EnemyChasing chasing = enemyObject.GetComponent<EnemyChasing>();
+      EnemyChaser chasing = enemyObject.GetComponent<EnemyChaser>();
       EnemyHealth health = enemyObject.GetComponent<EnemyHealth>();
       AnimFrame anim = enemyObject.GetComponentInChildren<AnimFrame>(true);
       CapsuleCollider2D collider = enemyObject.GetComponent<CapsuleCollider2D>();
       if (chasing == null || health == null || anim == null || collider == null)
       {
-        Debug.LogError($"[EnemyConfigurator] 敌人实例 '{enemyObject.name}' 缺少追击/血量/动画/碰撞体组件，未应用配置。", enemyObject);
+        Debug.LogError($"[EnemyConfigUtil] 敌人实例 '{enemyObject.name}' 缺少追击/血量/动画/碰撞体组件，未应用配置。", enemyObject);
         return false;
       }
 
@@ -42,7 +42,7 @@ namespace VampireSurvivorsLike
       else
       {
         // 新建的 EnemyTypeConfig 可能还没指定动画；此时保留 Prefab 默认配置，避免生成无贴图的隐形敌人。
-        Debug.LogWarning($"[EnemyConfigurator] 敌人类型配置 '{config.name}' 未指定 AnimConfig，沿用 Prefab 默认动画。", config);
+        Debug.LogWarning($"[EnemyConfigUtil] 敌人类型配置 '{config.name}' 未指定 AnimConfig，沿用 Prefab 默认动画。", config);
         anim.PlayDefault();
       }
 

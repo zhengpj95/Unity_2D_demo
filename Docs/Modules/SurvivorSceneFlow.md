@@ -15,14 +15,14 @@ Launcher.unity
   → Launcher.unity + SurvivorHomePresenter
 ```
 
-`SurvivorHome` 属于局外主界面，不属于战斗 HUD。它在 `Launcher.unity` 激活期间打开；Home 显示时不加载 `SurvivorsDemo.unity`，因此不会创建 Player、EnemyDirector、WeaponManager 或 Wave 运行时对象，也不依赖 `Time.timeScale = 0` 阻止战斗。
+`SurvivorHome` 属于局外主界面，不属于战斗 HUD。它在 `Launcher.unity` 激活期间打开；Home 显示时不加载 `SurvivorsDemo.unity`，因此不会创建 Player、EnemyManager、WeaponManager 或 Wave 运行时对象，也不依赖 `Time.timeScale = 0` 阻止战斗。
 
 ## 2. 场景与持久对象职责
 
 | 对象 | 生命周期 | 职责 |
 | --- | --- | --- |
 | `Launcher.unity` | 登录或返回主界面时加载 | 承载登录入口与 Home 所需的非战斗场景环境。 |
-| `SurvivorsDemo.unity` | 点击开始战斗后加载 | 承载 Player、EnemyDirector、WeaponManager、DropItemManager、Wave 和地图。 |
+| `SurvivorsDemo.unity` | 点击开始战斗后加载 | 承载 Player、EnemyManager、WeaponManager、DropItemManager、Wave 和地图。 |
 | `GameMgr` | `DontDestroyOnLoad` | 初始化并持续驱动 Module、Network、Timer 和 Pool。 |
 | `UILauncher/UIRoot` | `DontDestroyOnLoad` | 持有 UIManager 的 Main/Window/Model/Tip 层、唯一 EventSystem 和已缓存 Presenter 的 View。 |
 | `SurvivorModule` | 随 GameMgr 常驻 | 注册 Home、战斗 HUD、升级选择和 GameOver Presenter，向流程控制器提供 UI 开关入口。 |
