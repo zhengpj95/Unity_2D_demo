@@ -75,10 +75,10 @@ namespace VampireSurvivorsLike
 
     private void UpdateHpBar()
     {
-      UI_HpBar hpBarUI = gameObject.GetComponent<UI_HpBar>();
-      if (hpBarUI)
+      HpBarDisplay hpBarDisplay = gameObject.GetComponent<HpBarDisplay>();
+      if (hpBarDisplay)
       {
-        hpBarUI.SetPercent(Mathf.Max(0f, currentHealth / (maxHealth * 1f)));
+        hpBarDisplay.SetPercent(Mathf.Max(0f, currentHealth / (maxHealth * 1f)));
       }
     }
   }

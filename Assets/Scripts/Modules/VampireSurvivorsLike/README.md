@@ -49,8 +49,8 @@ VampireSurvivorsLike/
 │   ├── SurvivorMainPresenter.cs          # 主界面 Presenter
 │   ├── SurvivorSkillSelectPanelPresenter.cs # 三选一 Presenter
 │   ├── SurvivorGameOverPresenter.cs      # GameOver Presenter
-│   └── Display/                          # 血条与品质/颜色显示
-│       ├── UI_HpBar.cs                   # 实体血条显示
+│   ├── HpBarDisplay.cs                   # 实体血条显示
+│   └── Display/                          # 品质与颜色显示
 │       ├── VampireQuality.cs             # 品质枚举与 HexColor 解析
 │       ├── VampireQualityConfig.cs       # 掉落品质权重配置 SO
 │       └── SurvivorColors.cs             # UI 颜色常量

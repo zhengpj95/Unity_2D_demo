@@ -84,7 +84,7 @@ Assets/Prefabs/Survivor/Enemy/EnemyCommon.prefab
 负责：
 
 - 在 `OnAlloc` 时恢复满血。
-- 受伤后刷新 `UI_HpBar` 和伤害飘字。
+- 受伤后刷新 `HpBarDisplay` 和伤害飘字。
 - 对配置了 `AnimFrame` 的敌人播放一次 `Hit`，完成后恢复循环的 `Move`；旧敌人未配置该组件时保持原行为。
 - 当前 `Enemy_01/02/03`、`Enemy_Rino`、`Enemy_Slime` 和 `Enemy_Treant` 均使用 `AnimFrame`（拖入 `SpriteRenderer`）；Treant 没有 `Hit` 素材，受伤时继续保持 `Move`。
 - 生命值归零时累计击杀、生成掉落并通过 `EnemyDirector.RecycleEnemy` 回收。

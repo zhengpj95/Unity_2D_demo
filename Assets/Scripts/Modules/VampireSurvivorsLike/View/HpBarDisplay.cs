@@ -5,7 +5,7 @@ using UnityEngine;
 namespace VampireSurvivorsLike
 {
 
-  public class UI_HpBar : MonoBehaviour
+  public class HpBarDisplay : MonoBehaviour
   {
     [SerializeField] private Transform fill;
 
