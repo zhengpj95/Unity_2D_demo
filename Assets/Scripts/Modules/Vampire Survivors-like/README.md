@@ -48,18 +48,25 @@ Vampire Survivors-like/
 │   ├── SurvivorHomePresenter.cs          # Launcher 局外主界面 Presenter
 │   ├── SurvivorMainPresenter.cs          # 主界面 Presenter
 │   ├── SurvivorSkillSelectPanelPresenter.cs # 三选一 Presenter
-│   └── SurvivorGameOverPresenter.cs      # GameOver Presenter
+│   ├── SurvivorGameOverPresenter.cs      # GameOver Presenter
+│   └── Display/                          # 血条与品质/颜色显示
+│       ├── UI_HpBar.cs                   # 实体血条显示
+│       ├── VampireQuality.cs             # 品质枚举与 HexColor 解析
+│       ├── VampireQualityConfig.cs       # 掉落品质权重配置 SO
+│       └── SurvivorColors.cs             # UI 颜色常量
 ├── Entity/
 │   ├── Hero.cs                           # 玩家移动、基础属性配置与最终属性消费
-│   ├── EnemyDirector.cs                  # 敌人列表、刷怪、Wave、选敌、回收
-│   ├── EnemySpawner.cs                   # EnemyDirector 的生成与预热协作类
-│   ├── EnemyChasing.cs                   # 敌人追击与超距回收
 │   ├── DropItem.cs                       # Gem/Coin 拾取及对象池状态
 │   ├── DropItemManager.cs                # 掉落抽取、生成与回收
+│   ├── Enemy/                            # 敌人实体、生成与配置
+│   │   ├── EnemyDirector.cs              # 敌人列表、刷怪、Wave、选敌、回收
+│   │   ├── EnemySpawner.cs               # EnemyDirector 的生成与预热协作类
+│   │   ├── EnemyChasing.cs               # 敌人追击与超距回收
+│   │   ├── EnemyTypeConfig.cs            # 敌人类型配置 SO
+│   │   ├── EnemyConfigurator.cs          # 把配置注入通用敌人实例
+│   │   └── VSEnemyHealth.cs              # 敌人生命、死亡与对象池重置
 │   └── Health/
-│       ├── VSPlayerHealth.cs             # 伤害上报和死亡通知
-│       ├── VSEnemyHealth.cs              # 敌人生命、死亡与对象池重置
-│       └── UI_HpBar.cs                   # 实体血条显示
+│       └── VSPlayerHealth.cs             # 伤害上报和死亡通知
 ├── WeaponSystem/
 │   ├── WeaponManager.cs                  # 场景级武器槽位与控制器创建
 │   ├── WeaponSO.cs / WeaponLevelData.cs  # 武器和等级配置
@@ -85,7 +92,7 @@ Vampire Survivors-like/
 | ------------------------------ | ---------------------------------------------------------------------------------------- |
 | `BaseModule` / `ModuleManager` | `SurvivorModule` 注册 Proxy、Presenter，并持有流程 Controller。                          |
 | `BaseProxy`                    | `SurvivorProxy` 持有并修改 `SurvivorModel`，不直接操作 UI。                              |
-| `UIManager` / Presenter / View | Home、主 HUD、三选一、GameOver 按既有 Presenter 生命周期打开、隐藏和关闭。             |
+| `UIManager` / Presenter / View | Home、主 HUD、三选一、GameOver 按既有 Presenter 生命周期打开、隐藏和关闭。               |
 | `SingletonMono<T>`             | `EnemyDirector`、`DropItemManager`、`WeaponManager`、`UpgradeManager` 等场景级组件使用。 |
 | `PoolManager` / `IPoolable`    | 敌人、掉落物、投射物和范围特效复用；不另建武器专用池。                                   |
 | `DamageController`             | `VSPlayerHealth` 调用项目现有的伤害飘字能力；该能力不由本模块维护。                      |
@@ -170,15 +177,15 @@ Vampire Survivors-like/
 
 ## 5. 场景与资源配置入口
 
-| 目标                             | 主要配置位置                                                                  |
-| -------------------------------- | ----------------------------------------------------------------------------- |
-| 敌人、生成距离、Wave、预热数量   | `SurvivorsDemo/EnemyDirector` Inspector。                                     |
-| 掉落权重、掉落容器               | `SurvivorsDemo/DropItemManager` Inspector。                                   |
-| 武器引用与最大槽位               | `SurvivorsDemo/WeaponManager` Inspector。                                     |
-| 武器数值和等级数组               | `WeaponSystem/SO/*.asset` 的 `WeaponSO.levels`。                              |
-| 自定义升级、默认属性升级图标     | `SurvivorsDemo/UpgradeManager` Inspector。                                    |
-| 玩家初始武器、基础移动/索敌/拾取范围 | Player 的 `Hero` 组件；永久增量保存在 `SurvivorModel.PlayerAttributes`。       |
-| 玩家与敌人生命、Collider、Tag    | Player / Enemy Prefab 上的 `VSPlayerHealth`、`VSEnemyHealth` 和 2D Collider。 |
+| 目标                                 | 主要配置位置                                                                  |
+| ------------------------------------ | ----------------------------------------------------------------------------- |
+| 敌人、生成距离、Wave、预热数量       | `SurvivorsDemo/EnemyDirector` Inspector。                                     |
+| 掉落权重、掉落容器                   | `SurvivorsDemo/DropItemManager` Inspector。                                   |
+| 武器引用与最大槽位                   | `SurvivorsDemo/WeaponManager` Inspector。                                     |
+| 武器数值和等级数组                   | `WeaponSystem/SO/*.asset` 的 `WeaponSO.levels`。                              |
+| 自定义升级、默认属性升级图标         | `SurvivorsDemo/UpgradeManager` Inspector。                                    |
+| 玩家初始武器、基础移动/索敌/拾取范围 | Player 的 `Hero` 组件；永久增量保存在 `SurvivorModel.PlayerAttributes`。      |
+| 玩家与敌人生命、Collider、Tag        | Player / Enemy Prefab 上的 `VSPlayerHealth`、`VSEnemyHealth` 和 2D Collider。 |
 
 不要在运行时修改 `WeaponSO`、`WaveSpawnConfig`、`WaveTimelineConfig` 等资源文件；局内等级、Buff 与属性增量应只保存在运行时实例中。
 

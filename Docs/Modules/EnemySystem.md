@@ -19,12 +19,12 @@ DropItemManager
 当前实现文件：
 
 ```text
-Assets/Scripts/Modules/Vampire Survivors-like/Entity/EnemyDirector.cs
-Assets/Scripts/Modules/Vampire Survivors-like/Entity/EnemySpawner.cs
-Assets/Scripts/Modules/Vampire Survivors-like/Entity/EnemyChasing.cs
-Assets/Scripts/Modules/Vampire Survivors-like/Entity/Health/VSEnemyHealth.cs
-Assets/Scripts/Modules/Vampire Survivors-like/Entity/EnemyTypeConfig.cs
-Assets/Scripts/Modules/Vampire Survivors-like/Entity/EnemyConfigurator.cs
+Assets/Scripts/Modules/Vampire Survivors-like/Entity/Enemy/EnemyDirector.cs
+Assets/Scripts/Modules/Vampire Survivors-like/Entity/Enemy/EnemySpawner.cs
+Assets/Scripts/Modules/Vampire Survivors-like/Entity/Enemy/EnemyChasing.cs
+Assets/Scripts/Modules/Vampire Survivors-like/Entity/Enemy/VSEnemyHealth.cs
+Assets/Scripts/Modules/Vampire Survivors-like/Entity/Enemy/EnemyTypeConfig.cs
+Assets/Scripts/Modules/Vampire Survivors-like/Entity/Enemy/EnemyConfigurator.cs
 Assets/Scripts/Framework/Pool/PoolManager.cs
 Assets/Prefabs/Survivor/Enemy/EnemyCommon.prefab
 ```
