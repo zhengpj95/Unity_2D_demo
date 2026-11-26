@@ -1,10 +1,10 @@
 # Survivor 数值平衡基线
 
-本文是 SB-005 的首版可调参数表。它不创建第二套运行时配置；下列 Prefab、`WeaponSO`、Wave 资源和场景 Inspector 仍是唯一数值真源。调整参数时先修改对应资源，再同步本文与验收记录。
+本文是 SB-005 的首版可调参数表。它不创建第二套运行时配置；下列 `EnemyTypeConfig`、`WeaponSO`、Wave 资源和场景 Inspector 仍是唯一数值真源。调整参数时先修改对应资源，再同步本文与验收记录。
 
 ## 1. 调整原则
 
-- 初始 Bullet 在 Wave 1 面对 `2` 点生命的 Slime 时单发击杀，避免前 30 秒因伤害不足堆积敌人。
+- Wave 1 使用 `EnemyType01`（生命 `6`、速度 `0.8`），初始 Bullet 需要多次命中；生命 `2` 的 `EnemyTypeSlime` 出现在 Wave 3。
 - 武器每升一级至少提升伤害、攻击频率、数量、选敌范围、持续时间或移动速度中的一项；不允许出现等级越高核心数值反向下降。
 - Rino 与 Treant 承担中后段耐久差异，Slime 继续作为基础经验来源。
 - Wave、掉落权重和敌人移动速度暂不由运行时倍率覆盖，便于先建立可重复的手动验收基线。
@@ -17,9 +17,10 @@
 | 玩家移动速度 | `2` | `Hero.prefab` 的 `Hero.baseMoveSpeed` | 高于 Slime/Rino/Treant 的追击速度。 |
 | 玩家索敌范围 | `4` | `Hero.prefab` 的 `Hero.baseAttackRange` | 武器 `range` 以此值为倍率基础。 |
 | 玩家拾取范围 | `0.3` | `SurvivorsDemo/Hero` 的 `basePickupRadius` 覆盖 | 以 Hero 根节点为圆心。 |
-| Slime | 生命 `2`，速度 `0.5`，伤害 `1` | `Enemy_Slime.prefab` | Wave 1 基础敌人。 |
-| Rino | 生命 `6`，速度 `0.8`，伤害 `2` | `Enemy_Rino.prefab` | Wave 2 起的中型敌人。 |
-| Treant | 生命 `10`，速度 `1.0`，伤害 `3` | `Enemy_Treant.prefab` | Wave 3 起的高耐久敌人。 |
+| EnemyType01/02/03 | 生命 `6`，速度 `0.8`，伤害 `2` | `EnemyType01/02/03.asset` | Wave 1、2、4 的基础与中后段敌人。 |
+| Slime | 生命 `2`，速度 `0.5`，伤害 `1` | `EnemyTypeSlime.asset` | Wave 3 起的基础敌人。 |
+| Rino | 生命 `6`，速度 `0.8`，伤害 `2` | `EnemyTypeRino.asset` | Wave 3 起的中型敌人。 |
+| Treant | 生命 `10`，速度 `1.0`，伤害 `3` | `EnemyTypeTreant.asset` | Wave 3 起的高耐久敌人。 |
 
 ## 3. 武器等级基线
 
@@ -41,19 +42,19 @@
 | 项目 | 当前基线 | 配置位置 | 说明 |
 | --- | --- | --- | --- |
 | Wave 时间轴 | `30 秒 / 30 秒 / 30 秒 / 无限` | `WaveTimeline_Default.asset` | 按列表顺序连续执行，时间与可复用刷怪组合分离。 |
-| Wave 1 | 上限 `20`；Slime：`1 / 秒` | `Wave_01_Intro.asset` | 初期压力。 |
-| Wave 2 | 上限 `30`；Slime：`1.25 / 秒`；Rino：约 `0.67 / 秒` | `Wave_02_Threat.asset` | 中期混合敌人。 |
-| Wave 3 | 上限 `40`；Slime：约 `3.33 / 秒`；Treant：约 `0.83 / 秒`；Rino：`0.5 / 秒` | `Wave_03_Heavy.asset` | 进入高耐久混合敌人阶段。 |
-| Wave 4 | 上限 `80`；Enemy_01：约 `8.33 / 秒`；Enemy_02：`2.5 / 秒`；Enemy_03：约 `1.11 / 秒` | `Wave_04.asset` | 最终无限段；三种条目保持各自的固定生成间隔。 |
+| Wave 1 | 上限 `20`；EnemyType01：`1 / 秒` | `Wave_01_Intro.asset` | 初期压力。 |
+| Wave 2 | 上限 `30`；EnemyType02：`1.25 / 秒`；EnemyType03：约 `0.67 / 秒` | `Wave_02_Threat.asset` | 中期混合敌人。 |
+| Wave 3 | 上限 `40`；Rino：约 `3.33 / 秒`；Slime：约 `0.83 / 秒`；Treant：`0.5 / 秒` | `Wave_03_Heavy.asset` | 进入高耐久混合敌人阶段。 |
+| Wave 4 | 上限 `80`；EnemyType01：`5 / 秒`；EnemyType02：`2.5 / 秒`；EnemyType03：约 `1.11 / 秒` | `Wave_04_Ultimate.asset` | 最终无限段；三种条目保持各自的固定生成间隔。 |
 | 生成/回收半径 | `10 / 20` | `SurvivorsDemo/EnemyManager` | 保证敌人在镜头外生成并在过远时回收。 |
 | Gem / Coin 权重 | `80 / 10` | `SurvivorsDemo/DropItemManager` | Coin 概率约 `11.1%`，保持稀缺但可稳定出现。 |
 
 ## 5. Play Mode 验收
 
 1. 从 `Launcher.unity` 进入 `SurvivorsDemo`，不启用 `OverridePlayerHealthForTesting` 等测试入口。
-2. 前 30 秒只使用初始 Bullet，确认 Slime 能被单发击杀，敌人不会持续堆至 `maxEnemies`。
+2. 前 30 秒只使用初始 Bullet，确认 EnemyType01 需要多次命中才会死亡，敌人不会持续堆至 `maxEnemies`。
 3. 升级或获得各类武器后，确认 Lv2/Lv3 的核心数值不低于前一级；Saw Lv3 必须继续转动并更频繁触发。
-4. 进入 Wave 2、Wave 3，确认 Rino 与 Treant 比 Slime 更耐打；进入 Wave 4 后确认 Enemy_01/02/03 按各自间隔生成，场上上限依次提升到 20、30、40、80。
+4. 进入 Wave 2、Wave 3，确认 Rino 与 Treant 比 Slime 更耐打；进入 Wave 4 后确认 EnemyType01/02/03 按各自间隔生成，场上上限依次提升到 20、30、40、80。
 5. 观察至少 30 次掉落，Coin 应明显少于 Gem，且并非长期不出现。
 6. 武器槽位满、已有武器满级时，连续获得经验不应让升级流程停留在无可选候选状态。
 

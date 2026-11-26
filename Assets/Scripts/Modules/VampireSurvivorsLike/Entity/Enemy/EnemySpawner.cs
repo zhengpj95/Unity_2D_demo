@@ -14,15 +14,15 @@ namespace VampireSurvivorsLike
       _enemyContainer = enemyContainer;
     }
 
-    /// <summary>按 Wave 指定的敌人预制体，在玩家周围生成一名敌人。</summary>
+    /// <summary>按敌人类型配置，在玩家周围生成一名通用 Prefab 敌人。</summary>
     /// <param name="player">生成圆心及敌人追击目标。</param>
     /// <param name="spawnRadius">敌人相对玩家的出生半径。</param>
     /// <param name="director">负责登记敌人并提供回收入口的导演器。</param>
-    /// <param name="prefab">本次生成使用的敌人预制体。</param>
-    /// <param name="config">可选敌人类型配置；设置时在初始化前注入通用 Prefab 实例。</param>
-    public EnemyChaser Spawn(Transform player, float spawnRadius, EnemyManager director, GameObject prefab, EnemyTypeConfig config = null)
+    /// <param name="prefab">所有敌人共用的通用 Prefab。</param>
+    /// <param name="config">敌人类型配置；必须提供，初始化前会注入外形和数值。</param>
+    public EnemyChaser Spawn(Transform player, float spawnRadius, EnemyManager director, GameObject prefab, EnemyTypeConfig config)
     {
-      if (player == null || director == null || prefab == null)
+      if (player == null || director == null || prefab == null || config == null)
         return null;
 
       Vector2 direction = Random.insideUnitCircle;
@@ -35,7 +35,7 @@ namespace VampireSurvivorsLike
         return null;
 
       // PoolManager 的 OnAlloc 先于配置注入执行，因此这里覆盖数值并重启默认动画。
-      if (config != null && !EnemyConfigUtil.Apply(enemyObject, config))
+      if (!EnemyConfigUtil.Apply(enemyObject, config))
       {
         PoolManager.Instance.Free(enemyObject);
         return null;

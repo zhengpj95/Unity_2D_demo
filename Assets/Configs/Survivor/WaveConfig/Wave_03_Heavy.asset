@@ -14,15 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxEnemies: 40
   spawnEntries:
-  - enemyPrefab: {fileID: 5408803987995198023, guid: 93efd6b0d0006e64b9cddfee1ef2a143, type: 3}
-    enemyTypeConfig: {fileID: 11400000, guid: 62d1c6f021e849788d75c481b55761d6, type: 2}
+  - enemyTypeConfig: {fileID: 11400000, guid: 62d1c6f021e849788d75c481b55761d6, type: 2}
     spawnInterval: 0.6
     spawnCount: 2
-  - enemyPrefab: {fileID: 6659708394562086004, guid: 2c7a5ced109a1af4f9adc4de735c58b9, type: 3}
-    enemyTypeConfig: {fileID: 11400000, guid: 22dea1de37ce4c228d1c0386b06affbf, type: 2}
+  - enemyTypeConfig: {fileID: 11400000, guid: 22dea1de37ce4c228d1c0386b06affbf, type: 2}
     spawnInterval: 1.2
     spawnCount: 1
-  - enemyPrefab: {fileID: 1196323208441000344, guid: 61aa0f0ecfaf6de45b0119b6c2a82247, type: 3}
-    enemyTypeConfig: {fileID: 11400000, guid: 6425c47be5aa43b180c2ceb965c7a6cd, type: 2}
+  - enemyTypeConfig: {fileID: 11400000, guid: 6425c47be5aa43b180c2ceb965c7a6cd, type: 2}
     spawnInterval: 2
     spawnCount: 1

@@ -14,7 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxEnemies: 20
   spawnEntries:
-  - enemyPrefab: {fileID: 5408803987995198023, guid: 93efd6b0d0006e64b9cddfee1ef2a143, type: 3}
-    enemyTypeConfig: {fileID: 11400000, guid: 68e1cd65702c4c4cb6962bd57e0f5d64, type: 2}
+  - enemyTypeConfig: {fileID: 11400000, guid: 68e1cd65702c4c4cb6962bd57e0f5d64, type: 2}
     spawnInterval: 1
     spawnCount: 1

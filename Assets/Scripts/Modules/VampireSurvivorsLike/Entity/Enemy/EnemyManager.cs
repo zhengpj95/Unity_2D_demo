@@ -31,8 +31,8 @@ namespace VampireSurvivorsLike
     [Tooltip("本局使用的 Wave 时间轴；为空时不会生成敌人。")]
     [SerializeField] private WaveTimelineConfig waveTimeline;
 
-    [Header("配置驱动敌人")]
-    [Tooltip("WaveSpawnEntry 配置 EnemyTypeConfig 时使用的通用敌人 Prefab。")]
+    [Header("敌人预制体")]
+    [Tooltip("所有 Wave 共用的通用敌人 Prefab，必须挂载 EnemyChaser；运行时由 EnemyTypeConfig 注入具体外形和数值。")]
     [SerializeField] private GameObject enemyCommonPrefab;
 
     private float gameTime;
@@ -66,7 +66,7 @@ namespace VampireSurvivorsLike
       public WaveSpawnRuntime(WaveSpawnEntry config)
       {
         Config = config;
-        // 首次进入 Wave 时允许下一帧立即生成，保持旧版启动即刷怪的体验。
+        // 首次进入 Wave 时允许下一帧立即生成，避免开局等待一个完整间隔。
         Timer = config.SpawnInterval;
       }
     }
@@ -94,6 +94,10 @@ namespace VampireSurvivorsLike
     protected override void Awake()
     {
       base.Awake();
+      // 唯一生成来源必须在启动时就绪，否则本局所有 Wave 都无法实例化敌人。
+      if (enemyCommonPrefab == null)
+        Debug.LogError("[EnemyManager] 未指定 EnemyCommon Prefab，本局不会生成敌人。", this);
+
       ResolvePlayer();
       _spawner = new EnemySpawner(enemyContainer);
       BuildWaveSchedule();
@@ -169,7 +173,7 @@ namespace VampireSurvivorsLike
     /// <summary>推进单个条目的计时器并按其配置向 EnemySpawner 请求生成。</summary>
     private void TickSpawnEntry(WaveSpawnRuntime runtime)
     {
-      if (runtime == null || runtime.Config == null || !runtime.Config.IsValid)
+      if (runtime == null || runtime.Config == null || !runtime.Config.IsValid || enemyCommonPrefab == null)
         return;
 
       float interval = runtime.Config.SpawnInterval;
@@ -181,13 +185,9 @@ namespace VampireSurvivorsLike
       // 每种敌人仍按各自的固定间隔触发；容量只决定本次还能生成多少只。
       if (enemies.Count < currentMaxEnemies)
       {
-        GameObject prefab = ResolveSpawnPrefab(runtime.Config);
-        if (prefab == null)
-          return;
-
         int count = Mathf.Min(runtime.Config.SpawnCount, currentMaxEnemies - enemies.Count);
         for (int i = 0; i < count; i++)
-          _spawner.Spawn(player, spawnRadius, this, prefab, runtime.Config.EnemyTypeConfig);
+          _spawner.Spawn(player, spawnRadius, this, enemyCommonPrefab, runtime.Config.EnemyTypeConfig);
       }
 
       // 只处理一次触发，避免低帧率时一帧补刷过多；减去间隔可避免长期节奏漂移。
@@ -243,53 +243,13 @@ namespace VampireSurvivorsLike
       return player != null;
     }
 
-    /// <summary>
-    /// 解析条目最终使用的 Prefab：配置驱动时统一使用通用 Prefab，否则沿用旧式引用。
-    /// </summary>
-    private GameObject ResolveSpawnPrefab(WaveSpawnEntry entry)
-    {
-      if (entry == null)
-        return null;
-
-      if (entry.EnemyTypeConfig == null)
-        return entry.EnemyPrefab;
-
-      if (enemyCommonPrefab == null)
-      {
-        Debug.LogError($"[EnemyManager] Wave 条目配置了 EnemyTypeConfig '{entry.EnemyTypeConfig.name}'，但场景未指定 EnemyCommon Prefab。", this);
-        return null;
-      }
-
-      return enemyCommonPrefab;
-    }
-
-    /// <summary>预热所有 Wave 实际使用的敌人预制体；相同预制体只预热一次。</summary>
+    /// <summary>预热唯一的通用敌人 Prefab；所有 Wave 共享同一个对象池预热结果。</summary>
     private void PreloadWaveEnemies()
     {
-      if (preloadCountPerPrefab <= 0)
+      if (preloadCountPerPrefab <= 0 || enemyCommonPrefab == null)
         return;
 
-      var prefabs = new HashSet<GameObject>();
-      for (int i = 0; i < _waveSchedule.Count; i++)
-      {
-        WaveSpawnConfig wave = _waveSchedule[i].Config;
-        if (wave == null || wave.SpawnEntries == null)
-          continue;
-
-        for (int j = 0; j < wave.SpawnEntries.Count; j++)
-        {
-          WaveSpawnEntry entry = wave.SpawnEntries[j];
-          if (entry == null || !entry.IsValid)
-            continue;
-
-          GameObject prefab = ResolveSpawnPrefab(entry);
-          if (prefab != null)
-            prefabs.Add(prefab);
-        }
-      }
-
-      foreach (GameObject prefab in prefabs)
-        PoolManager.Instance.Preload(prefab, preloadCountPerPrefab);
+      PoolManager.Instance.Preload(enemyCommonPrefab, preloadCountPerPrefab);
     }
 
     public void RecycleEnemy(GameObject enemy)

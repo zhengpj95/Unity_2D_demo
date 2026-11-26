@@ -14,8 +14,8 @@ WaveTimelineEntry
 WaveSpawnConfig
     ↓ 包含一条或多条
 WaveSpawnEntry
-    ↓ 指定 Prefab、间隔和单次数量
-EnemySpawner → PoolManager → EnemyChaser
+    ↓ 指定敌人类型配置、间隔和单次数量
+EnemySpawner → 通用 EnemyCommon Prefab + EnemyTypeConfig → PoolManager → EnemyChaser
 ```
 
 相关代码：
@@ -27,7 +27,7 @@ Assets/Scripts/Modules/VampireSurvivorsLike/Entity/Enemy/EnemyManager.cs
 Assets/Scripts/Modules/VampireSurvivorsLike/Entity/Enemy/EnemySpawner.cs
 ```
 
-`EnemyManager` 不再保留 `enemyPrefab`、`spawnInterval`、`spawnCount` 固定刷怪逻辑。未配置有效 `WaveTimelineConfig` 时会输出警告，本局不生成敌人。
+`EnemyManager` 不再保存每种敌人的 Prefab、间隔或数量；这些规则全部来自 `WaveSpawnEntry`。所有敌人均从 `EnemyManager.enemyCommonPrefab` 生成，并由 `EnemyTypeConfig` 注入外形与数值。未配置有效 `WaveTimelineConfig` 时会输出警告，本局不生成敌人。
 
 ## 2. 配置职责
 
@@ -37,14 +37,11 @@ Assets/Scripts/Modules/VampireSurvivorsLike/Entity/Enemy/EnemySpawner.cs
 
 | 字段 | 含义 |
 | --- | --- |
-| `enemyPrefab` | 旧式敌人 Prefab，必须挂载 `EnemyChaser`；配置 `enemyTypeConfig` 时可留空 |
-| `enemyTypeConfig` | 可选敌人类型配置；设置后统一从 `EnemyManager.enemyCommonPrefab` 生成并注入数值 |
+| `enemyTypeConfig` | 必填敌人类型配置；生成时统一从 `EnemyManager.enemyCommonPrefab` 创建实例并注入数值 |
 | `spawnInterval` | 两次生成触发的间隔，单位为秒 |
 | `spawnCount` | 每次触发生成的数量 |
 
-`enemyPrefab` 与 `enemyTypeConfig` 都为空、间隔不大于 0 或数量不大于 0 时，条目无效并在运行时被跳过。
-
-当前 4 份示例 Wave 的条目同时填写了 `enemyPrefab` 与 `enemyTypeConfig`；运行时以 `enemyTypeConfig` 为准，`enemyPrefab` 仅作为回退与对照保留。两种方式的完整对比和收敛计划见 [EnemySystem.md](EnemySystem.md) 第 10 节。
+`enemyTypeConfig` 为空、间隔不大于 0 或数量不大于 0 时，条目无效并在运行时被跳过。当前 4 份示例 Wave 共 9 个条目均已配置 `EnemyTypeConfig`。唯一的生成方式见 [EnemySystem.md](EnemySystem.md) 第 10 节。
 
 ### WaveSpawnConfig
 
@@ -96,15 +93,15 @@ Wave 变化时重建 WaveSpawnRuntime
 
 ## 4. 对象池与边界
 
-`EnemySpawner` 接受条目解析后的 Prefab：配置驱动时使用 `EnemyManager.enemyCommonPrefab`，否则使用条目的 `enemyPrefab`。它负责：
+`EnemySpawner` 只使用 `EnemyManager.enemyCommonPrefab`，并要求调用方提供 `EnemyTypeConfig`。它负责：
 
 1. 以 Player 为圆心计算出生位置。
-2. 从 `PoolManager` 取得 Prefab 实例。
-3. 若条目带 `EnemyTypeConfig`，调用 `EnemyConfigUtil.Apply` 覆盖数值、动画、碰撞体和血条。
+2. 从 `PoolManager` 取得通用 Prefab 实例。
+3. 调用 `EnemyConfigUtil.Apply` 覆盖数值、动画、碰撞体和血条；注入失败时回收实例。
 4. 设置 `enemyContainer` 父节点。
 5. 调用 `EnemyChaser.Initialize(player, director)`。
 
-`EnemyManager` 会收集时间轴内所有实际使用的 Prefab 并去重预热。敌人死亡、碰撞玩家或超出 `despawnRadius` 时仍通过 `EnemyManager.RecycleEnemy` 和 `PoolManager.Free` 回收。
+`EnemyManager` 启动时预热唯一的 `EnemyCommon` Prefab；所有 Wave 和敌人类型共享同一个对象池预热结果。敌人死亡、碰撞玩家或超出 `despawnRadius` 时仍通过 `EnemyManager.RecycleEnemy` 和 `PoolManager.Free` 回收。
 
 ## 5. 当前示例
 
@@ -116,17 +113,17 @@ Assets/Configs/Survivor/
 ├── Wave_01_Intro.asset
 ├── Wave_02_Threat.asset
 ├── Wave_03_Heavy.asset
-└── Wave_04.asset
+└── Wave_04_Ultimate.asset
 ```
 
 | 时间轴段 | 持续时间 | 存活上限 | WaveSpawnEntry |
 | --- | --- | --- | --- |
-| Wave 1 | 30 秒 | 20 | Slime：间隔 1.0 秒，数量 1 |
-| Wave 2 | 30 秒 | 30 | Slime：0.8 秒/1；Rino：1.5 秒/1 |
-| Wave 3 | 30 秒 | 40 | Slime：0.6 秒/2；Treant：1.2 秒/1；Rino：2.0 秒/1 |
-| Wave 4 | 无限 | 80 | Enemy_01：0.6 秒/5；Enemy_02：1.2 秒/3；Enemy_03：1.8 秒/2 |
+| Wave 1 | 30 秒 | 20 | EnemyType01：间隔 1.0 秒，数量 1 |
+| Wave 2 | 30 秒 | 30 | EnemyType02：0.8 秒/1；EnemyType03：1.5 秒/1 |
+| Wave 3 | 30 秒 | 40 | Rino：0.6 秒/2；Slime：1.2 秒/1；Treant：2.0 秒/1 |
+| Wave 4 | 无限 | 80 | EnemyType01：0.6 秒/3；EnemyType02：1.2 秒/3；EnemyType03：1.8 秒/2 |
 
-场景 `SurvivorsDemo/EnemyManager` 只需引用 `WaveTimeline_Default`。敌人上限完全由当前 `WaveSpawnConfig` 决定；生成半径、回收半径和预热数量仍配置在 `EnemyManager`。
+场景 `SurvivorsDemo/EnemyManager` 需要引用 `WaveTimeline_Default` 和 `EnemyCommon.prefab`。敌人上限完全由当前 `WaveSpawnConfig` 决定；生成半径、回收半径和预热数量仍配置在 `EnemyManager`。
 
 ## 6. 当前未实现
 
@@ -140,10 +137,10 @@ Assets/Configs/Survivor/
 
 ## 7. 验收清单
 
-1. 0～30 秒仅生成 Slime。
-2. 30～60 秒按各自间隔生成 Slime 和 Rino。
-3. 60～90 秒生成 Slime、Treant 和 Rino。
-4. 90 秒后持续按各自间隔生成 Enemy_01、Enemy_02 和 Enemy_03。
+1. 0～30 秒仅生成 EnemyType01。
+2. 30～60 秒按各自间隔生成 EnemyType02 和 EnemyType03。
+3. 60～90 秒生成 Rino、Slime 和 Treant。
+4. 90 秒后持续按各自间隔生成 EnemyType01、EnemyType02 和 EnemyType03。
 5. Wave 切换不删除场上已有敌人。
 6. 四个 Wave 的场上敌人上限依次为 20、30、40、80。
 7. 敌人仍从 `PoolManager` 取出并回收。

@@ -43,7 +43,7 @@ Assets/Prefabs/Survivor/Enemy/EnemyCommon.prefab
 - 解析 Player 引用并创建 `EnemySpawner`。
 - 累计 `gameTime`，按 `WaveTimelineConfig` 切换当前 Wave，并驱动每个 `WaveSpawnEntry` 的独立计时器。
 - 按当前 `WaveSpawnConfig.maxEnemies` 限制同时存活的敌人数量。
-- 预热当前模式会使用的敌人 Prefab。
+- 预热唯一的通用敌人 Prefab `EnemyCommon`。
 - 提供 `RecycleEnemy(GameObject)` 作为统一回收入口。
 - 提供最近/随机选敌接口；`GetRandomExcluding` 支持调用方复用排除集合，让同一次多目标施放优先命中不同敌人。
 
@@ -60,13 +60,13 @@ Assets/Prefabs/Survivor/Enemy/EnemyCommon.prefab
 - 设置运行时父节点 `enemyContainer`。
 - 调用 `EnemyChaser.Initialize(player, director)` 注入运行时依赖。
 
-它只生成当前 `WaveSpawnEntry` 明确指定的 Prefab，不保存候选列表，也不负责随机选择敌人类型。
+它只从 `EnemyManager.enemyCommonPrefab` 生成敌人，不保存候选 Prefab 列表，也不负责随机选择敌人类型。
 
-### 配置驱动敌人（可选）
+### 配置驱动敌人（唯一路径）
 
 `EnemyTypeConfig` 保存动画、速度、伤害、生命、碰撞体和血条位置。`EnemyCommon.prefab` 提供统一节点层级，`EnemyConfigUtil.Apply` 在生成或 Editor 实例化时把配置写入实例：覆盖 `EnemyChaser` 与 `EnemyHealth` 数值、切换 `AnimFrame` 配置、设置 `CapsuleCollider2D` 和血条 Transform。池复用时每次出池都会重新应用，避免残留上一类型的数据。
 
-`WaveSpawnEntry.enemyTypeConfig` 为空时走旧 Prefab 路径；非空时由 `EnemyManager.enemyCommonPrefab` 提供外壳。当前 `SurvivorsDemo` 已绑定通用 Prefab，4 份 Wave 的条目也都设置了 `enemyTypeConfig`，因此实际生效的是配置驱动路径；条目上的 `enemyPrefab` 仅作为回退与对照保留。`spriteSize` 在 Simple 绘制模式下不参与显示，暂不注入实例。
+`WaveSpawnEntry.enemyTypeConfig` 是条目的必填项，为空时条目无效并被跳过。`EnemyManager.enemyCommonPrefab` 是唯一的生成外壳，`Spawn` 无条件调用 `EnemyConfigUtil.Apply`。`spriteSize` 在 Simple 绘制模式下不参与显示，暂不注入实例。
 
 ### EnemyChaser
 
@@ -85,8 +85,8 @@ Assets/Prefabs/Survivor/Enemy/EnemyCommon.prefab
 
 - 在 `OnAlloc` 时恢复满血。
 - 受伤后刷新 `HpBarDisplay` 和伤害飘字。
-- 对配置了 `AnimFrame` 的敌人播放一次 `Hit`，完成后恢复循环的 `Move`；旧敌人未配置该组件时保持原行为。
-- 当前 `Enemy_01/02/03`、`Enemy_Rino`、`Enemy_Slime` 和 `Enemy_Treant` 均使用 `AnimFrame`（拖入 `SpriteRenderer`）；Treant 没有 `Hit` 素材，受伤时继续保持 `Move`。
+- 对配置了 `AnimFrame` 的敌人播放一次 `Hit`，完成后恢复循环的 `Move`；未配置该组件时保持原行为。
+- 敌人动画统一来自 `EnemyTypeConfig.AnimConfig`，由 `AnimFrame` 组件驱动；部分配置没有 `Hit` 素材，受伤时继续保持 `Move`。
 - 生命值归零时累计击杀、生成掉落并通过 `EnemyManager.RecycleEnemy` 回收。
 - 武器高频调用的最近/随机选敌直接遍历已注册敌人；随机选择使用蓄水池抽样，不创建候选列表或按距离排序。
 - `ClearActiveEnemies` 在重开前回收当前活跃敌人，避免旧回合实体进入下一局。
@@ -242,39 +242,26 @@ Assets/Scenes/SurvivorsDemo.unity
 
 - Boss、Elite、稀有度和特殊出生编队。
 - NavMesh、A*、行为树、复杂避障或敌人分离。
-- 动态难度预算；两种敌人生成方式尚未收敛为一条，旧 Prefab 路径保留作回退，详见第 10 节。
+- 动态难度预算；敌人生成已统一为通用 Prefab + 配置注入，详见第 10 节。
 - DOTS/ECS、Spatial Hash、分帧大规模模拟。
 
 ---
 
-## 10. 两种敌人生成方式（当前并存，待收敛）
+## 10. 唯一的敌人生成方式
 
-代码同时保留两条路径，由 `WaveSpawnEntry.enemyTypeConfig` 是否为空决定实际走哪条：
+当前只保留“通用 Prefab + 配置注入”一条路径：
 
-| 对比项   | 方式 A：独立 Prefab（旧）                    | 方式 B：通用 Prefab + SO（新）                                                               |
-| -------- | -------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| 配置入口 | `WaveSpawnEntry.enemyPrefab`                 | `WaveSpawnEntry.enemyTypeConfig` + `EnemyManager.enemyCommonPrefab`                         |
-| 数据来源 | 每种敌人 Prefab 的序列化字段                 | `EnemyTypeConfig`（数值/碰撞体/血条）+ `AnimFrameConfig`（动画）                             |
-| 预制体   | `Enemy_01/02/03/Rino/Slime/Treant` 各一份    | 统一 `EnemyCommon.prefab`                                                                    |
-| 数值修改 | 打开对应 Prefab 改字段                       | 改 SO 资源；多个 Wave 共享同一类型配置                                                       |
-| 出池处理 | 只跑 `OnAlloc`，使用 Prefab 固定值           | `EnemyConfigUtil.Apply` 每次出池覆盖数值、动画、碰撞体、血条                               |
-| 对象池键 | 每种 Prefab 各一个池                         | 通用 Prefab 共用一个池，按配置切换表现                                                       |
-| 当前状态 | Wave 条目仍保留引用，但被 B 覆盖，实际不生效 | 场景已绑定 `EnemyCommon.prefab`，4 份 Wave 共 9 个条目已设置 `enemyTypeConfig`，当前实际生效 |
+| 对比项   | 当前实现                                                                 |
+| -------- | ------------------------------------------------------------------------ |
+| 配置入口 | `WaveSpawnEntry.enemyTypeConfig` + `EnemyManager.enemyCommonPrefab`      |
+| 数据来源 | `EnemyTypeConfig`（数值/碰撞体/血条）+ `AnimFrameConfig`（动画）          |
+| 预制体   | 统一 `EnemyCommon.prefab`，所有 Wave 和敌人类型共用一个对象池            |
+| 数值修改 | 改 SO 资源；多个 Wave 可共享同一类型配置                                 |
+| 出池处理 | `EnemyConfigUtil.Apply` 每次出池覆盖数值、动画、碰撞体、血条              |
 
-优先级：条目同时填写两个字段时，方式 B 优先；`enemyPrefab` 只在 `enemyTypeConfig` 为空时作为回退。Editor 的"实例化选中配置到场景"只用于验证方式 B，不是第三种生成方式。
+`WaveSpawnEntry` 不再保存独立 Prefab 引用，`IsValid` 要求必须配置 `EnemyTypeConfig`；生成时不再解析回退 Prefab。新增敌人只需建一份 `EnemyTypeConfig` 并复用 `AnimFrameConfig`，不再复制整套 Prefab。Editor 的“实例化选中配置到场景”用于预览配置效果，不参与运行时生成。
 
-### 后续收敛建议（未执行）
-
-推荐保留方式 B：新增敌人只需建一份 `EnemyTypeConfig` 并复用 `AnimFrameConfig`，不再复制整套 Prefab；数值、碰撞体和血条集中修改，避免 Prefab 与 SO 两份数据漂移。代价是旧 Prefab 及其直连动画引用会废弃，且需要先确认配置注入后的视觉与数值和旧 Prefab 一致。
-
-收敛步骤：
-
-1. Play Mode 验收 4 个 Wave 的敌人外观、碰撞体、速度、伤害、血量与旧 Prefab 基线一致。
-2. 从 `WaveSpawnEntry` 移除 `enemyPrefab` 和 `IsValid` / `ResolveSpawnPrefab` 的旧分支，并从 Wave 资源清理该字段。
-3. 删除 6 个旧敌人 Prefab 及其 `.meta`，保留 `EnemyCommon.prefab` 和类型配置。
-4. 同步更新本文件、`WaveSystem.md` 与场景引用说明。
-
-若决定保留方式 A，则反向移除 `EnemyTypeConfig`、`EnemyConfigUtil`、`enemyCommonPrefab`、Editor 实例化入口及新增的 6 份类型配置。当前不执行删除，因为收敛前必须完成 Play Mode 验收。
+`EnemyManager.Awake` 会校验 `enemyCommonPrefab` 是否存在；缺失时输出错误并且本局不生成敌人。`EnemySpawner.Spawn` 要求调用方必须提供配置，配置注入失败时回收实例并返回 null。
 
 ---
 

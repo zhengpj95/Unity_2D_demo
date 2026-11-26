@@ -8,25 +8,21 @@ namespace VampireSurvivorsLike
   [Serializable]
   public sealed class WaveSpawnEntry
   {
-    [Tooltip("旧式敌人预制体，必须挂载 EnemyChaser；配置 EnemyTypeConfig 时可留空。")]
-    [SerializeField] private GameObject enemyPrefab;
-    [Tooltip("可选敌人类型配置；设置后从通用 EnemyCommon Prefab 生成对应敌人。")]
+    [Tooltip("该条目使用的敌人类型配置；生成时从通用 EnemyCommon Prefab 创建并注入配置。")]
     [SerializeField] private EnemyTypeConfig enemyTypeConfig;
     [Tooltip("该敌人每次生成之间的间隔（秒）。")]
     [SerializeField, Min(0.01f)] private float spawnInterval = 1f;
     [Tooltip("每次触发时生成的敌人数量。")]
     [SerializeField, Min(1)] private int spawnCount = 1;
 
-    /// <summary>该条目使用的旧式敌人预制体。</summary>
-    public GameObject EnemyPrefab => enemyPrefab;
-    /// <summary>该条目使用的敌人类型配置；为空时沿用 EnemyPrefab。</summary>
+    /// <summary>该条目使用的敌人类型配置；为空时该条目无效。</summary>
     public EnemyTypeConfig EnemyTypeConfig => enemyTypeConfig;
     /// <summary>相邻两次生成触发的间隔。</summary>
     public float SpawnInterval => spawnInterval;
     /// <summary>一次触发需要生成的数量。</summary>
     public int SpawnCount => spawnCount;
     /// <summary>是否具备可以交给 EnemySpawner 执行的最小配置。</summary>
-    public bool IsValid => (enemyPrefab != null || enemyTypeConfig != null) && spawnInterval > 0f && spawnCount > 0;
+    public bool IsValid => enemyTypeConfig != null && spawnInterval > 0f && spawnCount > 0;
   }
 
   /// <summary>
